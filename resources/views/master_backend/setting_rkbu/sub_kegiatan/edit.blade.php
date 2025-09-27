@@ -1,0 +1,110 @@
+<x-layouts.main class="main">
+    <x-slot:title>{{ $title }}</x-slot:title>
+    <div class="pcoded-inner-content">
+        <!-- Main-body start -->
+        <div class="main-body">
+            <div class="page-wrapper">
+                <!-- Page-header start -->
+                <x-partials.breadcrumb>
+                </x-partials.breadcrumb>
+                <!-- Page-header end -->
+
+                <!-- Page body start -->
+                <div class="page-body">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <!-- Basic Form Inputs card start -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-header-right">
+                                        <i class="icofont icofont-spinner-alt-5"></i>
+                                    </div>
+                                </div>
+                                <div class="card-block">
+                                    <h4 class="sub-title">Form Inputs</h4>
+                                    <form id="confirmSubmitForm" method="POST"
+                                        action="{{ route('sub_kegiatans.update', $sub_kegiatans->id_sub_kegiatan) }}">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="form-group row">
+                                            <label class="col-sm-2 col-form-label">Nama Sub Kegiatan</label>
+                                            <div class="col-sm-10">
+                                                <input type="text" name="nama_sub_kegiatan"
+                                                    value="{{ $sub_kegiatans->nama_sub_kegiatan }}"
+                                                    class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-sm-2 col-form-label">Kode Sub Kegiatan</label>
+                                            <div class="col-sm-10">
+                                                <input type="text" name="kode_sub_kegiatan"
+                                                    value="{{ $sub_kegiatans->kode_sub_kegiatan }}"
+                                                    class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-sm-2 col-form-label">Tujuan Sub Kegiatan</label>
+                                            <div class="col-sm-10">
+                                                <input type="text" name="tujuan_sub_kegiatan"
+                                                    value="{{ $sub_kegiatans->tujuan_sub_kegiatan }}"
+                                                    class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-sm-2 col-form-label">Indikator Sub Kegiatan</label>
+                                            <div class="col-sm-10">
+                                                <input type="text" name="indikator_sub_kegiatan"
+                                                    value="{{ $sub_kegiatans->indikator_sub_kegiatan }}"
+                                                    class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-sm-2 col-form-label">Kegiatan</label>
+                                            <div class="col-sm-10">
+                                                <select name="id_kegiatan" class="js-example-basic-single col-sm-12">
+                                                    <option value="{{ $sub_kegiatans->id_kegiatan }}">
+                                                        {{ $sub_kegiatans->kegiatan->nama_kegiatan }}
+                                                    </option>
+                                                    @foreach ($kegiatans as $key)
+                                                        <option value="{{ $key->id_kegiatan }}">
+                                                            {{ $key->nama_kegiatan }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <label class="col-sm-2 col-form-label">Sumber Dana</label>
+                                            <div class="col-sm-10">
+                                                <select name="id_sumber_dana" class="js-example-basic-single col-sm-12">
+                                                    <option value="{{ $sub_kegiatans->id_sumber_dana }}">
+                                                        {{ $sub_kegiatans->sumber_danas->nama_sumber_dana }}
+                                                    </option>
+                                                    @foreach ($sumber_danas as $key)
+                                                        <option value="{{ $key->id_sumber_dana }}">
+                                                            {{ $key->nama_sumber_dana }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="card-block card-header-right">
+                                            <a href="{{ route('sub_kegiatans.index') }}"
+                                                class="btn btn-sm btn-secondary btn-outline-secondary me-4">
+                                                <i class="icofont icofont-circled-left"></i> Kembali
+                                            </a>
+                                            <button class="btn btn-sm btn-primary btn-outline-primary me-4">
+                                                <i class="icofont icofont-check-circled"></i> Submit
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <!-- Basic Form Inputs card end -->
+                        </div>
+                    </div>
+                </div>
+                <!-- Page body end -->
+            </div>
+        </div>
+    </div>
+
+</x-layouts.main>
