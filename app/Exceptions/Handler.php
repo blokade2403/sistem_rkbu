@@ -2,8 +2,9 @@
 
 namespace App\Exceptions;
 
-use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class Handler extends ExceptionHandler
 {
@@ -27,4 +28,32 @@ class Handler extends ExceptionHandler
             //
         });
     }
+
+    // public function render($request, Throwable $exception)
+    // {
+    //     // Kalau Administrator, tampilkan error detail (default Laravel bawaan)
+    //     if (session('nama_level_user') === 'Administrator') {
+    //         return parent::render($request, $exception);
+    //     }
+
+    //     // Kalau bukan Administrator, tampilkan error custom
+    //     $statusCode = 500; // default
+
+    //     // cek apakah exception turunan HttpExceptionInterface
+    //     if ($exception instanceof HttpExceptionInterface) {
+    //         $statusCode = $exception->getStatusCode();
+    //     }
+
+    //     // cek apakah ada view khusus sesuai kode error (misal errors/404.blade.php)
+    //     if (view()->exists("components.errors.{$statusCode}")) {
+    //         return response()->view("components.errors.{$statusCode}", [
+    //             'code' => $statusCode
+    //         ], $statusCode);
+    //     }
+
+    //     // fallback kalau view spesifik tidak ada
+    //     return response()->view("components.errors.custom", [
+    //         'code' => $statusCode
+    //     ], $statusCode);
+    // }
 }

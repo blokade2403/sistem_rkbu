@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg">
 @include('layouts.head')
+@include('layouts.style')
 
 <body>
 

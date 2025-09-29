@@ -73,6 +73,7 @@ class CekUsulanBarangController extends Controller
             ->distinct()
             ->get();
 
+
         $id_usulan = UsulanBarang::join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
             ->where('status_usulan_barang', 'Pending')
             ->where('id_user', $id_user)
@@ -161,6 +162,23 @@ class CekUsulanBarangController extends Controller
             $keranjang = collect(); // Jika tidak ada, gunakan collection kosong
         }
 
+        $status = UsulanBarang::join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
+            ->join('usulan_barang_details', 'usulan_barang_details.id_usulan_barang', '=', 'usulan_barangs.id_usulan_barang')
+            ->join('rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
+            ->join('users', 'rkbus.id_user', '=', 'users.id_user')
+            ->join('ksps', 'users.id_ksp', '=', 'ksps.id_ksp')
+            ->where('status_usulan_barang', 'Selesai')
+            ->where('rkbus.id_status_validasi', '9cfb1edc-2263-401f-b249-361db4017932')
+            ->where('ksps.id_ksp', $id_ksp)
+            ->where('usulan_barangs.id_user', $id_user)
+            ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
+            ->where('usulan_barang_details.id_usulan_barang', $id_usulan_barang) // Filter by id_usulan_barang
+            ->orderby('usulan_barangs.id_usulan_barang', 'DESC')
+            ->select('usulan_barangs.*', 'rkbus.*')
+            ->distinct()
+            ->first(); // ⬅️ ganti get() jadi first()
+
+
         // dd($invoice);
 
         $gambar1 = $judul_headers->gambar1 ? asset('storage/uploads/' . basename($judul_headers->gambar1)) : asset('storage/uploads/foto.png');
@@ -183,12 +201,12 @@ class CekUsulanBarangController extends Controller
             'website'           => $website,
             'gambar1'           => $gambar1,
             'gambar2'           => $gambar2,
-            'routePrefix'       => 'cek_usulan_barang_barjass'
+            'routePrefix'       => 'cek_usulan_barang_barjass',
         ];
 
         // dd($data);
 
-        return view('cek_usulan_belanja.cek_detail_usulan_belanja', $data, compact('sub_kategori_rkbus', 'usulan_barangs', 'id_usulan', 'invoice'), ['title' => 'Halaman Belanja', 'routePrefix' => 'cek_usulan_barang_barjass']);
+        return view('cek_usulan_belanja.cek_detail_usulan_belanja', $data, compact('sub_kategori_rkbus', 'status', 'usulan_barangs', 'id_usulan', 'invoice'), ['title' => 'Halaman Belanja', 'routePrefix' => 'cek_usulan_barang_barjass']);
     }
 
 

@@ -137,7 +137,7 @@ class UsulanBelanjaPersediaanController extends Controller
             ->join('rkbus', 'rkbus.id_rkbu', '=', 'usulan_barang_details.id_rkbu')
             ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
             ->where('usulan_barang_details.id_usulan_barang', $id_usulan_barang)
-            ->select('usulan_barang_details.*', 'sub_kategori_rkbus.nama_sub_kategori_rkbu', 'users.nama_lengkap as nama_pengusul_barang', 'usulan_barangs.*')
+            ->select('usulan_barang_details.*', 'sub_kategori_rkbus.nama_sub_kategori_rkbu', 'sub_kategori_rkbus.kode_sub_kategori_rkbu', 'users.nama_lengkap as nama_pengusul_barang', 'usulan_barangs.*')
             ->first();
 
         // Cek apakah invoice ditemukan

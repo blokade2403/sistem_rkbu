@@ -1,13 +1,10 @@
-<x-layouts.main class="main">
+@extends('layouts.main')
+@section('content')
     <div class="pcoded-inner-content">
         <div class="main-body">
             <div class="page-wrapper">
-
-                <x-partials.breadcrumb />
-
                 <div class="page-body">
                     <div class="container-xxl flex-grow-1 container-p-y">
-
                         <div class="col-lg-12 col-12 mb-lg-0 mb-4">
                             <div class="card invoice-preview-card">
                                 <div class="card-body">
@@ -32,9 +29,7 @@
                                                 width="145" height="105" class="img-fluid" />
                                         </div>
                                     </div>
-
                                     <hr>
-
                                     <!-- Judul -->
                                     <div class="row">
                                         <div class="col-12 text-center">
@@ -134,8 +129,7 @@
                                                     <tbody>
                                                         @foreach ($keranjang as $key => $item)
                                                             <tr>
-                                                                <td><small
-                                                                        class="text-info">{{ $key + 1 }}</small>
+                                                                <td><small class="text-info">{{ $key + 1 }}</small>
                                                                 </td>
                                                                 <td>
                                                                     <small
@@ -145,8 +139,7 @@
                                                                 </td>
                                                                 <td class="text-wrap"
                                                                     style="white-space: normal; word-wrap: break-word;">
-                                                                    <span
-                                                                        class="fa-sm">{{ $item->spek_detail }}</span>
+                                                                    <span class="fa-sm">{{ $item->spek_detail }}</span>
                                                                 </td>
                                                                 <td><small>Rp.
                                                                         {{ number_format($item->harga_barang, 0, ',', '.') }}</small>
@@ -217,15 +210,30 @@
 
                                     <!-- Tombol Aksi -->
                                     <div class="row">
-                                        <div class="col-md-4 m-3">
+                                        <div class="text-end">
                                             <div class="demo-inline-spacing">
                                                 <a href="{{ route($routePrefix . '.index') }}"
-                                                    class="btn btn-info btn-outline-info">
-                                                    <i class="icofont icofont-cart-alt"></i>Kembali
+                                                    class="btn btn-primary btn-label waves-effect waves-light">
+                                                    <div class="d-flex">
+                                                        <div class="flex-shrink-0">
+                                                            <i class="ri-reply-fill label-icon align-middle fs-16 me-2"></i>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            Kembali
+                                                        </div>
+                                                    </div>
                                                 </a>
                                                 <a href="{{ route($routePrefix . '.downloadPDF', ['id_usulan_barang' => $invoice->id_usulan_barang]) }}"
-                                                    class="btn btn-info btn-outline-info">
-                                                    <i class="icofont icofont-cart-alt"></i>Print
+                                                    class="btn btn-info btn-label waves-effect waves-light">
+                                                    <div class="d-flex">
+                                                        <div class="flex-shrink-0">
+                                                            <i
+                                                                class="ri-printer-fill label-icon align-middle fs-16 me-2"></i>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            Print
+                                                        </div>
+                                                    </div>
                                                 </a>
                                             </div>
                                         </div>
@@ -252,4 +260,4 @@
             </div>
         </div>
     </div>
-</x-layouts.main>
+@endsection

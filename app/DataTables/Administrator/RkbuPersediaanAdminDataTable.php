@@ -420,6 +420,13 @@ class RkbuPersediaanAdminDataTable extends DataTable
                 ->addClass('text-left')
                 ->responsivePriority(1), // tampil lebih prioritas
 
+            Column::computed('detail_anggaran')
+                ->title('Detail Anggaran')
+                ->exportable(false)
+                ->printable(false)
+                ->addClass('text-left')
+                ->responsivePriority(1), // tampil lebih prioritas
+
             Column::computed('action')
                 ->title('Action')
                 ->exportable(false)
@@ -427,13 +434,6 @@ class RkbuPersediaanAdminDataTable extends DataTable
                 ->width(100)
                 ->addClass('text-center')
                 ->responsivePriority(1), // usahakan selalu tampil
-
-            Column::computed('detail_anggaran')
-                ->title('Detail Anggaran')
-                ->exportable(false)
-                ->printable(false)
-                ->addClass('text-left')
-                ->responsivePriority(2), // tampil lebih prioritas
 
             Column::computed('detail_quantity')
                 ->title('Detail Quantity')

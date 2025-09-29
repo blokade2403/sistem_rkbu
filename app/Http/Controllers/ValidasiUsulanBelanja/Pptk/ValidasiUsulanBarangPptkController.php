@@ -311,6 +311,7 @@ class ValidasiUsulanBarangPptkController extends Controller
 
     public function store(Request $request) {}
 
+
     public function show($id_usulan_barang)
     {
         // Ambil id_ksp dari session
@@ -429,6 +430,22 @@ class ValidasiUsulanBarangPptkController extends Controller
         // Cek apakah gambar2 ada, jika tidak gunakan gambar alias
         $gambar2 = $judul_headers->gambar2 ? asset('storage/uploads/' . basename($judul_headers->gambar2)) : asset('storage/uploads/foto.png');
 
+        $status = UsulanBarang::join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
+            ->join('usulan_barang_details', 'usulan_barang_details.id_usulan_barang', '=', 'usulan_barangs.id_usulan_barang')
+            ->join('rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
+            ->join('users', 'rkbus.id_user', '=', 'users.id_user')
+            ->join('ksps', 'users.id_ksp', '=', 'ksps.id_ksp')
+            ->where('status_usulan_barang', 'Selesai')
+            ->where('rkbus.id_status_validasi', '9cfb1edc-2263-401f-b249-361db4017932')
+            ->where('ksps.id_ksp', $id_ksp)
+            ->where('usulan_barangs.id_user', $id_user)
+            ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
+            ->where('usulan_barang_details.id_usulan_barang', $id_usulan_barang) // Filter by id_usulan_barang
+            ->orderby('usulan_barangs.id_usulan_barang', 'DESC')
+            ->select('usulan_barangs.*', 'rkbus.*')
+            ->distinct()
+            ->first(); // ⬅️ ganti get() jadi first()
+
         // Siapkan data untuk dikirim ke view
         $data = [
             'no_inv'            => $invo,
@@ -449,7 +466,7 @@ class ValidasiUsulanBarangPptkController extends Controller
 
         // dd($data);
 
-        return view('validasi_usulan_belanja.cek_detail_usulan_belanja', $data, compact('sub_kategori_rkbus', 'usulan_barangs', 'id_usulan', 'invoice'), ['title' => 'Halaman Show', 'routePrefix' => 'validasi_usulan_barang_pptks']);
+        return view('validasi_usulan_belanja.cek_detail_usulan_belanja', $data, compact('sub_kategori_rkbus', 'status', 'usulan_barangs', 'id_usulan', 'invoice'), ['title' => 'Halaman Show', 'routePrefix' => 'validasi_usulan_barang_pptks']);
     }
 
 
