@@ -20,7 +20,9 @@ class PptkController extends Controller
             [
                 'pptks'             => $pptks,
                 'tahun_anggaran'    => $tahun_anggaran,
-                'title'             => 'PPTK'
+                'title'             => 'Halaman PPTK',
+                'title2'            => 'PPTK',
+                'routePrefix'       => 'pptks'
             ]
         );
     }
@@ -28,7 +30,12 @@ class PptkController extends Controller
     public function create()
     {
         $tahun_anggaran = TahunAnggaran::all();
-        return view('master_backend.setting_users.pptk.create',  ['title' => 'PPTK', 'tahun_anggaran'    => $tahun_anggaran]);
+        return view('master_backend.setting_users.pptk.create',  [
+            'title'             => 'Halaman PPTK',
+            'title2'            => 'PPTK',
+            'routePrefix'       => 'pptks',
+            'tahun_anggaran'    => $tahun_anggaran
+        ]);
     }
 
     public function store(Request $request)
@@ -77,7 +84,13 @@ class PptkController extends Controller
     public function edit(Pptk $Pptk)
     {
         $tahun_anggaran = TahunAnggaran::all();
-        return view('master_backend.setting_users.pptk.edit',  ['pptks' => $Pptk, 'tahun_anggaran'    => $tahun_anggaran, 'title' => 'PPTK']);
+        return view('master_backend.setting_users.pptk.edit',  [
+            'pptks'             => $Pptk,
+            'tahun_anggaran'    => $tahun_anggaran,
+            'title'             => 'Halaman PPTK',
+            'title2'            => 'PPTK',
+            'routePrefix'       => 'pptks'
+        ]);
     }
 
     public function update(Request $request, Pptk $Pptk)
@@ -109,8 +122,12 @@ class PptkController extends Controller
         return redirect()->route('pptks.index')->with('success', 'Data Berhasil Di Ubah');
     }
 
-    public function destroy(Pptk $Pptk)
+    public function destroy($id)
     {
-        //
+
+        $fase = Pptk::findOrFail($id);
+        $fase->delete();
+
+        return redirect()->route('pptks.index')->with('success', 'Data fase Berhasil dihapus.');
     }
 }

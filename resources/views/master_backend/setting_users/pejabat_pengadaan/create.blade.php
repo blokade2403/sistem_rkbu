@@ -1,146 +1,209 @@
-<x-layouts.main class="main">
-    <x-slot:title>{{ $title }}</x-slot:title>
-    <div class="pcoded-inner-content">
-        <!-- Main-body start -->
-        <div class="main-body">
-            <div class="page-wrapper">
-                <!-- Page-header start -->
-                <x-partials.breadcrumb>
-                </x-partials.breadcrumb>
-                <!-- Page-header end -->
-                <!-- Page body start -->
-                <div class="page-body">
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <!-- Basic Form Inputs card start -->
-                            <div class="card">
-                                <div class="card-header">
-                                    <div class="card-header-right">
-                                        <i class="icofont icofont-spinner-alt-5"></i>
-                                    </div>
-
-                                </div>
-                                <div class="card-block">
-                                    <h4 class="sub-title">Form Inputs</h4>
-                                    <form id="confirmSubmitForm" method="POST"
-                                        action="{{ route('pejabat_pengadaans.store') }}">
-                                        @csrf
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">Nama PPK</label>
-                                            <div class="col-sm-10">
-                                                <input type="text" name="nama_ppk" class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">NIP PPTK</label>
-                                            <div class="col-sm-10">
-                                                <input type="text" name="nip_ppk" class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">Nama PPBJ</label>
-                                            <div class="col-sm-10">
-                                                <input type="text" name="nama_ppbj" class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">NIP PPBJ</label>
-                                            <div class="col-sm-10">
-                                                <input type="text" name="nip_ppbj" class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">Nama Pengurus Barang</label>
-                                            <div class="col-sm-10">
-                                                <input type="text" name="nama_pengurus_barang" class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">NIP Pengurus Barang</label>
-                                            <div class="col-sm-10">
-                                                <input type="text" name="nip_pengurus_barang" class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">Nama Bendahara</label>
-                                            <div class="col-sm-10">
-                                                <input type="text" name="nama_bendahara" class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">NIP Bendahara</label>
-                                            <div class="col-sm-10">
-                                                <input type="text" name="nip_bendahara" class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">Nama Direktur</label>
-                                            <div class="col-sm-10">
-                                                <input type="text" name="nama_direktur" class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">NIP Direktur</label>
-                                            <div class="col-sm-10">
-                                                <input type="text" name="nip_direktur" class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">PPK Keuangan</label>
-                                            <div class="col-sm-10">
-                                                <select name="id_ppk_keuangan"
-                                                    class="js-example-basic-single col-sm-12">
-                                                    <option selected="" disabled="">Pilih Pejabat PPK Keuangan
-                                                    </option>
-                                                    @foreach ($ppk_keuangan as $key)
-                                                        <option value="{{ $key->id_ppk_keuangan }}">
-                                                            {{ $key->nama_ppk_keuangan }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">Status</label>
-                                            <div class="col-sm-10">
-                                                <select name="status" class="js-example-basic-single col-sm-12">
-                                                    <option selected="" disabled="">Pilih Status</option>
-                                                    <option value="aktif">Aktif</option>
-                                                    <option value="tidak aktif">Tidak Aktif</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">Tahun Anggaran</label>
-                                            <div class="col-sm-10">
-                                                <select name="id_tahun_anggaran"
-                                                    class="js-example-basic-single col-sm-12">
-                                                    <option selected="" disabled="">Pilih Tahun Anggaran</option>
-                                                    @foreach ($tahun_anggaran as $tahun_anggaran)
-                                                        <option value="{{ $tahun_anggaran->id }}">
-                                                            {{ $tahun_anggaran->nama_tahun_anggaran }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="card-block card-header-right">
-                                            <a href="{{ route('pejabat_pengadaans.index') }}"
-                                                class="btn btn-sm btn-secondary btn-outline-secondary me-4">
-                                                <i class="icofont icofont-circled-left"></i> Kembali
-                                            </a>
-                                            <button class="btn btn-sm btn-primary btn-outline-primary me-4">
-                                                <i class="icofont icofont-check-circled"></i> Submit
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
+@extends('layouts.main')
+@section('content')
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">{{ $title }}</h4>
+                </div><!-- end card header -->
+                <div class="card-body form-steps">
+                    <div class="row gy-5">
+                        <div class="col-lg-3">
+                            <div class="nav flex-column custom-nav nav-pills" role="tablist" aria-orientation="vertical">
+                                <button class="nav-link done" id="v-pills-bill-info-tab" data-bs-toggle="pill"
+                                    data-bs-target="#v-pills-bill-info" type="button" role="tab"
+                                    aria-controls="v-pills-bill-info" aria-selected="true">
+                                    <span class="step-title me-2">
+                                        <i class="ri-close-circle-fill step-icon me-2"></i>
+                                        Step create
+                                    </span>
+                                    {{ $title }} Info
+                                </button>
                             </div>
-                            <!-- Basic Form Inputs card end -->
+                            <!-- end nav -->
+                        </div> <!-- end col-->
+                        <div class="col-lg-6">
+                            <div class="px-lg-4">
+                                <div class="tab-content">
+                                    <div class="tab-pane fade show active" id="v-pills-bill-address" role="tabpanel"
+                                        aria-labelledby="v-pills-bill-address-tab">
+                                        <div>
+                                            <h5>Form {{ $title2 }}</h5>
+                                            <p class="text-muted">Fill all information below</p>
+                                        </div>
+                                        <form id="confirmSubmitForm" method="POST"
+                                            action="{{ route('pejabat_pengadaans.store') }}">
+                                            @csrf
+                                            <div>
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="phonenumberInput" class="form-label">Nama
+                                                                PPK</label>
+                                                            <input type="text" class="form-control" placeholder="nama"
+                                                                name="nama_ppk">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="phonenumberInput" class="form-label">NIP PPK</label>
+                                                            <input type="text" class="form-control" placeholder="nip"
+                                                                name="nip_ppk">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="phonenumberInput" class="form-label">Nama
+                                                                PPBJ</label>
+                                                            <input type="text" class="form-control" placeholder="nama"
+                                                                name="nama_ppbj">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="phonenumberInput" class="form-label">NIP
+                                                                PPBJ</label>
+                                                            <input type="text" class="form-control" placeholder="nip"
+                                                                name="nip_ppbj">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="phonenumberInput" class="form-label">Nama
+                                                                Pengurus Barang</label>
+                                                            <input type="text" class="form-control" placeholder="nama"
+                                                                name="nama_pengurus_barang">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="phonenumberInput" class="form-label">NIP
+                                                                Pengurus Barang</label>
+                                                            <input type="text" class="form-control" placeholder="nip"
+                                                                name="nip_pengurus_barang">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="phonenumberInput" class="form-label">Nama
+                                                                Bendahara</label>
+                                                            <input type="text" class="form-control" placeholder="nama"
+                                                                name="nama_bendahara">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="phonenumberInput" class="form-label">NIP
+                                                                Bendahara</label>
+                                                            <input type="text" class="form-control" placeholder="nip"
+                                                                name="nip_bendahara">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="phonenumberInput" class="form-label">Nama
+                                                                Direktur</label>
+                                                            <input type="text" class="form-control" placeholder="nama"
+                                                                name="nama_direktur">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="phonenumberInput" class="form-label">NIP
+                                                                Direktur</label>
+                                                            <input type="text" class="form-control" placeholder="nip"
+                                                                name="nip_direktur">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="phonenumberInput" class="form-label">PPPK
+                                                                Keuangan</label>
+                                                            <select id="form-control choices-select"
+                                                                name="id_ppk_keuangan" id="satuan_1" class="form-select"
+                                                                data-choices data-choices-sorting="true">
+                                                                <option selected="" disabled="">Pilih Pejabat PPK
+                                                                    Keuangan
+                                                                </option>
+                                                                @foreach ($ppk_keuangan as $key)
+                                                                    <option value="{{ $key->id_ppk_keuangan }}">
+                                                                        {{ $key->nama_ppk_keuangan }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="phonenumberInput"
+                                                                class="form-label">Status</label>
+                                                            <select id="form-control choices-select" name="status"
+                                                                id="satuan_1" class="form-select" data-choices
+                                                                data-choices-sorting="true">
+                                                                <option selected="" disabled="">Pilih Status
+                                                                </option>
+                                                                <option value="aktif">Aktif</option>
+                                                                <option value="tidak aktif">Tidak Aktif</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <div class="mb-3">
+                                                            <label for="phonenumberInput" class="form-label">Tahun
+                                                                Anggaran</label>
+                                                            <select id="form-control choices-select"
+                                                                name="id_tahun_anggaran" id="satuan_1"
+                                                                class="form-select" data-choices
+                                                                data-choices-sorting="true">
+                                                                <option selected="" disabled="">Pilih Tahun Anggaran
+                                                                </option>
+                                                                @foreach ($tahun_anggaran as $tahun_anggaran)
+                                                                    <option value="{{ $tahun_anggaran->id }}">
+                                                                        {{ $tahun_anggaran->nama_tahun_anggaran }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <hr class="my-4 text-muted">
+                                                <div class="form-check mb-2">
+                                                    <input type="checkbox" class="form-check-input" id="same-address">
+                                                    <label class="form-check-label" for="same-address">Yakin isian anda
+                                                        pada form ini </label>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                @include('partials.submit_buttons')
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                <!-- end tab content -->
+                            </div>
+                        </div>
+                        <!-- end col -->
+                        <div class="col-lg-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fs-14 text-primary mb-0"><i
+                                        class="ri-shopping-cart-fill align-middle me-2"></i>
+                                    Your Form</h5>
+                                <span class="badge bg-danger rounded-pill">3</span>
+                            </div>
+                            <ul class="list-group mb-3">
+                                <li class="list-group-item d-flex justify-content-between lh-sm">
+                                    <div>
+                                        <h6 class="my-0">Product name</h6>
+                                        <small class="text-muted">Brief description</small>
+                                    </div>
+                                    <span class="text-muted">$12</span>
+                                </li>
+                            </ul>
                         </div>
                     </div>
+                    <!-- end row -->
                 </div>
-                <!-- Page body end -->
             </div>
+            <!-- end -->
         </div>
+        <!-- end col -->
     </div>
-
-</x-layouts.main>
+@endsection

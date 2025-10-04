@@ -128,19 +128,19 @@ Route::controller(AuthController::class)->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/dashbord', [DashboardController::class, 'index'])->name('dashbord');
 
-    //     // Master Data Routes
-    //     Route::prefix('setting-user')->group(function () {
-    // Route::resource('jabatans', JabatanController::class);
-    // Route::delete('/jabatans/{id}', [JabatanController::class, 'destroy'])->name('jabatans.destroy');
-    // Route::resource('fungsionals', FungsionalController::class);
-    // Route::resource('units', UnitController::class);
-    // Route::resource('level_users', LevelUserController::class);
-    // Route::resource('fases', FaseController::class);
-    // Route::resource('ppk_keuangans', PpkKeuanganController::class);
-    // Route::resource('pptks', PptkController::class);
-    // Route::resource('pejabat_pengadaans', PejabatPengadaanController::class);
-    // Route::resource('admin_pendukungs', AdminPendukungController::class);
-    // });
+    // Master Data Routes
+    Route::prefix('setting-user')->group(function () {
+        Route::resource('jabatans', JabatanController::class);
+        Route::delete('/jabatans/{id}', [JabatanController::class, 'destroy'])->name('jabatans.destroy');
+        Route::resource('fungsionals', FungsionalController::class);
+        Route::resource('units', UnitController::class);
+        Route::resource('level_users', LevelUserController::class);
+        Route::resource('fases', FaseController::class);
+        Route::resource('ppk_keuangans', PpkKeuanganController::class);
+        Route::resource('pptks', PptkController::class);
+        Route::resource('pejabat_pengadaans', PejabatPengadaanController::class);
+        Route::resource('admin_pendukungs', AdminPendukungController::class);
+    });
 
     Route::prefix('user-profil')->group(function () {
         Route::resource('users', UserController::class);
@@ -524,9 +524,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/master_spjs/{id_spj_detail}', [MasterSpjController::class, 'update'])->name('master_spjs.update');
         Route::put('/master-spj/{id}/update-surat-pesanan', [MasterSpjController::class, 'updateSuratPesanan'])
             ->name('master_spjs.updateSuratPesanan');
-        Route::put('/master-spj/{id}/update-barang-datang', [MasterSpjController::class, 'updateBarangDatang'])
+        Route::put('/master-spjs/{id}/update-barang-datang', [MasterSpjController::class, 'updateBarangDatang'])
             ->name('master_spjs.updateBarangDatang');
         Route::put('/master-spj/{id}/update-tukar-faktur', [MasterSpjController::class, 'tukarfaktur'])
             ->name('master_spjs.tukarfaktur');
+        Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangBarjas::class, 'downloadPDFCekBarjas'])->name('master_spjs.downloadPDF');
     });
 });

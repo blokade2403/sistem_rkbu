@@ -18,7 +18,12 @@ class AdminPendukungController extends Controller
     public function index()
     {
         $admin_pendukungs   = AdminPendukung::all();
-        return view('master_backend.setting_users.admin_pendukung_ppk.index', ['title'  => 'Halaman Admin Pendukung PPK', 'admin_pendukungs' => $admin_pendukungs]);
+        return view('master_backend.setting_users.admin_pendukung_ppk.index', [
+            'title'             => 'Halaman Admin Pendukung PPK',
+            'admin_pendukungs'  => $admin_pendukungs,
+            'title2'            => 'Admin Pendukung',
+            'routePrefix'       => 'admin_pendukungs'
+        ]);
     }
 
     /**
@@ -31,7 +36,12 @@ class AdminPendukungController extends Controller
         $users              = User::where('id_level', '9dba8d34-082f-495e-81a7-393dcb51d073')->get();
         $admin_pendukungs   = AdminPendukung::with(['pejabat_pengadaan', 'pptk', 'user'])->get();
         // dd($pejabat_pengadaans);
-        return view('master_backend.setting_users.admin_pendukung_ppk.create', compact('admin_pendukungs', 'pejabat_pengadaans', 'pptks', 'users'), ['title' => 'Admin Pendukung PPK']);
+        return view('master_backend.setting_users.admin_pendukung_ppk.create', compact('pejabat_pengadaans', 'pptks', 'users'), [
+            'admin_pendukungs'  => $admin_pendukungs,
+            'title'             => 'Halaman Admin Pendukung PPK',
+            'title2'            => 'Admin Pendukung',
+            'routePrefix'       => 'admin_pendukungs'
+        ]);
     }
 
     /**
@@ -47,7 +57,6 @@ class AdminPendukungController extends Controller
                 'nrk'                       =>  'required',
                 'id_pejabat_pengadaan'      =>  'required',
                 'id_pptk'                   =>  'required',
-                'id_user'                   =>  'required'
             ],
             [
                 'nama_pendukung_ppk'        =>  'Nama Pendukung Belum terisi data!!',
@@ -60,11 +69,14 @@ class AdminPendukungController extends Controller
         );
 
         if ($validator->fails()) {
-            $errors = $validator->error();
+            $errors = $validator->errors();
 
             $errorMessages = implode(' ', $errors->all());
-            return redirect()->back()->withInput()->with('error', 'Periksa Kembali Data Inputan Anda !!!' . $errorMessages);
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Periksa Kembali Data Inputan Anda !!! ' . $errorMessages);
         }
+
 
         $admin_pendukungs = new AdminPendukung(
             [
@@ -73,7 +85,6 @@ class AdminPendukungController extends Controller
                 'nrk'                       => $request->nrk,
                 'id_pejabat_pengadaan'      => $request->id_pejabat_pengadaan,
                 'id_pptk'                   => $request->id_pptk,
-                'id_user'                   => $request->id_user
             ]
         );
 
@@ -99,7 +110,11 @@ class AdminPendukungController extends Controller
         $pejabat_pengadaans     = PejabatPengadaan::all();
         $users                  = User::where('id_level', '9dba8d34-082f-495e-81a7-393dcb51d073')->get();
         $pptks                  = Pptk::all();
-        return view('master_backend.setting_users.admin_pendukung_ppk.edit', compact('admin_pendukungs', 'pejabat_pengadaans', 'pptks', 'users'), ['title'  => 'Pendung PPK']);
+        return view('master_backend.setting_users.admin_pendukung_ppk.edit', compact('admin_pendukungs', 'pejabat_pengadaans', 'pptks', 'users'), [
+            'title'             => 'Halaman Admin Pendukung PPK',
+            'title2'            => 'Fase',
+            'routePrefix'       => 'admin_pendukungs'
+        ]);
     }
 
     /**
@@ -115,7 +130,6 @@ class AdminPendukungController extends Controller
                 'nrk'                       =>  'required',
                 'id_pejabat_pengadaan'      =>  'required',
                 'id_pptk'                   =>  'required',
-                'id_user'                   =>  'required'
             ],
             [
                 'nama_pendukung_ppk'        =>  'Nama Pendukung Belum terisi data!!',
@@ -123,7 +137,6 @@ class AdminPendukungController extends Controller
                 'nrk'                       =>  'NRK Belum terisi data!!',
                 'id_pejabat_pengadaan'      =>  'Pejabat Pengadaan Belum terisi data!!',
                 'id_pptk'                   =>  'Nama PPTK Belum terisi data!!',
-                'id_user'                   =>  'ID User Belum terisi data!!'
             ]
         );
 

@@ -15,15 +15,18 @@ class FaseController extends Controller
         $fases = Fase::all();
         return view('master_backend.setting_users.fase.index', [
             'fases'     => $fases,
-            'title'     => 'Halaman Fase',
+            'title'         => 'Halaman Fase',
+            'title2'        => 'Fase',
+            'routePrefix'   => 'fases'
         ]);
     }
 
     public function create()
     {
         return view('master_backend.setting_users.fase.create', [
-            'title'     => 'Halaman Fase',
-            'title2'    => 'Fase'
+            'title'         => 'Halaman Fase',
+            'title2'        => 'Fase',
+            'routePrefix'   => 'fases'
         ]);
     }
 
@@ -59,8 +62,10 @@ class FaseController extends Controller
     public function edit(Fase $fase)
     {
         return view('master_backend.setting_users.fase.edit', [
-            'fase'              => $fase,
-            'title'             => 'Halaman Fase',
+            'fases'              => $fase,
+            'title'            => 'Halaman Fase',
+            'title2'            => 'Fase',
+            'routePrefix'       => 'fases'
         ]);
     }
 

@@ -446,6 +446,7 @@ class ValidasiUsulanBarangPptkController extends Controller
             ->distinct()
             ->first(); // ⬅️ ganti get() jadi first()
 
+
         // Siapkan data untuk dikirim ke view
         $data = [
             'no_inv'            => $invo,

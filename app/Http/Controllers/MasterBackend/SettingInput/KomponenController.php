@@ -14,14 +14,22 @@ class KomponenController extends Controller
     public function index(KomponenDataTable $dataTable)
     {
         return $dataTable->render('master_backend.setting_input.komponen.index', [
-            'title' => 'Halaman Komponen'
+            'title'         => 'Halaman Komponen',
+            'title2'        => 'Komponen',
+            'routePrefix'   => 'komponens',
         ]);
     }
 
     public function create()
     {
+        $komponens              = Komponen::all();
         $jenis_kategori_rkbu    = JenisKategoriRkbu::all();
-        return view('master_backend.setting_input.komponen.create', compact('jenis_kategori_rkbu'), ['title' => 'Halaman Komponen']);
+        return view('master_backend.setting_input.komponen.create', compact('jenis_kategori_rkbu'), [
+            'title'         => 'Halaman Komponen',
+            'title2'        => 'Komponen',
+            'routePrefix'   => 'komponens',
+            'komponens'     => $komponens
+        ]);
     }
 
     /**
@@ -96,9 +104,13 @@ class KomponenController extends Controller
      */
     public function edit($id)
     {
-        $komponen = Komponen::with('jenis_kategori_rkbu')->findOrFail($id);
+        $komponens = Komponen::with('jenis_kategori_rkbu')->findOrFail($id);
         $jenis_kategori_rkbu    = JenisKategoriRkbu::all();
-        return view('backend.setting_input.komponens.edit', compact('komponen', 'jenis_kategori_rkbu'));
+        return view('master_backend.setting_input.komponen.edit', compact('komponens', 'jenis_kategori_rkbu'), [
+            'title'         => 'Halaman Komponen',
+            'title2'        => 'Komponen',
+            'routePrefix'   => 'komponens',
+        ]);
     }
 
     /**

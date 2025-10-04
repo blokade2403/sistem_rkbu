@@ -13,15 +13,17 @@ class JabatanController extends Controller
     {
         $jabatans = Jabatan::all();
         return view('master_backend.setting_users.jabatan.index', [
-            'jabatans'  => $jabatans,
-            'title'     => 'Halaman Jabatan',
-            'title2'    => 'Jabatan'
+            'jabatans'      => $jabatans,
+            'title'         => 'Halaman Jabatan',
+            'title2'        => 'Jabatan',
+            'routePrefix'   => 'jabatans'
         ]);
     }
 
     public function create()
     {
-        return view('master_backend.setting_users.jabatan.create', ['title' => 'Halaman Jabatan',  'title2'    => 'Jabatan']);
+        $jabatans   = Jabatan::all();
+        return view('master_backend.setting_users.jabatan.create', ['title' => 'Halaman Jabatan',  'title2'    => 'Jabatan', 'jabatans' => $jabatans, 'routePrefix' => 'jabatans']);
     }
 
 
@@ -56,8 +58,10 @@ class JabatanController extends Controller
     public function edit(Jabatan $jabatan)
     {
         return view('master_backend.setting_users.jabatan.edit', [
-            'jabatan' => $jabatan,
-            'title'   => 'Jabatan'
+            'jabatans'      => $jabatan,
+            'title'         => 'Halaman Jabatan',
+            'title2'        => 'Jabatan',
+            'routePrefix'   => 'jabatans'
         ]);
     }
 

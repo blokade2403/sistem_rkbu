@@ -581,6 +581,7 @@ class MasterSpjController extends Controller
             //->where('spj_details.id_usulan_barang', $invoice->id_usulan_barang) // Filter by id_usulan_barang
             ->select(
                 'spj_details.*',
+                'usulan_barangs.no_usulan_barang',
                 'rkbus.*',
                 'programs.*',
                 'sub_kategori_rkbus.nama_sub_kategori_rkbu',
@@ -644,8 +645,9 @@ class MasterSpjController extends Controller
             'title'                           => ''
         ];
 
+
         // dd($data);
-        return view('master_spj.edit', $data, compact('master_spj'), ['title' => '']);
+        return view('master_spj.edit', $data, compact('master_spj'), ['title' => '', 'routePrefix' => 'master_spjs']);
     }
 
     public function editkomponen($id)

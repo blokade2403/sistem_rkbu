@@ -56,14 +56,15 @@
                                                             class=""></a>
                                                         <a href="#" data-rating-value="Awesome"
                                                             data-rating-text="Awesome" class=""></a>
-                                                        <div class="br-current-rating f-12"><label
-                                                                class="label label-inverse">{{ $key->status_usulan_barang }}
-                                                            </label>
+                                                        <div class="br-current-rating f-12">
+                                                            <span
+                                                                class="badge badge-soft-info">{{ $key->status_usulan_barang }}
+                                                            </span>
                                                             @if ($key->status_validasi_direktur == 'Revisi')
-                                                                <span class="f-12"><label
-                                                                        class="label label-warning">{{ $key->status_validasi_direktur }}
-                                                                        :
-                                                                        {{ $key->keterangan_direktur }}</label></span>
+                                                                <span
+                                                                    class="badge badge-soft-danger fs-110">{{ $key->status_validasi_direktur }}
+                                                                    :
+                                                                    {{ $key->keterangan_direktur }}</span>
                                                             @endif
                                                         </div>
                                                     </div>

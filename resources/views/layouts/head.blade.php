@@ -20,12 +20,12 @@
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bar-rating/1.2.2/themes/bars-movie.min.css">
 
-    {{-- <link rel="stylesheet" type="text/css"
-        href="{{ asset('libraries\bower_components\jquery-bar-rating\css\bars-movie.css') }}"> --}}
-    <!-- Style.css -->
+
     <!-- Style.css -->
     {{-- <link rel="stylesheet" type="text/css" href="{{ asset('libraries\assets\css\style.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('libraries\assets\css\jquery.mCustomScrollbar.css') }}"> --}}
+    <link rel="stylesheet" type="text/css" href="{{ asset('libraries\assets\css\jquery.mCustomScrollbar.css') }}">
+    <link rel="stylesheet" type="text/css"
+        href="{{ asset('libraries\bower_components\jquery-bar-rating\css\bars-movie.css') }}"> --}}
 
     <!-- jsvectormap css -->
     <link href="{{ asset('assets/libs/jsvectormap/css/jsvectormap.min.css') }}" rel="stylesheet" type="text/css" />
@@ -35,9 +35,7 @@
 
     <!-- Layout config Js -->
     <script src="{{ asset('assets/js/layout.js') }}"></script>
-
     <!-- Bootstrap Css -->
-
     <link href="{{ asset('assets/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css" />
     <!-- Icons Css -->
     <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />

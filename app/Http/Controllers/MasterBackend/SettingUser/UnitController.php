@@ -12,12 +12,21 @@ class UnitController extends Controller
     public function index()
     {
         $units  = Unit::all();
-        return view('master_backend.setting_users.unit.index', ['units' => $units, 'title'   => "Unit"]);
+        return view('master_backend.setting_users.unit.index', [
+            'units'         => $units,
+            'title'         => 'Halaman Unit',
+            'title2'        => 'Unit',
+            'routePrefix'   => 'units'
+        ]);
     }
 
     public function create()
     {
-        return view('master_backend.setting_users.unit.create', ['title'    => 'Unit']);
+        return view('master_backend.setting_users.unit.create', [
+            'title'         => 'Halaman Unit',
+            'title2'        => 'Unit',
+            'routePrefix'   => 'units'
+        ]);
     }
 
     public function store(Request $request)
@@ -51,7 +60,12 @@ class UnitController extends Controller
 
     public function edit(Unit $unit)
     {
-        return view('master_backend.setting_users.unit.edit', ['unit' => $unit, 'title'   => "Unit"]);
+        return view('master_backend.setting_users.unit.edit', [
+            'units'         => $unit,
+            'title'         => 'Halaman Unit',
+            'title2'        => 'Unit',
+            'routePrefix'   => 'units'
+        ]);
     }
 
     public function update(Request $request, Unit $unit)

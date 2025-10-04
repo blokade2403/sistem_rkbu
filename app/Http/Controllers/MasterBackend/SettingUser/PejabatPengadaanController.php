@@ -21,7 +21,9 @@ class PejabatPengadaanController extends Controller
             [
                 'pejabat_pengadaans'        => $pejabat_pengadaans,
                 'tahun_anggaran'            => $tahun_anggaran,
-                'title'                     => 'Pejabat Pengadaan'
+                'title'                     => 'Halaman Pejabat Pengadaan',
+                'title2'                    => 'Pejabat Pengadaan',
+                'routePrefix'               => 'pejabat_pengadaans'
             ]
         );
     }
@@ -33,7 +35,9 @@ class PejabatPengadaanController extends Controller
         return view(
             'master_backend.setting_users.pejabat_pengadaan.create',
             [
-                'title'             => 'Pejabat Pengadaan',
+                'title'             => 'Halaman Pejabat Pengadaan',
+                'title2'            => 'Pejabat Pengadaan',
+                'routePrefix'       => 'pejabat_pengadaans',
                 'tahun_anggaran'    => $tahun_anggaran,
                 'ppk_keuangan'      => $ppk_keuangan,
             ]
@@ -47,8 +51,8 @@ class PejabatPengadaanController extends Controller
             [
                 'nama_ppk'                 => 'required',
                 'nip_ppk'                  => 'required',
-                'nama_ppbj'                 => 'required',
-                'nip_ppbj'                  => 'required',
+                'nama_ppbj'                => 'required',
+                'nip_ppbj'                 => 'required',
                 'nama_pengurus_barang'     => 'required',
                 'nama_direktur'            => 'required',
                 'nama_bendahara'           => 'required',
@@ -87,8 +91,8 @@ class PejabatPengadaanController extends Controller
             [
                 'nama_ppk'                 => $request->nama_ppk,
                 'nip_ppk'                  => $request->nip_ppk,
-                'nama_pbj'                 => $request->nama_pbj,
-                'nip_pbj'                  => $request->nip_pbj,
+                'nama_ppbj'                 => $request->nama_ppbj,
+                'nip_ppbj'                  => $request->nip_ppbj,
                 'nama_pengurus_barang'     => $request->nama_pengurus_barang,
                 'nama_direktur'            => $request->nama_direktur,
                 'nama_bendahara'           => $request->nama_bendahara,
@@ -117,10 +121,12 @@ class PejabatPengadaanController extends Controller
         return view(
             'master_backend.setting_users.pejabat_pengadaan.edit',
             [
-                'title'             => 'Pejabat Pengadaan',
-                'tahun_anggaran'    => $tahun_anggaran,
-                'ppk_keuangan'      => $ppk_keuangan,
-                'pejabat_pengadaan' => $PejabatPengadaan,
+                'title'                     => 'Halaman Pejabat Pengadaan',
+                'title2'                    => 'Pejabat Pengadaan',
+                'routePrefix'               => 'pejabat_pengadaans',
+                'tahun_anggaran'            => $tahun_anggaran,
+                'ppk_keuangan'              => $ppk_keuangan,
+                'pejabat_pengadaans'        => $PejabatPengadaan,
             ]
         );
     }

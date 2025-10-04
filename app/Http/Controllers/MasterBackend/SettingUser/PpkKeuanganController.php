@@ -13,12 +13,21 @@ class PpkKeuanganController extends Controller
     public function index()
     {
         $ppk_keuangans = PpkKeuangan::all();
-        return view('master_backend.setting_users.ppk_keuangan.index', ['ppk_keuangans' => $ppk_keuangans, 'title' => 'PPK Keuangan']);
+        return view('master_backend.setting_users.ppk_keuangan.index', [
+            'ppk_keuangans'     => $ppk_keuangans,
+            'title'             => 'Halaman PPK Keuangan',
+            'title2'            => 'PPK Keuangan',
+            'routePrefix'       => 'ppk_keuangans'
+        ]);
     }
 
     public function create()
     {
-        return view('master_backend.setting_users.ppk_keuangan.create',  ['title' => 'PPK Keuangan']);
+        return view('master_backend.setting_users.ppk_keuangan.create',  [
+            'title'             => 'Halaman PPK Keuangan',
+            'title2'            => 'PPK Keuangan',
+            'routePrefix'       => 'ppk_keuangans'
+        ]);
     }
 
     public function store(Request $request)
@@ -62,7 +71,12 @@ class PpkKeuanganController extends Controller
 
     public function edit(PpkKeuangan $ppkKeuangan)
     {
-        return view('master_backend.setting_users.ppk_keuangan.edit',  ['ppk_keuangans' => $ppkKeuangan, 'title' => 'PPK Keuangan']);
+        return view('master_backend.setting_users.ppk_keuangan.edit',  [
+            'ppk_keuangans' => $ppkKeuangan,
+            'title'             => 'Halaman PPK Keuangan',
+            'title2'            => 'PPK Keuangan',
+            'routePrefix'       => 'ppk_keuangans'
+        ]);
     }
 
     public function update(Request $request, PpkKeuangan $ppkKeuangan)
@@ -92,8 +106,12 @@ class PpkKeuanganController extends Controller
         return redirect()->route('ppk_keuangans.index')->with('success', 'Data Berhasil Di Ubah');
     }
 
-    public function destroy(PpkKeuangan $ppkKeuangan)
+    public function destroy($id)
     {
-        //
+
+        $fase = PpkKeuangan::findOrFail($id);
+        $fase->delete();
+
+        return redirect()->route('ppk_keuangans.index')->with('success', 'Data fase Berhasil dihapus.');
     }
 }

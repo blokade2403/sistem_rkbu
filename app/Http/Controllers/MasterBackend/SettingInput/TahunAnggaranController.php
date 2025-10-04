@@ -16,7 +16,11 @@ class TahunAnggaranController extends Controller
     public function index()
     {
         $tahun_anggarans = TahunAnggaran::all();
-        return view('master_backend.setting_input.tahun_anggaran.index', compact('tahun_anggarans'), ['title'   => 'Tahun Anggaran']);
+        return view('master_backend.setting_input.tahun_anggaran.index', compact('tahun_anggarans'), [
+            'title'       => 'Halaman Tahun Anggaran',
+            'title2'      => 'Tahun Anggaran',
+            'routePrefix' => 'tahun_anggarans'
+        ]);
     }
 
     /**
@@ -25,7 +29,12 @@ class TahunAnggaranController extends Controller
     public function create()
     {
         $fase   = Fase::all();
-        return view('master_backend.setting_input.tahun_anggaran.create', ['title'   => 'Tahun Anggaran', 'fase'    => $fase]);
+        return view('master_backend.setting_input.tahun_anggaran.create', [
+            'title'         => 'Halaman Tahun Anggaran',
+            'title2'        => 'Tahun Anggaran',
+            'routePrefix'   => 'tahun_anggarans',
+            'fase'          => $fase
+        ]);
     }
 
     /**
@@ -68,7 +77,12 @@ class TahunAnggaranController extends Controller
     public function edit(TahunAnggaran $TahunAnggaran)
     {
         $fase   = Fase::all();
-        return view('master_backend.setting_input.tahun_anggaran.edit', compact('TahunAnggaran'), ['title'   => 'Tahun Anggaran', 'fase'    => $fase]);
+        return view('master_backend.setting_input.tahun_anggaran.edit', compact('TahunAnggaran'), [
+            'title'         => 'Halaman Tahun Anggaran',
+            'title2'        => 'Tahun Anggaran',
+            'routePrefix'   => 'tahun_anggarans',
+            'fase'          => $fase,
+        ]);
     }
 
     /**

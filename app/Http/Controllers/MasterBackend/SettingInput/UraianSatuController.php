@@ -12,12 +12,20 @@ class UraianSatuController extends Controller
     public function index()
     {
         $uraian_satus  = UraianSatu::all();
-        return view('master_backend.setting_input.uraian_satu.index', compact('uraian_satus'), ['title' => 'Halaman Uraian Satu']);
+        return view('master_backend.setting_input.uraian_satu.index', compact('uraian_satus'), [
+            'title'         => 'Halaman Uraian Satu',
+            'title2'        => 'Uraian Satu',
+            'routePrefix'   => 'uraian_satus',
+        ]);
     }
 
     public function create()
     {
-        return view('master_backend.setting_input.uraian_satu.create', ['title' => 'Halaman Uraian Satu']);
+        return view('master_backend.setting_input.uraian_satu.create', [
+            'title'         => 'Halaman Uraian Satu',
+            'title2'        => 'Uraian Satu',
+            'routePrefix'   => 'uraian_satus',
+        ]);
     }
 
     public function store(Request $request)
@@ -57,7 +65,11 @@ class UraianSatuController extends Controller
     public function edit(UraianSatu $uraianSatu)
     {
         // $uraianSatu = UraianSatu::all();
-        return view('master_backend.setting_input.uraian_satu.edit', compact('uraianSatu'), ['title' => 'Halaman Uraian Satu']);
+        return view('master_backend.setting_input.uraian_satu.edit', compact('uraianSatu'), [
+            'title'         => 'Halaman Uraian Satu',
+            'title2'        => 'Uraian Satu',
+            'routePrefix'   => 'uraian_satus',
+        ]);
     }
 
     public function update(Request $request, UraianSatu $uraianSatu)

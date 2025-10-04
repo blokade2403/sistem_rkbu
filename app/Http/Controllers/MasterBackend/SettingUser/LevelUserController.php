@@ -14,13 +14,19 @@ class LevelUserController extends Controller
         $level_users = LevelUser::all();
         return view('master_backend.setting_users.level_user.index', [
             'level_users' => $level_users,
-            'title'    => 'Level User'
+            'title'         => 'Halaman Level User',
+            'title2'        => 'Level User',
+            'routePrefix'   => 'level_users'
         ]);
     }
 
     public function create()
     {
-        return view('master_backend.setting_users.level_user.create', ['title' => 'level_user']);
+        return view('master_backend.setting_users.level_user.create', [
+            'title'         => 'Halaman Level User',
+            'title2'        => 'Level User',
+            'routePrefix'   => 'level_users'
+        ]);
     }
 
 
@@ -55,8 +61,10 @@ class LevelUserController extends Controller
     public function edit(LevelUser $level_user)
     {
         return view('master_backend.setting_users.level_user.edit', [
-            'level_user' => $level_user,
-            'title'    => 'Level User'
+            'level_users'   => $level_user,
+            'title'         => 'Halaman Level User',
+            'title2'        => 'Level User',
+            'routePrefix'   => 'level_users'
         ]);
     }
 

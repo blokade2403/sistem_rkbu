@@ -14,13 +14,18 @@ class FungsionalController extends Controller
         $fungsionals = Fungsional::all();
         return view('master_backend.setting_users.fungsional.index', [
             'fungsionals'   => $fungsionals,
-            'title'         => 'Fungsional Jabatan'
+            'title'         => 'Fungsional Jabatan',
+            'routePrefix'   => 'fungsionals',
         ]);
     }
 
     public function create()
     {
-        return view('master_backend.setting_users.fungsional.create', ['title' => 'Fungsional Jabatan']);
+        return view('master_backend.setting_users.fungsional.create', [
+            'title'         => 'Halaman Fungsional',
+            'title2'        => 'Fungsional',
+            'routePrefix'   => 'fungsionals'
+        ]);
     }
 
 
@@ -55,8 +60,10 @@ class FungsionalController extends Controller
     public function edit(Fungsional $fungsional)
     {
         return view('master_backend.setting_users.fungsional.edit', [
-            'fungsional'    => $fungsional,
-            'title'         => 'Fungsional Jabatan'
+            'fungsionals'    => $fungsional,
+            'title'         => 'Halaman Fungsional',
+            'title2'        => 'Fungsional',
+            'routePrefix'   => 'fungsionals'
         ]);
     }
 

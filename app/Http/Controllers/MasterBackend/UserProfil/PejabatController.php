@@ -14,14 +14,22 @@ class PejabatController extends Controller
     public function index()
     {
         $pejabats = Pejabat::with('jabatan')->get();
-        return view('master_backend.user_profil.pejabat.index', compact('pejabats'), ['title' => 'Pejabat']);
+        return view('master_backend.user_profil.pejabat.index', compact('pejabats'), [
+            'title'             => 'Halaman Pejabat',
+            'title2'            => 'Pejabat',
+            'routePrefix'       => 'pejabats'
+        ]);
     }
 
 
     public function create()
     {
         $jabatans = Jabatan::all();
-        return view('master_backend.user_profil.pejabat.create', compact('jabatans'), ['title' => 'Pejabat']);
+        return view('master_backend.user_profil.pejabat.create', compact('jabatans'), [
+            'title'             => 'Halaman Pejabat',
+            'title2'            => 'Pejabat',
+            'routePrefix'       => 'pejabats'
+        ]);
     }
 
 
@@ -82,9 +90,13 @@ class PejabatController extends Controller
     public function edit($id)
     {
         $pejabat = Pejabat::with('jabatan')->findOrFail($id);
-        $jabatans = Jabatan::all(); // Mengambil semua data Jabatan
-        $pejabats = Pejabat::with('jabatan')->get(); // Mengambil semua data Pejabat dengan relasi Jabatan
-        return view('master_backend.user_profil.pejabat.edit', compact('pejabat', 'jabatans'), ['title' => 'Pejabat']);
+        $jabatans = Jabatan::all();
+
+        return view('master_backend.user_profil.pejabat.edit', compact('pejabat', 'jabatans'), [
+            'title'       => 'Halaman Pejabat',
+            'title2'      => 'Pejabat',
+            'routePrefix' => 'pejabats'
+        ]);
     }
 
 

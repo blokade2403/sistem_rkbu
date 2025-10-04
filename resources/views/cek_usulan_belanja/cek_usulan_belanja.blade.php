@@ -107,18 +107,17 @@
                         </ul>
                         <div class="card-block">
                             <div class="card-body">
-                                <div class="table-responsive table-card mb-1">
-                                    <table id="responsive"
+                                <div class="table-responsive">
+                                    <table id="responsive-reorder"
                                         class="table table-hover table-centered align-middle table-nowrap mb-0">
                                         <thead class="text-muted table-light">
                                             <tr class="text-uppercase">
                                                 <th>No</th>
                                                 <th>No Inv</th>
-                                                <th>Sub Kategori</th>
                                                 <th>Pengusul</th>
-                                                <th>Status Usulan</th>
                                                 <th>Status Validasi</th>
                                                 <th>Status Proses</th>
+                                                <th>Status Usulan</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -131,36 +130,15 @@
                                                     <td>
                                                         <span
                                                             class="fs-14 text-primary">#{{ $item->no_usulan_barang }}</span>
-                                                    </td>
-                                                    <td>
-                                                        <span class="fs-12">
-                                                            {{ $item->sub_kategori_rkbu->kode_sub_kategori_rkbu }}.
-                                                            {{ $item->sub_kategori_rkbu->nama_sub_kategori_rkbu }}</span>
+                                                        <p>
+                                                            <span class="fs-12">
+                                                                {{ $item->sub_kategori_rkbu->kode_sub_kategori_rkbu }}.
+                                                                {{ $item->sub_kategori_rkbu->nama_sub_kategori_rkbu }}</span>
+                                                        </p>
                                                     </td>
                                                     <td>
                                                         <span class="fs-12">
                                                             {{ $item->nama_pengusul_barang }}</span>
-                                                    </td>
-                                                    <td>
-                                                        @if ($item->status_usulan_barang == 'Selesai')
-                                                            <div class="br-wrapper br-theme-bars-movie">
-                                                                <span class="f-12">Status Usulan</span>
-                                                                <div class="br-widget">
-                                                                    <a href="#" data-rating-value="Bad"
-                                                                        data-rating-text="Bad" class="br-selected"></a>
-                                                                    <a href="#" data-rating-value="Mediocre"
-                                                                        data-rating-text="Mediocre"
-                                                                        class="br-selected"></a>
-                                                                    <a href="#" data-rating-value="Good"
-                                                                        data-rating-text="Good" class="br-selected"></a>
-                                                                </div>
-                                                                <div class="br-current-rating f-12">
-                                                                    <span class="badge badge-label bg-success"><i
-                                                                            class="mdi mdi-circle-medium"></i>
-                                                                        {{ $item->status_usulan_barang }}</span>
-                                                                </div>
-                                                            </div>
-                                                        @endif
                                                     </td>
                                                     <td>
                                                         @include('cek_usulan_belanja.status_cek_usulan_belanja')
@@ -192,6 +170,27 @@
                                                                 </a>
                                                             </li>
                                                         </ul>
+                                                    </td>
+                                                    <td>
+                                                        @if ($item->status_usulan_barang == 'Selesai')
+                                                            <div class="br-wrapper br-theme-bars-movie">
+                                                                <span class="f-12">Status Usulan</span>
+                                                                <div class="br-widget">
+                                                                    <a href="#" data-rating-value="Bad"
+                                                                        data-rating-text="Bad" class="br-selected"></a>
+                                                                    <a href="#" data-rating-value="Mediocre"
+                                                                        data-rating-text="Mediocre"
+                                                                        class="br-selected"></a>
+                                                                    <a href="#" data-rating-value="Good"
+                                                                        data-rating-text="Good" class="br-selected"></a>
+                                                                </div>
+                                                                <div class="br-current-rating f-12">
+                                                                    <span class="badge badge-label bg-success"><i
+                                                                            class="mdi mdi-circle-medium"></i>
+                                                                        {{ $item->status_usulan_barang }}</span>
+                                                                </div>
+                                                            </div>
+                                                        @endif
                                                     </td>
                                                 </tr>
                                             @endforeach

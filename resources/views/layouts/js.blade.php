@@ -421,30 +421,6 @@
     document.write(new Date().getFullYear());
 </script> --}}
 
-
-<script>
-    document.getElementById('
-    ').addEventListener('
-    submit ', function(e) {
-    e.preventDefault(); // Mencegah submit form default
-
-    Swal.fire({
-        title: 'Apakah Anda yakin?',
-        text: 'Anda akan menyimpan Data ini.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Ya, simpan!',
-        cancelButtonText: 'Batal'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            e.target.submit(); // Jika pengguna mengklik "Ya, simpan!", kirimkan form
-        }
-    });
-    });
-</script>
-
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -530,47 +506,125 @@
     });
 </script>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const elements = document.querySelectorAll("[data-choices]");
+        elements.forEach(function(el) {
+            new Choices(el, {
+                searchEnabled: true, // aktifkan fitur search
+                itemSelectText: '', // hilangkan teks select
+                shouldSort: false // biar urutannya sesuai option awal
+            });
+        });
+    });
+</script>
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $('#example-movie').barrating({
+                theme: 'bars-movie',
+                showSelectedRating: true // tampilkan nilai yang dipilih
+            });
+        });
+    </script>
+@endpush
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const form = document.getElementById('confirmSubmitForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Apakah Anda yakin?',
+                    text: "Anda akan menyimpan Data ini!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Simpan!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        }
+    });
+</script>
 
 
 <script>
-    document.querySelector('confirmUpdateForm').addEventListener('submit', function(e) {
-        e.preventDefault(); // Mencegah submit form default
+    document.addEventListener("DOMContentLoaded", function() {
+        const form = document.getElementById('confirmUpdateForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Apakah Anda yakin?',
+                    text: "Anda akan menyimpan perubahan ini!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Simpan!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        }
+    });
+</script>
 
-        Swal.fire({
-            title: 'Apakah Anda yakin?',
-            text: 'Anda akan menyimpan perubahan ini.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Ya, simpan!',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                e.target.submit(); // Jika pengguna mengklik "Ya, simpan!", kirimkan form
-            }
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll('.delete-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // cegah submit default
+
+                Swal.fire({
+                    title: 'Apakah Anda yakin?',
+                    text: 'Data ini akan dihapus secara permanen!!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, hapus!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit(); // submit form kalau setuju
+                    }
+                });
+            });
         });
     });
 </script>
 
 <script>
-    document.querySelectorAll('.delete-form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault(); // Mencegah submit form default
+    document.addEventListener("DOMContentLoaded", function() {
+        const editButtons = document.querySelectorAll(".edit-item-btn");
+        const form = document.getElementById("confirmUpdateForm");
 
-            Swal.fire({
-                title: 'Apakah Anda yakin?',
-                text: 'Data ini akan dihapus secara permanen!!',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, hapus!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.submit(); // Kirimkan form jika pengguna mengklik "Ya, hapus!"
-                }
+        editButtons.forEach(btn => {
+            btn.addEventListener("click", function() {
+                let id = this.dataset.id;
+                let no = this.dataset.no;
+                let kategori = this.dataset.kategori;
+                let pengusul = this.dataset.pengusul;
+                let status = this.dataset.status;
+                // let total = this.dataset.total;
+                let route = this.dataset.route;
+
+                // isi form
+                form.action = route;
+                document.getElementById("id-field").value = id;
+                document.getElementById("orderId").value = no;
+                document.getElementById("kategori-field").value = kategori;
+                document.getElementById("pengusul-field").value = pengusul;
+                document.getElementById("status-field").value = status;
+                // document.getElementById("total-field").value = total;
             });
         });
     });

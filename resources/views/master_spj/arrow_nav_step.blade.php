@@ -1,0 +1,119 @@
+<div class="col-xl-12">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title mb-0">Arrow Nav Steps</h4>
+        </div><!-- end card header -->
+        <div class="card-body form-steps">
+            <form action="#">
+                <div class="text-center pt-3 pb-4 mb-1">
+                    <img src="assets/images/logo-dark.png" alt="" height="17">
+                </div>
+                <div class="step-arrow-nav mb-4">
+
+                    <ul class="nav nav-pills custom-nav nav-justified" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link done" id="steparrow-gen-info-tab" data-bs-toggle="pill"
+                                data-bs-target="#steparrow-gen-info" type="button" role="tab"
+                                aria-controls="steparrow-gen-info" aria-selected="true">General</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="steparrow-description-info-tab" data-bs-toggle="pill"
+                                data-bs-target="#steparrow-description-info" type="button" role="tab"
+                                aria-controls="steparrow-description-info" aria-selected="false">Description</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pills-experience-tab" data-bs-toggle="pill"
+                                data-bs-target="#pills-experience" type="button" role="tab"
+                                aria-controls="pills-experience" aria-selected="false">Finish</button>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="tab-content">
+                    <div class="tab-pane fade" id="steparrow-gen-info" role="tabpanel"
+                        aria-labelledby="steparrow-gen-info-tab">
+                        <div>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="steparrow-gen-info-email-input">Email</label>
+                                        <input type="text" class="form-control" id="steparrow-gen-info-email-input"
+                                            placeholder="Enter Email">
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="steparrow-gen-info-username-input">User
+                                            Name</label>
+                                        <input type="text" class="form-control"
+                                            id="steparrow-gen-info-username-input" placeholder="Enter User Name">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="steparrow-gen-info-password-input">Password</label>
+                                <input type="password" class="form-control" id="steparrow-gen-info-password-input"
+                                    placeholder="Enter Password">
+                            </div>
+                            <div>
+                                <label class="form-label" for="steparrow-gen-info-confirm-password-input">Confirm
+                                    Password</label>
+                                <input type="password" class="form-control"
+                                    id="steparrow-gen-info-confirm-password-input" placeholder="Enter Confirm Password">
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start gap-3 mt-4">
+                            <button type="button" class="btn btn-success btn-label right ms-auto nexttab nexttab"
+                                data-nexttab="steparrow-description-info-tab"><i
+                                    class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>Go
+                                to more info</button>
+                        </div>
+                    </div>
+                    <!-- end tab pane -->
+
+                    <div class="tab-pane fade show active" id="steparrow-description-info" role="tabpanel"
+                        aria-labelledby="steparrow-description-info-tab">
+                        <div>
+                            <div class="mb-3">
+                                <label for="formFile" class="form-label">Upload
+                                    Image</label>
+                                <input class="form-control" type="file" id="formFile">
+                            </div>
+                            <div>
+                                <label class="form-label" for="des-info-description-input">Description</label>
+                                <textarea class="form-control" placeholder="Enter Description" id="des-info-description-input" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start gap-3 mt-4">
+                            <button type="button" class="btn btn-light btn-label previestab"
+                                data-previous="steparrow-gen-info-tab"><i
+                                    class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>
+                                Back to General</button>
+                            <button type="button" class="btn btn-success btn-label right ms-auto nexttab nexttab"
+                                data-nexttab="pills-experience-tab"><i
+                                    class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>Submit</button>
+                        </div>
+                    </div>
+                    <!-- end tab pane -->
+
+                    <div class="tab-pane fade" id="pills-experience" role="tabpanel">
+                        <div class="text-center">
+
+                            <div class="avatar-md mt-5 mb-4 mx-auto">
+                                <div class="avatar-title bg-light text-success display-4 rounded-circle">
+                                    <i class="ri-checkbox-circle-fill"></i>
+                                </div>
+                            </div>
+                            <h5>Well Done !</h5>
+                            <p class="text-muted">You have Successfully Signed Up</p>
+                        </div>
+                    </div>
+                    <!-- end tab pane -->
+                </div>
+                <!-- end tab content -->
+            </form>
+        </div>
+        <!-- end card body -->
+    </div>
+    <!-- end card -->
+</div>

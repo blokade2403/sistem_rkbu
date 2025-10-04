@@ -78,10 +78,6 @@ class RkbuModalAlkesAdminDataTable extends DataTable
             ->addColumn('detail_anggaran', function ($row) {
                 return '
                      <ul class="list list-unstyled">
-                        <li>
-                            <span class="f-12">&nbsp;' . ($row->subKategoriRkbu->kode_sub_kategori_rkbu) . '.
-                                ' . ($row->subKategoriRkbu->nama_sub_kategori_rkbu) . '</span>
-                        </li>
                         <li><span class="f-12">Sisa Volume:&nbsp;' . ($row->sisa_vol_rkbu) . '
                                 ' . ($row->satuan_1) . '/' . ($row->satuan_2) . '
                                 </br><span class="f-12"> Sisa Anggaran:&nbsp;Rp.

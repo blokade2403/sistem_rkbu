@@ -14,7 +14,11 @@ class KspController extends Controller
     public function index()
     {
         $ksps = Ksp::with(['fungsional', 'pejabat'])->get();
-        return view('master_backend.user_profil.ksp.index', compact('ksps'), ['title'   => 'Halaman KSP']);
+        return view('master_backend.user_profil.ksp.index', compact('ksps'), [
+            'title'       => 'Halaman KSP',
+            'title2'      => 'KSP',
+            'routePrefix' => 'ksps'
+        ]);
     }
 
     public function create()
@@ -22,7 +26,11 @@ class KspController extends Controller
 
         $pejabats       = Pejabat::where('id_jabatan', '!=', 1)->get();
         $fungsionals    = Fungsional::all();
-        return view('master_backend.user_profil.ksp.create', compact('pejabats', 'fungsionals'), ['title'   => 'Halaman KSP']);
+        return view('master_backend.user_profil.ksp.create', compact('pejabats', 'fungsionals'), [
+            'title'       => 'Halaman KSP',
+            'title2'      => 'KSP',
+            'routePrefix' => 'ksps'
+        ]);
     }
 
 
@@ -90,7 +98,11 @@ class KspController extends Controller
         $ksps           = Ksp::with('pejabat')->findOrFail($id);
         $fungsionals    = Fungsional::all(); // Mengambil semua data Jabatan
         $pejabats       = Pejabat::all(); // Mengambil semua data Jabatan
-        return view('master_backend.user_profil.ksp.edit', compact('ksps', 'fungsionals', 'pejabats'), ['title'   => 'Halaman KSP']);
+        return view('master_backend.user_profil.ksp.edit', compact('ksps', 'fungsionals', 'pejabats'), [
+            'title'       => 'Halaman KSP',
+            'title2'      => 'KSP',
+            'routePrefix' => 'ksps'
+        ]);
     }
 
     public function update(Request $request, Ksp $ksp)

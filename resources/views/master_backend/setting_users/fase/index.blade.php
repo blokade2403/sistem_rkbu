@@ -1,85 +1,49 @@
-<x-layouts.main class="main">
-    <x-slot:title>{{ $title }}</x-slot:title>
-    <div class="pcoded-inner-content">
-        <!-- Main-body start -->
-        <div class="main-body">
-            <div class="page-wrapper">
-                <!-- Page-header start -->
-                <x-partials.breadcrumb>
-                </x-partials.breadcrumb>
-                <!-- Page-header end -->
-                <!-- Page-body start -->
-                <div class="page-body">
-                    <!-- Basic row reorder table start -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>Form Input</h5>
-                            <span></span>
-                            <div class="card-block">
-                                <a href="{{ route('fases.create') }}" class="btn btn-mat btn-primary"><i
-                                        class="icofont icofont-plus-square"></i>Tambah Data</a>
-                                <button class="btn btn-mat btn-warning"><i
-                                        class="icofont icofont-check-circled"></i>Success Button</button>
-                                <button class="btn btn-mat btn-info"><i class="icofont icofont-info-square"></i>Info
-                                    Button</button>
-                            </div>
-                            <div class="card-header-right">
-                                <ul class="list-unstyled card-option">
-                                    <li><i class="feather icon-maximize full-card"></i></li>
-                                    <li><i class="feather icon-minus minimize-card"></i></li>
-                                </ul>
-                            </div>
+@extends('layouts.main')
+@section('content')
+    @include('partials.add_buttons_backend', ['routePrefix' => $routePrefix])
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card">
+                @include('partials.animate_progress')
+                <div class="card-header align-items-center d-flex">
+                    <h4 class="card-title mb-0 flex-grow-1">{{ $title }}</h4>
+                </div><!-- end card header -->
+                <div class="card-block">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="example" class="table align-middle table-nowrap mb-0">
+                                <thead class="text-muted table-light">
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Name Fase</th>
+                                        <th>Create At</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php
+                                        $no = 1;
+                                    @endphp
+                                    @foreach ($fases as $item)
+                                        <tr>
+                                            <td>{{ $no++ }}</td>
+                                            <td>
+                                                <span class="fs-16 text-primary">#&nbsp;{{ $item->nama_fase }}</span>
+                                                <p class="fs-12">ID:{{ $item->id_fase }}</p>
+                                            </td>
+                                            <td>{{ $item->created_at }}</td>
+                                            <td>
+                                                <x-partials.action-buttons :edit-url="route('fases.edit', $item->id_fase)" :delete-url="route('fases.destroy', $item->id_fase)" />
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="card-block">
-                            <div class="dt-responsive table-responsive">
-                                <table id="basic-row-reorder" class="table table-striped table-bordered nowrap">
 
-                                    <thead>
-                                        <tr>
-                                            <th>No</th>
-                                            <th>Name Fase</th>
-                                            <th>Create At</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php
-                                            $no = 1;
-                                        @endphp
-                                        @foreach ($fases as $item)
-                                            <tr>
-                                                <td>{{ $no++ }}</td>
-                                                <td>
-                                                    <ul class="list list-unstyled">
-                                                        <li>
-                                                            <span class="f-16">#&nbsp;{{ $item->nama_fase }}</span>
-                                                        </li>
-                                                        <li><span class="f-12">ID:{{ $item->id_fase }}</span>
-                                                        </li>
-                                                    </ul>
-                                                </td>
-                                                <td>{{ $item->created_at }}</td>
-                                                <td>
-                                                    <x-partials.action-buttons :edit-url="route('fases.edit', $item->id_fase)" :delete-url="route('fases.destroy', $item->id_fase)" />
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <th>No</th>
-                                            <th>Name Fase</th>
-                                            <th>Create At</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-</x-layouts.main>
+            </div> <!-- .card-->
+        </div> <!-- .col-->
+    </div> <!-- end row-->
+@endsection

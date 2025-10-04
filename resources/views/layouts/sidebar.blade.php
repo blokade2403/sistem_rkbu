@@ -53,149 +53,94 @@
                           </ul>
                       </div>
                   </li> <!-- end Dashboard Menu -->
-                  <li class="nav-item">
-                      <a class="nav-link menu-link" href="#sidebarApps" data-bs-toggle="collapse" role="button"
-                          aria-expanded="false" aria-controls="sidebarApps">
-                          <i class="ri-apps-2-line"></i> <span data-key="t-apps">Apps</span>
-                      </a>
-                      <div class="collapse menu-dropdown" id="sidebarApps">
-                          <ul class="nav nav-sm flex-column">
-                              <li class="nav-item">
-                                  <a href="#sidebarEcommerce" class="nav-link" data-bs-toggle="collapse" role="button"
-                                      aria-expanded="false" aria-controls="sidebarEcommerce" data-key="t-ecommerce">
-                                      Ecommerce
-                                  </a>
-                                  <div class="collapse menu-dropdown" id="sidebarEcommerce">
-                                      <ul class="nav nav-sm flex-column">
-                                          <li class="nav-item">
-                                              <a href="apps-ecommerce-products.html" class="nav-link"
-                                                  data-key="t-products"> Products </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="apps-ecommerce-product-details.html" class="nav-link"
-                                                  data-key="t-product-Details"> Product Details </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="apps-ecommerce-add-product.html" class="nav-link"
-                                                  data-key="t-create-product"> Create Product </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="apps-ecommerce-orders.html" class="nav-link" data-key="t-orders">
-                                                  Orders </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="apps-ecommerce-order-details.html" class="nav-link"
-                                                  data-key="t-order-details"> Order Details </a>
-                                          </li>
-                                      </ul>
-                                  </div>
-                              </li>
-                              <li class="nav-item">
-                                  <a href="#sidebarProjects" class="nav-link" data-bs-toggle="collapse"
-                                      role="button" aria-expanded="false" aria-controls="sidebarProjects"
-                                      data-key="t-projects"> Projects
-                                  </a>
-                                  <div class="collapse menu-dropdown" id="sidebarProjects">
-                                      <ul class="nav nav-sm flex-column">
-                                          <li class="nav-item">
-                                              <a href="apps-projects-list.html" class="nav-link" data-key="t-list">
-                                                  List </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="apps-projects-overview.html" class="nav-link"
-                                                  data-key="t-overview"> Overview </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="apps-projects-create.html" class="nav-link"
-                                                  data-key="t-create-project"> Create Project </a>
-                                          </li>
-                                      </ul>
-                                  </div>
-                              </li>
-                              <li class="nav-item">
-                                  <a href="#sidebarTasks" class="nav-link" data-bs-toggle="collapse" role="button"
-                                      aria-expanded="false" aria-controls="sidebarTasks" data-key="t-tasks"> Tasks
-                                  </a>
-                                  <div class="collapse menu-dropdown" id="sidebarTasks">
-                                      <ul class="nav nav-sm flex-column">
-                                          <li class="nav-item">
-                                              <a href="apps-tasks-kanban.html" class="nav-link"
-                                                  data-key="t-kanbanboard"> Kanban Board </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="apps-tasks-list-view.html" class="nav-link"
-                                                  data-key="t-list-view"> List View </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="apps-tasks-details.html" class="nav-link"
-                                                  data-key="t-task-details"> Task Details </a>
-                                          </li>
-                                      </ul>
-                                  </div>
-                              </li>
-                              <li class="nav-item">
-                                  <a href="#sidebarCRM" class="nav-link" data-bs-toggle="collapse" role="button"
-                                      aria-expanded="false" aria-controls="sidebarCRM" data-key="t-crm"> CRM
-                                  </a>
-                                  <div class="collapse menu-dropdown" id="sidebarCRM">
-                                      <ul class="nav nav-sm flex-column">
-                                          <li class="nav-item">
-                                              <a href="apps-crm-contacts.html" class="nav-link"
-                                                  data-key="t-contacts"> Contacts </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="apps-crm-companies.html" class="nav-link"
-                                                  data-key="t-companies"> Companies </a>
-                                          </li>
-                                      </ul>
-                                  </div>
-                              </li>
-                          </ul>
-                      </div>
-                  </li>
-
-                  <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-pages">Pages</span>
-                  </li>
 
                   <li class="nav-item">
                       <a class="nav-link menu-link" href="#sidebarAuth" data-bs-toggle="collapse" role="button"
                           aria-expanded="false" aria-controls="sidebarAuth">
-                          <i class="ri-account-circle-line"></i> <span data-key="t-authentication">User Profil</span>
+                          <i class="ri-account-circle-line"></i> <span data-key="t-authentication">Konfigurasi
+                              User</span>
                       </a>
                       <div class="collapse menu-dropdown" id="sidebarAuth">
                           <ul class="nav nav-sm flex-column">
                               <li class="nav-item">
                                   <a href="#sidebarSignIn" class="nav-link" data-bs-toggle="collapse" role="button"
-                                      aria-expanded="false" aria-controls="sidebarSignIn" data-key="t-signin"> User
+                                      aria-expanded="false" aria-controls="sidebarSignIn" data-key="t-signin"> Setting
+                                      User
                                   </a>
                                   <div class="collapse menu-dropdown" id="sidebarSignIn">
                                       <ul class="nav nav-sm flex-column">
                                           <li class="nav-item">
-                                              <a href="{{ route('users.index') }}" class="nav-link"
+                                              <a href="{{ route('jabatans.index') }}" class="nav-link"
                                                   data-key="t-basic">
-                                                  User Login </a>
+                                                  Struktur Jabatan </a>
                                           </li>
                                           <li class="nav-item">
-                                              <a href="auth-signin-cover.html" class="nav-link" data-key="t-cover">
-                                                  Cover </a>
+                                              <a href="{{ route('fungsionals.index') }}" class="nav-link"
+                                                  data-key="t-cover">
+                                                  Fungsional jabatan </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('units.index') }}" class="nav-link" data-key="t-cover">
+                                                  Nama Unit </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('level_users.index') }}" class="nav-link"
+                                                  data-key="t-cover">
+                                                  Level User </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('fases.index') }}" class="nav-link" data-key="t-cover">
+                                                  Fase User </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('fungsionals.index') }}" class="nav-link"
+                                                  data-key="t-cover">
+                                                  Fungsional jabatan </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('admin_pendukungs.index') }}" class="nav-link"
+                                                  data-key="t-cover">
+                                                  Admin PPK</a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('pejabat_pengadaans.index') }}" class="nav-link"
+                                                  data-key="t-cover">
+                                                  Pejabat PPK</a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('pptks.index') }}" class="nav-link"
+                                                  data-key="t-cover">
+                                                  Pejabat PPTK</a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('ppk_keuangans.index') }}" class="nav-link"
+                                                  data-key="t-cover">
+                                                  PPK Keuangan</a>
                                           </li>
                                       </ul>
                                   </div>
                               </li>
                               <li class="nav-item">
                                   <a href="#sidebarSignUp" class="nav-link" data-bs-toggle="collapse" role="button"
-                                      aria-expanded="false" aria-controls="sidebarSignUp" data-key="t-signup"> Sign
-                                      Up
+                                      aria-expanded="false" aria-controls="sidebarSignUp" data-key="t-signup"> User
+                                      Profil
                                   </a>
                                   <div class="collapse menu-dropdown" id="sidebarSignUp">
                                       <ul class="nav nav-sm flex-column">
                                           <li class="nav-item">
-                                              <a href="auth-signup-basic.html" class="nav-link" data-key="t-basic">
-                                                  Basic </a>
+                                              <a href="{{ route('pejabats.index') }}" class="nav-link"
+                                                  data-key="t-basic">
+                                                  Pejabat </a>
                                           </li>
                                           <li class="nav-item">
-                                              <a href="auth-signup-cover.html" class="nav-link" data-key="t-cover">
-                                                  Cover </a>
+                                              <a href="{{ route('ksps.index') }}" class="nav-link"
+                                                  data-key="t-cover">
+                                                  KSP </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('users.index') }}" class="nav-link"
+                                                  data-key="t-cover">
+                                                  User </a>
                                           </li>
                                       </ul>
                                   </div>
@@ -207,7 +152,7 @@
                   <li class="nav-item">
                       <a class="nav-link menu-link" href="#sidebarPages" data-bs-toggle="collapse" role="button"
                           aria-expanded="false" aria-controls="sidebarPages">
-                          <i class="ri-pages-line"></i> <span data-key="t-pages">Pages</span>
+                          <i class="ri-pages-line"></i> <span data-key="t-pages">Konfigurasi Input</span>
                       </a>
                       <div class="collapse menu-dropdown" id="sidebarPages">
                           <ul class="nav nav-sm flex-column">
@@ -218,17 +163,42 @@
                               <li class="nav-item">
                                   <a href="#sidebarProfile" class="nav-link" data-bs-toggle="collapse"
                                       role="button" aria-expanded="false" aria-controls="sidebarProfile"
-                                      data-key="t-profile"> Profile
+                                      data-key="t-profile"> Setting Input
                                   </a>
                                   <div class="collapse menu-dropdown" id="sidebarProfile">
                                       <ul class="nav nav-sm flex-column">
                                           <li class="nav-item">
-                                              <a href="pages-profile.html" class="nav-link" data-key="t-simple-page">
-                                                  Simple Page </a>
+                                              <a href="{{ route('tahun_anggarans.index') }}" class="nav-link"
+                                                  data-key="t-simple-page">
+                                                  Tahun Anggaran </a>
                                           </li>
                                           <li class="nav-item">
-                                              <a href="pages-profile-settings.html" class="nav-link"
-                                                  data-key="t-settings"> Settings </a>
+                                              <a href="{{ route('komponens.index') }}" class="nav-link"
+                                                  data-key="t-settings"> Komponen </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('uraian_satus.index') }}" class="nav-link"
+                                                  data-key="t-settings"> Uraian Satu </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('uraian_duas.index') }}" class="nav-link"
+                                                  data-key="t-settings"> Uraian Dua </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('status_validasis.index') }}" class="nav-link"
+                                                  data-key="t-settings"> Status Validasi </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('status_validasi_rkas.index') }}" class="nav-link"
+                                                  data-key="t-settings"> Status Validasi RKA </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('judul_headers.index') }}" class="nav-link"
+                                                  data-key="t-settings"> Judul Header </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('anggarans.index') }}" class="nav-link"
+                                                  data-key="t-settings"> Anggaran </a>
                                           </li>
                                       </ul>
                                   </div>
@@ -236,17 +206,54 @@
                               <li class="nav-item">
                                   <a href="#sidebarProfile2" class="nav-link" data-bs-toggle="collapse"
                                       role="button" aria-expanded="false" aria-controls="sidebarProfile2"
-                                      data-key="t-profile"> Profile
+                                      data-key="t-profile"> Setting RKBU
                                   </a>
                                   <div class="collapse menu-dropdown" id="sidebarProfile2">
                                       <ul class="nav nav-sm flex-column">
                                           <li class="nav-item">
-                                              <a href="pages-profile.html" class="nav-link" data-key="t-simple-page">
-                                                  Simple Page </a>
+                                              <a href="{{ route('obyek_belanjas.index') }}" class="nav-link"
+                                                  data-key="t-simple-page">
+                                                  Obyek Belanja</a>
                                           </li>
                                           <li class="nav-item">
-                                              <a href="pages-profile-settings.html" class="nav-link"
-                                                  data-key="t-settings"> Settings </a>
+                                              <a href="{{ route('kategori_rkbus.index') }}" class="nav-link"
+                                                  data-key="t-settings"> Kategori RKBU </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('programs.index') }}" class="nav-link"
+                                                  data-key="t-settings"> Program</a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('kegiatans.index') }}" class="nav-link"
+                                                  data-key="t-settings"> Kegiatan </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('sub_kegiatans.index') }}" class="nav-link"
+                                                  data-key="t-settings">Sub Kegiatan</a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('sumber_danas.index') }}" class="nav-link"
+                                                  data-key="t-settings">Sumber Dana</a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('jenis_kategori_rkbus.index') }}" class="nav-link"
+                                                  data-key="t-settings">Jenis Kategori RKBU</a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('kategori_rekenings.index') }}" class="nav-link"
+                                                  data-key="t-settings">Kategori Rekening</a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('jenis_belanjas.index') }}" class="nav-link"
+                                                  data-key="t-settings">Jenis Belanja</a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('aktivitas.index') }}" class="nav-link"
+                                                  data-key="t-settings">Aktivitas</a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="" class="nav-link" data-key="t-settings">Rekening
+                                                  Belanja</a>
                                           </li>
                                       </ul>
                                   </div>
@@ -257,6 +264,79 @@
                               <li class="nav-item">
                                   <a href="pages-search-results.html" class="nav-link" data-key="t-search-results">
                                       Search Results </a>
+                              </li>
+                          </ul>
+                      </div>
+                  </li>
+
+                  <li class="nav-item">
+                      <a class="nav-link menu-link collapsed" href="#sidebarMaps" data-bs-toggle="collapse"
+                          role="button" aria-expanded="false" aria-controls="sidebarMaps">
+                          <i class="mdi mdi-map-marker-outline"></i> <span data-key="t-maps">Maps</span>
+                      </a>
+                      <div class="menu-dropdown collapse" id="sidebarMaps" style="">
+                          <ul class="nav nav-sm flex-column">
+                              <li class="nav-item">
+                                  <a href="maps-google.html" class="nav-link" data-key="t-google">
+                                      Google
+                                  </a>
+                              </li>
+                              <li class="nav-item">
+                                  <a href="maps-vector.html" class="nav-link" data-key="t-vector">
+                                      Vector
+                                  </a>
+                              </li>
+                              <li class="nav-item">
+                                  <a href="maps-leaflet.html" class="nav-link" data-key="t-leaflet">
+                                      Leaflet
+                                  </a>
+                              </li>
+                          </ul>
+                      </div>
+                  </li>
+
+                  <li class="nav-item">
+                      <a class="nav-link menu-link collapsed" href="#sidebarMultilevel" data-bs-toggle="collapse"
+                          role="button" aria-expanded="false" aria-controls="sidebarMultilevel">
+                          <i class="mdi mdi-share-variant-outline"></i> <span data-key="t-multi-level">Multi
+                              Level</span>
+                      </a>
+                      <div class="menu-dropdown collapse" id="sidebarMultilevel" style="">
+                          <ul class="nav nav-sm flex-column">
+                              <li class="nav-item">
+                                  <a href="#" class="nav-link" data-key="t-level-1.1"> Level 1.1 </a>
+                              </li>
+                              <li class="nav-item">
+                                  <a href="#sidebarAccount" class="nav-link collapsed" data-bs-toggle="collapse"
+                                      role="button" aria-expanded="false" aria-controls="sidebarAccount"
+                                      data-key="t-level-1.2"> Level 1.2
+                                  </a>
+                                  <div class="collapse menu-dropdown" id="sidebarAccount">
+                                      <ul class="nav nav-sm flex-column">
+                                          <li class="nav-item">
+                                              <a href="#" class="nav-link" data-key="t-level-2.1"> Level 2.1
+                                              </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="#sidebarCrm" class="nav-link collapsed"
+                                                  data-bs-toggle="collapse" role="button" aria-expanded="false"
+                                                  aria-controls="sidebarCrm" data-key="t-level-2.2"> Level 2.2
+                                              </a>
+                                              <div class="collapse menu-dropdown" id="sidebarCrm">
+                                                  <ul class="nav nav-sm flex-column">
+                                                      <li class="nav-item">
+                                                          <a href="#" class="nav-link" data-key="t-level-3.1">
+                                                              Level 3.1 </a>
+                                                      </li>
+                                                      <li class="nav-item">
+                                                          <a href="#" class="nav-link" data-key="t-level-3.2">
+                                                              Level 3.2 </a>
+                                                      </li>
+                                                  </ul>
+                                              </div>
+                                          </li>
+                                      </ul>
+                                  </div>
                               </li>
                           </ul>
                       </div>
@@ -410,6 +490,111 @@
                   <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-components">Pengadaan
                           Belanja</span>
                   </li>
+                  <li class="nav-item">
+                      <a class="nav-link menu-link" href="#sidebarApps" data-bs-toggle="collapse" role="button"
+                          aria-expanded="false" aria-controls="sidebarApps">
+                          <i class="ri-apps-2-line"></i> <span data-key="t-apps">Master SPJ</span>
+                      </a>
+                      <div class="collapse menu-dropdown" id="sidebarApps">
+                          <ul class="nav nav-sm flex-column">
+                              <li class="nav-item">
+                                  <a href="#sidebarProjects" class="nav-link" data-bs-toggle="collapse"
+                                      role="button" aria-expanded="false" aria-controls="sidebarProjects"
+                                      data-key="t-projects"> Usulan SPJ
+                                  </a>
+                                  <div class="collapse menu-dropdown" id="sidebarProjects">
+                                      <ul class="nav nav-sm flex-column">
+                                          <li class="nav-item">
+                                              <a href="{{ route('usulan_spj_barjass.index') }}" class="nav-link"
+                                                  data-key="t-list">
+                                                  Barang Jasa </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('usulan_spj_modals.index') }}" class="nav-link"
+                                                  data-key="t-overview"> Modal </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="{{ route('usulan_spj_persediaans.index') }}" class="nav-link"
+                                                  data-key="t-create-project"> Persediaan </a>
+                                          </li>
+                                      </ul>
+                                  </div>
+                              </li>
+                              <li class="nav-item">
+                                  <a href="#sidebarEcommerce" class="nav-link" data-bs-toggle="collapse"
+                                      role="button" aria-expanded="false" aria-controls="sidebarEcommerce"
+                                      data-key="t-ecommerce">
+                                      SPJ
+                                      <span class="badge badge-pill bg-warning" data-key="t-new">New</span>
+                                  </a>
+                                  <div class="collapse menu-dropdown" id="sidebarEcommerce">
+                                      <ul class="nav nav-sm flex-column">
+                                          <li class="nav-item">
+                                              <a href="{{ route('master_spjs.index') }}" class="nav-link"
+                                                  data-key="t-products"> Pengadaan Barang </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="apps-ecommerce-product-details.html" class="nav-link"
+                                                  data-key="t-product-Details"> Product Details </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="apps-ecommerce-add-product.html" class="nav-link"
+                                                  data-key="t-create-product"> Create Product </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="apps-ecommerce-orders.html" class="nav-link"
+                                                  data-key="t-orders">
+                                                  Orders </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="apps-ecommerce-order-details.html" class="nav-link"
+                                                  data-key="t-order-details"> Order Details </a>
+                                          </li>
+                                      </ul>
+                                  </div>
+                              </li>
+
+                              <li class="nav-item">
+                                  <a href="#sidebarTasks" class="nav-link" data-bs-toggle="collapse" role="button"
+                                      aria-expanded="false" aria-controls="sidebarTasks" data-key="t-tasks"> Tasks
+                                  </a>
+                                  <div class="collapse menu-dropdown" id="sidebarTasks">
+                                      <ul class="nav nav-sm flex-column">
+                                          <li class="nav-item">
+                                              <a href="apps-tasks-kanban.html" class="nav-link"
+                                                  data-key="t-kanbanboard"> Kanban Board </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="apps-tasks-list-view.html" class="nav-link"
+                                                  data-key="t-list-view"> List View </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="apps-tasks-details.html" class="nav-link"
+                                                  data-key="t-task-details"> Task Details </a>
+                                          </li>
+                                      </ul>
+                                  </div>
+                              </li>
+                              <li class="nav-item">
+                                  <a href="#sidebarCRM" class="nav-link" data-bs-toggle="collapse" role="button"
+                                      aria-expanded="false" aria-controls="sidebarCRM" data-key="t-crm"> CRM
+                                  </a>
+                                  <div class="collapse menu-dropdown" id="sidebarCRM">
+                                      <ul class="nav nav-sm flex-column">
+                                          <li class="nav-item">
+                                              <a href="apps-crm-contacts.html" class="nav-link"
+                                                  data-key="t-contacts"> Contacts </a>
+                                          </li>
+                                          <li class="nav-item">
+                                              <a href="apps-crm-companies.html" class="nav-link"
+                                                  data-key="t-companies"> Companies </a>
+                                          </li>
+                                      </ul>
+                                  </div>
+                              </li>
+                          </ul>
+                      </div>
+                  </li>
                   @if (session('nama_level_user') == 'Validasi')
                       <li class="nav-item">
                           <a class="nav-link menu-link" href="#sidebarCharts" data-bs-toggle="collapse"
@@ -434,31 +619,6 @@
                                           data-key="t-echarts">
                                           Modal </a>
                                   </li>
-                                  <li class="nav-item">
-                                      <a href="#sidebarApexcharts" class="nav-link" data-bs-toggle="collapse"
-                                          role="button" aria-expanded="false" aria-controls="sidebarApexcharts"
-                                          data-key="t-apexcharts"> Cek Usulan Belanja
-                                      </a>
-                                      <div class="collapse menu-dropdown" id="sidebarApexcharts">
-                                          <ul class="nav nav-sm flex-column">
-                                              <li class="nav-item">
-                                                  <a href="{{ route('cek_usulan_barang_barjass.index') }}"
-                                                      class="nav-link" data-key="t-line">
-                                                      Belanja Barang dan Jasa </a>
-                                              </li>
-                                              <li class="nav-item">
-                                                  <a href="{{ route('cek_usulan_barang_modals.index') }}"
-                                                      class="nav-link" data-key="t-area">
-                                                      Modal </a>
-                                              </li>
-                                              <li class="nav-item">
-                                                  <a href="{{ route('cek_usulan_barang_persediaans.index') }}"
-                                                      class="nav-link" data-key="t-bar">
-                                                      Persediaan </a>
-                                              </li>
-                                          </ul>
-                                      </div>
-                                  </li>
                               </ul>
                           </div>
                       </li>
@@ -466,21 +626,22 @@
                   <li class="nav-item">
                       <a class="nav-link menu-link collapsed" href="#sidebarLayouts" data-bs-toggle="collapse"
                           role="button" aria-expanded="false" aria-controls="sidebarLayouts">
-                          <i class="mdi mdi-view-carousel-outline"></i> <span data-key="t-layouts">Usulan SPJ</span>
+                          <i class="mdi mdi-view-carousel-outline"></i> <span data-key="t-layouts">Cek Usulan
+                              Belanja</span>
                       </a>
                       <div class="menu-dropdown collapse" id="sidebarLayouts" style="">
                           <ul class="nav nav-sm flex-column">
                               <li class="nav-item">
-                                  <a href="{{ route('usulan_spj_barjass.index') }}" class="nav-link" target="_blank"
-                                      data-key="t-horizontal">SPJ Barang Jasa</a>
+                                  <a href="{{ route('cek_usulan_barang_barjass.index') }}" class="nav-link"
+                                      data-key="t-horizontal">Barang Jasa</a>
                               </li>
                               <li class="nav-item">
-                                  <a href="{{ route('usulan_spj_modals.index') }}" class="nav-link" target="_blank"
-                                      data-key="t-detached">SPJ Modal</a>
+                                  <a href="{{ route('cek_usulan_barang_modals.index') }}" class="nav-link"
+                                      data-key="t-detached">Modal</a>
                               </li>
                               <li class="nav-item">
-                                  <a href="{{ route('usulan_spj_persediaans.index') }}" class="nav-link"
-                                      target="_blank" data-key="t-two-column">SPJ Persediaan</a>
+                                  <a href="{{ route('cek_usulan_barang_persediaans.index') }}" class="nav-link"
+                                      data-key="t-two-column">Persediaan</a>
                               </li>
                           </ul>
                       </div>
@@ -513,6 +674,42 @@
                                   </li>
                                   <li class="nav-item">
                                       <a href="{{ route('validasi_usulan_persediaan_pptks.index') }}"
+                                          class="nav-link" data-key="t-material-design">Persediaan</a>
+                                  </li>
+                              </ul>
+                          </div>
+                      @endif
+                      @if (session('nama_level_user') == 'Validasi RKA')
+                          <div class="collapse menu-dropdown" id="sidebarIcons">
+                              <ul class="nav nav-sm flex-column">
+                                  <li class="nav-item">
+                                      <a href="{{ route('validasi_usulan_barang_rkas.index') }}" class="nav-link"
+                                          data-key="t-remix">Barjas</a>
+                                  </li>
+                                  <li class="nav-item">
+                                      <a href="{{ route('validasi_usulan_modal_rkas.index') }}" class="nav-link"
+                                          data-key="t-boxicons">Modal</a>
+                                  </li>
+                                  <li class="nav-item">
+                                      <a href="{{ route('validasi_usulan_persediaan_rkas.index') }}" class="nav-link"
+                                          data-key="t-material-design">Persediaan</a>
+                                  </li>
+                              </ul>
+                          </div>
+                      @endif
+                      @if (session('nama_level_user') == 'Direktur')
+                          <div class="collapse menu-dropdown" id="sidebarIcons">
+                              <ul class="nav nav-sm flex-column">
+                                  <li class="nav-item">
+                                      <a href="{{ route('validasi_usulan_barang_direkturs.index') }}"
+                                          class="nav-link" data-key="t-remix">Barjas</a>
+                                  </li>
+                                  <li class="nav-item">
+                                      <a href="{{ route('validasi_usulan_modal_direkturs.index') }}" class="nav-link"
+                                          data-key="t-boxicons">Modal</a>
+                                  </li>
+                                  <li class="nav-item">
+                                      <a href="{{ route('validasi_usulan_persediaan_direkturs.index') }}"
                                           class="nav-link" data-key="t-material-design">Persediaan</a>
                                   </li>
                               </ul>

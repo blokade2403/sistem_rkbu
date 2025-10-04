@@ -10,7 +10,7 @@
     <div class="card-body">
         <div class="profile-timeline">
             <div class="accordion accordion-flush" id="accordionFlushExample">
-                @if ($status->status_permintaan_barang == 'Perlu Validasi PPTK')
+                @if ($no_inv->status_permintaan_barang == 'Perlu Validasi PPTK')
                     <div class="accordion-item border-0">
                         <div class="accordion-header" id="headingOne">
                             <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseOne"
@@ -23,7 +23,7 @@
                                     </div>
                                     <div class="flex-grow-1 ms-3">
                                         <h6 class="fs-15 mb-0 fw-semibold">Usulan <span
-                                                class="fw-normal">{{ $status->no_usulan_barang ?? 'N/A' }}</span>
+                                                class="fw-normal">{{ $no_inv->no_usulan_barang ?? 'N/A' }}</span>
                                         </h6>
                                     </div>
                                 </div>
@@ -32,9 +32,9 @@
                         <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne"
                             data-bs-parent="#accordionExample">
                             <div class="accordion-body ms-2 ps-5 pt-0">
-                                <h6 class="mb-1">Usulan belanja dibuat oleh {{ $status->nama_pengusul_barang }}</h6>
+                                <h6 class="mb-1">Usulan belanja dibuat oleh {{ $no_inv->nama_pengusul_barang }}</h6>
                                 <p class="text-muted">
-                                    {{ \Carbon\Carbon::parse($status->created_at)->translatedFormat('d F Y') }}</p>
+                                    {{ \Carbon\Carbon::parse($no_inv->created_at)->translatedFormat('d F Y') }}</p>
                             </div>
                         </div>
                         <div class="accordion-item border-0">
@@ -55,7 +55,7 @@
                             </div>
                         </div>
                     </div>
-                @elseif ($status->status_permintaan_barang == 'Disetujui PPTK')
+                @elseif ($no_inv->status_permintaan_barang == 'Disetujui PPTK')
                     <div class="accordion-item border-0">
                         <div class="accordion-header" id="headingOne">
                             <a class="accordion-button p-2 shadow-none" data-bs-toggle="collapse" href="#collapseOne"
@@ -68,7 +68,7 @@
                                     </div>
                                     <div class="flex-grow-1 ms-3">
                                         <h6 class="fs-15 mb-0 fw-semibold">Usulan <span
-                                                class="fw-normal">{{ $status->no_usulan_barang ?? 'N/A' }}</span>
+                                                class="fw-normal">{{ $no_inv->no_usulan_barang ?? 'N/A' }}</span>
                                         </h6>
                                     </div>
                                 </div>
@@ -93,10 +93,10 @@
                             data-bs-parent="#accordionExample">
                             <div class="accordion-body ms-2 ps-5 pt-0">
                                 <h6 class="mb-1">Usulan Sudah di Validasi oleh
-                                    {{ $status->ValidPptk->nama_lengkap ?? '-' }}
+                                    {{ $no_inv->ValidPptk->nama_lengkap ?? '-' }}
                                 </h6>
                                 <p class="text-muted mb-0">
-                                    {{ \Carbon\Carbon::parse($status->tgl_validasi_pptk)->translatedFormat('d F Y') }}
+                                    {{ \Carbon\Carbon::parse($no_inv->tgl_validasi_pptk)->translatedFormat('d F Y') }}
                                 </p>
                             </div>
                         </div>
@@ -131,7 +131,7 @@
                                     </div>
                                     <div class="flex-grow-1 ms-3">
                                         <h6 class="fs-15 mb-0 fw-semibold">Usulan <span
-                                                class="fw-normal">{{ $status->no_usulan_barang ?? 'N/A' }}</span>
+                                                class="fw-normal">{{ $no_inv->no_usulan_barang ?? 'N/A' }}</span>
                                         </h6>
                                     </div>
                                 </div>
@@ -156,10 +156,10 @@
                             data-bs-parent="#accordionExample">
                             <div class="accordion-body ms-2 ps-5 pt-0">
                                 <h6 class="mb-1">Usulan Sudah di Validasi oleh
-                                    {{ $status->ValidPptk->nama_lengkap ?? '-' }}
+                                    {{ $no_inv->ValidPptk->nama_lengkap ?? '-' }}
                                 </h6>
                                 <p class="text-muted mb-0">
-                                    {{ \Carbon\Carbon::parse($status->tgl_validasi_pptk)->translatedFormat('d F Y') }}
+                                    {{ \Carbon\Carbon::parse($no_inv->tgl_validasi_pptk)->translatedFormat('d F Y') }}
                                 </p>
                             </div>
                         </div>

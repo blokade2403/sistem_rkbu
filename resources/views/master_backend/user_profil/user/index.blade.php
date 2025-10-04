@@ -1,13 +1,12 @@
 @extends('layouts.main')
 @section('content')
-    @include('partials.add_buttons', ['routePrefix' => $routePrefix])
-
+    @include('partials.add_buttons_backend', ['routePrefix' => $routePrefix])
     <div class="row">
         <div class="col-xl-12">
             <div class="card">
+                @include('partials.animate_progress')
                 <div class="card-header align-items-center d-flex">
                     <h4 class="card-title mb-0 flex-grow-1">{{ $title }}</h4>
-
                 </div><!-- end card header -->
                 <div class="card-block">
                     <div class="card-body">

@@ -27,6 +27,12 @@ class KomponenDataTable extends DataTable
                         </ul>
                     ';
             })
+            ->addColumn('harga_barang', function ($row) {
+                return '
+                        ' . e(number_format($row->harga_barang, 0, ',', ',')) . '
+                        
+                    ';
+            })
             ->addColumn('action', function ($row) {
                 $editUrl = route('komponens.edit', $row->id_komponen);
                 $deleteUrl = route('komponens.destroy', $row->id_komponen);
@@ -68,34 +74,40 @@ class KomponenDataTable extends DataTable
                 ->title('No')
                 ->searchable(false)
                 ->orderable(false)
+                ->width(50)
                 ->responsivePriority(1), // selalu tampil
 
             Column::computed('nama_komponen')
                 ->title('Name Komponen')
                 ->exportable(false)
                 ->printable(false)
+                ->width(200)
                 ->addClass('text-left')
                 ->addClass('text-break')
-                ->responsivePriority(2), // tampil lebih prioritas
+                ->responsivePriority(1), // tampil lebih prioritas
 
-            Column::make('kode_barang')->title('Kode Barang')->responsivePriority(3),
-            Column::make('satuan')->title('Satuan')->responsivePriority(4),
-            Column::make('harga_barang')->title('Harga Barang')->responsivePriority(5),
-
-            Column::make('spek')->title('Spek')
+            Column::make('kode_barang')->title('Kode Barang')->width(100)->responsivePriority(1),
+            Column::make('satuan')->title('Satuan')->width(100)->responsivePriority(1),
+            Column::computed('harga_barang')
+                ->title('Harga Barang')
+                ->exportable(false)
+                ->printable(false)
+                ->width(100)
+                ->addClass('text-left')
                 ->addClass('text-break')
-                ->width(50)
-                ->responsivePriority(100), // sering masuk expand
-
-            Column::make('created_at')->title('Created At')->responsivePriority(100),
-
+                ->responsivePriority(1), // tampil lebih prioritas
+            Column::make('created_at')->title('Created At')->width(70)->responsivePriority(1),
             Column::computed('action')
                 ->title('Action')
                 ->exportable(false)
                 ->printable(false)
                 ->width(100)
                 ->addClass('text-center')
-                ->responsivePriority(100), // usahakan selalu tampil
+                ->responsivePriority(1), // usahakan selalu tampil
+            Column::make('spek')->title('Spek')
+                ->addClass('text-break')
+                ->width(50)
+                ->responsivePriority(100), // sering masuk expand
         ];
     }
 

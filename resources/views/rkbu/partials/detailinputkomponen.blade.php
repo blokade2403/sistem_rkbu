@@ -130,29 +130,25 @@
                              <label for="meassageInput" class="form-label">Skala Prioritas</label>
                          </div>
                          <div class="col-lg-10">
-                             <div class="br-wrapper br-theme-bars-movie">
-                                 <select id="example-movie" name="rating" autocomplete="off">
-                                     <option value="Prioritas 3"
-                                         {{ old('rating', $rkbuBarangJasa->rating ?? '') == 'Prioritas 3' ? 'selected' : '' }}>
-                                         <span class="badge badge-label bg-light text-dark"><i
-                                                 class="mdi mdi-circle-medium"></i> Prioritas 3</span>
-                                     </option>
-                                     <option value="Prioritas 2"
-                                         {{ old('rating', $rkbuBarangJasa->rating ?? '') == 'Prioritas 2' ? 'selected' : '' }}>
-                                         <span class="badge badge-label bg-light text-dark"><i
-                                                 class="mdi mdi-circle-medium"></i> Prioritas 2</span>
-
-                                     </option>
-                                     <option value="Prioritas 1"
-                                         {{ old('rating', $rkbuBarangJasa->rating ?? '') == 'Prioritas 1' ? 'selected' : '' }}>
-                                         <span class="badge badge-label bg-light text-dark"><i
-                                                 class="mdi mdi-circle-medium"></i> Prioritas 1</span>
-
-                                     </option>
-                                 </select>
-                             </div>
+                             <select name="rating" class="form-select" data-choices data-choices-sorting="true">
+                                 <option value="" disabled
+                                     {{ old('rating', $rkbuBarangJasa->rating) ? '' : 'selected' }}>
+                                     Pilih Prioritas Usulan
+                                 </option>
+                                 <option value="Prioritas 1"
+                                     {{ old('rating', $rkbuBarangJasa->rating) == 'Prioritas 1' ? 'selected' : '' }}>
+                                     Prioritas 1
+                                 </option>
+                                 <option value="Prioritas 2"
+                                     {{ old('rating', $rkbuBarangJasa->rating) == 'Prioritas 2' ? 'selected' : '' }}>
+                                     Prioritas 2
+                                 </option>
+                                 <option value="Prioritas 3"
+                                     {{ old('rating', $rkbuBarangJasa->rating) == 'Prioritas 3' ? 'selected' : '' }}>
+                                     Prioritas 3
+                                 </option>
+                             </select>
                          </div>
-
                      </div>
                      <div class="row mb-3">
                          <div class="col-lg-2">

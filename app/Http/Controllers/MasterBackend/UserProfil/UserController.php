@@ -23,7 +23,11 @@ class UserController extends Controller
         $admin_pendukungs       = AdminPendukung::all();
         $pptks                  = Pptk::all();
         // $level_user = LevelUser::all();
-        return view('master_backend.user_profil.user.index', compact('users', 'admin_pendukungs', 'pptks'), ['title' => 'Pejabat', 'routePrefix' => 'users']);
+        return view('master_backend.user_profil.user.index', compact('users', 'admin_pendukungs', 'pptks'), [
+            'title'       => 'Halaman User',
+            'title2'      => 'User',
+            'routePrefix' => 'users'
+        ]);
     }
 
     public function create()
@@ -36,7 +40,11 @@ class UserController extends Controller
         $admin_pendukungs       = AdminPendukung::all();
         $pptks                  = Pptk::all();
         // dd($ksps);
-        return view('master_backend.user_profil.user.create', compact('ksps', 'units', 'pptks', 'level_users', 'fases', 'pejabats', 'admin_pendukungs'), ['title' => 'Halaman Users', 'routePrefix' => 'users']);
+        return view('master_backend.user_profil.user.create', compact('ksps', 'units', 'pptks', 'level_users', 'fases', 'pejabats', 'admin_pendukungs'), [
+            'title'       => 'Halaman User',
+            'title2'      => 'User',
+            'routePrefix' => 'users'
+        ]);
     }
 
     // Method 'store' Ini adalah method dalam sebuah controller di Laravel yang bertanggung jawab untuk menyimpan data baru ke dalam database
@@ -114,7 +122,7 @@ class UserController extends Controller
 
     public function edit($id)
     {
-        $user                   = User::findOrFail($id);
+        $users                   = User::findOrFail($id);
         $ksps                   = Ksp::all();
         $level_users            = LevelUser::all();
         $fases                  = Fase::all();
@@ -122,7 +130,11 @@ class UserController extends Controller
         $pejabats               = Pejabat::all();
         $admin_pendukungs       = AdminPendukung::all();
         $pptks                  = Pptk::all();
-        return view('master_backend.user_profil.user.edit', compact('user', 'ksps', 'pptks', 'level_users', 'fases', 'units', 'pejabats', 'admin_pendukungs'), ['title' => 'Halaman User']);
+        return view('master_backend.user_profil.user.edit', compact('users', 'ksps', 'pptks', 'level_users', 'fases', 'units', 'pejabats', 'admin_pendukungs'), [
+            'title'       => 'Halaman User',
+            'title2'      => 'User',
+            'routePrefix' => 'users'
+        ]);
     }
 
     public function update(Request $request, User $user)

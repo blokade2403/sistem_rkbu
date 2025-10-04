@@ -39,7 +39,8 @@
                                 <div class="p-3">
                                     <div class="mt-3">
                                         <input type="text" name="nama_barang" value="{{ $rkbuBarangJasa->nama_barang }}"
-                                            class="form-control" placeholder="input-group-primary">
+                                            class="form-control form-control-lg text-primary"
+                                            placeholder="input-group-primary">
                                         <input type="hidden" value="{{ $rkbuBarangJasa->id_status_validasi }}"
                                             name="id_status_validasi" class="form-control" value="">
                                         <input type="hidden" value="{{ $rkbuBarangJasa->jumlah_vol }}" name="jumlah_vol"

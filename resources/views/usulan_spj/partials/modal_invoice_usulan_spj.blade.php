@@ -40,7 +40,7 @@
                              yang sudah divalidasi.</p>
                      </div>
                  </div>
-                 <form class="row g-3" method="POST" action="{{ route($routePrefix . '.store') }}">
+                 <form class="row g-3" method="POST" action="{{ route($routePrefix . '.add') }}">
                      @csrf
                      <div class="col-lg-12">
                          <select id="subKategoriSelect2" name="id_usulan_barang" class="form-select" data-choices

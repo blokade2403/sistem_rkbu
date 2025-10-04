@@ -14,8 +14,8 @@
                  action="{{ route('master_spj.updateBarangDatang', $master_spj->id_master_spj) }}"
                  id="confirmSubmitForm" enctype="multipart/form-data" validate> --}}
 
-             <form action="j-pro/php/action.php" method="POST" class="j-pro" id="j-pro"
-                 enctype="multipart/form-data" novalidate="">
+             <form action="{{ route('master_spj.updateBarangDatang', $master_spj->id_master_spj) }}" method="POST"
+                 enctype="multipart/form-data">
                  @csrf
                  @method('PUT')
                  <!-- end /.header-->
