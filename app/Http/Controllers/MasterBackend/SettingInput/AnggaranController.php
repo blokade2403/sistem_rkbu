@@ -16,7 +16,11 @@ class AnggaranController extends Controller
     public function index()
     {
         $anggarans  = Anggaran::all();
-        return view('master_backend.setting_input.anggaran.index', compact('anggarans'), ['title' => 'Halaman Anggaran']);
+        return view('master_backend.setting_input.anggaran.index', compact('anggarans'), [
+            'title'         => 'Halaman Anggaran',
+            'title2'        => 'Anggaran',
+            'routePrefix'   => 'anggarans'
+        ]);
     }
 
     public function create()
@@ -27,7 +31,11 @@ class AnggaranController extends Controller
 
         // dd($rekening_belanjas);
 
-        return view('backend.master_setting.anggarans.create', compact('rekening_belanjas', 'sumber_danas', 'tahun_anggaran'));
+        return view('master_backend.setting_input.anggaran.create', compact('rekening_belanjas', 'sumber_danas', 'tahun_anggaran'), [
+            'title'         => 'Halaman Anggaran',
+            'title2'        => 'Anggaran',
+            'routePrefix'   => 'anggarans'
+        ]);
     }
 
     public function store(Request $request)
@@ -87,7 +95,11 @@ class AnggaranController extends Controller
         $rekening_belanjas = RekeningBelanja::all();
         $sumber_danas = SumberDana::all();
         $tahun_anggaran = TahunAnggaran::all();
-        return view('backend.master_setting.anggarans.edit', compact('anggaran', 'rekening_belanjas', 'sumber_danas', 'tahun_anggaran'));
+        return view('master_backend.setting_input.anggaran.edit', compact('anggaran', 'rekening_belanjas', 'sumber_danas', 'tahun_anggaran'), [
+            'title'         => 'Halaman Anggaran',
+            'title2'        => 'Anggaran',
+            'routePrefix'   => 'anggarans'
+        ]);
     }
 
     /**

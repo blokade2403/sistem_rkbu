@@ -13,13 +13,21 @@ class ObyekBelanjaController extends Controller
     public function index()
     {
         $obyek_belanjas   = ObyekBelanja::all();
-        return view('master_backend.setting_rkbu.obyek_belanja.index', compact('obyek_belanjas'), ['title' => 'Halaman Obyek Belanja']);
+        return view('master_backend.setting_rkbu.obyek_belanja.index', compact('obyek_belanjas'), [
+            'title'         => 'Halaman Obyek Belanja',
+            'title2'        => 'Obyek Belanja',
+            'routePrefix'   => 'obyek_belanjas'
+        ]);
     }
 
     public function create()
     {
         $jenis_kategori_rkbus = JenisKategoriRkbu::all();
-        return view('master_backend.setting_rkbu.obyek_belanja.create', compact('jenis_kategori_rkbus'), ['title' => 'Halaman Obyek Belanja']);
+        return view('master_backend.setting_rkbu.obyek_belanja.create', compact('jenis_kategori_rkbus'), [
+            'title'         => 'Halaman Obyek Belanja',
+            'title2'        => 'Obyek Belanja',
+            'routePrefix'   => 'obyek_belanjas'
+        ]);
     }
 
     public function store(Request $request)
@@ -76,7 +84,11 @@ class ObyekBelanjaController extends Controller
     {
         $jenis_kategori_rkbus   = JenisKategoriRkbu::all();
         $obyekBelanja           = ObyekBelanja::with('jenis_kategori_rkbu')->findOrFail($id);
-        return view('master_backend.setting_rkbu.obyek_belanja.edit', compact('jenis_kategori_rkbus', 'obyekBelanja'), ['title' => 'Halaman Obyek Belanja']);
+        return view('master_backend.setting_rkbu.obyek_belanja.edit', compact('jenis_kategori_rkbus', 'obyekBelanja'), [
+            'title'         => 'Halaman Obyek Belanja',
+            'title2'        => 'Obyek Belanja',
+            'routePrefix'   => 'obyek_belanjas'
+        ]);
     }
 
     /**

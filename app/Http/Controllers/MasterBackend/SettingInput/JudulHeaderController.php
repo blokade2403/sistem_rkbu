@@ -14,13 +14,22 @@ class JudulHeaderController extends Controller
     public function index()
     {
         $judul_headers  = JudulHeader::all();
-        return view('master_backend.setting_input.judul_header.index', compact('judul_headers'), ['title' => 'Halaman Judul Header']);
+        return view('master_backend.setting_input.judul_header.index', compact('judul_headers'), [
+            'title'         => 'Halaman Judul Header',
+            'title2'        => 'Judul Header',
+            'routePrefix'   => 'judul_headers'
+        ]);
     }
 
     public function create()
     {
         $judul_headers  = JudulHeader::all();
-        return view('master_backend.setting_input.judul_header.create',  ['title' => 'Halaman Judul Header', 'judul_headers' => $judul_headers]);
+        return view('master_backend.setting_input.judul_header.create',  [
+            'title'         => 'Halaman Judul Header',
+            'title2'        => 'Judul Header',
+            'routePrefix'   => 'judul_headers',
+            'judul_headers' => $judul_headers
+        ]);
     }
 
     public function store(Request $request)
@@ -113,7 +122,11 @@ class JudulHeaderController extends Controller
      */
     public function edit(JudulHeader $judulHeader)
     {
-        return view('master_backend.setting_input.judul_header.edit', compact('judulHeader'), ['title' => 'Halaman Judul Header']);
+        return view('master_backend.setting_input.judul_header.edit', compact('judulHeader'), [
+            'title'         => 'Halaman Judul Header',
+            'title2'        => 'Judul Header',
+            'routePrefix'   => 'judul_headers'
+        ]);
     }
 
     /**

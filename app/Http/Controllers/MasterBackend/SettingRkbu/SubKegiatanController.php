@@ -14,14 +14,22 @@ class SubKegiatanController extends Controller
     public function index()
     {
         $sub_kegiatans  = SubKegiatan::with(['kegiatan', 'sumber_danas'])->get();
-        return view('master_backend.setting_rkbu.sub_kegiatan.index', compact('sub_kegiatans'), ['title' => 'Halaman Sub Kegiatan']);
+        return view('master_backend.setting_rkbu.sub_kegiatan.index', compact('sub_kegiatans'), [
+            'title'         => 'Halaman Sub Kegiatan',
+            'title2'        => 'Sub Kegiatan',
+            'routePrefix'   => 'sub_kegiatans'
+        ]);
     }
 
     public function create()
     {
         $kegiatans      = Kegiatan::all();
         $sumber_danas   = SumberDana::all();
-        return view('master_backend.setting_rkbu.sub_kegiatan.create', compact('kegiatans', 'sumber_danas'), ['title' => 'Halaman Sub Kegiatan']);
+        return view('master_backend.setting_rkbu.sub_kegiatan.create', compact('kegiatans', 'sumber_danas'), [
+            'title'         => 'Halaman Sub Kegiatan',
+            'title2'        => 'Sub Kegiatan',
+            'routePrefix'   => 'sub_kegiatans'
+        ]);
     }
 
     public function store(Request $request)
@@ -79,7 +87,11 @@ class SubKegiatanController extends Controller
         $sub_kegiatans   = SubKegiatan::with('kegiatan')->findOrFail($id);
         $sumber_danas    = SumberDana::all(); // Mengambil semua data Jabatan
         $kegiatans       = Kegiatan::all();
-        return view('master_backend.setting_rkbu.sub_kegiatan.edit', compact('sub_kegiatans', 'sumber_danas', 'kegiatans'), ['title' => 'Halaman Sub Kegiatan']);
+        return view('master_backend.setting_rkbu.sub_kegiatan.edit', compact('sub_kegiatans', 'sumber_danas', 'kegiatans'), [
+            'title'         => 'Halaman Sub Kegiatan',
+            'title2'        => 'Sub Kegiatan',
+            'routePrefix'   => 'sub_kegiatans'
+        ]);
     }
 
     /**

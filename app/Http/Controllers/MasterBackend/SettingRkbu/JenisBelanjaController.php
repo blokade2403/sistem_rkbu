@@ -13,14 +13,22 @@ class JenisBelanjaController extends Controller
     public function index(Request $request)
     {
         $jenis_belanjas  = JenisBelanja::all();
-        return view('master_backend.setting_rkbu.jenis_belanja.index', compact('jenis_belanjas'), ['title' => 'Halaman Jenis Belanja']);
+        return view('master_backend.setting_rkbu.jenis_belanja.index', compact('jenis_belanjas'), [
+            'title'         => 'Halaman Jenis Belanja',
+            'title2'        => 'Jenis Belanja',
+            'routePrefix'   => 'jenis_belanjas'
+        ]);
     }
 
 
     public function create()
     {
 
-        return view('master_backend.setting_rkbu.jenis_belanja.create', ['title' => 'Halaman Jenis Belanja']);
+        return view('master_backend.setting_rkbu.jenis_belanja.create', [
+            'title'         => 'Halaman Jenis Belanja',
+            'title2'        => 'Jenis Belanja',
+            'routePrefix'   => 'jenis_belanjas'
+        ]);
     }
 
     public function store(Request $request)
@@ -62,7 +70,11 @@ class JenisBelanjaController extends Controller
 
     public function edit(JenisBelanja $jenisBelanja)
     {
-        return view('master_backend.setting_rkbu.jenis_belanja.edit', compact('jenisBelanja'), ['title' => 'Halaman Jenis Belanja']);
+        return view('master_backend.setting_rkbu.jenis_belanja.edit', compact('jenisBelanja'), [
+            'title'         => 'Halaman Jenis Belanja',
+            'title2'        => 'Jenis Belanja',
+            'routePrefix'   => 'jenis_belanjas'
+        ]);
     }
 
     public function update(Request $request, JenisBelanja $jenisBelanja)

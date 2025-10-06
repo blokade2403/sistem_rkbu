@@ -12,12 +12,20 @@ class SumberDanaController extends Controller
     public function index()
     {
         $sumber_danas = SumberDana::all();
-        return view('master_backend.setting_rkbu.sumber_dana.index', compact('sumber_danas'), ['title' => 'Halaman Sumber Dana']);
+        return view('master_backend.setting_rkbu.sumber_dana.index', compact('sumber_danas'), [
+            'title'         => 'Halaman Sumber Dana',
+            'title2'        => 'Sumber Dana',
+            'routePrefix'   => 'sumber_danas'
+        ]);
     }
 
     public function create()
     {
-        return view('master_backend.setting_rkbu.sumber_dana.create', ['title' => 'Halaman Sumber Dana']);
+        return view('master_backend.setting_rkbu.sumber_dana.create', [
+            'title'         => 'Halaman Sumber Dana',
+            'title2'        => 'Sumber Dana',
+            'routePrefix'   => 'sumber_danas'
+        ]);
     }
 
     public function store(Request $request, SumberDana $SumberDana)
@@ -52,7 +60,11 @@ class SumberDanaController extends Controller
      */
     public function edit(SumberDana $SumberDana)
     {
-        return view('master_backend.setting_rkbu.sumber_dana.edit', compact('SumberDana'), ['title' => 'Halaman Sumber Dana']);
+        return view('master_backend.setting_rkbu.sumber_dana.edit', compact('SumberDana'), [
+            'title'         => 'Halaman Sumber Dana',
+            'title2'        => 'Sumber Dana',
+            'routePrefix'   => 'sumber_danas'
+        ]);
     }
 
     /**

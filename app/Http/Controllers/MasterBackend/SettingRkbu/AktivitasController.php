@@ -17,7 +17,11 @@ class AktivitasController extends Controller
     public function index()
     {
         $aktivitas = Aktivitas::with(['program', 'sub_kegiatan'])->get();
-        return view('master_backend.setting_rkbu.aktivitas.index', compact('aktivitas'), ['title' => 'Halaman Jenis Belanja']);
+        return view('master_backend.setting_rkbu.aktivitas.index', compact('aktivitas'), [
+            'title'         => 'Halaman Aktivitas',
+            'title2'        => 'Aktivitas',
+            'routePrefix'   => 'aktivitas'
+        ]);
     }
 
     /**
@@ -28,7 +32,11 @@ class AktivitasController extends Controller
 
         $programs       = Program::all();
         $sub_kegiatans  = SubKegiatan::all();
-        return view('master_backend.setting_rkbu.aktivitas.create', compact('programs', 'sub_kegiatans'), ['title' => 'Halaman Jenis Belanja']);
+        return view('master_backend.setting_rkbu.aktivitas.create', compact('programs', 'sub_kegiatans'), [
+            'title'         => 'Halaman Aktivitas',
+            'title2'        => 'Aktivitas',
+            'routePrefix'   => 'aktivitas'
+        ]);
     }
 
     /**
@@ -98,7 +106,11 @@ class AktivitasController extends Controller
         $aktivitas              = Aktivitas::with('sub_kegiatan')->findOrFail($id);
         $programs               = Program::all(); // Mengambil semua data Jabatan
         $sub_kegiatans          = SubKegiatan::with('kegiatan')->get(); // Mengambil semua data Jabatan
-        return view('master_backend.setting_rkbu.aktivitas.edit', compact('aktivitas', 'programs', 'sub_kegiatans'), ['title' => 'Halaman Jenis Belanja']);
+        return view('master_backend.setting_rkbu.aktivitas.edit', compact('aktivitas', 'programs', 'sub_kegiatans'), [
+            'title'         => 'Halaman Aktivitas',
+            'title2'        => 'Aktivitas',
+            'routePrefix'   => 'aktivitas'
+        ]);
     }
 
     /**

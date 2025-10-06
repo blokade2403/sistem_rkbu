@@ -15,7 +15,11 @@ class ProgramController extends Controller
     public function index()
     {
         $programs   = Program::all();
-        return view('master_backend.setting_rkbu.program.index', compact('programs'), ['title' => 'Halaman Program']);
+        return view('master_backend.setting_rkbu.program.index', compact('programs'), [
+            'title'         => 'Halaman Program',
+            'title2'        => 'Program',
+            'routePrefix'   => 'programs'
+        ]);
     }
 
     /**
@@ -23,7 +27,11 @@ class ProgramController extends Controller
      */
     public function create()
     {
-        return view('master_backend.setting_rkbu.program.create', ['title' => 'Halaman Program']);
+        return view('master_backend.setting_rkbu.program.create', [
+            'title'         => 'Halaman Program',
+            'title2'        => 'Program',
+            'routePrefix'   => 'programs'
+        ]);
     }
 
     /**
@@ -72,7 +80,11 @@ class ProgramController extends Controller
     public function edit(Program $program)
     {
         // $program   = Program::all();
-        return view('master_backend.setting_rkbu.program.edit', compact('program'), ['title' => 'Halaman Program']);
+        return view('master_backend.setting_rkbu.program.edit', compact('program'), [
+            'title'         => 'Halaman Program',
+            'title2'        => 'Program',
+            'routePrefix'   => 'programs'
+        ]);
     }
 
     /**

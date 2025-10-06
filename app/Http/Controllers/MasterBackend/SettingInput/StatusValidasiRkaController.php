@@ -12,12 +12,20 @@ class StatusValidasiRkaController extends Controller
     public function index()
     {
         $status_validasi_rkas   = StatusValidasiRka::all();
-        return view('master_backend.setting_input.status_validasi_rka.index', compact('status_validasi_rkas'), ['title' => 'Halaman Status Validasi']);
+        return view('master_backend.setting_input.status_validasi_rka.index', compact('status_validasi_rkas'), [
+            'title'         => 'Halaman Status Validasi',
+            'title2'        => 'Status Validasi',
+            'routePrefix'   => 'status_validasi_rkas'
+        ]);
     }
 
     public function create()
     {
-        return view('master_backend.setting_input.status_validasi_rka.create', ['title' => 'Halaman Status Validasi']);
+        return view('master_backend.setting_input.status_validasi_rka.create', [
+            'title'         => 'Halaman Status Validasi',
+            'title2'        => 'Status Validasi',
+            'routePrefix'   => 'status_validasi_rkas'
+        ]);
     }
 
     public function store(Request $request)
@@ -58,7 +66,12 @@ class StatusValidasiRkaController extends Controller
 
     public function edit(StatusValidasiRka $statusValidasiRka)
     {
-        return view('master_backend.setting_input.status_validasi_rka.edit', ['statusValidasiRka' => $statusValidasiRka, 'title' => 'Halaman Status Validasi']);
+        return view('master_backend.setting_input.status_validasi_rka.edit', [
+            'statusValidasiRka' => $statusValidasiRka,
+            'title'         => 'Halaman Status Validasi',
+            'title2'        => 'Status Validasi',
+            'routePrefix'   => 'status_validasi_rkas'
+        ]);
     }
 
     public function update(Request $request, StatusValidasiRka $statusValidasiRka)

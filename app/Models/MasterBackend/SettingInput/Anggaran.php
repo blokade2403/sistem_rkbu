@@ -31,4 +31,9 @@ class Anggaran extends Model
     {
         return $this->belongsTo(SumberDana::class, 'id_sumber_dana');
     }
+
+    public function TahunAnggaran()
+    {
+        return $this->belongsTo(TahunAnggaran::class, 'id', 'id');
+    }
 }

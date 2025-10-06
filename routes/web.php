@@ -144,6 +144,8 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('user-profil')->group(function () {
         Route::resource('users', UserController::class);
+        Route::get('/users/{id}/edit_profil', [UserController::class, 'edit_profil'])->name('users.edit_profil');
+        Route::put('/users/{user}', [UserController::class, 'update_profil'])->name('users.update_profil');
         Route::resource('ksps', KspController::class);
         Route::resource('pejabats', PejabatController::class);
     });

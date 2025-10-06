@@ -17,7 +17,11 @@ class KategoriRkbuController extends Controller
     public function index()
     {
         $kategori_rkbus = KategoriRkbu::with(['obyek_belanja', 'jenis_kategori_rkbu'])->get();
-        return view('master_backend.setting_rkbu.kategori_rkbu.index', compact('kategori_rkbus'), ['title' => 'Halaman Kategori RKBU']);
+        return view('master_backend.setting_rkbu.kategori_rkbu.index', compact('kategori_rkbus'), [
+            'title'         => 'Halaman Kategori RKBU',
+            'title2'        => 'Kategori RKBU',
+            'routePrefix'   => 'kategori_rkbus'
+        ]);
     }
 
     /**
@@ -27,7 +31,11 @@ class KategoriRkbuController extends Controller
     {
         $jenis_kategori_rkbus = JenisKategoriRkbu::all();
         $obyek_belanjas = ObyekBelanja::all();
-        return view('master_backend.setting_rkbu.kategori_rkbu.create', compact('jenis_kategori_rkbus', 'obyek_belanjas'), ['title' => 'Halaman Kategori RKBU']);
+        return view('master_backend.setting_rkbu.kategori_rkbu.create', compact('jenis_kategori_rkbus', 'obyek_belanjas'), [
+            'title'         => 'Halaman Kategori RKBU',
+            'title2'        => 'Kategori RKBU',
+            'routePrefix'   => 'kategori_rkbus'
+        ]);
     }
 
     /**
@@ -103,7 +111,11 @@ class KategoriRkbuController extends Controller
         $kategori_rkbus             = KategoriRkbu::with('obyek_belanja')->findOrFail($id);
         $jenis_kategori_rkbus       = JenisKategoriRkbu::all();
         $obyek_belanjas             = ObyekBelanja::all();
-        return view('master_backend.setting_rkbu.kategori_rkbu.edit', compact('kategori_rkbus', 'jenis_kategori_rkbus', 'obyek_belanjas'), ['title' => 'Halaman Kategori RKBU']);
+        return view('master_backend.setting_rkbu.kategori_rkbu.edit', compact('kategori_rkbus', 'jenis_kategori_rkbus', 'obyek_belanjas'), [
+            'title'         => 'Halaman Kategori RKBU',
+            'title2'        => 'Kategori RKBU',
+            'routePrefix'   => 'kategori_rkbus'
+        ]);
     }
 
     /**

@@ -430,6 +430,23 @@
     });
 </script>
 
+<script>
+    document.querySelectorAll('.profile-img-file-input').forEach((input, index) => {
+        input.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    // Update gambar preview sesuai urutan input
+                    document.getElementById('preview-img-' + (index + 1)).src = event.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+</script>
+
+
 {{-- <script type="text/javascript">
     $('#sub_kategori_rkbu').change(function() {
         var subKategoriId = $(this).val();

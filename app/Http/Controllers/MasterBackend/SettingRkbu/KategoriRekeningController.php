@@ -15,7 +15,11 @@ class KategoriRekeningController extends Controller
     public function index()
     {
         $kategori_rekenings = KategoriRekening::all();
-        return view('master_backend.setting_rkbu.kategori_rekening.index', compact('kategori_rekenings'), ['title' => 'Halaman Program']);
+        return view('master_backend.setting_rkbu.kategori_rekening.index', compact('kategori_rekenings'), [
+            'title'         => 'Halaman Kategori Rekening',
+            'title2'        => 'Kategori Rekening',
+            'routePrefix'   => 'kategori_rekenings'
+        ]);
     }
 
     /**
@@ -23,7 +27,11 @@ class KategoriRekeningController extends Controller
      */
     public function create()
     {
-        return view('master_backend.setting_rkbu.kategori_rekening.create', ['title' => 'Halaman Program']);
+        return view('master_backend.setting_rkbu.kategori_rekening.create', [
+            'title'         => 'Halaman Kategori Rekening',
+            'title2'        => 'Kategori Rekening',
+            'routePrefix'   => 'kategori_rekenings'
+        ]);
     }
 
     /**
@@ -80,7 +88,11 @@ class KategoriRekeningController extends Controller
      */
     public function edit(KategoriRekening $kategoriRekening)
     {
-        return view('master_backend.setting_rkbu.kategori_rekening.edit', compact('kategoriRekening'), ['title' => 'Halaman Program']);
+        return view('master_backend.setting_rkbu.kategori_rekening.edit', compact('kategoriRekening'), [
+            'title'         => 'Halaman Kategori Rekening',
+            'title2'        => 'Kategori Rekening',
+            'routePrefix'   => 'kategori_rekenings'
+        ]);
     }
 
     /**

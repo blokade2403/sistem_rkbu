@@ -12,12 +12,20 @@ class StatusValidasiController extends Controller
     public function index()
     {
         $status_validasis   = StatusValidasi::all();
-        return view('master_backend.setting_input.status_validasi.index', compact('status_validasis'), ['title' => 'Halaman Status Validasi']);
+        return view('master_backend.setting_input.status_validasi.index', compact('status_validasis'), [
+            'title'         => 'Halaman Status Validasi',
+            'title2'        => 'Status Validasi',
+            'routePrefix'   => 'status_validasis'
+        ]);
     }
 
     public function create()
     {
-        return view('master_backend.setting_input.status_validasi.create', ['title' => 'Halaman Status Validasi']);
+        return view('master_backend.setting_input.status_validasi.create', [
+            'title'         => 'Halaman Status Validasi',
+            'title2'        => 'Status Validasi',
+            'routePrefix'   => 'status_validasis'
+        ]);
     }
 
     public function store(Request $request)
@@ -61,7 +69,12 @@ class StatusValidasiController extends Controller
      */
     public function edit(StatusValidasi $statusValidasi)
     {
-        return view('master_backend.setting_input.status_validasi.edit', ['statusValidasi' => $statusValidasi, 'title' => 'Halaman Status Validasi']);
+        return view('master_backend.setting_input.status_validasi.edit', [
+            'statusValidasi' => $statusValidasi,
+            'title'         => 'Halaman Status Validasi',
+            'title2'        => 'Status Validasi',
+            'routePrefix'   => 'status_validasis'
+        ]);
     }
 
     /**

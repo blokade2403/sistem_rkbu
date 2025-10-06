@@ -13,13 +13,21 @@ class KegiatanController extends Controller
     public function index()
     {
         $kegiatans = Kegiatan::all();
-        return view('master_backend.setting_rkbu.kegiatan.index', compact('kegiatans'), ['title' => 'Halaman Kegiatan']);
+        return view('master_backend.setting_rkbu.kegiatan.index', compact('kegiatans'), [
+            'title'         => 'Halaman Kegiatan',
+            'title2'        => 'Kegiatan',
+            'routePrefix'   => 'kegiatans'
+        ]);
     }
 
     public function create()
     {
         $programs  = Program::all();
-        return view('master_backend.setting_rkbu.kegiatan.create', compact('programs'), ['title' => 'Halaman Kegiatan']);
+        return view('master_backend.setting_rkbu.kegiatan.create', compact('programs'), [
+            'title'         => 'Halaman Kegiatan',
+            'title2'        => 'Kegiatan',
+            'routePrefix'   => 'kegiatans'
+        ]);
     }
 
     public function getProgramDetails($id)
@@ -77,7 +85,11 @@ class KegiatanController extends Controller
     {
         $kegiatans          = Kegiatan::with('program')->findOrFail($id);
         $programs           = Program::all();
-        return view('master_backend.setting_rkbu.kegiatan.edit', compact('kegiatans', 'programs'), ['title' => 'Halaman Kegiatan']);
+        return view('master_backend.setting_rkbu.kegiatan.edit', compact('kegiatans', 'programs'), [
+            'title'         => 'Halaman Kegiatan',
+            'title2'        => 'Kegiatan',
+            'routePrefix'   => 'kegiatans'
+        ]);
     }
 
     public function update(Request $request, Kegiatan $kegiatan)

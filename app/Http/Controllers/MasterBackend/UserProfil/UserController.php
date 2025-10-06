@@ -214,7 +214,7 @@ class UserController extends Controller
         $pejabats               = Pejabat::all();
         $admin_pendukungs       = AdminPendukung::all();
         $pptks                  = Pptk::all();
-        return view('backend.user_profile.users.edit_profil', compact('user', 'ksps', 'pptks', 'level_users', 'fases', 'units', 'pejabats', 'admin_pendukungs'));
+        return view('master_backend.user_profil.user.edit_profil', compact('user', 'ksps', 'pptks', 'level_users', 'fases', 'units', 'pejabats', 'admin_pendukungs'));
     }
 
     public function update_profil(Request $request, User $user)

@@ -15,13 +15,21 @@ class JenisKategoriRkbuController extends Controller
     public function index()
     {
         $jenis_kategori_rkbus   = JenisKategoriRkbu::all();
-        return view('master_backend.setting_rkbu.jenis_kategori_rkbu.index', compact('jenis_kategori_rkbus'), ['title' => 'Halaman Jenis Belanja']);
+        return view('master_backend.setting_rkbu.jenis_kategori_rkbu.index', compact('jenis_kategori_rkbus'), [
+            'title'         => 'Halaman Jenis Belanja',
+            'title2'        => 'Jenis Belanja',
+            'routePrefix'   => 'jenis_kategori_rkbus'
+        ]);
     }
 
     public function create()
     {
         $jenis_belanja = JenisBelanja::all();
-        return view('master_backend.setting_rkbu.jenis_kategori_rkbu.create', compact('jenis_belanja'), ['title' => 'Halaman Jenis Belanja']);
+        return view('master_backend.setting_rkbu.jenis_kategori_rkbu.create', compact('jenis_belanja'), [
+            'title'         => 'Halaman Jenis Belanja',
+            'title2'        => 'Jenis Belanja',
+            'routePrefix'   => 'jenis_kategori_rkbus'
+        ]);
     }
 
     public function store(Request $request)
@@ -79,7 +87,11 @@ class JenisKategoriRkbuController extends Controller
     public function edit(JenisKategoriRkbu $jenisKategoriRkbu)
     {
         $jenis_belanja = JenisBelanja::all();
-        return view('master_backend.setting_rkbu.jenis_kategori_rkbu.edit', compact('jenisKategoriRkbu', 'jenis_belanja'), ['title' => 'Halaman Jenis Belanja']);
+        return view('master_backend.setting_rkbu.jenis_kategori_rkbu.edit', compact('jenisKategoriRkbu', 'jenis_belanja'), [
+            'title'         => 'Halaman Jenis Belanja',
+            'title2'        => 'Jenis Belanja',
+            'routePrefix'   => 'jenis_kategori_rkbus'
+        ]);
     }
 
     /**

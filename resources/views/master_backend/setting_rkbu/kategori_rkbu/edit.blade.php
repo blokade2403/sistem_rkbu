@@ -1,96 +1,149 @@
-<x-layouts.main class="main">
-    <x-slot:title>{{ $title }}</x-slot:title>
-    <div class="pcoded-inner-content">
-        <!-- Main-body start -->
-        <div class="main-body">
-            <div class="page-wrapper">
-                <!-- Page-header start -->
-                <x-partials.breadcrumb>
-                </x-partials.breadcrumb>
-                <!-- Page-header end -->
+@extends('layouts.main')
+@section('content')
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">{{ $title }}</h4>
+                </div><!-- end card header -->
+                <div class="card-body form-steps">
+                    <div class="row gy-5">
+                        <div class="col-lg-2">
+                            <div class="nav flex-column custom-nav nav-pills" role="tablist" aria-orientation="vertical">
+                                <button class="nav-link done" id="v-pills-bill-info-tab" data-bs-toggle="pill"
+                                    data-bs-target="#v-pills-bill-info" type="button" role="tab"
+                                    aria-controls="v-pills-bill-info" aria-selected="true">
+                                    <span class="step-title me-2">
+                                        <i class="ri-close-circle-fill step-icon me-2"></i>
+                                    </span>
+                                    {{ $title }} Info
+                                </button>
+                            </div>
+                            <!-- end nav -->
+                        </div> <!-- end col-->
+                        <div class="col-lg-7">
+                            <div class="px-lg-4">
+                                <div class="tab-content">
+                                    <div class="tab-pane fade show active" id="v-pills-bill-address" role="tabpanel"
+                                        aria-labelledby="v-pills-bill-address-tab">
+                                        <div>
+                                            <h5>Form {{ $title2 }}</h5>
+                                            <p class="text-muted">Fill all information below</p>
+                                        </div>
+                                        <form id="confirmSubmitForm" method="POST"
+                                            action="{{ route($routePrefix . '.update', $kategori_rkbus->id_kategori_rkbu) }}">
+                                            @csrf
+                                            @method('PUT')
 
-                <!-- Page body start -->
-                <div class="page-body">
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <!-- Basic Form Inputs card start -->
-                            <div class="card">
-                                <div class="card-header">
-                                    <div class="card-header-right">
-                                        <i class="icofont icofont-spinner-alt-5"></i>
+                                            <div>
+                                                <div class="row g-3">
+
+                                                    {{-- Nama Kategori RKBU --}}
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Nama Kategori RKBU</label>
+                                                            <input type="text" name="nama_kategori_rkbu"
+                                                                value="{{ old('nama_kategori_rkbu', $kategori_rkbus->nama_kategori_rkbu) }}"
+                                                                class="form-control" required>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Kode Kategori RKBU --}}
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Kode Kategori RKBU</label>
+                                                            <input type="text" name="kode_kategori_rkbu"
+                                                                value="{{ old('kode_kategori_rkbu', $kategori_rkbus->kode_kategori_rkbu) }}"
+                                                                class="form-control" required>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Obyek Belanja --}}
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Obyek Belanja</label>
+                                                            <select name="id_obyek_belanja" class="form-select" data-choices
+                                                                data-choices-sorting="true" required>
+                                                                <option disabled
+                                                                    {{ old('id_obyek_belanja', $kategori_rkbus->id_obyek_belanja) ? '' : 'selected' }}>
+                                                                    Pilih Obyek Belanja
+                                                                </option>
+                                                                @foreach ($obyek_belanjas as $key)
+                                                                    <option value="{{ $key->id_obyek_belanja }}"
+                                                                        {{ old('id_obyek_belanja', $kategori_rkbus->id_obyek_belanja) == $key->id_obyek_belanja ? 'selected' : '' }}>
+                                                                        {{ $key->nama_obyek_belanja }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Jenis Kategori RKBU --}}
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Jenis Kategori RKBU</label>
+                                                            <select name="id_jenis_kategori_rkbu" class="form-select"
+                                                                data-choices data-choices-sorting="true" required>
+                                                                <option disabled
+                                                                    {{ old('id_jenis_kategori_rkbu', $kategori_rkbus->id_jenis_kategori_rkbu) ? '' : 'selected' }}>
+                                                                    Pilih Jenis Kategori RKBU
+                                                                </option>
+                                                                @foreach ($jenis_kategori_rkbus as $key)
+                                                                    <option value="{{ $key->id_jenis_kategori_rkbu }}"
+                                                                        {{ old('id_jenis_kategori_rkbu', $kategori_rkbus->id_jenis_kategori_rkbu) == $key->id_jenis_kategori_rkbu ? 'selected' : '' }}>
+                                                                        {{ $key->nama_jenis_kategori_rkbu }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+
+                                                <hr class="my-4 text-muted">
+
+                                                <div class="form-check mb-2">
+                                                    <input type="checkbox" class="form-check-input" id="same-address"
+                                                        required>
+                                                    <label class="form-check-label" for="same-address">
+                                                        Yakin isian anda pada form ini
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-12">
+                                                @include('partials.submit_buttons')
+                                            </div>
+                                        </form>
+
                                     </div>
                                 </div>
-                                <div class="card-block">
-                                    <h4 class="sub-title">Form Inputs</h4>
-                                    <form id="confirmSubmitForm" method="POST"
-                                        action="{{ route('kategori_rkbus.update', $kategori_rkbus->id_kategori_rkbu) }}">
-                                        @csrf
-                                        @method('PUT')
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">Nama Kategori RKBU</label>
-                                            <div class="col-sm-10">
-                                                <input type="text" name="nama_kategori_rkbu"
-                                                    value="{{ $kategori_rkbus->nama_kategori_rkbu }}"
-                                                    class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">Kode Kategori RKBU</label>
-                                            <div class="col-sm-10">
-                                                <input type="text" name="kode_kategori_rkbu"
-                                                    value="{{ $kategori_rkbus->kode_kategori_rkbu }}"
-                                                    class="form-control">
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">Obyek Belanja</label>
-                                            <div class="col-sm-10">
-                                                <select name="id_obyek_belanja"
-                                                    class="js-example-basic-single col-sm-12">
-                                                    <option value="{{ $kategori_rkbus->id_obyek_belanja }}">
-                                                        {{ $kategori_rkbus->obyek_belanja->nama_obyek_belanja }}
-                                                    </option>
-                                                    @foreach ($obyek_belanjas as $key)
-                                                        <option value="{{ $key->id_obyek_belanja }}">
-                                                            {{ $key->nama_obyek_belanja }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">Jenis Kategori RKBU</label>
-                                            <div class="col-sm-10">
-                                                <select name="id_jenis_kategori_rkbu"
-                                                    class="js-example-basic-single col-sm-12">
-                                                    <option value="{{ $kategori_rkbus->id_jenis_kategori_rkbu }}">
-                                                        {{ $kategori_rkbus->jenis_kategori_rkbu->nama_jenis_kategori_rkbu }}
-                                                    </option>
-                                                    @foreach ($jenis_kategori_rkbus as $key)
-                                                        <option value="{{ $key->id_jenis_kategori_rkbu }}">
-                                                            {{ $key->nama_jenis_kategori_rkbu }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="card-block card-header-right">
-                                            <a href="{{ route('kategori_rkbus.index') }}"
-                                                class="btn btn-sm btn-secondary btn-outline-secondary me-4">
-                                                <i class="icofont icofont-circled-left"></i> Kembali
-                                            </a>
-                                            <button class="btn btn-sm btn-primary btn-outline-primary me-4">
-                                                <i class="icofont icofont-check-circled"></i> Submit
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
+                                <!-- end tab content -->
                             </div>
-                            <!-- Basic Form Inputs card end -->
+                        </div>
+                        <!-- end col -->
+                        <div class="col-lg-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fs-14 text-primary mb-0"><i class="ri-shopping-cart-fill align-middle me-2"></i>
+                                    Your Form</h5>
+                                <span class="badge bg-danger rounded-pill">3</span>
+                            </div>
+                            <ul class="list-group mb-3">
+                                <li class="list-group-item d-flex justify-content-between lh-sm">
+                                    <div>
+                                        <h6 class="my-0">Product name</h6>
+                                        <small class="text-muted">Brief description</small>
+                                    </div>
+                                    <span class="text-muted">$12</span>
+                                </li>
+                            </ul>
                         </div>
                     </div>
+                    <!-- end row -->
                 </div>
-                <!-- Page body end -->
             </div>
+            <!-- end -->
         </div>
+        <!-- end col -->
     </div>
-
-</x-layouts.main>
+@endsection
