@@ -34,7 +34,6 @@
                 @method('PUT')
                 <div class="modal-body">
                     <input type="hidden" name="id_usulan_barang" id="id-field" />
-
                     <div class="mb-3">
                         <label for="orderId" class="form-label">No Invoice</label>
                         <input type="text" id="orderId" class="form-control" readonly />
@@ -51,31 +50,28 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Total Anggaran</label>
-                        <input type="text" id="total-field" class="form-control" readonly />
-                    </div>
-
-                    <div class="mb-3">
                         <label class="form-label">Pilih Status Validasi</label>
-                        <select class="form-control" name="status_validasi_pptk" data-choices
-                            data-choices-sorting="true" id="status-field">
+                        <select class="form-select" name="status_validasi_pptk" id="status-field" data-choices
+                            data-choices-sorting="true">
                             <option value="">-- Pilih --</option>
-                            <option value="Disetujui PPTK">Validasi PPTK</option>
+                            <option value="Disetujui PPTK">Disetujui PPTK</option>
                             <option value="Di Tolak">Di Tolak</option>
                         </select>
                     </div>
 
                     <div class="mb-3">
-                        <label for="date-field" class="form-label">Order Date</label>
-                        <input type="date" id="date-field" name="order_date" class="form-control" required />
+                        <label class="form-label">Keterangan PPTK</label>
+                        <textarea name="keterangan_pptk" id="keterangan-field" class="form-control" rows="3"></textarea>
                     </div>
+
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
                     <button type="submit" class="btn btn-success">Simpan</button>
                 </div>
             </form>
+
         </div>
     </div>
 </div>

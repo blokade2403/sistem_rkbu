@@ -291,6 +291,7 @@ class ValidasiRkaModalDataTable extends DataTable
             ->join('sumber_danas', 'sumber_danas.id_sumber_dana', '=', 'sub_kegiatans.id_sumber_dana')
             ->where('pejabats.id_pejabat', $id_pejabat)
             ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
+            ->where('id_status_validasi', '9cfb1edc-2263-401f-b249-361db4017932')
             ->where('jenis_kategori_rkbus.id_jenis_kategori_rkbu', $currentJenisKategori);
 
         // 🔄 Filter Berdasarkan Sub Kategori

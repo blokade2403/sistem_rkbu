@@ -212,27 +212,24 @@
                              <label for="meassageInput" class="form-label">Skala Prioritas</label>
                          </div>
                          <div class="col-lg-10">
-                             <div class="br-wrapper br-theme-bars-movie">
-                                 <select id="example-movie" name="rating" autocomplete="off">
-                                     <option value="Prioritas 3"
-                                         {{ old('rating', $rkbuBarangJasa->rating ?? '') == 'Prioritas 3' ? 'selected' : '' }}>
-                                         <span class="badge badge-label bg-light text-dark"><i
-                                                 class="mdi mdi-circle-medium"></i> Prioritas 3</span>
-                                     </option>
-                                     <option value="Prioritas 2"
-                                         {{ old('rating', $rkbuBarangJasa->rating ?? '') == 'Prioritas 2' ? 'selected' : '' }}>
-                                         <span class="badge badge-label bg-light text-dark"><i
-                                                 class="mdi mdi-circle-medium"></i> Prioritas 2</span>
-
-                                     </option>
-                                     <option value="Prioritas 1"
-                                         {{ old('rating', $rkbuBarangJasa->rating ?? '') == 'Prioritas 1' ? 'selected' : '' }}>
-                                         <span class="badge badge-label bg-light text-dark"><i
-                                                 class="mdi mdi-circle-medium"></i> Prioritas 1</span>
-
-                                     </option>
-                                 </select>
-                             </div>
+                             <select name="rating" class="form-select" data-choices data-choices-sorting="true">
+                                 <option value="" disabled
+                                     {{ old('rating', $rkbuBarangJasa->rating) ? '' : 'selected' }}>
+                                     Pilih Prioritas Usulan
+                                 </option>
+                                 <option value="Prioritas 1"
+                                     {{ old('rating', $rkbuBarangJasa->rating) == 'Prioritas 1' ? 'selected' : '' }}>
+                                     Prioritas 1
+                                 </option>
+                                 <option value="Prioritas 2"
+                                     {{ old('rating', $rkbuBarangJasa->rating) == 'Prioritas 2' ? 'selected' : '' }}>
+                                     Prioritas 2
+                                 </option>
+                                 <option value="Prioritas 3"
+                                     {{ old('rating', $rkbuBarangJasa->rating) == 'Prioritas 3' ? 'selected' : '' }}>
+                                     Prioritas 3
+                                 </option>
+                             </select>
                          </div>
 
                      </div>
@@ -279,12 +276,16 @@
                              <p><span id="nama_sub_kategori_rekening"></span></p>
                          </div>
                      </div>
+                     @if (session('nama_level_user') == 'Administrator')
+                         @include('rkbu.partials.form_rekening_belanja_admin')
+                     @endif
 
                  </div>
                  <div class="d-none code-view">
                  </div>
              </div>
          </div>
+         @include('rkbu.partials.formvalidasirkbu')
          <div class="card">
              <div class="card-header align-items-center d-flex">
                  <h4 class="card-title mb-0 flex-grow-1">Upload Data Penunjang</h4>

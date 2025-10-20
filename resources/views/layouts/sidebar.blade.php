@@ -25,6 +25,46 @@
               <i class="ri-record-circle-line"></i>
           </button>
       </div>
+      @php
+          $nama_level = ['Administartor', 'User'];
+          $level_asset = ['Administartor', 'Pengurus Barang'];
+          $level_ksp = ['Validasi', 'Administartor'];
+          $level_kabag = ['Administrator', 'Validasi RKA'];
+          $level_pb = ['Administrator', 'Pengurus Barang'];
+          $level_admin_ppk1 = ['Administrator', 'Admin PPK', 'PPK', 'PPBJ'];
+          $level_admin_ppk = ['PPTK', 'PPTK Alkes', 'PPTK Umum'];
+          $level_pengadaan_pej = [
+              'Administrator',
+              'PPK',
+              'PPBJ',
+              'Pengurus Barang',
+              'PPK Keuangan',
+              'PPTK',
+              'PPTK Alkes',
+              'PPTK Umum',
+              'Validasi Keuangan',
+              'Verifikator',
+              'Direktur',
+              'Admin PPK',
+              'Validasi RKA',
+              'Bendahara',
+          ];
+          $level_pengadaan_ppk = [
+              'Administrator',
+              'Admin PPK',
+              'Pendukung PPK',
+              'PPK',
+              'PPBJ',
+              'Pengurus Barang',
+              'PPK Keuangan',
+              'PPTK',
+              'PPTK Alkes',
+              'PPTK Umum',
+              'Validasi Keuangan',
+              'Verifikator',
+              'Bendahara',
+          ];
+      @endphp
 
       <div id="scrollbar">
           <div class="container-fluid">
@@ -36,318 +76,250 @@
                   <li class="nav-item">
                       <a class="nav-link menu-link" href="#sidebarDashboards" data-bs-toggle="collapse" role="button"
                           aria-expanded="false" aria-controls="sidebarDashboards">
-                          <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards">Dashboards</span>
+                          <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards">Halaman Utama</span>
                       </a>
                       <div class="collapse menu-dropdown" id="sidebarDashboards">
                           <ul class="nav nav-sm flex-column">
                               <li class="nav-item">
-                                  <a href="dashboard-analytics.html" class="nav-link" data-key="t-analytics">
-                                      Analytics </a>
+                                  <a href="{{ route('dashbord') }}" class="nav-link" data-key="t-analytics">
+                                      Data Anggaran </a>
                               </li>
                               <li class="nav-item">
-                                  <a href="dashboard-crm.html" class="nav-link" data-key="t-crm"> CRM </a>
+                                  <a href="{{ route('dashboard.apbd') }}" class="nav-link" data-key="t-crm"> Anggaran
+                                      APBD </a>
                               </li>
                               <li class="nav-item">
-                                  <a href="index.html" class="nav-link" data-key="t-ecommerce"> Ecommerce </a>
+                                  <a href="{{ route('dashboard.realisasi') }}" class="nav-link" data-key="t-ecommerce">
+                                      Data Asset </a>
                               </li>
                           </ul>
                       </div>
                   </li> <!-- end Dashboard Menu -->
 
-                  <li class="nav-item">
-                      <a class="nav-link menu-link" href="#sidebarAuth" data-bs-toggle="collapse" role="button"
-                          aria-expanded="false" aria-controls="sidebarAuth">
-                          <i class="ri-account-circle-line"></i> <span data-key="t-authentication">Konfigurasi
-                              User</span>
-                      </a>
-                      <div class="collapse menu-dropdown" id="sidebarAuth">
-                          <ul class="nav nav-sm flex-column">
-                              <li class="nav-item">
-                                  <a href="#sidebarSignIn" class="nav-link" data-bs-toggle="collapse" role="button"
-                                      aria-expanded="false" aria-controls="sidebarSignIn" data-key="t-signin"> Setting
-                                      User
-                                  </a>
-                                  <div class="collapse menu-dropdown" id="sidebarSignIn">
-                                      <ul class="nav nav-sm flex-column">
-                                          <li class="nav-item">
-                                              <a href="{{ route('jabatans.index') }}" class="nav-link"
-                                                  data-key="t-basic">
-                                                  Struktur Jabatan </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('fungsionals.index') }}" class="nav-link"
-                                                  data-key="t-cover">
-                                                  Fungsional jabatan </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('units.index') }}" class="nav-link" data-key="t-cover">
-                                                  Nama Unit </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('level_users.index') }}" class="nav-link"
-                                                  data-key="t-cover">
-                                                  Level User </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('fases.index') }}" class="nav-link" data-key="t-cover">
-                                                  Fase User </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('fungsionals.index') }}" class="nav-link"
-                                                  data-key="t-cover">
-                                                  Fungsional jabatan </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('admin_pendukungs.index') }}" class="nav-link"
-                                                  data-key="t-cover">
-                                                  Admin PPK</a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('pejabat_pengadaans.index') }}" class="nav-link"
-                                                  data-key="t-cover">
-                                                  Pejabat PPK</a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('pptks.index') }}" class="nav-link"
-                                                  data-key="t-cover">
-                                                  Pejabat PPTK</a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('ppk_keuangans.index') }}" class="nav-link"
-                                                  data-key="t-cover">
-                                                  PPK Keuangan</a>
-                                          </li>
-                                      </ul>
-                                  </div>
-                              </li>
-                              <li class="nav-item">
-                                  <a href="#sidebarSignUp" class="nav-link" data-bs-toggle="collapse" role="button"
-                                      aria-expanded="false" aria-controls="sidebarSignUp" data-key="t-signup"> User
-                                      Profil
-                                  </a>
-                                  <div class="collapse menu-dropdown" id="sidebarSignUp">
-                                      <ul class="nav nav-sm flex-column">
-                                          <li class="nav-item">
-                                              <a href="{{ route('pejabats.index') }}" class="nav-link"
-                                                  data-key="t-basic">
-                                                  Pejabat </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('ksps.index') }}" class="nav-link"
-                                                  data-key="t-cover">
-                                                  KSP </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('users.index') }}" class="nav-link"
-                                                  data-key="t-cover">
-                                                  User </a>
-                                          </li>
-                                      </ul>
-                                  </div>
-                              </li>
-                          </ul>
-                      </div>
-                  </li>
-
-                  <li class="nav-item">
-                      <a class="nav-link menu-link" href="#sidebarPages" data-bs-toggle="collapse" role="button"
-                          aria-expanded="false" aria-controls="sidebarPages">
-                          <i class="ri-pages-line"></i> <span data-key="t-pages">Konfigurasi Input</span>
-                      </a>
-                      <div class="collapse menu-dropdown" id="sidebarPages">
-                          <ul class="nav nav-sm flex-column">
-                              <li class="nav-item">
-                                  <a href="pages-starter.html" class="nav-link" data-key="t-starter">
-                                      Starter </a>
-                              </li>
-                              <li class="nav-item">
-                                  <a href="#sidebarProfile" class="nav-link" data-bs-toggle="collapse"
-                                      role="button" aria-expanded="false" aria-controls="sidebarProfile"
-                                      data-key="t-profile"> Setting Input
-                                  </a>
-                                  <div class="collapse menu-dropdown" id="sidebarProfile">
-                                      <ul class="nav nav-sm flex-column">
-                                          <li class="nav-item">
-                                              <a href="{{ route('tahun_anggarans.index') }}" class="nav-link"
-                                                  data-key="t-simple-page">
-                                                  Tahun Anggaran </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('komponens.index') }}" class="nav-link"
-                                                  data-key="t-settings"> Komponen </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('uraian_satus.index') }}" class="nav-link"
-                                                  data-key="t-settings"> Uraian Satu </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('uraian_duas.index') }}" class="nav-link"
-                                                  data-key="t-settings"> Uraian Dua </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('status_validasis.index') }}" class="nav-link"
-                                                  data-key="t-settings"> Status Validasi </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('status_validasi_rkas.index') }}" class="nav-link"
-                                                  data-key="t-settings"> Status Validasi RKA </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('judul_headers.index') }}" class="nav-link"
-                                                  data-key="t-settings"> Judul Header </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('anggarans.index') }}" class="nav-link"
-                                                  data-key="t-settings"> Anggaran </a>
-                                          </li>
-                                      </ul>
-                                  </div>
-                              </li>
-                              <li class="nav-item">
-                                  <a href="#sidebarProfile2" class="nav-link" data-bs-toggle="collapse"
-                                      role="button" aria-expanded="false" aria-controls="sidebarProfile2"
-                                      data-key="t-profile"> Setting RKBU
-                                  </a>
-                                  <div class="collapse menu-dropdown" id="sidebarProfile2">
-                                      <ul class="nav nav-sm flex-column">
-                                          <li class="nav-item">
-                                              <a href="{{ route('obyek_belanjas.index') }}" class="nav-link"
-                                                  data-key="t-simple-page">
-                                                  Obyek Belanja</a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('kategori_rkbus.index') }}" class="nav-link"
-                                                  data-key="t-settings"> Kategori RKBU </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('programs.index') }}" class="nav-link"
-                                                  data-key="t-settings"> Program</a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('kegiatans.index') }}" class="nav-link"
-                                                  data-key="t-settings"> Kegiatan </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('sub_kegiatans.index') }}" class="nav-link"
-                                                  data-key="t-settings">Sub Kegiatan</a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('sumber_danas.index') }}" class="nav-link"
-                                                  data-key="t-settings">Sumber Dana</a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('jenis_kategori_rkbus.index') }}" class="nav-link"
-                                                  data-key="t-settings">Jenis Kategori RKBU</a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('kategori_rekenings.index') }}" class="nav-link"
-                                                  data-key="t-settings">Kategori Rekening</a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('jenis_belanjas.index') }}" class="nav-link"
-                                                  data-key="t-settings">Jenis Belanja</a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('aktivitas.index') }}" class="nav-link"
-                                                  data-key="t-settings">Aktivitas</a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="" class="nav-link" data-key="t-settings">Rekening
-                                                  Belanja</a>
-                                          </li>
-                                      </ul>
-                                  </div>
-                              </li>
-                              <li class="nav-item">
-                                  <a href="pages-team.html" class="nav-link" data-key="t-team"> Team </a>
-                              </li>
-                              <li class="nav-item">
-                                  <a href="pages-search-results.html" class="nav-link" data-key="t-search-results">
-                                      Search Results </a>
-                              </li>
-                          </ul>
-                      </div>
-                  </li>
-
-                  <li class="nav-item">
-                      <a class="nav-link menu-link collapsed" href="#sidebarMaps" data-bs-toggle="collapse"
-                          role="button" aria-expanded="false" aria-controls="sidebarMaps">
-                          <i class="mdi mdi-map-marker-outline"></i> <span data-key="t-maps">Maps</span>
-                      </a>
-                      <div class="menu-dropdown collapse" id="sidebarMaps" style="">
-                          <ul class="nav nav-sm flex-column">
-                              <li class="nav-item">
-                                  <a href="maps-google.html" class="nav-link" data-key="t-google">
-                                      Google
-                                  </a>
-                              </li>
-                              <li class="nav-item">
-                                  <a href="maps-vector.html" class="nav-link" data-key="t-vector">
-                                      Vector
-                                  </a>
-                              </li>
-                              <li class="nav-item">
-                                  <a href="maps-leaflet.html" class="nav-link" data-key="t-leaflet">
-                                      Leaflet
-                                  </a>
-                              </li>
-                          </ul>
-                      </div>
-                  </li>
-
-                  <li class="nav-item">
-                      <a class="nav-link menu-link collapsed" href="#sidebarMultilevel" data-bs-toggle="collapse"
-                          role="button" aria-expanded="false" aria-controls="sidebarMultilevel">
-                          <i class="mdi mdi-share-variant-outline"></i> <span data-key="t-multi-level">Multi
-                              Level</span>
-                      </a>
-                      <div class="menu-dropdown collapse" id="sidebarMultilevel" style="">
-                          <ul class="nav nav-sm flex-column">
-                              <li class="nav-item">
-                                  <a href="#" class="nav-link" data-key="t-level-1.1"> Level 1.1 </a>
-                              </li>
-                              <li class="nav-item">
-                                  <a href="#sidebarAccount" class="nav-link collapsed" data-bs-toggle="collapse"
-                                      role="button" aria-expanded="false" aria-controls="sidebarAccount"
-                                      data-key="t-level-1.2"> Level 1.2
-                                  </a>
-                                  <div class="collapse menu-dropdown" id="sidebarAccount">
-                                      <ul class="nav nav-sm flex-column">
-                                          <li class="nav-item">
-                                              <a href="#" class="nav-link" data-key="t-level-2.1"> Level 2.1
-                                              </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="#sidebarCrm" class="nav-link collapsed"
-                                                  data-bs-toggle="collapse" role="button" aria-expanded="false"
-                                                  aria-controls="sidebarCrm" data-key="t-level-2.2"> Level 2.2
-                                              </a>
-                                              <div class="collapse menu-dropdown" id="sidebarCrm">
-                                                  <ul class="nav nav-sm flex-column">
-                                                      <li class="nav-item">
-                                                          <a href="#" class="nav-link" data-key="t-level-3.1">
-                                                              Level 3.1 </a>
-                                                      </li>
-                                                      <li class="nav-item">
-                                                          <a href="#" class="nav-link" data-key="t-level-3.2">
-                                                              Level 3.2 </a>
-                                                      </li>
-                                                  </ul>
-                                              </div>
-                                          </li>
-                                      </ul>
-                                  </div>
-                              </li>
-                          </ul>
-                      </div>
-                  </li>
-
-                  <li class="nav-item">
-                      <a class="nav-link menu-link" target="_blank" href="landing.html">
-                          <i class="ri-rocket-line"></i> <span data-key="t-landing">Landing</span>
-                          <span class="badge badge-pill bg-danger" data-key="t-new">New</span>
-                      </a>
-                  </li>
+                  @if (session('nama_level_user') == 'Administrator')
+                      <li class="nav-item">
+                          <a class="nav-link menu-link" href="#sidebarAuth" data-bs-toggle="collapse" role="button"
+                              aria-expanded="false" aria-controls="sidebarAuth">
+                              <i class="ri-account-circle-line"></i> <span data-key="t-authentication">Konfigurasi
+                                  User</span>
+                          </a>
+                          <div class="collapse menu-dropdown" id="sidebarAuth">
+                              <ul class="nav nav-sm flex-column">
+                                  <li class="nav-item">
+                                      <a href="#sidebarSignIn" class="nav-link" data-bs-toggle="collapse" role="button"
+                                          aria-expanded="false" aria-controls="sidebarSignIn" data-key="t-signin">
+                                          Setting
+                                          User
+                                      </a>
+                                      <div class="collapse menu-dropdown" id="sidebarSignIn">
+                                          <ul class="nav nav-sm flex-column">
+                                              <li class="nav-item">
+                                                  <a href="{{ route('jabatans.index') }}" class="nav-link"
+                                                      data-key="t-basic">
+                                                      Struktur Jabatan </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('fungsionals.index') }}" class="nav-link"
+                                                      data-key="t-cover">
+                                                      Fungsional jabatan </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('units.index') }}" class="nav-link"
+                                                      data-key="t-cover">
+                                                      Nama Unit </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('level_users.index') }}" class="nav-link"
+                                                      data-key="t-cover">
+                                                      Level User </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('fases.index') }}" class="nav-link"
+                                                      data-key="t-cover">
+                                                      Fase User </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('fungsionals.index') }}" class="nav-link"
+                                                      data-key="t-cover">
+                                                      Fungsional jabatan </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('admin_pendukungs.index') }}" class="nav-link"
+                                                      data-key="t-cover">
+                                                      Admin PPK</a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('pejabat_pengadaans.index') }}" class="nav-link"
+                                                      data-key="t-cover">
+                                                      Pejabat PPK</a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('pptks.index') }}" class="nav-link"
+                                                      data-key="t-cover">
+                                                      Pejabat PPTK</a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('ppk_keuangans.index') }}" class="nav-link"
+                                                      data-key="t-cover">
+                                                      PPK Keuangan</a>
+                                              </li>
+                                          </ul>
+                                      </div>
+                                  </li>
+                                  <li class="nav-item">
+                                      <a href="#sidebarSignUp" class="nav-link" data-bs-toggle="collapse"
+                                          role="button" aria-expanded="false" aria-controls="sidebarSignUp"
+                                          data-key="t-signup"> User
+                                          Profil
+                                      </a>
+                                      <div class="collapse menu-dropdown" id="sidebarSignUp">
+                                          <ul class="nav nav-sm flex-column">
+                                              <li class="nav-item">
+                                                  <a href="{{ route('pejabats.index') }}" class="nav-link"
+                                                      data-key="t-basic">
+                                                      Pejabat </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('ksps.index') }}" class="nav-link"
+                                                      data-key="t-cover">
+                                                      KSP </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('users.index') }}" class="nav-link"
+                                                      data-key="t-cover">
+                                                      User </a>
+                                              </li>
+                                          </ul>
+                                      </div>
+                                  </li>
+                              </ul>
+                          </div>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link menu-link" href="#sidebarPages" data-bs-toggle="collapse"
+                              role="button" aria-expanded="false" aria-controls="sidebarPages">
+                              <i class="ri-pages-line"></i> <span data-key="t-pages">Konfigurasi Input</span>
+                          </a>
+                          <div class="collapse menu-dropdown" id="sidebarPages">
+                              <ul class="nav nav-sm flex-column">
+                                  <li class="nav-item">
+                                      <a href="pages-starter.html" class="nav-link" data-key="t-starter">
+                                          Starter </a>
+                                  </li>
+                                  <li class="nav-item">
+                                      <a href="#sidebarProfile" class="nav-link" data-bs-toggle="collapse"
+                                          role="button" aria-expanded="false" aria-controls="sidebarProfile"
+                                          data-key="t-profile"> Setting Input
+                                      </a>
+                                      <div class="collapse menu-dropdown" id="sidebarProfile">
+                                          <ul class="nav nav-sm flex-column">
+                                              <li class="nav-item">
+                                                  <a href="{{ route('tahun_anggarans.index') }}" class="nav-link"
+                                                      data-key="t-simple-page">
+                                                      Tahun Anggaran </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('komponens.index') }}" class="nav-link"
+                                                      data-key="t-settings"> Komponen </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('uraian_satus.index') }}" class="nav-link"
+                                                      data-key="t-settings"> Uraian Satu </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('uraian_duas.index') }}" class="nav-link"
+                                                      data-key="t-settings"> Uraian Dua </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('status_validasis.index') }}" class="nav-link"
+                                                      data-key="t-settings"> Status Validasi </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('status_validasi_rkas.index') }}"
+                                                      class="nav-link" data-key="t-settings"> Status Validasi RKA </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('judul_headers.index') }}" class="nav-link"
+                                                      data-key="t-settings"> Judul Header </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('anggarans.index') }}" class="nav-link"
+                                                      data-key="t-settings"> Anggaran </a>
+                                              </li>
+                                          </ul>
+                                      </div>
+                                  </li>
+                                  <li class="nav-item">
+                                      <a href="#sidebarProfile2" class="nav-link" data-bs-toggle="collapse"
+                                          role="button" aria-expanded="false" aria-controls="sidebarProfile2"
+                                          data-key="t-profile"> Setting RKBU
+                                      </a>
+                                      <div class="collapse menu-dropdown" id="sidebarProfile2">
+                                          <ul class="nav nav-sm flex-column">
+                                              <li class="nav-item">
+                                                  <a href="{{ route('obyek_belanjas.index') }}" class="nav-link"
+                                                      data-key="t-simple-page">
+                                                      Obyek Belanja</a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('kategori_rkbus.index') }}" class="nav-link"
+                                                      data-key="t-settings"> Kategori RKBU </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('sub_kategori_rkbus.index') }}" class="nav-link"
+                                                      data-key="t-settings">Sub Kategori RKBU </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('programs.index') }}" class="nav-link"
+                                                      data-key="t-settings"> Program</a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('kegiatans.index') }}" class="nav-link"
+                                                      data-key="t-settings"> Kegiatan </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('sub_kegiatans.index') }}" class="nav-link"
+                                                      data-key="t-settings">Sub Kegiatan</a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('sumber_danas.index') }}" class="nav-link"
+                                                      data-key="t-settings">Sumber Dana</a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('jenis_kategori_rkbus.index') }}"
+                                                      class="nav-link" data-key="t-settings">Jenis Kategori RKBU</a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('kategori_rekenings.index') }}" class="nav-link"
+                                                      data-key="t-settings">Kategori Rekening</a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('jenis_belanjas.index') }}" class="nav-link"
+                                                      data-key="t-settings">Jenis Belanja</a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('aktivitas.index') }}" class="nav-link"
+                                                      data-key="t-settings">Aktivitas</a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="" class="nav-link" data-key="t-settings">Rekening
+                                                      Belanja</a>
+                                              </li>
+                                          </ul>
+                                      </div>
+                                  </li>
+                                  <li class="nav-item">
+                                      <a href="pages-team.html" class="nav-link" data-key="t-team"> Team </a>
+                                  </li>
+                                  <li class="nav-item">
+                                      <a href="pages-search-results.html" class="nav-link"
+                                          data-key="t-search-results">
+                                          Search Results </a>
+                                  </li>
+                              </ul>
+                          </div>
+                      </li>
+                  @endif
 
                   <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-components">RKBU Unit</span>
                   </li>
@@ -482,9 +454,26 @@
                   </li>
 
                   <li class="nav-item">
-                      <a class="nav-link menu-link" href="widgets.html">
-                          <i class="ri-honour-line"></i> <span data-key="t-widgets">Widgets</span>
+                      <a class="nav-link menu-link collapsed" href="#sidebarMultilevel" data-bs-toggle="collapse"
+                          role="button" aria-expanded="false" aria-controls="sidebarMultilevel">
+                          <i class="mdi mdi-share-variant-outline"></i> <span data-key="t-multi-level">History</span>
                       </a>
+                      <div class="menu-dropdown collapse" id="sidebarMultilevel" style="">
+                          <ul class="nav nav-sm flex-column">
+                              <li class="nav-item">
+                                  <a href="{{ route('history_barjas.index') }}" class="nav-link"
+                                      data-key="t-level-1.1"> Barang Jasa </a>
+                              </li>
+                              <li class="nav-item">
+                                  <a href="{{ route('history_modal.index') }}" class="nav-link"
+                                      data-key="t-level-1.1"> Modal </a>
+                              </li>
+                              <li class="nav-item">
+                                  <a href="{{ route('history_persediaan.index') }}" class="nav-link"
+                                      data-key="t-level-1.1"> Persediaan </a>
+                              </li>
+                          </ul>
+                      </div>
                   </li>
 
                   <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-components">Pengadaan
@@ -716,6 +705,47 @@
                           </div>
                       @endif
                   </li>
+                  <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-components">Asset</span>
+                  </li>
+                  <li class="nav-item">
+                      <a class="nav-link menu-link collapsed" href="#sidebarMaps" data-bs-toggle="collapse"
+                          role="button" aria-expanded="false" aria-controls="sidebarMaps">
+                          <i class="mdi mdi-map-marker-outline"></i> <span data-key="t-maps">Data Asset</span>
+                      </a>
+                      <div class="menu-dropdown collapse" id="sidebarMaps" style="">
+                          <ul class="nav nav-sm flex-column">
+                              <li class="nav-item">
+                                  <a href="{{ route('assets.index') }}" class="nav-link" data-key="t-google">
+                                      Asset
+                                  </a>
+                              </li>
+                              <li class="nav-item">
+                                  <a href="{{ route('penempatans.index') }}" class="nav-link" data-key="t-vector">
+                                      Lokasi Barang
+                                  </a>
+                              </li>
+                              <li class="nav-item">
+                                  <a href="{{ route('reklas_arbs.index') }}" class="nav-link" data-key="t-leaflet">
+                                      Reklas ARB
+                                  </a>
+                              </li>
+                              <li class="nav-item">
+                                  <a href="{{ route('laporan_kirs.index') }}" class="nav-link" data-key="t-leaflet">
+                                      Laporan KIR
+                                  </a>
+                              </li>
+                          </ul>
+                      </div>
+                  </li>
+
+                  <li class="nav-item">
+                      <a class="nav-link menu-link" target="_blank" href="landing.html">
+                          <i class="ri-rocket-line"></i> <span data-key="t-landing">Landing</span>
+                          <span class="badge badge-pill bg-danger" data-key="t-new">New</span>
+                      </a>
+                  </li>
+
+
               </ul>
           </div>
           <!-- Sidebar -->

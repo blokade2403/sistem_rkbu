@@ -24,7 +24,7 @@
     /* Step Container */
     .step {
         position: relative;
-        margin-bottom: 15px;
+        margin-bottom: 8px;
         display: flex;
         align-items: center;
         z-index: 1;

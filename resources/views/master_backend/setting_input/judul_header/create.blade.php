@@ -189,6 +189,44 @@
                                                         </label>
                                                     </div>
                                                 </div>
+
+                                                {{-- Gambar 3 --}}
+                                                <div class="profile-user position-relative d-inline-block mx-auto mb-2">
+                                                    <img id="preview-img-4"
+                                                        src="{{ asset('assets/images/users/user-dummy-img.jpg') }}"
+                                                        class="rounded-circle avatar-lg img-thumbnail user-profile-image"
+                                                        alt="user-profile-image">
+                                                    <div class="avatar-xs p-0 rounded-circle profile-photo-edit">
+                                                        <input id="profile-img-file-input-4" name="gambar3"
+                                                            type="file" class="profile-img-file-input"
+                                                            accept="image/png, image/jpeg">
+                                                        <label for="profile-img-file-input-2"
+                                                            class="profile-photo-edit avatar-xs">
+                                                            <span class="avatar-title rounded-circle bg-light text-body">
+                                                                <i class="ri-camera-fill"></i>
+                                                            </span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Gambar 4 --}}
+                                                <div class="profile-user position-relative d-inline-block mx-auto mb-2">
+                                                    <img id="preview-img-5"
+                                                        src="{{ asset('assets/images/users/user-dummy-img.jpg') }}"
+                                                        class="rounded-circle avatar-lg img-thumbnail user-profile-image"
+                                                        alt="user-profile-image">
+                                                    <div class="avatar-xs p-0 rounded-circle profile-photo-edit">
+                                                        <input id="profile-img-file-input-5" name="gambar4"
+                                                            type="file" class="profile-img-file-input"
+                                                            accept="image/png, image/jpeg">
+                                                        <label for="profile-img-file-input-2"
+                                                            class="profile-photo-edit avatar-xs">
+                                                            <span class="avatar-title rounded-circle bg-light text-body">
+                                                                <i class="ri-camera-fill"></i>
+                                                            </span>
+                                                        </label>
+                                                    </div>
+                                                </div>
                                                 <h5 class="fs-14">Add Image</h5>
                                                 <p></p>
                                             </div>

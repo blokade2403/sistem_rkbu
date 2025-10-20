@@ -17,22 +17,15 @@
             <div class="live-preview">
                 <div class="row mb-3">
                     <div class="col-lg-2">
-                        <label for="nameInput" class="form-label">Pilih Status Validasi</label>
+                        <label for="nameInput" class="form-label">Pilih Status Validasi KSP</label>
                     </div>
                     <div class="col-lg-10">
 
-                        <select id="form-control choices-select" name="id_status_validasi" class="form-select"
-                            data-choices data-choices-sorting="true">
-                            @php
-                                $selectedId = old(
-                                    'id_sub_kategori_rkbu',
-                                    optional($rkbuBarangJasa)->id_status_validasi,
-                                );
-                            @endphp
+                        {{-- Select tetap tampil tapi tidak bisa diubah --}}
+                        <select class="form-select" name="id_status_validasi" data-choices data-choices="true">
                             <option value="" disabled {{ $selectedId ? '' : 'selected' }}>
                                 Pilih Status Validasi
                             </option>
-
                             @foreach ($status_validasi as $sub)
                                 <option value="{{ $sub->id_status_validasi }}"
                                     {{ (string) $selectedId === (string) $sub->id_status_validasi ? 'selected' : '' }}>
@@ -40,6 +33,7 @@
                                 </option>
                             @endforeach
                         </select>
+
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -74,30 +68,46 @@
             <div class="live-preview">
                 <div class="row mb-3">
                     <div class="col-lg-2">
-                        <label for="nameInput" class="form-label">Pilih Status Validasi</label>
+                        <label for="nameInput" class="form-label">Pilih Status Validasi RKA</label>
                     </div>
                     <div class="col-lg-10">
 
-                        <select id="form-control choices-select" name="id_status_validasi_rka" class="form-select"
-                            data-choices data-choices-sorting="true">
-                            @php
-                                $selectedId = old(
-                                    'id_sub_kategori_rkbu',
-                                    optional($rkbuBarangJasa)->id_status_validasi_rka,
-                                );
-                            @endphp
+                        @php
+                            $selectedId = old(
+                                'id_sub_kategori_rkbu',
+                                optional($rkbuBarangJasa)->id_status_validasi_rka,
+                            );
+                            $isReadonly = $total_anggaran_sebelumnya != $sisa_anggaran_sebelumnya;
+                        @endphp
 
-                            <option value="" disabled {{ $selectedId ? '' : 'selected' }}>
-                                Pilih Status Validasi
-                            </option>
-
-                            @foreach ($status_validasi_rka as $sub)
-                                <option value="{{ $sub->id_status_validasi_rka }}"
-                                    {{ (string) $selectedId === (string) $sub->id_status_validasi_rka ? 'selected' : '' }}>
-                                    {{ $sub->nama_validasi_rka }}
+                        @if ($isReadonly)
+                            {{-- Hidden agar value tetap terkirim --}}
+                            <input type="hidden" name="id_status_validasi_rka" value="{{ $selectedId }}">
+                            {{-- Tampilkan select tapi nonaktif secara visual --}}
+                            <select class="form-select" disabled>
+                                @foreach ($status_validasi_rka as $sub)
+                                    <option value="{{ $sub->id_status_validasi_rka }}"
+                                        {{ (string) $selectedId === (string) $sub->id_status_validasi_rka ? 'selected' : '' }}>
+                                        {{ $sub->nama_validasi_rka }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @else
+                            <select id="form-control choices-select" name="id_status_validasi_rka" class="form-select"
+                                data-choices data-choices-sorting="true">
+                                <option value="" disabled {{ $selectedId ? '' : 'selected' }}>
+                                    Pilih Status Validasi
                                 </option>
-                            @endforeach
-                        </select>
+
+                                @foreach ($status_validasi_rka as $sub)
+                                    <option value="{{ $sub->id_status_validasi_rka }}"
+                                        {{ (string) $selectedId === (string) $sub->id_status_validasi_rka ? 'selected' : '' }}>
+                                        {{ $sub->nama_validasi_rka }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @endif
+
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -136,27 +146,46 @@
                     </div>
                     <div class="col-lg-10">
 
-                        <select id="form-control choices-select" name="id_status_validasi" class="form-select"
-                            data-choices data-choices-sorting="true">
-                            @php
-                                $selectedId = old(
-                                    'id_sub_kategori_rkbu',
-                                    optional($rkbuBarangJasa)->id_status_validasi,
-                                );
-                            @endphp
-                            <option value="" disabled {{ $selectedId ? '' : 'selected' }}>
-                                Pilih Status Validasi
-                            </option>
+                        @php
+                            $selectedId = old('id_sub_kategori_rkbu', optional($rkbuBarangJasa)->id_status_validasi);
+                            $isReadonly = $total_anggaran_sebelumnya != $sisa_anggaran_sebelumnya;
+                        @endphp
 
-                            @foreach ($status_validasi as $sub)
-                                <option value="{{ $sub->id_status_validasi }}"
-                                    {{ (string) $selectedId === (string) $sub->id_status_validasi ? 'selected' : '' }}>
-                                    {{ $sub->nama_validasi }}
+                        @if ($isReadonly)
+                            {{-- Hidden agar value tetap dikirim ke server --}}
+                            <input type="hidden" name="id_status_validasi" value="{{ $selectedId }}">
+
+                            {{-- Select tetap tampil tapi tidak bisa diubah --}}
+                            <select class="form-select" disabled>
+                                <option value="" disabled {{ $selectedId ? '' : 'selected' }}>
+                                    Pilih Status Validasi
                                 </option>
-                            @endforeach
-                        </select>
+                                @foreach ($status_validasi as $sub)
+                                    <option value="{{ $sub->id_status_validasi }}"
+                                        {{ (string) $selectedId === (string) $sub->id_status_validasi ? 'selected' : '' }}>
+                                        {{ $sub->nama_validasi }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @else
+                            {{-- Jika editable --}}
+                            <select id="form-control choices-select" name="id_status_validasi" class="form-select"
+                                data-choices data-choices-sorting="true">
+                                <option value="" disabled {{ $selectedId ? '' : 'selected' }}>
+                                    Pilih Status Validasi
+                                </option>
+                                @foreach ($status_validasi as $sub)
+                                    <option value="{{ $sub->id_status_validasi }}"
+                                        {{ (string) $selectedId === (string) $sub->id_status_validasi ? 'selected' : '' }}>
+                                        {{ $sub->nama_validasi }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @endif
+
                     </div>
                 </div>
+
                 <div class="row mb-3">
                     <div class="col-lg-2">
                         <label for="websiteUrl" class="form-label">Keterangan Validasi</label>
@@ -172,28 +201,45 @@
                     </div>
                     <div class="col-lg-10">
 
-                        <select id="form-control choices-select" name="id_status_validasi_rka" class="form-select"
-                            data-choices data-choices-sorting="true">
-                            @php
-                                $selectedId = old(
-                                    'id_sub_kategori_rkbu',
-                                    optional($rkbuBarangJasa)->id_status_validasi_rka,
-                                );
-                            @endphp
+                        @php
+                            $selectedId = old(
+                                'id_sub_kategori_rkbu',
+                                optional($rkbuBarangJasa)->id_status_validasi_rka,
+                            );
+                            $isReadonly = $total_anggaran_sebelumnya != $sisa_anggaran_sebelumnya;
+                        @endphp
 
-                            <option value="" disabled {{ $selectedId ? '' : 'selected' }}>
-                                Pilih Status Validasi
-                            </option>
-
-                            @foreach ($status_validasi_rka as $sub)
-                                <option value="{{ $sub->id_status_validasi_rka }}"
-                                    {{ (string) $selectedId === (string) $sub->id_status_validasi_rka ? 'selected' : '' }}>
-                                    {{ $sub->nama_validasi_rka }}
+                        @if ($isReadonly)
+                            {{-- Hidden agar value tetap terkirim --}}
+                            <input type="hidden" name="id_status_validasi_rka" value="{{ $selectedId }}">
+                            {{-- Tampilkan select tapi nonaktif secara visual --}}
+                            <select class="form-select" disabled>
+                                @foreach ($status_validasi_rka as $sub)
+                                    <option value="{{ $sub->id_status_validasi_rka }}"
+                                        {{ (string) $selectedId === (string) $sub->id_status_validasi_rka ? 'selected' : '' }}>
+                                        {{ $sub->nama_validasi_rka }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @else
+                            <select id="form-control choices-select" name="id_status_validasi_rka"
+                                class="form-select" data-choices data-choices-sorting="true">
+                                <option value="" disabled {{ $selectedId ? '' : 'selected' }}>
+                                    Pilih Status Validasi
                                 </option>
-                            @endforeach
-                        </select>
+
+                                @foreach ($status_validasi_rka as $sub)
+                                    <option value="{{ $sub->id_status_validasi_rka }}"
+                                        {{ (string) $selectedId === (string) $sub->id_status_validasi_rka ? 'selected' : '' }}>
+                                        {{ $sub->nama_validasi_rka }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @endif
+
                     </div>
                 </div>
+
                 <div class="row mb-3">
                     <div class="col-lg-2">
                         <label for="websiteUrl" class="form-label">Keterangan Validasi</label>

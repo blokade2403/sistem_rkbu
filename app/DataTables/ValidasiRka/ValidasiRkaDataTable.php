@@ -190,7 +190,7 @@ class ValidasiRkaDataTable extends DataTable
 
                 // Kalau lolos kondisi -> kasih tombol edit & delete
                 $editUrl   = route($routePrefix . '.edit', $row->id_rkbu);
-                // $deleteUrl = route($routePrefix . '.destroy', $row->id_rkbu);
+                $deleteUrl = route($routePrefix . '.destroy', $row->id_rkbu);
 
                 return view('components.partials.action-buttons', compact('editUrl', 'deleteUrl'))->render();
             })

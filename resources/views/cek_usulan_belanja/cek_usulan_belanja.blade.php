@@ -108,7 +108,7 @@
                         <div class="card-block">
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <table id="responsive-reorder"
+                                    <table id="example"
                                         class="table table-hover table-centered align-middle table-nowrap mb-0">
                                         <thead class="text-muted table-light">
                                             <tr class="text-uppercase">

@@ -50,9 +50,27 @@
                                                         <div class="mb-3">
                                                             <label for="phonenumberInput" class="form-label">Fase
                                                                 Tahun</label>
-                                                            <input type="text" class="form-control"
-                                                                placeholder="fase tahun"
-                                                                value="{{ $TahunAnggaran->fase_tahun }}" name="fase_tahun">
+                                                            @php
+                                                                $selectedFase = old(
+                                                                    'fase_tahun',
+                                                                    $TahunAnggaran->fase_tahun ?? '',
+                                                                );
+                                                            @endphp
+
+                                                            <select name="fase_tahun" class="form-select" data-choices
+                                                                data-choices-sorting="true">
+                                                                <option value="" disabled
+                                                                    {{ $selectedFase ? '' : 'selected' }}>
+                                                                    Pilih Status
+                                                                </option>
+
+                                                                @foreach ($fase as $item)
+                                                                    <option value="{{ $item->nama_fase }}"
+                                                                        {{ $selectedFase == $item->nama_fase ? 'selected' : '' }}>
+                                                                        {{ $item->nama_fase }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-12">

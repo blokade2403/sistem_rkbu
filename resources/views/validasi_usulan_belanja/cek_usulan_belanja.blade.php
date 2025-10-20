@@ -124,7 +124,7 @@
                                             @php
                                                 $no = 1;
                                             @endphp
-                                            @foreach ($usulan_barangs as $item)
+                                            @foreach ($id_usulan as $keyIndex => $item)
                                                 <tr>
                                                     <td>{{ $no++ }}</td>
                                                     <td>
@@ -163,6 +163,8 @@
                                                                     data-kategori="{{ $item->sub_kategori_rkbu->kode_sub_kategori_rkbu }}. {{ $item->sub_kategori_rkbu->nama_sub_kategori_rkbu }}"
                                                                     data-pengusul="{{ $item->nama_pengusul_barang }}"
                                                                     data-status="{{ $item->status_permintaan_barang }}"
+                                                                    data-status_pptk="{{ $item->status_validasi_pptk }}"
+                                                                    data-keterangan_pptk="{{ $item->keterangan_pptk }}"
                                                                     {{-- data-total="{{ $get_total }}" --}}
                                                                     data-route="{{ route($routePrefix . '.updateValidasi', $item->no_usulan_barang) }}"
                                                                     data-bs-toggle="modal" data-bs-target="#showModal">

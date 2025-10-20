@@ -26,5 +26,7 @@ class JudulHeader extends Model
         'header7',
         'gambar1',
         'gambar2',
+        'gambar3',
+        'gambar4',
     ];
 }

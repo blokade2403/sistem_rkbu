@@ -236,24 +236,26 @@ if (!function_exists('terbilangUang')) {
     if (! function_exists('getUserNotifications')) {
         function getUserNotifications()
         {
-            $idLevel        = session('id_level');
+            $idPptk         = session('id_pptk'); // gunakan session id_pptk
             $idPejabat      = session('id_pejabat');
             $tahunAnggaran  = Session::get('tahun_anggaran');
             $namaLevelUser  = session('nama_level_user');
 
             $pptk = [
-                '9d7a2cd3-1ab2-4f6b-bba3-3ee6bcc06e85',
-                '9dfafd48-b536-42a0-985e-97eb47168589',
-                '9dfafd54-6bae-4814-b380-dd7b701ae2e7',
+                '9ce173c5-b49f-41e1-b17c-f55e25544a58',
+                '9d5b9ca9-8699-4456-8267-153db7acb631',
+                '9d5b9cbe-e3f4-4cfc-bb3a-3e5b4fca35db',
             ];
 
             $notifications = collect();
 
-            if (in_array($idLevel, $pptk)) {
+            if (!empty($idPptk)) {
                 $notifications = UsulanBarang::where('status_permintaan_barang', 'Perlu Validasi PPTK')
                     ->where('usulan_barangs.tahun_anggaran', $tahunAnggaran)
                     ->where('usulan_barangs.status_usulan_barang', 'Selesai')
                     ->join('users', 'usulan_barangs.id_user', '=', 'users.id_user')
+                    ->join('sub_kategori_rkbus', 'usulan_barangs.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
+                    ->where('sub_kategori_rkbus.id_pptk', $idPptk)
                     ->select('usulan_barangs.*')
                     ->distinct()
                     ->get();

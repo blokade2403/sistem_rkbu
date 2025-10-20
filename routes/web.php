@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\Assets\AssetController;
+use App\Http\Controllers\Assets\AssetImportController;
+use App\Http\Controllers\Assets\LaporanKirController;
+use App\Http\Controllers\Assets\PenempatanController;
+use App\Http\Controllers\Assets\ReklasArbController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Dashboard\DashboardController;
@@ -88,9 +93,16 @@ use App\Http\Controllers\UsulanBelanja\PdfControllerCekUsulanBarangPersediaan;
 use App\Http\Controllers\MasterBackend\SettingRkbu\JenisKategoriRkbuController;
 use App\Http\Controllers\Rkbu\ValidasiRka\ValidasiRkbuModalKantorRkaController;
 use App\Http\Controllers\MasterBackend\SettingInput\StatusValidasiRkaController;
+use App\Http\Controllers\MasterSpj\PdfControllerSPJBastBP;
+use App\Http\Controllers\MasterSpj\PdfControllerSPJBastHP;
+use App\Http\Controllers\MasterSpj\PdfControllerSpjBastPK;
+use App\Http\Controllers\MasterSpj\PdfControllerSpjSuratPesanan;
 use App\Http\Controllers\Rkbu\ValidasiRka\PdfControllerValidasiPegawaiNonPnsRka;
 use App\Http\Controllers\Rkbu\ValidasiKsp\ValidasiRkbuPegawaiNonPnsKspController;
 use App\Http\Controllers\Rkbu\ValidasiRka\ValidasiRkbuPegawaiNonPnsRkaController;
+use App\Http\Controllers\RkbuHistory\RkbuHistoryBarjasController;
+use App\Http\Controllers\RkbuHistory\RkbuHistoryModalController;
+use App\Http\Controllers\RkbuHistory\RkbuHistoryPersediaanController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Rka\ValidasiUsulanModalRkaController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Rka\ValidasiUsulanBarangRkaController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Pptk\ValidasiUsulanModalPptkController;
@@ -127,6 +139,11 @@ Route::controller(AuthController::class)->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashbord', [DashboardController::class, 'index'])->name('dashbord');
+
+    Route::prefix('dashboard')->name('dashboard.')->group(function () {
+        Route::get('/apbd', [DashboardController::class, 'apbd'])->name('apbd'); // Anggaran APBD
+        Route::get('/realisasi', [DashboardController::class, 'realisasi'])->name('realisasi'); // Data Asset
+    });
 
     // Master Data Routes
     Route::prefix('setting-user')->group(function () {
@@ -221,6 +238,12 @@ Route::middleware('auth')->group(function () {
         Route::resource('validasi_ksp_rkbu_modal_kantors', ValidasiRkbuModalKspController::class);
         Route::post('validasi_ksp_rkbu_modal_kantors/get_data_by_subkategori', [ValidasiRkbuModalKspController::class, 'getDataBySubKategori'])->name('validasi_ksp_rkbu_modal_kantors.get_data_by_subkategori');
         Route::get('/downloadPDF', [PdfControllerValidasiModalKantorKsp::class, 'downloadPDF'])->name('validasi_ksp_rkbu_modal_kantors.downloadPDF');
+    });
+
+    Route::prefix('history-rkbu')->group(function () {
+        Route::resource('history_barjas', RkbuHistoryBarjasController::class);
+        Route::resource('history_modal', RkbuHistoryModalController::class);
+        Route::resource('history_persediaan', RkbuHistoryPersediaanController::class);
     });
 
     Route::prefix('validasi-ksp-modal-alkes')->group(function () {
@@ -437,7 +460,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/validasi-usulan-modal-rkas/show/{no_usulan_barang}', [ValidasiUsulanModalRkaController::class, 'show'])->name('validasi_usulan_modal_rkas.show');
         Route::delete('/validasi-usulan-modal-rkas/{id_usulan_barang}', [ValidasiUsulanModalRkaController::class, 'doDelete'])
             ->name('validasi_usulan_modal_rkas.delete');
-        Route::get('/downloadPDF/{id_usulan_modal}', [PdfControllerCekUsulanBarangModal::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_modal_rkas.downloadPDF');
+        Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangModal::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_modal_rkas.downloadPDF');
     });
 
     Route::prefix('validasi-usulan-persediaan-rka')->group(function () {
@@ -448,7 +471,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/validasi-usulan-persediaan-rkas/show/{no_usulan_barang}', [ValidasiUsulanPersediaanRkaController::class, 'show'])->name('validasi_usulan_persediaan_rkas.show');
         Route::delete('/validasi-usulan-persediaan-rkas/{id_usulan_barang}', [ValidasiUsulanPersediaanRkaController::class, 'doDelete'])
             ->name('validasi_usulan_persediaan_rkas.delete');
-        Route::get('/downloadPDF/{id_usulan_persediaan}', [PdfControllerCekUsulanBarangModal::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_persediaan_rkas.downloadPDF');
+        Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangModal::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_persediaan_rkas.downloadPDF');
     });
 
     Route::prefix('validasi-usulan-belanja-direktur')->group(function () {
@@ -521,15 +544,84 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('master-spj')->group(function () {
         Route::resource('master_spjs', MasterSpjController::class);
+        Route::get('/data', [MasterSpjController::class, 'data'])->name('master_spjs.data');
         // Route::get('{id}/show', [MasterSpjController::class, 'show'])->name('master_spjs.show');
         Route::get('/master_spjs/editkomponen/{id}', [MasterSpjController::class, 'editkomponen'])->name('master_spjs.editkomponen');
         Route::put('/master_spjs/{id_spj_detail}', [MasterSpjController::class, 'update'])->name('master_spjs.update');
-        Route::put('/master-spj/{id}/update-surat-pesanan', [MasterSpjController::class, 'updateSuratPesanan'])
+        Route::put('/master-spjs/{id}/update-surat-pesanan', [MasterSpjController::class, 'updateSuratPesanan'])
             ->name('master_spjs.updateSuratPesanan');
+        Route::put('/master-spjs/{id}/update-surat-pesanan-admin', [MasterSpjController::class, 'updateSuratPesananAdmin'])
+            ->name('master_spjs.updateSuratPesananAdmin');
         Route::put('/master-spjs/{id}/update-barang-datang', [MasterSpjController::class, 'updateBarangDatang'])
             ->name('master_spjs.updateBarangDatang');
         Route::put('/master-spj/{id}/update-tukar-faktur', [MasterSpjController::class, 'tukarfaktur'])
             ->name('master_spjs.tukarfaktur');
+        Route::put('/master-spj/{id}/update-bast', [MasterSpjController::class, 'updateBast'])
+            ->name('master_spjs.updateBast');
+        Route::put('/master-spj/{id}/update-bast-admin', [MasterSpjController::class, 'updateBastAdmin'])
+            ->name('master_spjs.updateBastAdmin');
+        Route::put('/master-spj/{id}/update-verif-pb', [MasterSpjController::class, 'updateVerifPB'])
+            ->name('master_spjs.updateVerifPB');
+        Route::put('/master-spj/{id}/update-verif-ppk', [MasterSpjController::class, 'updateVerifPPK'])
+            ->name('master_spjs.updateVerifPPK');
+        Route::put('/master-spj/{id}/update-verif-ppbj', [MasterSpjController::class, 'updateVerifPPBJ'])
+            ->name('master_spjs.updateVerifPPBJ');
+        Route::put('/master-spj/{id}/update-verif-pptk', [MasterSpjController::class, 'updateVerifPPTK'])
+            ->name('master_spjs.updateVerifPPTK');
+        Route::put('/master-spj/{id}/update-verif-Verifikator', [MasterSpjController::class, 'updateVerifVerifikator'])
+            ->name('master_spjs.updateVerifVerifikator');
+        Route::put('/master-spj/{id}/update-verif-PPK-Keuangan', [MasterSpjController::class, 'updateVerifPPKKeuangan'])
+            ->name('master_spjs.updateVerifPPKKeuangan');
+        Route::put('/master-spj/{id}/update-verif-Direktur', [MasterSpjController::class, 'updateVerifDirektur'])
+            ->name('master_spjs.updateVerifDirektur');
+        Route::put('/master-spj/{id}/update-serah-terima-Bendahara', [MasterSpjController::class, 'updateSerahTerimaBendahara'])
+            ->name('master_spjs.updateSerahTerimaBendahara');
+        Route::put('/master-spj/{id}/update-verifikasi-Bendahara', [MasterSpjController::class, 'updateverifikasiBendahara'])
+            ->name('master_spjs.updateverifikasiBendahara');
+        Route::put('/master-spj/{id}/update-pembayaran-Bendahara', [MasterSpjController::class, 'updatepembayaranBendahara'])
+            ->name('master_spjs.updatepembayaranBendahara');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangBarjas::class, 'downloadPDFCekBarjas'])->name('master_spjs.downloadPDF');
+        Route::get('/downloadPDF_Spj_surat_pesanan/{id}', [PdfControllerSpjSuratPesanan::class, 'downloadPDF'])->name('spj_surat_pesanan.downloadPDF_Spj_surat_pesanan');
+        Route::get('/downloadPDF_Spj_BAST_PK/{id}', [PdfControllerSpjBastPK::class, 'downloadPDF'])->name('bast_pk.downloadPDF_BAST_PK');
+        Route::get('/downloadPDF_Spj_BAST_BP/{id}', [PdfControllerSPJBastBP::class, 'downloadPDF'])->name('bast_bp.downloadPDF_BAST_BP');
+        Route::get('/downloadPDF_Spj_BAST_HP/{id}', [PdfControllerSPJBastHP::class, 'downloadPDF'])->name('bast_hp.downloadPDF_BAST_HP');
+        // Route::get('/rkbu/download-report-spj', [MasterSpjEksport::class, 'downloadReport'])->name('master_spj.downloadReport');
+        // Route::get('/downloadPDF-report-spj', [PdfControllerMasterSpj::class, 'downloadPDF'])->name('master_spj.downloadPDF_report_spj');
+        // Route::get('/downloadPDF-realisasi-report-spj', [PdfControllerRealisasiMasterSpj::class, 'downloadPDF'])->name('master_spj.downloadPDF_realisasi_spj');
+    });
+
+    Route::prefix('assets')->group(function () {
+        Route::resource('assets', AssetController::class);
+        Route::resource('penempatans', PenempatanController::class);
+        Route::resource('laporan_kirs', LaporanKirController::class);
+        Route::resource('reklas_arbs', ReklasArbController::class);
+        Route::post('/barang_assets/store', [AssetController::class, 'store'])->name('barang_assets.store');
+        Route::get('/barang_assets/create', [AssetController::class, 'create'])->name('barang_assets.create');
+        Route::get('/barang_assets/{id}/edit', [AssetController::class, 'edit'])->name('barang_assets.edit');
+        Route::put('/barang_assets/{id_asset}', [AssetController::class, 'update'])->name('barang_assets.update');
+        Route::get('/barang_assets/{id_asset}/reklas', [AssetController::class, 'reklas_update'])->name('barang_assets.reklas_update');
+        Route::delete('/barang_assets/{asset}', [AssetController::class, 'destroy'])->name('barang_assets.destroy');
+        Route::get('/barang_assets', [AssetController::class, 'index'])->name('barang_assets.index');
+        Route::post('barang_assets/import', [AssetImportController::class, 'import'])->name('barang_assets.import');
+        Route::get('barang_assets/download', [AssetImportController::class, 'downloadReport'])->name('barang_assets.downloadReport');
+        Route::get('/barang_assets/generate_qrcode/{id_asset}', [AssetController::class, 'generateQrCode'])->name('barang_assets.generate_qrcode');
+        Route::get('/barang_assets/export', [AssetController::class, 'export'])->name('barang_assets.export');
+        Route::get('/barang_assets/cetak-qrcode', [AssetController::class, 'cetakQRCode'])->name('barang_assets.cetakQRCode');
+        Route::get('/barang_assets/download/{id_asset}', [AssetController::class, 'downloadSptjm'])->name('barang_assets.download');
+        // Route::get('/PdfControllerSptjmAsset/{id_asset}', [PdfControllerSptjmAsset::class, 'downloadPDF'])->name('barang_assets.PdfControllerSptjmAsset');
+        Route::get('/barang_assets/details/{id}', [AssetController::class, 'show'])->name('barang_assets.details');
+
+        // Route::get('/reklas_arbs/details/{id}', [ReklasArbController::class, 'show'])->name('reklas_arbs.details');
+        // Route::post('/reklas_arbs/store', [ReklasArbController::class, 'store'])->name('reklas_arbs.store');
+        // Route::get('/reklas_arbs/{id}/edit', [ReklasArbController::class, 'edit'])->name('reklas_arbs.edit');
+        // Route::put('/reklas_arbs/{id_asset}', [ReklasArbController::class, 'update'])->name('reklas_arbs.update');
+        // Route::delete('/reklas_arbs/{asset}', [ReklasArbController::class, 'destroy'])->name('reklas_arbs.destroy');
+        // Route::get('/reklas_arbs', [ReklasArbController::class, 'index'])->name('reklas_arbs.index');
+        // Route::post('reklas_arbs/import', [AssetImport::class, 'import'])->name('reklas_arbs.import');
+        // Route::get('reklas_arbs/download', [AssetImport::class, 'downloadReport'])->name('reklas_arbs.downloadReport');
+        Route::get('/reklas_arbs/generate_qrcode/{id_asset}', [ReklasArbController::class, 'generateQrCode'])->name('reklas_arbs.generate_qrcode');
+        Route::get('/reklas_arbs/export', [ReklasArbController::class, 'export'])->name('reklas_arbs.export');
+        Route::get('/reklas_arbs/cetak-qrcode', [ReklasArbController::class, 'cetakQRCode'])->name('reklas_arbs.cetakQRCode');
+        Route::get('laporan_kirs/print/{id_penempatan}', [LaporanKirController::class, 'print'])->name('laporan_kirs.print');
     });
 });

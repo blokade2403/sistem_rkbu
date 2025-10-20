@@ -30,6 +30,8 @@
                                         <th>Gambar 1</th>
                                         <th>Gambar 2</th>
                                         <th>Gambar 3</th>
+                                        <th>Gambar 4</th>
+                                        <th>Gambar 5</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -103,6 +105,24 @@
                                                 @if (!empty($judul_headers->header7))
                                                     <div class="mt-2">
                                                         <img src="{{ asset('storage/judul_header/' . basename($judul_headers->header7)) }}"
+                                                            alt="Gambar 1" width="120" height="120"
+                                                            class="rounded avatar-xl shadow">
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if (!empty($judul_headers->gambar3))
+                                                    <div class="mt-2">
+                                                        <img src="{{ asset('storage/judul_header/' . basename($judul_headers->gambar3)) }}"
+                                                            alt="Gambar 1" width="120" height="120"
+                                                            class="rounded avatar-xl shadow">
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if (!empty($judul_headers->gambar4))
+                                                    <div class="mt-2">
+                                                        <img src="{{ asset('storage/judul_header/' . basename($judul_headers->gambar4)) }}"
                                                             alt="Gambar 1" width="120" height="120"
                                                             class="rounded avatar-xl shadow">
                                                     </div>

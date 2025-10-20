@@ -217,6 +217,9 @@ class UsulanSpjModalController extends Controller
                     'id_usulan_barang_detail' => $id_usulan_barang_detail,
                 ]);
             }
+
+            UsulanBarangDetail::where('id_usulan_barang_detail', $id_usulan_barang_detail)
+                ->update(['status_usulan_barang_detail' => 'Proses Pesanan']);
         }
 
         return redirect()->route('usulan_spj_modals.index')->with('success', 'Data berhasil ditransfer ke SPJ.');
@@ -526,6 +529,18 @@ class UsulanSpjModalController extends Controller
                 $spj = Spj::findOrFail($id_spj);
                 $spj->status_spj = 'Pending Pengadaan';
                 $spj->save();
+
+                // ✅ Ambil id_usulan_barang_detail dari spj_details untuk spj ini
+                $idDetails = DB::table('spj_details')
+                    ->where('id_spj', $id_spj)
+                    ->pluck('id_usulan_barang_detail')
+                    ->toArray();
+
+                // ✅ Update hanya detail yang muncul di spj_details
+                if (!empty($idDetails)) {
+                    UsulanBarangDetail::whereIn('id_usulan_barang_detail', $idDetails)
+                        ->update(['status_usulan_barang_detail' => 'Pending Pengadaan Barang']);
+                }
             } else {
                 // Jika status_spj bukan 'Pending', jalankan proses lengkap
                 $usulanBarang = UsulanBarang::find($request->id_usulan_barang);
@@ -544,6 +559,18 @@ class UsulanSpjModalController extends Controller
                 $spj                = Spj::findOrFail($id_spj);
                 $spj->status_spj    = 'Proses Pengadaan Barang';
                 $spj->save();
+
+                // ✅ Ambil id_usulan_barang_detail dari spj_details untuk spj ini
+                $idDetails = DB::table('spj_details')
+                    ->where('id_spj', $id_spj)
+                    ->pluck('id_usulan_barang_detail')
+                    ->toArray();
+
+                // ✅ Update hanya detail yang muncul di spj_details
+                if (!empty($idDetails)) {
+                    UsulanBarangDetail::whereIn('id_usulan_barang_detail', $idDetails)
+                        ->update(['status_usulan_barang_detail' => 'Proses Pengadaan Barang']);
+                }
 
                 // Insert ke tabel master_spj
                 $tahunAnggaran = session('tahun_anggaran');

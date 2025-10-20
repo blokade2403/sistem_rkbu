@@ -45,7 +45,9 @@
  <script src="{{ asset('assets/libs/swiper/swiper-bundle.min.js') }}"></script>
 
  <!-- Dashboard init -->
+ <script src="{{ asset('assets/js/pages/dashboard-projects.init.js') }}"></script>
  <script src="{{ asset('assets/js/pages/dashboard-ecommerce.init.js') }}"></script>
+ <script src="{{ asset('assets/js/pages/ecommerce-product-details.init.js') }}"></script>
  <script src="{{ asset('assets/js/pages/form-wizard.init.js') }}"></script>
 
  <!-- App js -->

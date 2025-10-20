@@ -29,34 +29,34 @@ class MasterSpjController extends Controller
     public function index(Request $request)
     {
         // dd(session()->all());
-        $tahunAnggaran = Session::get('tahun_anggaran');
-        $judul_headers = JudulHeader::first();
-        $idAdminPendukungPpk = session('id_admin_pendukung_ppk');
-        $nama_level_user = session('nama_level_user') ?? 'Guest'; // Default 'Guest'
+        $tahunAnggaran          = Session::get('tahun_anggaran');
+        $judul_headers          = JudulHeader::first();
+        $idAdminPendukungPpk    = session('id_admin_pendukung_ppk');
+        $nama_level_user        = session('nama_level_user') ?? 'Guest'; // Default 'Guest'
 
         // Data header
-        $judul_header1 = $judul_headers->header1 ?? 'Judul Tidak Ada';
-        $nama = $judul_headers->nama_rs ?? 'Nama Tidak Ada';
-        $alamat = $judul_headers->alamat_rs ?? 'Alamat Tidak Ada';
-        $tlp = $judul_headers->tlp_rs ?? 'Tlp Tidak Ada';
-        $email = $judul_headers->email_rs ?? 'Email Tidak Ada';
-        $website = $judul_headers->header3 ?? 'Website Tidak Ada';
-        $gambar1 = $judul_headers->gambar1 ? asset('storage/uploads/' . basename($judul_headers->gambar1)) : asset('storage/uploads/foto.png');
-        $gambar2 = $judul_headers->gambar2 ? asset('storage/uploads/' . basename($judul_headers->gambar2)) : asset('storage/uploads/foto.png');
+        $judul_header1          = $judul_headers->header1 ?? 'Judul Tidak Ada';
+        $nama                   = $judul_headers->nama_rs ?? 'Nama Tidak Ada';
+        $alamat                 = $judul_headers->alamat_rs ?? 'Alamat Tidak Ada';
+        $tlp                    = $judul_headers->tlp_rs ?? 'Tlp Tidak Ada';
+        $email                  = $judul_headers->email_rs ?? 'Email Tidak Ada';
+        $website                = $judul_headers->header3 ?? 'Website Tidak Ada';
+        $gambar1                = $judul_headers->gambar1 ? asset('storage/uploads/' . basename($judul_headers->gambar1)) : asset('storage/uploads/foto.png');
+        $gambar2                = $judul_headers->gambar2 ? asset('storage/uploads/' . basename($judul_headers->gambar2)) : asset('storage/uploads/foto.png');
 
         // Default data collections
-        $invo = collect();
-        $invo_pendukung_ppk = collect();
-        $invo_pb = collect();
-        $invo_bendahara = collect();
-        $invo_direktur = collect();
-        $invo_ksp = collect();
+        $invo                   = collect();
+        $invo_pendukung_ppk     = collect();
+        $invo_pb                = collect();
+        $invo_bendahara         = collect();
+        $invo_direktur          = collect();
+        $invo_ksp               = collect();
 
         // Level user pengadaan PPK
-        $level_pengadaan_ppk = ['Administrator', 'Admin PPK', 'PPTK', 'PPK', 'PPBJ', 'Validasi Keuangan', 'Verifikator', 'PPK Keuangan'];
-        $level_pb = ['Pengurus Barang', 'Administrator'];
-        $level_pptk = ['PPTK Alkes', 'Administrator'];
-        $level_bendahara = ['Bendahara', 'Administrator'];
+        $level_pengadaan_ppk    = ['Administrator', 'Admin PPK', 'PPTK', 'PPTK Umum', 'PPTK Alkes', 'PPK', 'PPBJ', 'Validasi Keuangan', 'Verifikator', 'PPK Keuangan', 'Direktur', 'Bendahara'];
+        $level_pb               = ['Pengurus Barang', 'Administrator'];
+        $level_pptk             = ['PPTK Alkes', 'Administrator'];
+        $level_bendahara        = ['Bendahara', 'Administrator'];
 
         $sub_kategori_rkbus = SubKategoriRkbu::join('rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
             ->join('usulan_barangs', 'usulan_barangs.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
@@ -317,8 +317,26 @@ class MasterSpjController extends Controller
         ];
 
         // dd($invo);
-        return view('master_spj.index', $data, compact('filteredData', 'sub_kategori_rkbus'), ['title' => 'Halaman SPJ', 'routePrefix' => 'master_spjs']);
+        return view('master_spj.layouts.index', $data, compact('filteredData', 'sub_kategori_rkbus'), ['title' => 'Halaman SPJ', 'routePrefix' => 'master_spjs']);
     }
+
+    // public function index(MasterSpjDataTable $dataTable)
+    // {
+    //     $judul_headers = JudulHeader::first();
+    //     $tahunAnggaran = Session::get('tahun_anggaran');
+    //     $sub_kategori_rkbus = SubKategoriRkbu::all();
+
+    //     return $dataTable->render('master_spj.index_serverside', [
+    //         'judul_header1' => $judul_headers->header1 ?? 'Judul Tidak Ada',
+    //         'nama'          => $judul_headers->nama_rs ?? '-',
+    //         'alamat'        => $judul_headers->alamat_rs ?? '-',
+    //         'title'         => 'Halaman SPJ',
+    //         'routePrefix'   => 'master_spjs',
+    //         'sub_kategori_rkbus' => $sub_kategori_rkbus,
+    //         'tahunAnggaran' => $tahunAnggaran
+    //     ]);
+    // }
+
 
     public function create() {}
     public function store(Request $request) {}
@@ -553,7 +571,6 @@ class MasterSpjController extends Controller
 
         // dd($sub_kategori_rkbus, $invoice);
 
-
         $sum_total_ppn = SpjDetail::where('spj_details.id_spj', $invoice->id_spj)
             ->join('rkbus', 'rkbus.id_rkbu', '=', 'spj_details.id_rkbu') // Join ke tabel rkbus
             ->join('spjs', 'spjs.id_spj', '=', 'spj_details.id_spj') // Join ke tabel spjs
@@ -597,6 +614,8 @@ class MasterSpjController extends Controller
                 'units.nama_unit as unit',
                 'sumber_danas.id_sumber_dana', // Retrieving id_sumber_dana
                 'sumber_danas.nama_sumber_dana', // Retrieving sumber_danas field
+                'jenis_kategori_rkbus.kode_jenis_kategori_rkbu', // Retrieving sumber_danas field
+                'jenis_kategori_rkbus.nama_jenis_kategori_rkbu', // Retrieving sumber_danas field
             ) // Pilih hanya id_usulan_barang
             ->distinct()
             ->first();
@@ -611,6 +630,8 @@ class MasterSpjController extends Controller
                 ->join('rkbus', 'rkbus.id_rkbu', '=', 'spj_details.id_rkbu') // Join ke tabel rkbus
                 ->join('spjs', 'spjs.id_spj', '=', 'spj_details.id_spj') // Join ke tabel spjs
                 ->join('usulan_barangs', 'spjs.id_usulan_barang', '=', 'usulan_barangs.id_usulan_barang') // Join ke tabel usulan_barangs
+                ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
+                ->join('units', 'units.id_unit', '=', 'users.id_unit')
                 ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu') // Join ke tabel usulan_barangs
                 ->Join('usulan_barang_details', 'usulan_barang_details.id_usulan_barang_detail', '=', 'spj_details.id_usulan_barang_detail') // Left join ke tabel usulan_barang_details
                 ->select(
@@ -618,12 +639,16 @@ class MasterSpjController extends Controller
                     'rkbus.nama_barang',
                     'sub_kategori_rkbus.kode_sub_kategori_rkbu',
                     'sub_kategori_rkbus.nama_sub_kategori_rkbu',
-                    'usulan_barang_details.*'
+                    'usulan_barang_details.*',
+                    'usulan_barangs.*',
+                    'users.id_unit',
+                    'units.nama_unit'
                 ) // Select kolom yang dibutuhkan
                 ->get();
         } else {
             $keranjang = collect(); // Jika tidak ada, gunakan collection kosong
         }
+
 
         $data = [
             'no_inv'                          => $invo,
@@ -647,7 +672,7 @@ class MasterSpjController extends Controller
 
 
         // dd($data);
-        return view('master_spj.edit', $data, compact('master_spj'), ['title' => '', 'routePrefix' => 'master_spjs']);
+        return view('master_spj.layouts.edit', $data, compact('master_spj'), ['title' => '', 'routePrefix' => 'master_spjs']);
     }
 
     public function editkomponen($id)
@@ -836,7 +861,6 @@ class MasterSpjController extends Controller
         $masterSpj->harga_dasar                 = $request->input('harga_dasar');
         $masterSpj->status_hutang               = $request->input('status_hutang');
         $masterSpj->status_proses_pesanan       = 'Selesai';
-        $masterSpj->ket_verif_bendahara         = 'Proses';
         $masterSpj->tgl_proses_pemesanan        = now();
 
 
@@ -851,6 +875,59 @@ class MasterSpjController extends Controller
                 ->update(['status_komponen_spj' => 'Hutang']);
         }
 
+        if ($masterSpj->status_proses_pesanan === 'Selesai') {
+            $idDetails = SpjDetail::where('id_spj', $masterSpj->id_spj)
+                ->pluck('id_usulan_barang_detail')
+                ->toArray();
+
+            if (!empty($idDetails)) {
+                UsulanBarangDetail::whereIn('id_usulan_barang_detail', $idDetails)
+                    ->update(['status_usulan_barang_detail' => 'Proses Pesanan Ke Penyedia']);
+            }
+        }
+
+
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
+    }
+
+    public function updateSuratPesananAdmin(Request $request, $id)
+    {
+        // Pastikan session 'id_user' dan 'tahun_anggaran' tersedia
+        if (!session()->has('id_user') || !session()->has('tahun_anggaran')) {
+            return redirect()->back()->with('error', 'Data session tidak tersedia. Silakan login kembali.');
+        }
+
+        // Bersihkan format currency sebelum validasi
+        $request->merge([
+            'bruto'       => str_replace('.', '', $request->bruto),
+            'harga_dasar' => str_replace('.', '', $request->harga_dasar),
+        ]);
+
+        // Validasi input
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'jangka_waktu_pekerjaan'    => 'required|date',
+                'tgl_surat_pesanan'         => 'required|date',
+            ]
+        );
+
+        if ($validator->fails()) {
+            $errors = $validator->errors();
+            $errorMessages = implode(' ', $errors->all());
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+        }
+
+        $masterSpj = MasterSpj::findOrFail($id);
+        $masterSpj->jangka_waktu_pekerjaan      = $request->input('jangka_waktu_pekerjaan');
+        $masterSpj->tgl_surat_pesanan           = $request->input('tgl_surat_pesanan');
+        $masterSpj->status_proses_pesanan       = 'Revisi';
+        $masterSpj->tgl_proses_pemesanan        = now();
+
+        $masterSpj->save();
 
         return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
     }
@@ -945,7 +1022,21 @@ class MasterSpjController extends Controller
         // Simpan perubahan
         $masterSpj->save();
 
-        return redirect()->route('master_spj.index')->with('success', 'Data berhasil diperbarui.');
+        $status_barang = ['Selesai', 'Parsial 1', 'Parsial 2', 'Parsial 3'];
+
+        if (in_array($masterSpj->status_proses_pengiriman_barang, $status_barang)) {
+            $idDetails = SpjDetail::where('id_spj', $masterSpj->id_spj)
+                ->pluck('id_usulan_barang_detail')
+                ->toArray();
+
+            if (!empty($idDetails)) {
+                UsulanBarangDetail::whereIn('id_usulan_barang_detail', $idDetails)
+                    ->update(['status_usulan_barang_detail' => 'Barang Sudah Datang']);
+            }
+        }
+
+
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
     }
 
     public function UpdateParsial1(Request $request, $id)
@@ -1020,7 +1111,7 @@ class MasterSpjController extends Controller
         // Simpan perubahan
         $masterSpj->save();
 
-        return redirect()->route('master_spj.index')->with('success', 'Data berhasil diperbarui.');
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
     }
 
     public function UpdateParsial2(Request $request, $id)
@@ -1095,7 +1186,7 @@ class MasterSpjController extends Controller
         // Simpan perubahan
         $masterSpj->save();
 
-        return redirect()->route('master_spj.index')->with('success', 'Data berhasil diperbarui.');
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
     }
 
     public function tukarfaktur(Request $request, $id)
@@ -1131,7 +1222,17 @@ class MasterSpjController extends Controller
         $masterSpj->tgl_proses_faktur           = now()->toDateString();
         $masterSpj->save();
 
-        return redirect()->route('master_spj.index')->with('success', 'Data berhasil diperbarui.');
+        if ($masterSpj->status_proses_tukar_faktur === 'Selesai') {
+            $idDetails = SpjDetail::where('id_spj', $masterSpj->id_spj)
+                ->pluck('id_usulan_barang_detail')
+                ->toArray();
+
+            if (!empty($idDetails)) {
+                UsulanBarangDetail::whereIn('id_usulan_barang_detail', $idDetails)
+                    ->update(['status_usulan_barang_detail' => 'Proses Tukar Faktur']);
+            }
+        }
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
     }
 
     public function updateBast(Request $request, $id)
@@ -1172,7 +1273,59 @@ class MasterSpjController extends Controller
         $masterSpj->status_proses_bast   = 'Selesai';
         $masterSpj->save();
 
-        return redirect()->route('master_spj.index')->with('success', 'Data berhasil diperbarui.');
+        if ($masterSpj->status_proses_bast === 'Selesai') {
+            $idDetails = SpjDetail::where('id_spj', $masterSpj->id_spj)
+                ->pluck('id_usulan_barang_detail')
+                ->toArray();
+
+            if (!empty($idDetails)) {
+                UsulanBarangDetail::whereIn('id_usulan_barang_detail', $idDetails)
+                    ->update(['status_usulan_barang_detail' => 'Proses BAST']);
+            }
+        }
+
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
+    }
+
+    public function updateBastAdmin(Request $request, $id)
+    {
+        // Pastikan session 'id_user' dan 'tahun_anggaran' tersedia
+        if (!session()->has('id_user') || !session()->has('tahun_anggaran')) {
+            return redirect()->back()->with('error', 'Data session tidak tersedia. Silakan login kembali.');
+        }
+
+        // Validasi input
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'tgl_bast'            => 'required|date',
+                'no_ba'               => 'required|string',
+                'no_ba_hp'            => 'required|string',
+                'no_ba_bp'            => 'required|string',
+                'no_dpa'              => 'required|string',
+            ]
+        );
+
+        if ($validator->fails()) {
+            $errors = $validator->errors();
+            $errorMessages = implode(' ', $errors->all());
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+        }
+
+        $masterSpj = MasterSpj::findOrFail($id);
+
+        $masterSpj->tgl_bast             = $request->input('tgl_bast');
+        $masterSpj->no_ba                = $request->input('no_ba');
+        $masterSpj->no_ba_hp             = $request->input('no_ba_hp');
+        $masterSpj->no_ba_bp             = $request->input('no_ba_bp');
+        $masterSpj->no_dpa               = $request->input('no_dpa');
+        $masterSpj->status_proses_bast   = $request->input('status_proses_bast');
+        $masterSpj->save();
+
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
     }
 
     public function updateVerifPB(Request $request, $id)
@@ -1207,7 +1360,18 @@ class MasterSpjController extends Controller
         $masterSpj->tgl_verif_pengurus_barang         = now()->toDateString();
         $masterSpj->save();
 
-        return redirect()->route('master_spj.index')->with('success', 'Data berhasil diperbarui.');
+        if ($masterSpj->status_verifikasi_pengurus_barang === 'Selesai') {
+            $idDetails = SpjDetail::where('id_spj', $masterSpj->id_spj)
+                ->pluck('id_usulan_barang_detail')
+                ->toArray();
+
+            if (!empty($idDetails)) {
+                UsulanBarangDetail::whereIn('id_usulan_barang_detail', $idDetails)
+                    ->update(['status_usulan_barang_detail' => 'Proses Verifikasi Pejabat']);
+            }
+        }
+
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
     }
 
     public function updateVerifPPK(Request $request, $id)
@@ -1242,7 +1406,7 @@ class MasterSpjController extends Controller
         $masterSpj->tgl_verif                   = now()->toDateString();
         $masterSpj->save();
 
-        return redirect()->route('master_spj.index')->with('success', 'Data berhasil diperbarui.');
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
     }
 
     public function updateVerifPPBJ(Request $request, $id)
@@ -1277,7 +1441,7 @@ class MasterSpjController extends Controller
         $masterSpj->tgl_verif_ppbj               = now()->toDateString();
         $masterSpj->save();
 
-        return redirect()->route('master_spj.index')->with('success', 'Data berhasil diperbarui.');
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
     }
 
     public function updateVerifPPTK(Request $request, $id)
@@ -1312,7 +1476,7 @@ class MasterSpjController extends Controller
         $masterSpj->tgl_verif_pptk               = now()->toDateString();
         $masterSpj->save();
 
-        return redirect()->route('master_spj.index')->with('success', 'Data berhasil diperbarui.');
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
     }
 
     public function updateVerifVerifikator(Request $request, $id)
@@ -1347,7 +1511,7 @@ class MasterSpjController extends Controller
         $masterSpj->tgl_verif_verifikator               = now()->toDateString();
         $masterSpj->save();
 
-        return redirect()->route('master_spj.index')->with('success', 'Data berhasil diperbarui.');
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
     }
 
     public function updateVerifPPKKeuangan(Request $request, $id)
@@ -1389,7 +1553,7 @@ class MasterSpjController extends Controller
 
         $masterSpj->save();
 
-        return redirect()->route('master_spj.index')->with('success', 'Data berhasil diperbarui.');
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
     }
 
     public function updateVerifDirektur(Request $request, $id)
@@ -1431,7 +1595,7 @@ class MasterSpjController extends Controller
 
         $masterSpj->save();
 
-        return redirect()->route('master_spj.index')->with('success', 'Data berhasil diperbarui.');
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
     }
 
     public function updateSerahTerimaBendahara(Request $request, $id)
@@ -1449,7 +1613,7 @@ class MasterSpjController extends Controller
                 'bruto'                             => 'required',
                 'ppn'                               => 'nullable',
                 'harga_dasar'                       => 'required',
-                'bulan_penyerahan_spj'              => 'required',
+                // 'bulan_penyerahan_spj'              => 'required',
                 'tanggal_penyerahan_spj'            => 'required',
                 'upload_spj_1'                      => 'nullable|file|mimes:pdf|max:20480',
                 'upload_spj_2'                      => 'nullable|file|mimes:pdf|max:20480',
@@ -1495,16 +1659,14 @@ class MasterSpjController extends Controller
         }
 
         $masterSpj->status_serah_terima_bendahara     = $request->input('status_serah_terima_bendahara');
-        $masterSpj->bruto                             = $request->input('bruto');
+        $masterSpj->bruto                             = $request->bruto ? str_replace('.', '', $request->bruto) : null;
         $masterSpj->ppn                               = $request->input('ppn');
-        $masterSpj->harga_dasar                       = $request->input('harga_dasar');
+        $masterSpj->harga_dasar                       = $request->harga_dasar ? str_replace('.', '', $request->harga_dasar) : null;
         $masterSpj->bulan_penyerahan_spj              = $bulanPenyerahanSpj;
         $masterSpj->tanggal_penyerahan_spj            = $tanggalPenyerahanSpj;
 
         // Cek status verifikasi
         if ($request->input('status_serah_terima_bendahara') === 'Revisi') {
-            $masterSpj->tanggal_revisi_spj = now()->toDateString();
-        } else {
             $masterSpj->tanggal_revisi_spj = now()->toDateString();
         }
 
@@ -1512,10 +1674,64 @@ class MasterSpjController extends Controller
 
         $masterSpj->save();
 
-        return redirect()->route('master_spj.index')->with('success', 'Data berhasil diperbarui.');
+        if ($masterSpj->status_serah_terima_bendahara === 'Selesai') {
+            $idDetails = SpjDetail::where('id_spj', $masterSpj->id_spj)
+                ->pluck('id_usulan_barang_detail')
+                ->toArray();
+
+            if (!empty($idDetails)) {
+                UsulanBarangDetail::whereIn('id_usulan_barang_detail', $idDetails)
+                    ->update(['status_usulan_barang_detail' => 'SPJ sudah di Keuangan']);
+            }
+        }
+
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
     }
 
     public function updateverifikasiBendahara(Request $request, $id)
+    {
+        // Pastikan session 'id_user' dan 'tahun_anggaran' tersedia
+        if (!session()->has('id_user') || !session()->has('tahun_anggaran')) {
+            return redirect()->back()->with('error', 'Data session tidak tersedia. Silakan login kembali.');
+        }
+
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'keterangan'                        => 'required',
+                'ket_verif_bendahara'               => 'nullable',
+                'tgl_verif_bendahara'               => 'nullable',
+            ]
+        );
+
+        if ($validator->fails()) {
+            $errors = $validator->errors();
+            $errorMessages = implode(' ', $errors->all());
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+        }
+
+        $masterSpj                          = MasterSpj::findOrFail($id);
+        $masterSpj->tgl_verif_bendahara     = now()->toDateString();
+
+        $masterSpj->keterangan                = $request->input('keterangan');
+        $masterSpj->ket_verif_bendahara       = $request->input('ket_verif_bendahara');
+
+        // Cek status verifikasi
+        if ($request->input('keterangan') === 'Revisi') {
+            $masterSpj->tanggal_revisi_spj = now()->toDateString();
+        }
+
+        $masterSpj->save();
+
+
+
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
+    }
+
+    public function updatepembayaranBendahara(Request $request, $id)
     {
         // Pastikan session 'id_user' dan 'tahun_anggaran' tersedia
         if (!session()->has('id_user') || !session()->has('tahun_anggaran')) {
@@ -1590,7 +1806,7 @@ class MasterSpjController extends Controller
         $sisa_pembayaran = str_replace('.', '', $request->input('sisa_pembayaran')); // Menghapus pemisah ribuan
         $sisa_pembayaran = floatval($sisa_pembayaran);
 
-        $masterSpj->status_pembayaran                        = $request->input('status_pembayaran');
+        $masterSpj->status_pembayaran                 = $request->input('status_pembayaran');
         $masterSpj->nama_validasi_keuangan            = $request->input('nama_validasi_keuangan');
         $masterSpj->bruto                             = $bruto;
         $masterSpj->ppn                               = $request->input('ppn');
@@ -1630,7 +1846,18 @@ class MasterSpjController extends Controller
             $masterSpj->spj->save();
         }
 
-        return redirect()->route('master_spj.index')->with('success', 'Data berhasil diperbarui.');
+        if ($masterSpj->status_spj === 'Sudah di Bayar') {
+            $idDetails = SpjDetail::where('id_spj', $masterSpj->id_spj)
+                ->pluck('id_usulan_barang_detail')
+                ->toArray();
+
+            if (!empty($idDetails)) {
+                UsulanBarangDetail::whereIn('id_usulan_barang_detail', $idDetails)
+                    ->update(['status_usulan_barang_detail' => 'Pembayaran Selesai']);
+            }
+        }
+
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
     }
 
     public function destroy($id_spj_detail)

@@ -18,28 +18,38 @@ class CekUsulanBelanjaModalController extends Controller
     public function index()
     {
 
-        // Ambil id_ksp dari session
         $id_ksp = session('id_ksp');
         $id_user = session('id_user');
         $tahunAnggaran = Session::get('tahun_anggaran');
-        $status_validasi_rka = StatusValidasiRka::all(); // Ambil status validasi dari model terkait
-        $inputIdUsulanBarang = request()->input('id_usulan_barang'); // Ambil input id_usulan_barang dari request
+        $namaLevelUser = session('nama_level_user');
+
+        $status_validasi_rka = StatusValidasiRka::all();
+        $inputIdUsulanBarang = request()->input('id_usulan_barang');
         $judul_headers = JudulHeader::first();
 
-        $gambar1                = $judul_headers->gambar1 ?? 'Website Tidak Ada';
-        $gambar2                = $judul_headers->gambar2 ?? 'Website Tidak Ada';
+        $gambar1 = $judul_headers->gambar1 ?? 'Website Tidak Ada';
+        $gambar2 = $judul_headers->gambar2 ?? 'Website Tidak Ada';
 
+        // Query dasar
         $usulan_barangs = UsulanBarang::join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
             ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
             ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
             ->where('status_usulan_barang', 'Selesai')
             ->whereIn('jenis_kategori_rkbus.id_jenis_kategori_rkbu', ['9cf70e1d-18e7-40fe-bdd3-b7dabf61877d', '9cf70e31-9b9e-4dea-8b39-5459f23f3f51']) // Kategori modal
-            ->where('usulan_barangs.id_user', $id_user)
             ->where('usulan_barangs.tahun_anggaran', $tahunAnggaran)
             ->orderby('usulan_barangs.id_usulan_barang', 'DESC')
             ->select('usulan_barangs.*')
-            ->distinct()
-            ->get();
+            ->distinct();
+
+        // Cek role user
+        $allowedRoles = ['Administrator', 'PPBJ', 'Admin PPK', 'PPK'];
+
+        if (!in_array($namaLevelUser, $allowedRoles)) {
+            // Jika bukan role di atas → filter berdasarkan id_user
+            $usulan_barangs->where('usulan_barangs.id_user', $id_user);
+        }
+
+        $usulan_barangs = $usulan_barangs->get();
 
         // dd($usulan_barangs);
 

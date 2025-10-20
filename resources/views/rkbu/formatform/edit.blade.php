@@ -68,6 +68,7 @@
                 </div>
             </div>
         </div>
+
         @include('rkbu.partials.detailinputkomponen', [
             'routePrefix' => $routePrefix,
         ])

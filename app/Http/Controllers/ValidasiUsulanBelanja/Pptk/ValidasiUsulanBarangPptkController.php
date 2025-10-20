@@ -95,6 +95,7 @@ class ValidasiUsulanBarangPptkController extends Controller
             $query->where('usulan_barangs.status_permintaan_barang', $request->status_permintaan_barang);
         }
 
+
         // Ambil hasil query
         $id_usulan = $query->get();
 
@@ -128,7 +129,6 @@ class ValidasiUsulanBarangPptkController extends Controller
                 })
                 ->select('rkbus.*')
                 ->get();
-
 
             $get_barangs[$yek->id_usulan_barang] = $barang;
         }

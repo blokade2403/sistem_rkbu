@@ -135,8 +135,30 @@
 
                                             </td>
                                             <td class="text-wrap" style="white-space: normal; word-wrap: break-word;">
+                                                @php
+                                                    $status = $item->status_usulan_barang_detail ?? 'Menunggu Proses';
 
+                                                    switch ($status) {
+                                                        case 'Menunggu Proses':
+                                                            $badgeClass = 'badge-soft-warning';
+                                                            break;
+                                                        case 'Proses Pesanan':
+                                                            $badgeClass = 'badge-soft-success';
+                                                            break;
+                                                        case 'Ditolak':
+                                                            $badgeClass = 'badge-soft-danger';
+                                                            break;
+                                                        default:
+                                                            $badgeClass = 'badge-soft-secondary';
+                                                            break;
+                                                    }
+                                                @endphp
+
+                                                <span class="badge {{ $badgeClass }}">
+                                                    {{ $status }}
+                                                </span>
                                             </td>
+
                                             <td>Rp.
                                                 {{ number_format($item->harga_barang, 0, ',', '.') }}
                                             </td>

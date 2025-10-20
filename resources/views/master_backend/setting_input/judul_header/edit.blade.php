@@ -202,6 +202,46 @@
                                                 </div>
                                             </div>
 
+                                            {{-- Gambar 4 --}}
+                                            <div class="profile-user position-relative d-inline-block mx-auto mb-2">
+                                                <img id="preview-img-4"
+                                                    src="{{ isset($judulHeader) && $judulHeader->gambar3
+                                                        ? asset('storage/judul_header/' . basename($judulHeader->gambar3))
+                                                        : asset('assets/images/users/user-dummy-img.jpg') }}"
+                                                    class="rounded-circle avatar-lg img-thumbnail user-profile-image"
+                                                    alt="Gambar 2">
+                                                <div class="avatar-xs p-0 rounded-circle profile-photo-edit">
+                                                    <input id="profile-img-file-input-4" name="gambar3" type="file"
+                                                        class="profile-img-file-input" accept="image/png, image/jpeg">
+                                                    <label for="profile-img-file-input-4"
+                                                        class="profile-photo-edit avatar-xs">
+                                                        <span class="avatar-title rounded-circle bg-light text-body">
+                                                            <i class="ri-camera-fill"></i>
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            {{-- Gambar 5 --}}
+                                            <div class="profile-user position-relative d-inline-block mx-auto mb-2">
+                                                <img id="preview-img-5"
+                                                    src="{{ isset($judulHeader) && $judulHeader->gambar4
+                                                        ? asset('storage/judul_header/' . basename($judulHeader->gambar4))
+                                                        : asset('assets/images/users/user-dummy-img.jpg') }}"
+                                                    class="rounded-circle avatar-lg img-thumbnail user-profile-image"
+                                                    alt="Gambar 2">
+                                                <div class="avatar-xs p-0 rounded-circle profile-photo-edit">
+                                                    <input id="profile-img-file-input-5" name="gambar4" type="file"
+                                                        class="profile-img-file-input" accept="image/png, image/jpeg">
+                                                    <label for="profile-img-file-input-5"
+                                                        class="profile-photo-edit avatar-xs">
+                                                        <span class="avatar-title rounded-circle bg-light text-body">
+                                                            <i class="ri-camera-fill"></i>
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
                                             <h5 class="fs-14">Add Image</h5>
                                         </div>
 

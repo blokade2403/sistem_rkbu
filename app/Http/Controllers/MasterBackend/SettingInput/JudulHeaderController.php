@@ -51,6 +51,8 @@ class JudulHeaderController extends Controller
                 'header6'       => 'nullable',
                 'gambar1'       => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
                 'gambar2'       => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+                'gambar3'       => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+                'gambar4'       => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
                 'header7'       => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
             ],
             [
@@ -65,7 +67,8 @@ class JudulHeaderController extends Controller
                 'gambar1.mimes'      => 'Gambar 1 harus berformat jpg, jpeg, atau png.',
                 'gambar1.max'        => 'Ukuran gambar 1 tidak boleh lebih dari 2MB.',
                 'gambar2.mimes'      => 'Gambar 2 harus berformat jpg, jpeg, atau png.',
-                'gambar2.max'        => 'Ukuran gambar 2 tidak boleh lebih dari 2MB.',
+                'gambar3.mimes'      => 'Gambar 3 harus berformat jpg, jpeg, atau png.',
+                'gambar4.mimes'      => 'Gambar 4 harus berformat jpg, jpeg, atau png.',
                 'header7.mimes'      => 'Gambar 3 harus berformat jpg, jpeg, atau png.',
                 'header7.max'        => 'Ukuran gambar 3 tidak boleh lebih dari 2MB.',
             ]
@@ -82,6 +85,8 @@ class JudulHeaderController extends Controller
         $namaFile1 = $request->hasFile('gambar1') ? $request->file('gambar1')->store('public/judul_header') : null;
         $namaFile2 = $request->hasFile('gambar2') ? $request->file('gambar2')->store('public/judul_header') : null;
         $namaFile3 = $request->hasFile('header7') ? $request->file('header7')->store('public/judul_header') : null;
+        $namaFile4 = $request->hasFile('gambar3') ? $request->file('gambar3')->store('public/judul_header') : null;
+        $namaFile5 = $request->hasFile('gambar4') ? $request->file('gambar4')->store('public/judul_header') : null;
 
         $judul_headers = new JudulHeader([
             'nama_rs'   => $request->nama_rs,
@@ -98,10 +103,10 @@ class JudulHeaderController extends Controller
             'header6'   => $request->header6, // Kolom ini sebelumnya tidak dimasukkan
             'gambar1'   => $namaFile1,
             'gambar2'   => $namaFile2,
+            'gambar3'   => $namaFile4,
+            'gambar4'   => $namaFile5,
             'header7'   => $namaFile3,
         ]);
-
-
 
         $judul_headers->save();
 
@@ -153,6 +158,8 @@ class JudulHeaderController extends Controller
                 'header6'   => 'nullable',
                 'gambar1'   => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
                 'gambar2'   => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+                'gambar3'       => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
+                'gambar4'       => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
                 'header7'   => 'nullable|file|mimes:jpg,jpeg,png|max:2048',
             ],
             [
@@ -166,6 +173,10 @@ class JudulHeaderController extends Controller
                 'gambar1.max'        => 'Ukuran gambar 1 tidak boleh lebih dari 2MB.',
                 'gambar2.mimes'      => 'Gambar 2 harus berformat jpg, jpeg, atau png.',
                 'gambar2.max'        => 'Ukuran gambar 2 tidak boleh lebih dari 2MB.',
+                'gambar3.max'        => 'Ukuran gambar 2 tidak boleh lebih dari 2MB.',
+                'gambar3.mimes'      => 'Gambar 3 harus berformat jpg, jpeg, atau png.',
+                'gambar4.max'        => 'Ukuran gambar 2 tidak boleh lebih dari 2MB.',
+                'gambar4.mimes'      => 'Gambar 4 harus berformat jpg, jpeg, atau png.',
                 'header7.mimes'      => 'Gambar 3 harus berformat jpg, jpeg, atau png.',
                 'header7.max'        => 'Ukuran gambar 3 tidak boleh lebih dari 2MB.',
             ]
@@ -209,6 +220,26 @@ class JudulHeaderController extends Controller
             $namaFile3 = $judulHeader->header7;
         }
 
+        // Upload gambar 3 (hapus lama jika ada upload baru)
+        if ($request->hasFile('gambar3')) {
+            if ($judulHeader->gambar3 && Storage::exists($judulHeader->gambar3)) {
+                Storage::delete($judulHeader->gambar3);
+            }
+            $namaFile4 = $request->file('gambar3')->store('public/judul_header');
+        } else {
+            $namaFile4 = $judulHeader->gambar3;
+        }
+
+        // Upload gambar 3 (hapus lama jika ada upload baru)
+        if ($request->hasFile('gambar4')) {
+            if ($judulHeader->gambar4 && Storage::exists($judulHeader->gambar4)) {
+                Storage::delete($judulHeader->gambar4);
+            }
+            $namaFile5 = $request->file('gambar4')->store('public/judul_header');
+        } else {
+            $namaFile5 = $judulHeader->gambar4;
+        }
+
         // Update data ke database
         $judulHeader->update([
             'nama_rs'   => $request->nama_rs,
@@ -225,6 +256,8 @@ class JudulHeaderController extends Controller
             'header6'   => $request->header6,
             'gambar1'   => $namaFile1,
             'gambar2'   => $namaFile2,
+            'gambar3'   => $namaFile4,
+            'gambar4'   => $namaFile5,
             'header7'   => $namaFile3,
         ]);
 
@@ -240,6 +273,14 @@ class JudulHeaderController extends Controller
 
         if ($judulHeader->gambar2) {
             Storage::delete($judulHeader->gambar2);
+        }
+
+        if ($judulHeader->gambar3) {
+            Storage::delete($judulHeader->gambar3);
+        }
+
+        if ($judulHeader->gambar4) {
+            Storage::delete($judulHeader->gambar4);
         }
 
         if ($judulHeader->header7) {

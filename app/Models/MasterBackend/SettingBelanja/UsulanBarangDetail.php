@@ -37,6 +37,8 @@ class UsulanBarangDetail extends Model
         'satuan_1_detail',
         'satuan_2_detail',
         'spek_detail',
+        'status_usulan_barang_detail',
+        'keterangan_update_usulan_barang_detail',
         'created_by',
     ];
 

@@ -29,7 +29,11 @@ class SubKategoriRkbuController extends Controller
         $sub_kategori_rekenings = SubKategoriRekening::all();
         $rekening_belanjas      = RekeningBelanja::all();
 
-        return view('master_backend.setting_rkbu.sub_kategori_rkbu.index', compact('sub_kategori_rkbus'), ['title' => 'Halaman Sub Kategori RKBU']);
+        return view('master_backend.setting_rkbu.sub_kategori_rkbu.index', compact('sub_kategori_rkbus'), [
+            'title'         => 'Halaman Sub Kategori RKBU',
+            'title2'        => 'Kategori Sub RKBU',
+            'routePrefix'   => 'sub_kategori_rkbus'
+        ]);
     }
 
     /**
@@ -43,7 +47,11 @@ class SubKategoriRkbuController extends Controller
         $rekening_belanjas          = RekeningBelanja::all();
         $pptk                       = Pptk::all();
         // dd($admin_pendukungs);
-        return view('master_backend.setting_rkbu.sub_kategori_rkbu.create', compact('kategori_rkbus', 'pptk', 'admin_pendukungs', 'sub_kategori_rekenings', 'rekening_belanjas'), ['title' => 'Halaman Sub Kategori RKBU']);
+        return view('master_backend.setting_rkbu.sub_kategori_rkbu.create', compact('kategori_rkbus', 'pptk', 'admin_pendukungs', 'sub_kategori_rekenings', 'rekening_belanjas'), [
+            'title'         => 'Halaman Sub Kategori RKBU',
+            'title2'        => 'Kategori Sub RKBU',
+            'routePrefix'   => 'sub_kategori_rkbus'
+        ]);
     }
 
     /**
@@ -126,7 +134,11 @@ class SubKategoriRkbuController extends Controller
         $sub_kategori_rekenings     = SubKategoriRekening::all();
         $rekening_belanjas          = RekeningBelanja::all();
         $pptk                       = Pptk::all();
-        return view('master_backend.setting_rkbu.sub_kategori_rkbu.edit', compact('sub_kategori_rkbus', 'pptk', 'sub_kategori_rekenings', 'kategori_rkbus', 'admin_pendukungs', 'rekening_belanjas'), ['title' => 'Halaman Sub Kategori RKBU']);
+        return view('master_backend.setting_rkbu.sub_kategori_rkbu.edit', compact('sub_kategori_rkbus', 'pptk', 'sub_kategori_rekenings', 'kategori_rkbus', 'admin_pendukungs', 'rekening_belanjas'), [
+            'title'         => 'Halaman Sub Kategori RKBU',
+            'title2'        => 'Kategori Sub RKBU',
+            'routePrefix'   => 'sub_kategori_rkbus'
+        ]);
     }
 
     /**

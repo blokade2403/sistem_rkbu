@@ -142,8 +142,6 @@ class MasterSpjDataTable extends DataTable
         return $query->distinct();
     }
 
-
-
     public function html(): HtmlBuilder
     {
         return $this->builder()

@@ -102,8 +102,9 @@
                              <label for="leaveemails" class="form-label">Total Anggaran</label>
                          </div>
                          <div class="col-lg-10">
-                             <input name="total_anggaran" value="{{ $rkbuBarangJasa->total_anggaran }}" id="hasil"
-                                 class="form-control" placeholder="1,000,000" readonly="">
+                             <input name="total_anggaran"
+                                 value="{{ number_format($rkbuBarangJasa->total_anggaran, 0, ',', ',') }}"
+                                 id="hasil" class="form-control" placeholder="1,000,000" readonly="">
                          </div>
                      </div>
                      <div class="row mb-3">
@@ -193,7 +194,9 @@
                              <p><span id="nama_sub_kategori_rekening"></span></p>
                          </div>
                      </div>
-
+                     @if (session('nama_level_user') == 'Administrator')
+                         @include('rkbu.partials.form_rekening_belanja_admin')
+                     @endif
                  </div>
                  <div class="d-none code-view">
                  </div>

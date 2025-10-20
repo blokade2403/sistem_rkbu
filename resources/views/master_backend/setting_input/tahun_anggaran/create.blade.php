@@ -48,8 +48,20 @@
                                                         <div class="mb-3">
                                                             <label for="phonenumberInput" class="form-label">Fase
                                                                 Tahun</label>
-                                                            <input type="text" class="form-control"
-                                                                placeholder="fase tahun" name="fase_tahun">
+                                                            <select name="fase_tahun" class="form-select" data-choices
+                                                                data-choices-sorting="true">
+                                                                <option value="" disabled
+                                                                    {{ old('fase_tahun') ? '' : 'selected' }}>
+                                                                    Pilih Status
+                                                                </option>
+
+                                                                @foreach ($fase as $item)
+                                                                    <option value="{{ $item->nama_fase }}"
+                                                                        {{ old('fase_tahun') == $item->nama_fase ? 'selected' : '' }}>
+                                                                        {{ $item->nama_fase }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-12">

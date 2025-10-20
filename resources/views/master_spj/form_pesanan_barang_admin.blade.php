@@ -52,6 +52,7 @@
                                  <input type="date" name="jangka_waktu_pekerjaan"
                                      value="{{ $master_spj->jangka_waktu_pekerjaan }}" class="form-control"
                                      placeholder="Password input">
+
                              </div>
                          </div>
                          <div class="row mb-3">

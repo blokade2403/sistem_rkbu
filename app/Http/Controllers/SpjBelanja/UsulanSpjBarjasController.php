@@ -140,7 +140,6 @@ class UsulanSpjBarjasController extends Controller
         return view('usulan_spj.index', compact('usulan_barangs', 'get_barangs', 'data_usulan_barangs', 'id_usulan', 'sub_kategori_rkbus'), ['title' => 'Halaman SPJ', 'routePrefix' => 'usulan_spj_barjass']);
     }
 
-
     public function create() {}
 
     public function add(Request $request)
@@ -193,7 +192,6 @@ class UsulanSpjBarjasController extends Controller
         return redirect()->route('usulan_spj_barjass.index')->with('success', 'SPJ berhasil disimpan!');
     }
 
-
     public function store(Request $request)
     {
         $request->validate([
@@ -205,6 +203,11 @@ class UsulanSpjBarjasController extends Controller
 
         foreach ($request->id_usulan_barang_detail as $id_usulan_barang_detail) {
             $detail = UsulanBarangDetail::with('subKategoriRkbu')->find($id_usulan_barang_detail);
+
+            if (!$detail) {
+                continue;
+            }
+
             $exists = DB::table('spj_details')
                 ->where('id_usulan_barang_detail', $id_usulan_barang_detail)
                 ->exists();
@@ -217,11 +220,15 @@ class UsulanSpjBarjasController extends Controller
                     'id_usulan_barang_detail' => $id_usulan_barang_detail,
                 ]);
             }
+
+            // Pastikan update status benar-benar dijalankan
+            UsulanBarangDetail::where('id_usulan_barang_detail', $id_usulan_barang_detail)
+                ->update(['status_usulan_barang_detail' => 'Proses Pesanan']);
         }
 
-        return redirect()->route('usulan_spj_barjass.index')->with('success', 'Data berhasil ditransfer ke SPJ.');
+        return redirect()->route('usulan_spj_barjass.index')
+            ->with('success', 'Data berhasil ditransfer ke SPJ dan status item diperbarui.');
     }
-
 
     public function show($id_spj)
     {
@@ -415,9 +422,6 @@ class UsulanSpjBarjasController extends Controller
         return view('usulan_spj.edit', compact('usulan_barang_details', 'rkbu', 'uraian_satu', 'uraian_dua', 'invo'), ['title' => 'Halaman SPJ', 'routePrefix' => 'usulan_spj_barjass']);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
         // Validasi input
@@ -503,7 +507,6 @@ class UsulanSpjBarjasController extends Controller
         }
     }
 
-
     public function updateStatus(Request $request, $id_spj)
     {
         try {
@@ -526,6 +529,18 @@ class UsulanSpjBarjasController extends Controller
                 $spj = Spj::findOrFail($id_spj);
                 $spj->status_spj = 'Pending Pengadaan';
                 $spj->save();
+
+                // ✅ Ambil id_usulan_barang_detail dari spj_details untuk spj ini
+                $idDetails = DB::table('spj_details')
+                    ->where('id_spj', $id_spj)
+                    ->pluck('id_usulan_barang_detail')
+                    ->toArray();
+
+                // ✅ Update hanya detail yang muncul di spj_details
+                if (!empty($idDetails)) {
+                    UsulanBarangDetail::whereIn('id_usulan_barang_detail', $idDetails)
+                        ->update(['status_usulan_barang_detail' => 'Pending Pengadaan Barang']);
+                }
             } else {
                 // Jika status_spj bukan 'Pending', jalankan proses lengkap
                 $usulanBarang = UsulanBarang::find($request->id_usulan_barang);
@@ -544,6 +559,18 @@ class UsulanSpjBarjasController extends Controller
                 $spj                = Spj::findOrFail($id_spj);
                 $spj->status_spj    = 'Proses Pengadaan Barang';
                 $spj->save();
+
+                // ✅ Ambil id_usulan_barang_detail dari spj_details untuk spj ini
+                $idDetails = DB::table('spj_details')
+                    ->where('id_spj', $id_spj)
+                    ->pluck('id_usulan_barang_detail')
+                    ->toArray();
+
+                // ✅ Update hanya detail yang muncul di spj_details
+                if (!empty($idDetails)) {
+                    UsulanBarangDetail::whereIn('id_usulan_barang_detail', $idDetails)
+                        ->update(['status_usulan_barang_detail' => 'Proses Pengadaan Barang']);
+                }
 
                 // Insert ke tabel master_spj
                 $tahunAnggaran = session('tahun_anggaran');

@@ -334,6 +334,54 @@
 </script>
 
 <script type="text/javascript">
+    function sum_modal() {
+        var vol_1 = parseFloat(document.getElementById('vol_1').value) || 0;
+        var vol_2 = parseFloat(document.getElementById('vol_2').value) || 0;
+        var harga_barang = parseFloat(document.getElementById('harga_barang').value) || 0;
+        var ppnValue = parseFloat(document.getElementById('ppn').value) || 0;
+
+        var jumlah_usulan_barang = (vol_1 * vol_2);
+        var ppn = Math.round((jumlah_usulan_barang * harga_barang * ppnValue) / 100);
+        var result = Math.round(jumlah_usulan_barang * harga_barang + ppn);
+
+        if (!isNaN(result)) {
+            document.getElementById('hasil').value = result.toString();
+        }
+
+        if (!isNaN(jumlah_usulan_barang)) {
+            document.getElementById('jumlah_usulan_barang').value = jumlah_usulan_barang.toString();
+        }
+
+        if (!isNaN(ppn)) {
+            document.getElementById('hasil_ppn').value = ppn.toString();
+        }
+    }
+</script>
+
+{{-- Script preview --}}
+<script>
+    function previewImage(inputId, imgId) {
+        const input = document.getElementById(inputId);
+        const img = document.getElementById(imgId);
+
+        input.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    }
+
+    // Hubungkan semua input ke preview-nya
+    previewImage('profile-img-file-input', 'preview-img-1');
+    previewImage('profile-img-file-input-2', 'preview-img-2');
+    previewImage('profile-img-file-input-3', 'preview-img-3');
+</script>
+
+<script type="text/javascript">
     // Fungsi untuk memformat angka dengan koma sebagai pemisah ribuan
     function formatCurrency(input) {
         let value = input.value.replace(/\D/g, ''); // Hanya ambil angka
@@ -1376,30 +1424,7 @@
     });
 </script> --}}
 
-<script type="text/javascript">
-    function sum_modal() {
-        var vol_1 = parseFloat(document.getElementById('vol_1').value) || 0;
-        var vol_2 = parseFloat(document.getElementById('vol_2').value) || 0;
-        var harga_barang = parseFloat(document.getElementById('harga_barang').value) || 0;
-        var ppnValue = parseFloat(document.getElementById('ppn').value) || 0;
 
-        var jumlah_usulan_barang = (vol_1 * vol_2);
-        var ppn = Math.round((jumlah_usulan_barang * harga_barang * ppnValue) / 100);
-        var result = Math.round(jumlah_usulan_barang * harga_barang + ppn);
-
-        if (!isNaN(result)) {
-            document.getElementById('hasil').value = result.toString();
-        }
-
-        if (!isNaN(jumlah_usulan_barang)) {
-            document.getElementById('jumlah_usulan_barang').value = jumlah_usulan_barang.toString();
-        }
-
-        if (!isNaN(ppn)) {
-            document.getElementById('hasil_ppn').value = ppn.toString();
-        }
-    }
-</script>
 
 <script type="text/javascript">
     $(document).ready(function() {
@@ -1980,6 +2005,8 @@
         });
     });
 </script>
+
+
 @stack('scripts')
 </body>
 

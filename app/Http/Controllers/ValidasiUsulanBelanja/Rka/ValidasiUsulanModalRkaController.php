@@ -21,9 +21,6 @@ use App\Models\MasterBackend\SettingBelanja\UsulanBarangDetail;
 
 class ValidasiUsulanModalRkaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index($id_sub_kategori_rkbu = null)
     {
         // dd(session()->all());

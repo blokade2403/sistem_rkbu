@@ -4,13 +4,6 @@
         <div class="col-xl-9">
             <div class="card">
                 <div class="card-header">
-                    {{-- <div class="d-flex align-items-center">
-                        <h5 class="card-title flex-grow-1 mb-0">Order #VL2667</h5>
-                        <div class="flex-shrink-0">
-                            <a href="apps-invoices-details.html" class="btn btn-success btn-sm"><i
-                                    class="ri-download-2-fill align-middle me-1"></i> Invoice</a>
-                        </div>
-                    </div> --}}
                     <div class="col-xl-12">
                         <div class="card-body p-0">
                             <div class="alert alert-warning border-0 rounded-top rounded-0 m-0 d-flex align-items-center"
@@ -136,7 +129,28 @@
 
                                             </td>
                                             <td class="text-wrap" style="white-space: normal; word-wrap: break-word;">
+                                                @php
+                                                    $status = $item->status_usulan_barang_detail ?? 'Menunggu Proses';
 
+                                                    switch ($status) {
+                                                        case 'Menunggu Proses':
+                                                            $badgeClass = 'badge-soft-warning';
+                                                            break;
+                                                        case 'Proses Pesanan':
+                                                            $badgeClass = 'badge-soft-success';
+                                                            break;
+                                                        case 'Ditolak':
+                                                            $badgeClass = 'badge-soft-danger';
+                                                            break;
+                                                        default:
+                                                            $badgeClass = 'badge-soft-secondary';
+                                                            break;
+                                                    }
+                                                @endphp
+
+                                                <span class="badge {{ $badgeClass }}">
+                                                    {{ $status }}
+                                                </span>
                                             </td>
                                             <td>Rp.
                                                 {{ number_format($item->harga_barang, 0, ',', '.') }}
