@@ -130,6 +130,7 @@ class PdfControllerSPJBastBP extends Controller
             ->join('admin_pendukungs', 'admin_pendukungs.id_admin_pendukung_ppk', '=', 'master_spjs.id_admin_pendukung_ppk')
             ->join('pejabat_pengadaans', 'pejabat_pengadaans.id_pejabat_pengadaan', '=', 'admin_pendukungs.id_pejabat_pengadaan')
             ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
+            ->where('master_spjs.id_master_spj', $id) // 🔥 filter sesuai ID master_spj
             ->select('master_spjs.*', 'perusahaans.*', 'admin_pendukungs.id_admin_pendukung_ppk', 'kategori_rkbus.*', 'sub_kategori_rkbus.*', 'rekening_belanjas.*', 'pejabat_pengadaans.*')
             ->distinct()
             ->first();

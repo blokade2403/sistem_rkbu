@@ -106,7 +106,7 @@
                 class="no-border" width="100%">Nomor : {{ $detail_master_spj->no_surat_pesanan }}</td>
         </tr>
         <tr>
-            <td style="font-weight: normal; margin-left: 10px; font-size: 11px; line-height: 1; text-align: center; word-wrap: break-word; white-space: normal;"
+            <td style="font-weight: normal; margin-left: 10px; font-size: 11px; line-height: 0; text-align: center; word-wrap: break-word; white-space: normal;"
                 class="no-border" width="100%">
                 Kegiatan :
                 @if ($keranjang->isNotEmpty())

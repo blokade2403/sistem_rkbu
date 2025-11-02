@@ -91,28 +91,42 @@
                                                 {{ number_format(($item->harga_barang * $item->ppn) / 100, 0, ',', '.') }}
                                             </td>
                                             <td>
-                                                <ul class="list-inline hstack gap-2 mb-0">
-                                                    <li class="list-inline-item" data-bs-toggle="tooltip"
-                                                        data-bs-trigger="hover" data-bs-placement="top" title="View">
-                                                        <a href="" class="text-primary d-inline-block">
-                                                            <i class="ri-eye-fill fs-16"></i>
-                                                        </a>
-                                                    </li>
-                                                    <li class="list-inline-item edit" data-bs-toggle="tooltip"
-                                                        data-bs-trigger="hover" data-bs-placement="top" title="Edit">
-                                                        <a href="{{ route($routePrefix . '.editkomponen', $item->id_usulan_barang_detail) }}"
-                                                            class="text-primary d-inline-block edit-item-btn">
-                                                            <i class="ri-pencil-fill fs-16"></i>
-                                                        </a>
-                                                    </li>
-                                                    <li class="list-inline-item remove" data-bs-toggle="tooltip"
-                                                        data-bs-trigger="hover" data-bs-placement="top" title="Remove">
-                                                        <a data-bs-toggle="modal" href="#deleteOrder"
-                                                            class="text-danger d-inline-block remove-item-btn">
-                                                            <i class="ri-delete-bin-5-fill fs-16"></i>
-                                                        </a>
-                                                    </li>
-                                                </ul>
+                                                @if ($master_spj->status_serah_terima_bendahara == 'Selesai')
+                                                    <button
+                                                        class="btn btn-sm btn-outline-success btn-load right ms-auto nexttab nexttab"
+                                                        data-nexttab="pills-success-tab"><span
+                                                            class="d-flex align-items-center">
+                                                            <span class="flex-grow-1 me-2">
+                                                                Selesai
+                                                            </span>
+                                                            <span class="spinner-grow flex-shrink-0" role="status">
+                                                                <span class="visually-hidden">Selesai</span>
+                                                            </span>
+                                                        </span></button>
+                                                @else
+                                                    <ul class="list-inline hstack gap-2 mb-0">
+                                                        <li class="list-inline-item" data-bs-toggle="tooltip"
+                                                            data-bs-trigger="hover" data-bs-placement="top" title="View">
+                                                            <a href="" class="text-primary d-inline-block">
+                                                                <i class="ri-eye-fill fs-16"></i>
+                                                            </a>
+                                                        </li>
+                                                        <li class="list-inline-item edit" data-bs-toggle="tooltip"
+                                                            data-bs-trigger="hover" data-bs-placement="top" title="Edit">
+                                                            <a href="{{ route($routePrefix . '.editkomponen', $item->id_usulan_barang_detail) }}"
+                                                                class="text-primary d-inline-block edit-item-btn">
+                                                                <i class="ri-pencil-fill fs-16"></i>
+                                                            </a>
+                                                        </li>
+                                                        <li class="list-inline-item remove" data-bs-toggle="tooltip"
+                                                            data-bs-trigger="hover" data-bs-placement="top" title="Remove">
+                                                            <a data-bs-toggle="modal" href="#deleteOrder"
+                                                                class="text-danger d-inline-block remove-item-btn">
+                                                                <i class="ri-delete-bin-5-fill fs-16"></i>
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
@@ -215,8 +229,12 @@
                         <lord-icon src="https://cdn.lordicon.com/uetqnvvg.json" trigger="loop"
                             colors="primary:#4b38b3,secondary:#0ab39c" style="width:80px;height:80px"></lord-icon>
                         <h5 class="fs-16 mt-2">Proses</h5>
-                        <p class="text-muted mb-0">ID: {{ $no_inv->no_usulan_barang ?? 'N/A' }}</p>
-                        <p class="text-muted mb-0">Tanggal :{{ $no_inv->created_at ?? 'N/A' }}</p>
+                        @php
+                            $firstKeranjang = $keranjang->first();
+                        @endphp
+
+                        <p class="text-muted mb-0">ID: {{ $firstKeranjang->no_usulan_barang ?? 'N/A' }}</p>
+                        <p class="text-muted mb-0">Tanggal: {{ $firstKeranjang->created_at ?? 'N/A' }}</p>
                     </div>
                 </div>
             </div><!--end card-->
@@ -261,21 +279,69 @@
         </div><!--end col-->
         @include('master_spj.partials.ceklis_verifikasi')
         <div class="vertical-overlay"></div>
-        {{-- @include('master_spj.arrow_nav_step') --}}
-        @include('master_spj.admin_pengadaan.proses_pesanan')
-        @include('master_spj.foto_barang.proses_barang_datang')
-        @include('master_spj.foto_barang.detail_foto_barang_datang')
-        @include('master_spj.admin_pengadaan.proses_bast_pengadaan')
-        @include('master_spj.admin_pengadaan.proses_tukar_faktur')
-        @include('master_spj.ppbj.form_validasi_ppbj')
-        @include('master_spj.ppk.form_validasi_ppk')
-        @include('master_spj.pptk.form_validasi_pptk')
-        @include('master_spj.verifikator.form_validasi_verifikator')
-        @include('master_spj.ppk_keuangan.form_validasi_ppk_keuangan')
-        @include('master_spj.direktur.form_validasi_direktur')
-        @include('master_spj.admin_pengadaan.proses_serah_terima_bendahara')
-        @include('master_spj.bendahara.proses_terima_spj')
-        @include('master_spj.bendahara.proses_pembayaran')
-        @include('master_spj.administrator.edit_admin_spj')
+        @php
+            $nama_level = ['Administartor'];
+            $level_ksp = ['Validasi'];
+            $level_kabag = ['Validasi RKA'];
+            $level_admin_ppk = ['Admin PPK'];
+            $level_pengadaan_ppk = [
+                'Administrator',
+                'Pendukung PPK',
+                'Admin PPK',
+                'PPK',
+                'PPBJ',
+                'Pengurus Barang',
+                'PPK Keuangan',
+                'PPTK',
+                'Validasi Keuangan',
+                'Verifikator',
+                'Direktur',
+                'Bendahara',
+                'PPTK',
+                'PPTK Umum',
+                'PPTK Yanmed',
+            ];
+        @endphp
+
+
+        @if (session('nama_level_user') == 'Admin PPK')
+            @include('master_spj.admin_pengadaan.proses_pesanan')
+            @include('master_spj.admin_pengadaan.proses_bast_pengadaan')
+            @include('master_spj.admin_pengadaan.proses_tukar_faktur')
+            @include('master_spj.admin_pengadaan.proses_serah_terima_bendahara')
+        @endif
+        @if (session('nama_level_user') == 'Pendukung PPK')
+            @include('master_spj.foto_barang.proses_barang_datang')
+        @endif
+        @if (in_array(session('nama_level_user'), $level_pengadaan_ppk))
+            @include('master_spj.foto_barang.detail_foto_barang_datang')
+        @endif
+        @if (session('nama_level_user') == 'PPBJ')
+            @include('master_spj.ppbj.form_validasi_ppbj')
+        @endif
+        @if (session('nama_level_user') == 'PPK')
+            @include('master_spj.ppk.form_validasi_ppk')
+        @endif
+        @if (session('nama_level_user') == 'PPTK')
+            @include('master_spj.pptk.form_validasi_pptk')
+        @endif
+        @if (session('nama_level_user') == 'Verifikator')
+            @include('master_spj.verifikator.form_validasi_verifikator')
+        @endif
+        @if (session('nama_level_user') == 'PPK Keuangan')
+            @include('master_spj.ppk_keuangan.form_validasi_ppk_keuangan')
+        @endif
+        @if (session('nama_level_user') == 'Direktur')
+            @include('master_spj.direktur.form_validasi_direktur')
+        @endif
+        @if (session('nama_level_user') == 'Bendahara')
+            @include('master_spj.bendahara.proses_terima_spj')
+            @include('master_spj.bendahara.proses_pembayaran')
+        @endif
+
+        @if (session('nama_level_user') == 'Administrator')
+            @include('master_spj.administrator.edit_admin_spj')
+        @endif
+
     </div><!--end row-->
 @endsection

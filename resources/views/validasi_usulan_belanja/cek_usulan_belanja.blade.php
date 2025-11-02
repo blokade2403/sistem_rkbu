@@ -153,21 +153,12 @@
                                                                     <i class="ri-eye-fill fs-16"></i>
                                                                 </a>
                                                             </li>
-                                                            <li class="list-inline-item edit" data-bs-toggle="tooltip"
+                                                            <li class="list-inline-item" data-bs-toggle="tooltip"
                                                                 data-bs-trigger="hover" data-bs-placement="top"
-                                                                title="Edit">
-                                                                <a href="javascript:void(0)"
-                                                                    class="text-primary d-inline-block edit-item-btn"
-                                                                    data-id="{{ $item->id_usulan_barang }}"
-                                                                    data-no="{{ $item->no_usulan_barang }}"
-                                                                    data-kategori="{{ $item->sub_kategori_rkbu->kode_sub_kategori_rkbu }}. {{ $item->sub_kategori_rkbu->nama_sub_kategori_rkbu }}"
-                                                                    data-pengusul="{{ $item->nama_pengusul_barang }}"
-                                                                    data-status="{{ $item->status_permintaan_barang }}"
-                                                                    data-status_pptk="{{ $item->status_validasi_pptk }}"
-                                                                    data-keterangan_pptk="{{ $item->keterangan_pptk }}"
-                                                                    {{-- data-total="{{ $get_total }}" --}}
-                                                                    data-route="{{ route($routePrefix . '.updateValidasi', $item->no_usulan_barang) }}"
-                                                                    data-bs-toggle="modal" data-bs-target="#showModal">
+                                                                title="Validasi">
+                                                                <a href="#" class="text-primary d-inline-block"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#modalValidasi{{ $item->id_usulan_barang }}">
                                                                     <i class="ri-pencil-fill fs-16"></i>
                                                                 </a>
                                                             </li>

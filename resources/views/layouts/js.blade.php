@@ -66,7 +66,6 @@
 
 
 <script>
-    // Fungsi untuk layout detail custom
     // JS: inisialisasi DataTables + toggle child row pada tombol .details-btn
     $(document).ready(function() {
         // Pastikan DataTables sudah di-load (jQuery + datatables)
@@ -333,29 +332,51 @@
     });
 </script>
 
-<script type="text/javascript">
-    function sum_modal() {
-        var vol_1 = parseFloat(document.getElementById('vol_1').value) || 0;
-        var vol_2 = parseFloat(document.getElementById('vol_2').value) || 0;
-        var harga_barang = parseFloat(document.getElementById('harga_barang').value) || 0;
-        var ppnValue = parseFloat(document.getElementById('ppn').value) || 0;
-
-        var jumlah_usulan_barang = (vol_1 * vol_2);
-        var ppn = Math.round((jumlah_usulan_barang * harga_barang * ppnValue) / 100);
-        var result = Math.round(jumlah_usulan_barang * harga_barang + ppn);
-
-        if (!isNaN(result)) {
-            document.getElementById('hasil').value = result.toString();
-        }
-
-        if (!isNaN(jumlah_usulan_barang)) {
-            document.getElementById('jumlah_usulan_barang').value = jumlah_usulan_barang.toString();
-        }
-
-        if (!isNaN(ppn)) {
-            document.getElementById('hasil_ppn').value = ppn.toString();
-        }
+<script>
+    // Fungsi ubah string berformat Rupiah jadi angka murni
+    function parseNumber(value) {
+        if (!value) return 0;
+        return parseFloat(value.toString().replace(/[^0-9.-]/g, '')) || 0;
     }
+
+    // Fungsi ubah angka jadi format Rupiah
+    function formatRupiah(angka) {
+        return angka.toLocaleString('id-ID');
+    }
+
+    function sum_modal() {
+        const vol_1 = parseFloat(document.getElementById('vol_1').value) || 0;
+        const vol_2 = parseFloat(document.getElementById('vol_2').value) || 0;
+        const harga_raw = document.getElementById('harga_barang').value;
+        const harga_barang = parseNumber(harga_raw);
+        const ppnValue = parseFloat(document.getElementById('ppn').value) || 0;
+
+        // Hitung jumlah usulan (vol 1 * vol 2)
+        const jumlah_usulan_barang = vol_1 * vol_2;
+        document.getElementById('jumlah_usulan_barang').value = jumlah_usulan_barang.toFixed(2);
+
+        // Hitung total harga + PPN
+        const subtotal = jumlah_usulan_barang * harga_barang;
+        const total_ppn = subtotal * ppnValue / 100;
+        const total_anggaran = subtotal + total_ppn;
+
+        // Tampilkan hasil ke input
+        document.getElementById('hasil').value = formatRupiah(total_anggaran);
+        document.getElementById('total_anggaran_number').value = total_anggaran; // untuk backend
+        document.getElementById('harga_barang_number').value = harga_barang; // untuk backend
+
+        // Format ulang harga di UI
+        document.getElementById('harga_barang').value = formatRupiah(harga_barang);
+    }
+
+    // Event agar harga satuan otomatis format Rupiah
+    document.getElementById('harga_barang').addEventListener('input', function(e) {
+        const cursorPos = e.target.selectionStart;
+        const angka = parseNumber(e.target.value);
+        e.target.value = formatRupiah(angka);
+        e.target.setSelectionRange(cursorPos, cursorPos);
+        sum_modal();
+    });
 </script>
 
 {{-- Script preview --}}
@@ -493,37 +514,6 @@
         });
     });
 </script>
-
-
-{{-- <script type="text/javascript">
-    $('#sub_kategori_rkbu').change(function() {
-        var subKategoriId = $(this).val();
-
-        // Mengirim AJAX request ke server
-        $.ajax({
-            url: "{{ route('rkbu_barang_jasas.getData') }}", // Perbaiki route di sini
-            method: "POST",
-            data: {
-                _token: '{{ csrf_token() }}',
-                id_sub_kategori_rkbu: subKategoriId
-            },
-            success: function(response) {
-                // Memasukkan data yang didapatkan ke input atau dropdown terkait
-                $('#id_aktivitas').val(response.id_aktivitas);
-                $('#id_sub_kegiatan').val(response.id_sub_kegiatan);
-                $('#id_kegiatan').val(response.id_kegiatan);
-                $('#id_program').val(response.id_program);
-                $('#id_jenis_kategori_rkbu').val(response.id_jenis_kategori_rkbu);
-                $('#id_kode_rekening_belanja').val(response.id_kode_rekening_belanja);
-            },
-            error: function(xhr, status, error) {
-                console.error('Error: ', error);
-                alert('Data tidak ditemukan atau terjadi kesalahan server.');
-            }
-        });
-    });
-</script> --}}
-
 
 <script type="text/javascript">
     $(document).ready(function() {
@@ -694,6 +684,665 @@
         });
     });
 </script>
+
+
+
+
+
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#subKategoriSelect').change(function() {
+            var subKategoriId = $(this).val();
+
+            if (subKategoriId) {
+                $.ajax({
+                    url: "{{ route('rkbu_barang_jasas.get_data_by_subkategori') }}",
+                    method: "POST",
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        id_sub_kategori_rkbu: subKategoriId
+                    },
+                    success: function(response) {
+                        console.log(response); // Debug respons dari server
+
+                        // Isi nilai ID ke dalam form input
+                        $('#id_sub_kategori_rekening').val(response
+                            .id_sub_kategori_rekening);
+                        $('#id_sub_kegiatan').val(response.id_aktivitas);
+
+                        // Tampilkan data string dalam elemen HTML
+                        $('#nama_program').text(response.kode_program + '. ' + response
+                            .nama_program);
+                        $('#nama_kegiatan').text(response.kode_kegiatan + '. ' + response
+                            .nama_kegiatan);
+                        $('#nama_sub_kegiatan').text(response.kode_sub_kegiatan + '. ' +
+                            response.nama_sub_kegiatan);
+                        $('#nama_kategori_rkbu').text('Kategori RKBU : ' + response
+                            .nama_kategori_rkbu);
+                        $('#nama_aktivitas').text('Aktivitas : ' + response.nama_aktivitas);
+                        $('#nama_jenis_belanja').text('Jenis Belanja : ' + response
+                            .nama_jenis_belanja);
+                        $('#nama_kategori_rekening').text(response.kode_kategori_rekening +
+                            '. ' + response.nama_kategori_rekening);
+                        $('#nama_sub_kategori_rekening').text(response
+                            .kode_sub_kategori_rekening + '. ' + response
+                            .nama_sub_kategori_rekening);
+                    }
+                });
+            } else {
+                // Jika tidak ada yang dipilih, kosongkan nilai input dan teks
+                $('#id_sub_kategori_rekening, #id_sub_kegiatan').val('');
+                $('#nama_kategori_rekening, #nama_aktivitas, #nama_kegiatan, #nama_sub_kegiatan, #nama_program')
+                    .text('');
+            }
+        });
+    });
+</script>
+
+
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#subKategoriSelect2').change(function() {
+            var subKategoriId = $(this).val();
+
+            if (subKategoriId) {
+                $.ajax({
+                    url: "{{ route('usulan_barang_barjass.get_data_by_subkategori') }}",
+                    method: "POST",
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        id_sub_kategori_rkbu: subKategoriId
+                    },
+                    success: function(response) {
+                        console.log(response); // Debug respons dari server
+
+                        // Isi nilai ID ke dalam form input
+                        $('#id_sub_kategori_rekening').val(response
+                            .id_sub_kategori_rekening);
+                        $('#id_kategori_rkbu').val(response.id_kategori_rkbu);
+                        $('#id_jenis_kategori_rkbu').val(response.id_jenis_kategori_rkbu);
+                        $('#id_sub_kegiatan').val(response.id_aktivitas);
+
+                        // Tampilkan data string dalam elemen HTML
+                        $('#nama_program').text(response.kode_program + '. ' + response
+                            .nama_program);
+                        $('#nama_kegiatan').text(response.kode_kegiatan + '. ' + response
+                            .nama_kegiatan);
+                        $('#nama_sub_kegiatan').text(response.kode_sub_kegiatan + '. ' +
+                            response.nama_sub_kegiatan);
+                        $('#nama_kategori_rkbu').text('Kategori RKBU : ' + response
+                            .nama_kategori_rkbu);
+                        $('#nama_aktivitas').text('Aktivitas : ' + response.nama_aktivitas);
+                        $('#nama_jenis_belanja').text('Jenis Belanja : ' + response
+                            .nama_jenis_belanja);
+                        $('#nama_kategori_rekening').text(response.kode_kategori_rekening +
+                            '. ' + response.nama_kategori_rekening);
+                        $('#nama_sub_kategori_rekening').text(response
+                            .kode_sub_kategori_rekening + '. ' + response
+                            .nama_sub_kategori_rekening);
+                    }
+                });
+            } else {
+                // Jika tidak ada yang dipilih, kosongkan nilai input dan teks
+                $('#id_sub_kategori_rekening, #id_sub_kegiatan').val('');
+                $('#nama_kategori_rekening, #nama_aktivitas, #nama_kegiatan, #nama_sub_kegiatan, #nama_program')
+                    .text('');
+            }
+        });
+    });
+</script>
+
+<script>
+    function total() {
+        var txtFirstNumberValue = document.getElementById('sisa_stok').value;
+        var txtSecondNumberValue = document.getElementById('pengadaan_sebelumnya').value;
+        var txtTigaNumberValue = document.getElementById('rata_rata_pemakaian').value;
+        var txtEmpatNumberValue = document.getElementById('kebutuhan_per_bulan').value;
+        var txtlimaNumberValue = document.getElementById('buffer').value;
+        var txtEnamNumberValue = document.getElementById('harga_satuan').value;
+        var txttujuhNumberValue = document.getElementById('persen').value;
+        var result1 = ((parseInt(txtFirstNumberValue) + parseInt(txtSecondNumberValue))) - (parseInt(
+            txtTigaNumberValue) * parseInt(txtEmpatNumberValue));
+        if (!isNaN(result1)) {
+            document.getElementById('proyeksi_sisa_stok').value = result1;
+        }
+        var result2 = parseInt(txtTigaNumberValue) * parseInt(txtEmpatNumberValue);
+        if (!isNaN(result2)) {
+            document.getElementById('kebutuhan_tahun_x1').value = result2;
+        }
+        var result3 = parseInt(result2) + (parseInt(txtTigaNumberValue) * parseInt(txtlimaNumberValue));
+        if (!isNaN(result3)) {
+            document.getElementById('kebutuhan_plus_buffer').value = result3;
+        }
+        var result4 = parseInt(result3) - parseInt(result1);
+        if (!isNaN(result4)) {
+            document.getElementById('rencana_pengadaan_tahun_x1').value = result4;
+        }
+        var ppn = parseInt(result4) * parseInt(txtEnamNumberValue) * parseInt(txttujuhNumberValue) / 100;
+        var result5 = (parseInt(result4) * parseInt(txtEnamNumberValue)) + parseInt(ppn);
+        if (!isNaN(result5)) {
+            document.getElementById('total_persediaan').value = result5.toLocaleString('id-ID');
+        }
+    }
+</script>
+
+<script>
+    function showDetailMasterSpj(id) {
+        // Reset isi modal sebelum request baru
+        $('#modalDetailContent').html(
+            '<div class="text-center"><span class="spinner-border text-primary" role="status"></span> Memuat data...</div>'
+        );
+
+        // Tampilkan modal
+        $('#modalDetailMasterSpj').modal('show');
+
+        // Kirim AJAX request untuk mengambil data detail
+        $.ajax({
+            url: "{{ route('master_spjs.show', ':id') }}".replace(':id', id),
+            method: 'GET',
+            success: function(response) {
+                $('#modalDetailContent').html(response);
+            },
+            error: function(xhr) {
+                $('#modalDetailContent').html(
+                    '<div class="alert alert-danger">Terjadi kesalahan saat memuat data.</div>'
+                );
+                console.log("DEBUG ERROR:", xhr.responseText);
+            }
+        });
+
+    }
+</script>
+
+
+<script>
+    function formatNumber(input) {
+        let value = input.value.replace(/[^0-9,]/g, ''); // Hanya izinkan angka dan koma
+        let parts = value.split(',');
+
+        if (parts.length > 2) {
+            value = parts[0] + ',' + parts.slice(1).join(''); // Pastikan hanya ada satu koma
+        }
+
+        input.value = value;
+    }
+</script>
+
+<script>
+    // Fungsi parsing angka dari format Rupiah
+    function parseNumber(value) {
+        if (!value) return 0;
+        return parseFloat(value.toString().replace(/[^0-9.-]/g, '')) || 0;
+    }
+
+    // Fungsi format angka ke Rupiah
+    function formatRupiah(angka) {
+        return angka.toLocaleString('id-ID');
+    }
+
+    function sum_farmasi() {
+        // Ambil nilai dari input
+        var harga_barang_raw = document.getElementById('harga_barang').value;
+        var harga_barang = parseNumber(harga_barang_raw);
+        var ppn = parseFloat(document.getElementById('ppn').value) || 0;
+        var rata2_pemakaian = parseFloat(document.getElementById('rata2_pemakaian')?.value) || 0;
+        var sisa_stok = parseFloat(document.getElementById('sisa_stok')?.value) || 0;
+        var buffer_stok = parseFloat(document.getElementById('buffer_stok')?.value) || 0;
+        var pengkali = parseFloat(document.getElementById('pengkali')?.value) || 1;
+
+        // Hitung stok minimal
+        var stok_minimal = pengkali * rata2_pemakaian;
+        if (document.getElementById('minimal_stok'))
+            document.getElementById('minimal_stok').value = !isNaN(stok_minimal) ? stok_minimal.toFixed(2) : 0;
+
+        // Hitung jumlah usulan barang
+        var jumlah_usulan = (buffer_stok + stok_minimal) - sisa_stok;
+        if (document.getElementById('usulan_barang'))
+            document.getElementById('usulan_barang').value = !isNaN(jumlah_usulan) ? jumlah_usulan.toFixed(2) : 0;
+
+        // Hitung total harga
+        var total_harga = harga_barang * jumlah_usulan;
+
+        // Hitung total PPN
+        var total_ppn = (total_harga * ppn) / 100;
+        if (document.getElementById('hasil_ppn'))
+            document.getElementById('hasil_ppn').value = !isNaN(total_ppn) ? total_ppn.toFixed(2) : 0;
+
+        // Total akhir
+        var total_anggaran = total_harga + total_ppn;
+
+        // Tampilkan hasil ke field tampilan
+        if (!isNaN(total_anggaran)) {
+            document.getElementById('hasil').value = formatRupiah(total_anggaran);
+            document.getElementById('total_anggaran_number').value = total_anggaran; // hidden numeric
+        }
+
+        // Simpan harga_barang numeric ke hidden field
+        document.getElementById('harga_barang_hidden').value = harga_barang;
+
+        // Format ulang harga_barang di tampilan
+        document.getElementById('harga_barang').value = formatRupiah(harga_barang);
+    }
+
+    // Format harga_barang setiap kali diketik
+    document.getElementById('harga_barang').addEventListener('input', function(e) {
+        const angka = parseNumber(e.target.value);
+        e.target.value = formatRupiah(angka);
+        document.getElementById('harga_barang_hidden').value = angka;
+        sum_farmasi();
+    });
+</script>
+
+<script>
+    document.getElementById('checkAll').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.check-item');
+        checkboxes.forEach(function(checkbox) {
+            checkbox.checked = document.getElementById('checkAll').checked;
+        });
+    });
+
+    document.querySelectorAll('.check-item').forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            const allChecked = document.querySelectorAll('.check-item:checked').length === document
+                .querySelectorAll('.check-item').length;
+            document.getElementById('checkAll').checked = allChecked;
+        });
+    });
+</script>
+
+<script>
+    // Fungsi parsing angka dari string berformat (hapus semua karakter non-numeric)
+    function parseNumber(value) {
+        if (!value) return 0;
+        return parseFloat(value.replace(/[^0-9]/g, '')) || 0;
+    }
+
+    // Fungsi format angka dengan titik ribuan
+    function formatNumber(angka) {
+        if (isNaN(angka)) return '';
+        return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    // Fungsi utama menghitung total
+    function tot_remunerasi() {
+        let gaji_pokok = parseNumber(document.getElementById('gaji_pokok').value);
+        let koef_gaji = parseFloat(document.getElementById('koefisien_gaji').value) || 0;
+        let remunerasi = parseNumber(document.getElementById('remunerasi').value);
+        let koef_remun = parseFloat(document.getElementById('koefisien_remunerasi').value) || 0;
+        let bpjs_kes = parseFloat(document.getElementById('bpjs_kesehatan').value) || 0;
+        let bpjs_tk = parseFloat(document.getElementById('bpjs_tk').value) || 0;
+        let bpjs_jht = parseFloat(document.getElementById('bpjs_jht').value) || 0;
+
+        // Perhitungan
+        let total_gaji_pokok = gaji_pokok * koef_gaji;
+        let total_remun = remunerasi * koef_remun;
+        let total_bpjs =
+            (total_gaji_pokok * bpjs_kes / 100) +
+            (total_gaji_pokok * bpjs_tk / 100) +
+            (total_gaji_pokok * bpjs_jht / 100);
+        let total_pegawai = total_gaji_pokok + total_remun + total_bpjs;
+
+        // Format tampilan (tapi tetap simpan angka murni di hidden input)
+        document.getElementById('tot_gaji_pokok').value = formatNumber(total_gaji_pokok);
+        document.getElementById('remun').value = formatNumber(total_remun);
+        document.getElementById('total_pegawai').value = formatNumber(total_pegawai);
+
+        // Format tampilan untuk input utama
+        document.getElementById('gaji_pokok').value = formatNumber(gaji_pokok);
+        document.getElementById('remunerasi').value = formatNumber(remunerasi);
+
+        // Simpan nilai bersih di hidden input (supaya server dapat angka murni)
+        document.getElementById('gaji_pokok_clean').value = gaji_pokok;
+        document.getElementById('remunerasi_clean').value = remunerasi;
+    }
+
+    // 🧹 Bersihkan semua format (titik, spasi, simbol) sebelum form disubmit
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function() {
+                const inputs = form.querySelectorAll('input');
+                inputs.forEach(input => {
+                    // Jika input punya angka yang diformat, bersihkan sebelum dikirim
+                    input.value = input.value.replace(/[^0-9.-]/g, '');
+                });
+            });
+        }
+    });
+</script>
+
+<script>
+    $(document).ready(function() {
+        $('.show_detail').click(function() {
+            var indexTable = $(this).data('indextable');
+            var idUsulanBarang = $(this).data('id_usulan_barang');
+            var idJenisKategori = $(this).data('id_jenis_kategori_rkbu');
+
+            // Kalau tabel belum jadi DataTable, baru inisialisasi
+            if (!$.fn.DataTable.isDataTable('#example' + indexTable)) {
+                $('#example' + indexTable).DataTable({
+                    paging: true,
+                    searching: true,
+                    lengthChange: true,
+                    pageLength: 10,
+                    lengthMenu: [5, 10, 25, 50, 100],
+                    autoWidth: false,
+                    responsive: true,
+                    dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>' +
+                        // baris atas: left=length, right=search
+                        'rt' + // isi tabel
+                        '<"row"<"col-sm-6"i><"col-sm-6"p>>', // baris bawah: info dan pagination
+                    language: {
+                        search: "Cari:",
+                        lengthMenu: "Tampilkan _MENU_ data",
+                        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                        paginate: {
+                            previous: "Sebelumnya",
+                            next: "Berikutnya"
+                        }
+                    }
+                });
+            }
+        });
+    });
+</script>
+
+<script type="text/javascript">
+    function sum_belanja() {
+        var vol1 = parseFloat(document.getElementById('vol1').value) || 0;
+        var vol2 = parseFloat(document.getElementById('vol2').value) || 0;
+        var hargaBarang = parseFloat(document.getElementById('harga_satuan').value) || 0;
+        var persen = parseFloat(document.getElementById('persen').value) || 0;
+        var jumlah_vol = parseFloat(document.getElementById('jumlah_vol').value) || 0;
+        var total_anggaran = parseFloat(document.getElementById('total_anggaran').value) || 0;
+        var id_rkbu = parseFloat(document.getElementById('id_rkbu').value) || 0;
+        var id_sumber_dana = parseFloat(document.getElementById('id_sumber_dana').value) || 0;
+        var id_kategori_rkbu = parseFloat(document.getElementById('id_kategori_rkbu').value) || 0;
+        var id_sub_kategori_rkbu = parseFloat(document.getElementById('id_sub_kategori_rkbu').value) || 0;
+        var id_jenis_kategori_rkbu = parseFloat(document.getElementById('id_jenis_kategori_rkbu').value) || 0;
+        var id_kode_rekening_belanja = parseFloat(document.getElementById('id_kode_rekening_belanja').value) || 0;
+
+        var sisa_vol = jumlah_vol - (vol1 * vol2);
+        var ppn = ((vol1 * vol2) * hargaBarang) * persen / 100;
+        var result = ((vol1 * vol2) * hargaBarang) + ppn;
+        var result2 = total_anggaran - (((vol1 * vol2) * hargaBarang) + ppn);
+
+        if (!isNaN(result)) {
+            document.getElementById('hasil').value = result;
+        }
+
+        if (!isNaN(result2)) {
+            document.getElementById('sisa_anggaran').value = result2;
+        }
+
+        var sisaVolumeElement = document.getElementById('sisa_volume');
+
+        if (!isNaN(sisa_vol)) {
+            sisaVolumeElement.value = sisa_vol;
+
+            // Periksa apakah sisa_vol lebih kecil dari 0
+            if (sisa_vol < 0) {
+                sisaVolumeElement.style.color = 'red'; // Atur warna teks menjadi merah
+                alert("Sisa volume kurang dari 0!");
+            } else {
+                sisaVolumeElement.style.color = ''; // Reset warna teks jika tidak kurang dari 0
+            }
+        }
+    }
+</script>
+<script>
+    $(document).ready(function() {
+        // Event listener ketika modal ditampilkan
+        $('#referAndEarn').on('shown.bs.modal', function() {
+            // Event listener untuk select option di dalam modal
+            $('#getkategori').on('change', function() {
+                var selectedOption = $(this).find('option:selected');
+
+                var id_kategori_rkbu = selectedOption.data('id_kategori_rkbu');
+                var id_jenis_kategori_rkbu = selectedOption.data('id_jenis_kategori_rkbu');
+                var id_jenis_belanja = selectedOption.data('id_jenis_belanja');
+
+                console.log('Kategori RKBU:', id_kategori_rkbu);
+                console.log('Jenis Kategori RKBU:', id_jenis_kategori_rkbu);
+                console.log('Jenis Belanja:', id_jenis_belanja);
+
+                // Isi nilai ke hidden input
+                $('#id_kategori_rkbu').val(id_kategori_rkbu);
+                $('#id_jenis_kategori_rkbu').val(id_jenis_kategori_rkbu);
+                $('#id_jenis_belanja').val(id_jenis_belanja);
+            });
+        });
+    });
+</script>
+
+<script>
+    // === Fungsi parsing dan format ===
+    function parseNumber(value) {
+        if (!value) return 0;
+        return Number(value.toString().replace(/\./g, '').replace(/,/g, '.')) || 0;
+    }
+
+    function formatRupiah(angka) {
+        if (isNaN(angka)) return '';
+        return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    // === Fungsi utama perhitungan ===
+    function hitungSemua() {
+        const vol_1 = parseFloat(document.getElementById('vol_1')?.value) || 0;
+        const vol_2 = parseFloat(document.getElementById('vol_2')?.value) || 0;
+        const harga_barang_raw = document.getElementById('harga_barang')?.value || '0';
+        const harga_barang = parseNumber(harga_barang_raw);
+        const ppn = parseFloat(document.getElementById('ppn')?.value) || 0;
+        const rata2_pemakaian = parseFloat(document.getElementById('rata2_pemakaian')?.value) || 0;
+        const sisa_stok = parseFloat(document.getElementById('sisa_stok')?.value) || 0;
+        const buffer_stok = parseFloat(document.getElementById('buffer_stok')?.value) || 0;
+        const pengkali = parseFloat(document.getElementById('pengkali')?.value) || 1;
+
+        // Farmasi
+        const stok_minimal = pengkali * rata2_pemakaian;
+        const jumlah_usulan_farmasi = Math.max((buffer_stok + stok_minimal) - sisa_stok, 0);
+
+        if (document.getElementById('minimal_stok'))
+            document.getElementById('minimal_stok').value = stok_minimal.toFixed(2);
+        if (document.getElementById('usulan_barang'))
+            document.getElementById('usulan_barang').value = jumlah_usulan_farmasi.toFixed(2);
+
+        // Modal
+        const jumlah_usulan_modal = vol_1 * vol_2;
+        if (document.getElementById('jumlah_usulan_barang'))
+            document.getElementById('jumlah_usulan_barang').value = jumlah_usulan_modal.toFixed(2);
+
+        const jumlah_final = jumlah_usulan_farmasi > 0 ? jumlah_usulan_farmasi : jumlah_usulan_modal;
+
+        const subtotal = jumlah_final * harga_barang;
+        const total_ppn = subtotal * (ppn / 100);
+        const total_anggaran = subtotal + total_ppn;
+
+        if (document.getElementById('hasil'))
+            document.getElementById('hasil').value = formatRupiah(total_anggaran.toFixed(0));
+        if (document.getElementById('total_anggaran_number'))
+            document.getElementById('total_anggaran_number').value = total_anggaran;
+        if (document.getElementById('harga_barang_number'))
+            document.getElementById('harga_barang_number').value = harga_barang;
+    }
+
+    // === Format harga otomatis ===
+    const hargaInput = document.getElementById('harga_barang');
+    if (hargaInput) {
+        hargaInput.addEventListener('focus', function(e) {
+            const angka = parseNumber(e.target.value);
+            e.target.value = angka > 0 ? angka : '';
+        });
+
+        hargaInput.addEventListener('blur', function(e) {
+            const angka = parseNumber(e.target.value);
+            e.target.value = angka > 0 ? formatRupiah(angka) : '';
+            hitungSemua();
+        });
+
+        hargaInput.addEventListener('input', function() {
+            hitungSemua();
+        });
+    }
+
+    // === Event Listener ===
+    const fieldIds = [
+        'vol_1', 'vol_2', 'ppn',
+        'rata2_pemakaian', 'sisa_stok', 'buffer_stok', 'pengkali'
+    ];
+    fieldIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', hitungSemua);
+    });
+
+    // === Saat halaman dimuat ===
+    window.addEventListener('DOMContentLoaded', function() {
+        const hargaField = document.getElementById('harga_barang');
+        if (hargaField && hargaField.value) {
+            const angka = parseNumber(hargaField.value);
+            hargaField.value = formatRupiah(angka);
+        }
+        hitungSemua();
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // Navigasi tab
+        document.querySelectorAll('.nexttab').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const nextTab = document.querySelector(`#${this.dataset.nexttab}`);
+                if (nextTab) new bootstrap.Tab(nextTab).show();
+            });
+        });
+
+        document.querySelectorAll('.previestab').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const prevTab = document.querySelector(`#${this.dataset.previous}`);
+                if (prevTab) new bootstrap.Tab(prevTab).show();
+            });
+        });
+
+        // Preview gambar otomatis
+        for (let p = 0; p <= 1; p++) { // prefix kosong dan 1 (Parsial)
+            for (let i = 1; i <= 3; i++) {
+                const prefix = p === 0 ? '' : '1';
+                const input = document.getElementById(`profile-img-file-input-${prefix}-${i}`);
+                const preview = document.getElementById(`preview-img-${prefix}-${i}`);
+                if (input && preview) {
+                    input.addEventListener('change', function(e) {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = function(ev) {
+                                preview.src = ev.target.result;
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                }
+            }
+        }
+    });
+</script>
+
+
+@stack('scripts')
+</body>
+
+</html>
+
+
+
+
+
+
+{{-- 
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Trigger saat sub kategori dipilih
+        $('#subKategoriSelect').on('change', function() {
+            var idSubKategoriRkbu = $(this).val();
+
+            // Lakukan request AJAX untuk mendapatkan data dari sub kategori
+            $.ajax({
+                url: '/get-data-by-sub-kategori', // URL ke route
+                type: 'GET',
+                data: {
+                    id_sub_kategori_rkbu: idSubKategoriRkbu
+                },
+                success: function(data) {
+                    // Menampilkan data ke dalam span atau element lain
+                    $('#id_kategori_rkbu').text('ID Kategori RKBU: ' + data
+                        .id_kategori_rkbu);
+                    $('#id_jenis_belanja').text('ID Jenis Belanja: ' + data
+                        .id_jenis_belanja);
+                    $('#id_jenis_kategori_rkbu').text('ID Jenis Kategori RKBU: ' + data
+                        .id_jenis_kategori_rkbu);
+                    $('#id_admin_pendukung_ppk').text('ID Admin Pendukung PPK: ' + data
+                        .id_admin_pendukung_ppk);
+                    $('#id_aktivitas').text('ID Aktivitas: ' + data.id_aktivitas);
+                    $('#nama_kategori_rkbu').text('Nama Kategori: ' + data
+                        .nama_kategori_rkbu);
+                    $('#nama_program').text('Program: ' + data.kode_program + '. ' + data
+                        .nama_program);
+                    $('#nama_aktivitas').text('Aktivitas: ' + data.nama_aktivitas);
+                    $('#nama_kegiatan').text('Kegiatan: ' + data.kode_kegiatan + '. ' + data
+                        .nama_kegiatan);
+                    $('#nama_sub_kegiatan').text('Sub Kegiatan: ' + data.kode_sub_kegiatan +
+                        '. ' + data.nama_sub_kegiatan);
+                    $('#nama_jenis_belanja').text('Nama Jenis Belanja: ' + data
+                        .nama_jenis_belanja);
+                    $('#nama_kategori_rekening').text('Kategori Rekening: ' + data
+                        .kode_kategori_rekening + '. ' + data.nama_kategori_rekening);
+                    $('#nama_sub_kategori_rekening').text('Sub Kategori Rekening: ' + data
+                        .kode_sub_kategori_rekening + '. ' + data
+                        .nama_sub_kategori_rekening);
+                    $('#id_kegiatan').text('ID Kegiatan: ' + data.id_sub_kegiatan);
+                    $('#id_kategori_rekening').text('ID Kategori Rekening: ' + data
+                        .id_kategori_rekening);
+                    $('#id_sub_kategori_rekening').text('ID Sub Kategori Rekening: ' + data
+                        .id_sub_kategori_rekening);
+
+                },
+                error: function(xhr) {
+                    console.log('Error:', xhr);
+                }
+            });
+        });
+    });
+</script> --}}
+
+
+{{-- <script>
+    $(document).ready(function() {
+        $('.show_detail').click(function() {
+            var indexTable = $(this).data('indextable');
+            var idUsulanBarang = $(this).data('id_usulan_barang');
+            var idJenisKategori = $(this).data('id_jenis_kategori_rkbu'); // Tambahkan untuk kategori
+
+            console.log('Index Table:', indexTable);
+            console.log('ID Usulan Barang:', idUsulanBarang);
+            console.log('ID Jenis Kategori:', idJenisKategori); // Debug kategori
+
+            // Bind hanya jika id_jenis_kategori_rkbu sesuai
+            if (!$.fn.DataTable.isDataTable('#example' + indexTable)) {
+                $('#example' + indexTable).DataTable();
+            }
+
+            var table = $('#example' + indexTable).DataTable();
+
+            table.rows().every(function(rowIdx, tableLoop, rowLoop) {
+                var rowNode = this.node();
+                $(rowNode).find('.bind_id_usulan_barang').val(idUsulanBarang);
+            });
+        });
+    });
+</script> --}}
 
 
 
@@ -1014,8 +1663,6 @@
         });
     });
 </script>
-
-
 
 <script>
     $.ajaxSetup({
@@ -1426,55 +2073,34 @@
 
 
 
-<script type="text/javascript">
-    $(document).ready(function() {
-        $('#subKategoriSelect').change(function() {
-            var subKategoriId = $(this).val();
+{{-- <script type="text/javascript">
+    $('#sub_kategori_rkbu').change(function() {
+        var subKategoriId = $(this).val();
 
-            if (subKategoriId) {
-                $.ajax({
-                    url: "{{ route('rkbu_barang_jasas.get_data_by_subkategori') }}",
-                    method: "POST",
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        id_sub_kategori_rkbu: subKategoriId
-                    },
-                    success: function(response) {
-                        console.log(response); // Debug respons dari server
-
-                        // Isi nilai ID ke dalam form input
-                        $('#id_sub_kategori_rekening').val(response
-                            .id_sub_kategori_rekening);
-                        $('#id_sub_kegiatan').val(response.id_aktivitas);
-
-                        // Tampilkan data string dalam elemen HTML
-                        $('#nama_program').text(response.kode_program + '. ' + response
-                            .nama_program);
-                        $('#nama_kegiatan').text(response.kode_kegiatan + '. ' + response
-                            .nama_kegiatan);
-                        $('#nama_sub_kegiatan').text(response.kode_sub_kegiatan + '. ' +
-                            response.nama_sub_kegiatan);
-                        $('#nama_kategori_rkbu').text('Kategori RKBU : ' + response
-                            .nama_kategori_rkbu);
-                        $('#nama_aktivitas').text('Aktivitas : ' + response.nama_aktivitas);
-                        $('#nama_jenis_belanja').text('Jenis Belanja : ' + response
-                            .nama_jenis_belanja);
-                        $('#nama_kategori_rekening').text(response.kode_kategori_rekening +
-                            '. ' + response.nama_kategori_rekening);
-                        $('#nama_sub_kategori_rekening').text(response
-                            .kode_sub_kategori_rekening + '. ' + response
-                            .nama_sub_kategori_rekening);
-                    }
-                });
-            } else {
-                // Jika tidak ada yang dipilih, kosongkan nilai input dan teks
-                $('#id_sub_kategori_rekening, #id_sub_kegiatan').val('');
-                $('#nama_kategori_rekening, #nama_aktivitas, #nama_kegiatan, #nama_sub_kegiatan, #nama_program')
-                    .text('');
+        // Mengirim AJAX request ke server
+        $.ajax({
+            url: "{{ route('rkbu_barang_jasas.getData') }}", // Perbaiki route di sini
+            method: "POST",
+            data: {
+                _token: '{{ csrf_token() }}',
+                id_sub_kategori_rkbu: subKategoriId
+            },
+            success: function(response) {
+                // Memasukkan data yang didapatkan ke input atau dropdown terkait
+                $('#id_aktivitas').val(response.id_aktivitas);
+                $('#id_sub_kegiatan').val(response.id_sub_kegiatan);
+                $('#id_kegiatan').val(response.id_kegiatan);
+                $('#id_program').val(response.id_program);
+                $('#id_jenis_kategori_rkbu').val(response.id_jenis_kategori_rkbu);
+                $('#id_kode_rekening_belanja').val(response.id_kode_rekening_belanja);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error: ', error);
+                alert('Data tidak ditemukan atau terjadi kesalahan server.');
             }
         });
     });
-</script>
+</script> --}}
 
 {{-- 
 
@@ -1531,91 +2157,6 @@
 
  --}}
 
-<script type="text/javascript">
-    $(document).ready(function() {
-        $('#subKategoriSelect2').change(function() {
-            var subKategoriId = $(this).val();
-
-            if (subKategoriId) {
-                $.ajax({
-                    url: "{{ route('usulan_barang_barjass.get_data_by_subkategori') }}",
-                    method: "POST",
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        id_sub_kategori_rkbu: subKategoriId
-                    },
-                    success: function(response) {
-                        console.log(response); // Debug respons dari server
-
-                        // Isi nilai ID ke dalam form input
-                        $('#id_sub_kategori_rekening').val(response
-                            .id_sub_kategori_rekening);
-                        $('#id_kategori_rkbu').val(response.id_kategori_rkbu);
-                        $('#id_jenis_kategori_rkbu').val(response.id_jenis_kategori_rkbu);
-                        $('#id_sub_kegiatan').val(response.id_aktivitas);
-
-                        // Tampilkan data string dalam elemen HTML
-                        $('#nama_program').text(response.kode_program + '. ' + response
-                            .nama_program);
-                        $('#nama_kegiatan').text(response.kode_kegiatan + '. ' + response
-                            .nama_kegiatan);
-                        $('#nama_sub_kegiatan').text(response.kode_sub_kegiatan + '. ' +
-                            response.nama_sub_kegiatan);
-                        $('#nama_kategori_rkbu').text('Kategori RKBU : ' + response
-                            .nama_kategori_rkbu);
-                        $('#nama_aktivitas').text('Aktivitas : ' + response.nama_aktivitas);
-                        $('#nama_jenis_belanja').text('Jenis Belanja : ' + response
-                            .nama_jenis_belanja);
-                        $('#nama_kategori_rekening').text(response.kode_kategori_rekening +
-                            '. ' + response.nama_kategori_rekening);
-                        $('#nama_sub_kategori_rekening').text(response
-                            .kode_sub_kategori_rekening + '. ' + response
-                            .nama_sub_kategori_rekening);
-                    }
-                });
-            } else {
-                // Jika tidak ada yang dipilih, kosongkan nilai input dan teks
-                $('#id_sub_kategori_rekening, #id_sub_kegiatan').val('');
-                $('#nama_kategori_rekening, #nama_aktivitas, #nama_kegiatan, #nama_sub_kegiatan, #nama_program')
-                    .text('');
-            }
-        });
-    });
-</script>
-
-<script>
-    function total() {
-        var txtFirstNumberValue = document.getElementById('sisa_stok').value;
-        var txtSecondNumberValue = document.getElementById('pengadaan_sebelumnya').value;
-        var txtTigaNumberValue = document.getElementById('rata_rata_pemakaian').value;
-        var txtEmpatNumberValue = document.getElementById('kebutuhan_per_bulan').value;
-        var txtlimaNumberValue = document.getElementById('buffer').value;
-        var txtEnamNumberValue = document.getElementById('harga_satuan').value;
-        var txttujuhNumberValue = document.getElementById('persen').value;
-        var result1 = ((parseInt(txtFirstNumberValue) + parseInt(txtSecondNumberValue))) - (parseInt(
-            txtTigaNumberValue) * parseInt(txtEmpatNumberValue));
-        if (!isNaN(result1)) {
-            document.getElementById('proyeksi_sisa_stok').value = result1;
-        }
-        var result2 = parseInt(txtTigaNumberValue) * parseInt(txtEmpatNumberValue);
-        if (!isNaN(result2)) {
-            document.getElementById('kebutuhan_tahun_x1').value = result2;
-        }
-        var result3 = parseInt(result2) + (parseInt(txtTigaNumberValue) * parseInt(txtlimaNumberValue));
-        if (!isNaN(result3)) {
-            document.getElementById('kebutuhan_plus_buffer').value = result3;
-        }
-        var result4 = parseInt(result3) - parseInt(result1);
-        if (!isNaN(result4)) {
-            document.getElementById('rencana_pengadaan_tahun_x1').value = result4;
-        }
-        var ppn = parseInt(result4) * parseInt(txtEnamNumberValue) * parseInt(txttujuhNumberValue) / 100;
-        var result5 = (parseInt(result4) * parseInt(txtEnamNumberValue)) + parseInt(ppn);
-        if (!isNaN(result5)) {
-            document.getElementById('total_persediaan').value = result5.toLocaleString('id-ID');
-        }
-    }
-</script>
 
 
 {{-- <script>
@@ -1695,319 +2236,3 @@
         });
     }
 </script> --}}
-
-<script>
-    function showDetailMasterSpj(id) {
-        // Reset isi modal sebelum request baru
-        $('#modalDetailContent').html(
-            '<div class="text-center"><span class="spinner-border text-primary" role="status"></span> Memuat data...</div>'
-        );
-
-        // Tampilkan modal
-        $('#modalDetailMasterSpj').modal('show');
-
-        // Kirim AJAX request untuk mengambil data detail
-        $.ajax({
-            url: "{{ route('master_spjs.show', ':id') }}".replace(':id', id),
-            method: 'GET',
-            success: function(response) {
-                $('#modalDetailContent').html(response);
-            },
-            error: function(xhr) {
-                $('#modalDetailContent').html(
-                    '<div class="alert alert-danger">Terjadi kesalahan saat memuat data.</div>'
-                );
-                console.log("DEBUG ERROR:", xhr.responseText);
-            }
-        });
-
-    }
-</script>
-
-
-<script>
-    function formatNumber(input) {
-        let value = input.value.replace(/[^0-9,]/g, ''); // Hanya izinkan angka dan koma
-        let parts = value.split(',');
-
-        if (parts.length > 2) {
-            value = parts[0] + ',' + parts.slice(1).join(''); // Pastikan hanya ada satu koma
-        }
-
-        input.value = value;
-    }
-</script>
-
-<script type="text/javascript">
-    function sum_farmasi() {
-        var harga_barang = parseFloat(document.getElementById('harga_barang').value) || 0;
-        var ppn = parseFloat(document.getElementById('ppn').value) || 0;
-        var rata2_pemakaian = parseFloat(document.getElementById('rata2_pemakaian').value) || 0;
-        var sisa_stok = parseFloat(document.getElementById('sisa_stok').value) || 0;
-        var buffer_stok = parseFloat(document.getElementById('buffer_stok').value) || 0;
-        var pengkali = parseFloat(document.getElementById('pengkali').value) || 0;
-
-        var result1 = (pengkali * rata2_pemakaian);
-        if (!isNaN(result1)) {
-            document.getElementById('minimal_stok').value = result1.toFixed(2);
-        }
-
-        var result2 = (buffer_stok + result1) - sisa_stok;
-        if (!isNaN(result2)) {
-            document.getElementById('usulan_barang').value = result2.toFixed(2);
-        }
-
-        var result3 = (harga_barang * result2);
-        if (!isNaN(result3)) {
-            document.getElementById('total_usulan_barang_ppn').value = result3.toFixed(2);
-        }
-
-        var result4 = (result3 * ppn) / 100;
-        if (!isNaN(result4)) {
-            document.getElementById('hasil_ppn').value = result4.toFixed(2);
-        }
-
-        var result5 = result3 + result4;
-        if (!isNaN(result5)) {
-            document.getElementById('total_usulan_barang_ppn').value = result5.toFixed(2);
-        }
-    }
-</script>
-
-<script>
-    document.getElementById('checkAll').addEventListener('change', function() {
-        const checkboxes = document.querySelectorAll('.check-item');
-        checkboxes.forEach(function(checkbox) {
-            checkbox.checked = document.getElementById('checkAll').checked;
-        });
-    });
-
-    document.querySelectorAll('.check-item').forEach(function(checkbox) {
-        checkbox.addEventListener('change', function() {
-            const allChecked = document.querySelectorAll('.check-item:checked').length === document
-                .querySelectorAll('.check-item').length;
-            document.getElementById('checkAll').checked = allChecked;
-        });
-    });
-</script>
-
-<script>
-    function tot_remunerasi() {
-        var txtFirstNumberValue = document.getElementById('gaji_pokok').value;
-        var txtSecondNumberValue = document.getElementById('koefisien_gaji').value;
-        var txtTigaNumberValue = document.getElementById('remunerasi').value;
-        var txtEmpatNumberValue = document.getElementById('koefisien_remunerasi').value;
-        var txtlimaNumberValue = document.getElementById('bpjs_kesehatan').value;
-        var txtEnamNumberValue = document.getElementById('bpjs_tk').value;
-        var txttujuhNumberValue = document.getElementById('bpjs_jht').value;
-        var result1 = (parseInt(txtFirstNumberValue) * parseInt(txtSecondNumberValue));
-        if (!isNaN(result1)) {
-            document.getElementById('tot_gaji_pokok').value = result1;
-        }
-        var result2 = parseInt(txtTigaNumberValue) * parseInt(txtEmpatNumberValue);
-        if (!isNaN(result2)) {
-            document.getElementById('remun').value = result2;
-        }
-        var bpjs = (parseInt(result1) * parseInt(txtlimaNumberValue) / 100) + (parseInt(result1) * parseInt(
-            txtEnamNumberValue) / 100) + (parseInt(result1) * parseInt(txttujuhNumberValue) / 100);
-        var result3 = (parseInt(result1) + parseInt(bpjs) + parseInt(result2));
-        if (!isNaN(result3)) {
-            document.getElementById('total_pegawai').value = result3;
-        }
-    }
-</script>
-
-{{-- <script>
-    $(document).ready(function() {
-        $('.show_detail').click(function() {
-            var indexTable = $(this).data('indextable');
-            var idUsulanBarang = $(this).data('id_usulan_barang');
-            var idJenisKategori = $(this).data('id_jenis_kategori_rkbu'); // Tambahkan untuk kategori
-
-            console.log('Index Table:', indexTable);
-            console.log('ID Usulan Barang:', idUsulanBarang);
-            console.log('ID Jenis Kategori:', idJenisKategori); // Debug kategori
-
-            // Bind hanya jika id_jenis_kategori_rkbu sesuai
-            if (!$.fn.DataTable.isDataTable('#example' + indexTable)) {
-                $('#example' + indexTable).DataTable();
-            }
-
-            var table = $('#example' + indexTable).DataTable();
-
-            table.rows().every(function(rowIdx, tableLoop, rowLoop) {
-                var rowNode = this.node();
-                $(rowNode).find('.bind_id_usulan_barang').val(idUsulanBarang);
-            });
-        });
-    });
-</script> --}}
-
-<script>
-    $(document).ready(function() {
-        $('.show_detail').click(function() {
-            var indexTable = $(this).data('indextable');
-            var idUsulanBarang = $(this).data('id_usulan_barang');
-            var idJenisKategori = $(this).data('id_jenis_kategori_rkbu');
-
-            // Kalau tabel belum jadi DataTable, baru inisialisasi
-            if (!$.fn.DataTable.isDataTable('#example' + indexTable)) {
-                $('#example' + indexTable).DataTable({
-                    paging: true,
-                    searching: true,
-                    lengthChange: true,
-                    pageLength: 10,
-                    lengthMenu: [5, 10, 25, 50, 100],
-                    autoWidth: false,
-                    responsive: true,
-                    dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>' +
-                        // baris atas: left=length, right=search
-                        'rt' + // isi tabel
-                        '<"row"<"col-sm-6"i><"col-sm-6"p>>', // baris bawah: info dan pagination
-                    language: {
-                        search: "Cari:",
-                        lengthMenu: "Tampilkan _MENU_ data",
-                        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                        paginate: {
-                            previous: "Sebelumnya",
-                            next: "Berikutnya"
-                        }
-                    }
-                });
-            }
-        });
-    });
-</script>
-
-
-
-
-{{-- 
-<script type="text/javascript">
-    $(document).ready(function() {
-        // Trigger saat sub kategori dipilih
-        $('#subKategoriSelect').on('change', function() {
-            var idSubKategoriRkbu = $(this).val();
-
-            // Lakukan request AJAX untuk mendapatkan data dari sub kategori
-            $.ajax({
-                url: '/get-data-by-sub-kategori', // URL ke route
-                type: 'GET',
-                data: {
-                    id_sub_kategori_rkbu: idSubKategoriRkbu
-                },
-                success: function(data) {
-                    // Menampilkan data ke dalam span atau element lain
-                    $('#id_kategori_rkbu').text('ID Kategori RKBU: ' + data
-                        .id_kategori_rkbu);
-                    $('#id_jenis_belanja').text('ID Jenis Belanja: ' + data
-                        .id_jenis_belanja);
-                    $('#id_jenis_kategori_rkbu').text('ID Jenis Kategori RKBU: ' + data
-                        .id_jenis_kategori_rkbu);
-                    $('#id_admin_pendukung_ppk').text('ID Admin Pendukung PPK: ' + data
-                        .id_admin_pendukung_ppk);
-                    $('#id_aktivitas').text('ID Aktivitas: ' + data.id_aktivitas);
-                    $('#nama_kategori_rkbu').text('Nama Kategori: ' + data
-                        .nama_kategori_rkbu);
-                    $('#nama_program').text('Program: ' + data.kode_program + '. ' + data
-                        .nama_program);
-                    $('#nama_aktivitas').text('Aktivitas: ' + data.nama_aktivitas);
-                    $('#nama_kegiatan').text('Kegiatan: ' + data.kode_kegiatan + '. ' + data
-                        .nama_kegiatan);
-                    $('#nama_sub_kegiatan').text('Sub Kegiatan: ' + data.kode_sub_kegiatan +
-                        '. ' + data.nama_sub_kegiatan);
-                    $('#nama_jenis_belanja').text('Nama Jenis Belanja: ' + data
-                        .nama_jenis_belanja);
-                    $('#nama_kategori_rekening').text('Kategori Rekening: ' + data
-                        .kode_kategori_rekening + '. ' + data.nama_kategori_rekening);
-                    $('#nama_sub_kategori_rekening').text('Sub Kategori Rekening: ' + data
-                        .kode_sub_kategori_rekening + '. ' + data
-                        .nama_sub_kategori_rekening);
-                    $('#id_kegiatan').text('ID Kegiatan: ' + data.id_sub_kegiatan);
-                    $('#id_kategori_rekening').text('ID Kategori Rekening: ' + data
-                        .id_kategori_rekening);
-                    $('#id_sub_kategori_rekening').text('ID Sub Kategori Rekening: ' + data
-                        .id_sub_kategori_rekening);
-
-                },
-                error: function(xhr) {
-                    console.log('Error:', xhr);
-                }
-            });
-        });
-    });
-</script> --}}
-
-<script type="text/javascript">
-    function sum_belanja() {
-        var vol1 = parseFloat(document.getElementById('vol1').value) || 0;
-        var vol2 = parseFloat(document.getElementById('vol2').value) || 0;
-        var hargaBarang = parseFloat(document.getElementById('harga_satuan').value) || 0;
-        var persen = parseFloat(document.getElementById('persen').value) || 0;
-        var jumlah_vol = parseFloat(document.getElementById('jumlah_vol').value) || 0;
-        var total_anggaran = parseFloat(document.getElementById('total_anggaran').value) || 0;
-        var id_rkbu = parseFloat(document.getElementById('id_rkbu').value) || 0;
-        var id_sumber_dana = parseFloat(document.getElementById('id_sumber_dana').value) || 0;
-        var id_kategori_rkbu = parseFloat(document.getElementById('id_kategori_rkbu').value) || 0;
-        var id_sub_kategori_rkbu = parseFloat(document.getElementById('id_sub_kategori_rkbu').value) || 0;
-        var id_jenis_kategori_rkbu = parseFloat(document.getElementById('id_jenis_kategori_rkbu').value) || 0;
-        var id_kode_rekening_belanja = parseFloat(document.getElementById('id_kode_rekening_belanja').value) || 0;
-
-        var sisa_vol = jumlah_vol - (vol1 * vol2);
-        var ppn = ((vol1 * vol2) * hargaBarang) * persen / 100;
-        var result = ((vol1 * vol2) * hargaBarang) + ppn;
-        var result2 = total_anggaran - (((vol1 * vol2) * hargaBarang) + ppn);
-
-        if (!isNaN(result)) {
-            document.getElementById('hasil').value = result;
-        }
-
-        if (!isNaN(result2)) {
-            document.getElementById('sisa_anggaran').value = result2;
-        }
-
-        var sisaVolumeElement = document.getElementById('sisa_volume');
-
-        if (!isNaN(sisa_vol)) {
-            sisaVolumeElement.value = sisa_vol;
-
-            // Periksa apakah sisa_vol lebih kecil dari 0
-            if (sisa_vol < 0) {
-                sisaVolumeElement.style.color = 'red'; // Atur warna teks menjadi merah
-                alert("Sisa volume kurang dari 0!");
-            } else {
-                sisaVolumeElement.style.color = ''; // Reset warna teks jika tidak kurang dari 0
-            }
-        }
-    }
-</script>
-<script>
-    $(document).ready(function() {
-        // Event listener ketika modal ditampilkan
-        $('#referAndEarn').on('shown.bs.modal', function() {
-            // Event listener untuk select option di dalam modal
-            $('#getkategori').on('change', function() {
-                var selectedOption = $(this).find('option:selected');
-
-                var id_kategori_rkbu = selectedOption.data('id_kategori_rkbu');
-                var id_jenis_kategori_rkbu = selectedOption.data('id_jenis_kategori_rkbu');
-                var id_jenis_belanja = selectedOption.data('id_jenis_belanja');
-
-                console.log('Kategori RKBU:', id_kategori_rkbu);
-                console.log('Jenis Kategori RKBU:', id_jenis_kategori_rkbu);
-                console.log('Jenis Belanja:', id_jenis_belanja);
-
-                // Isi nilai ke hidden input
-                $('#id_kategori_rkbu').val(id_kategori_rkbu);
-                $('#id_jenis_kategori_rkbu').val(id_jenis_kategori_rkbu);
-                $('#id_jenis_belanja').val(id_jenis_belanja);
-            });
-        });
-    });
-</script>
-
-
-@stack('scripts')
-</body>
-
-</html>

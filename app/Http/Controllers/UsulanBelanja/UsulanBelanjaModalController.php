@@ -795,6 +795,10 @@ class UsulanBelanjaModalController extends Controller
 
     public function update(Request $request, $id)
     {
+        $request->merge([
+            'harga_barang' => str_replace(['.', ','], '', $request->harga_barang),
+            'total_anggaran_usulan_barang' => str_replace(['.', ','], '', $request->total_anggaran_usulan_barang),
+        ]);
 
         // Validasi input
         $validator = Validator::make(
@@ -843,8 +847,15 @@ class UsulanBelanjaModalController extends Controller
             ->where('id_usulan_barang_detail', '!=', $id) // Kecualikan barang yang sedang di-update
             ->sum('total_anggaran_usulan_barang');
 
+        // 🔹 Fungsi bantu untuk bersihkan format angka
+        $cleanNumber = function ($value) {
+            if ($value === null || $value === '') return 0;
+            return floatval(str_replace(['.', ','], '', $value));
+        };
+
+
         // Ambil data dari request
-        $harga_barang           = $request->input('harga_barang');
+        $harga_barang           = $cleanNumber($request->input('harga_barang'));
         $jumlah_usulan_barang   = $request->input('jumlah_usulan_barang');
         $ppn                    = $request->input('ppn');
         $sum_total_ppn          = ($ppn / 100) * $jumlah_usulan_barang * $harga_barang;
@@ -868,7 +879,6 @@ class UsulanBelanjaModalController extends Controller
             $usulanBarangDetail->ppn = $ppn;
             $usulanBarangDetail->total_ppn = $sum_total_ppn;
             $usulanBarangDetail->total_anggaran_usulan_barang = $totalAnggaranBarang;
-
             $usulanBarangDetail->save();
 
             // Update sisa anggaran dan sisa volume di tabel rkbu

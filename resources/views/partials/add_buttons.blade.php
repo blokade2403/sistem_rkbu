@@ -39,12 +39,16 @@
                                     </div>
                                 </div>
                                 <!--end col-->
-                                <div class="col-auto">
-                                    <a href="{{ route($routePrefix . '.create') }}"
-                                        class="btn btn-soft-success shadow-none"><i
-                                            class="ri-add-circle-line align-middle me-1"></i>
-                                        Add Product</a>
-                                </div>
+                                @if (session('status_edit') == 'aktif' && in_array(session('nama_level_user'), ['User', 'Administrator']))
+                                    <div class="col-auto">
+                                        <a href="{{ route($routePrefix . '.create') }}"
+                                            class="btn btn-soft-success shadow-none">
+                                            <i class="ri-add-circle-line align-middle me-1"></i>
+                                            Tambah Data
+                                        </a>
+                                    </div>
+                                @endif
+
                                 <!--end col-->
                                 <div class="col-auto">
                                     <a href="{{ route($routePrefix . '.downloadPDF') }}"

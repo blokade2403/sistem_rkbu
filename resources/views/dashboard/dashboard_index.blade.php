@@ -8,8 +8,10 @@
                         <div class="d-flex align-items-lg-center flex-lg-row flex-column">
                             <div class="flex-grow-1">
                                 <h4 class="fs-16 mb-1">Hello, {{ session('nama_lengkap') }}!</h4>
-                                <p class="text-muted mb-0">Here's what's happening with your store
-                                    today.</p>
+                                <p class="text-muted mb-0">Anda masuk ke Anggaran Tahun <strong
+                                        class="bold">{{ session('tahun_anggaran') }}</strong> dalam
+                                    fase {{ session('nama_fase') }}
+                                </p>
                             </div>
                             <div class="mt-3 mt-lg-0">
                                 <form action="javascript:void(0);">
@@ -25,12 +27,6 @@
                                                     <i class="ri-calendar-2-line"></i>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <!--end col-->
-                                        <div class="col-auto">
-                                            <button type="button" class="btn btn-soft-success shadow-none"><i
-                                                    class="ri-add-circle-line align-middle me-1"></i>
-                                                Add Product</button>
                                         </div>
                                         <!--end col-->
                                         <div class="col-auto">

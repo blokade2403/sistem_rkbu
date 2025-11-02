@@ -48,21 +48,8 @@
               'Admin PPK',
               'Validasi RKA',
               'Bendahara',
-          ];
-          $level_pengadaan_ppk = [
-              'Administrator',
-              'Admin PPK',
+              'Validasi',
               'Pendukung PPK',
-              'PPK',
-              'PPBJ',
-              'Pengurus Barang',
-              'PPK Keuangan',
-              'PPTK',
-              'PPTK Alkes',
-              'PPTK Umum',
-              'Validasi Keuangan',
-              'Verifikator',
-              'Bendahara',
           ];
       @endphp
 
@@ -334,8 +321,11 @@
                               <div class="col-lg-4">
                                   <ul class="nav nav-sm flex-column">
                                       <li class="nav-item">
-                                          <a href="ui-alerts.html" class="nav-link" data-key="t-alerts">Remunerasi
-                                              PNS</a>
+                                          @if (session('nama_level_user') == 'User')
+                                              <a href="{{ route('rkbu_pegawai_pnss.index') }}" class="nav-link"
+                                                  data-key="t-form-select">
+                                                  Remunerasi PNS</a>
+                                          @endif
                                       </li>
                                   </ul>
                               </div>
@@ -351,8 +341,11 @@
                       <div class="collapse menu-dropdown" id="sidebarForms">
                           <ul class="nav nav-sm flex-column">
                               <li class="nav-item">
-                                  <a href="forms-elements.html" class="nav-link"
-                                      data-key="t-basic-elements">Remunerasi Non PNS</a>
+                                  @if (session('nama_level_user') == 'User')
+                                      <a href="{{ route('rkbu_pegawai_non_pnss.index') }}" class="nav-link"
+                                          data-key="t-form-select">
+                                          Remunerasi Non PNS</a>
+                                  @endif
                               </li>
                               <li class="nav-item">
                                   @if (session('nama_level_user') == 'User')
@@ -486,101 +479,56 @@
                       </a>
                       <div class="collapse menu-dropdown" id="sidebarApps">
                           <ul class="nav nav-sm flex-column">
-                              <li class="nav-item">
-                                  <a href="#sidebarProjects" class="nav-link" data-bs-toggle="collapse"
-                                      role="button" aria-expanded="false" aria-controls="sidebarProjects"
-                                      data-key="t-projects"> Usulan SPJ
-                                  </a>
-                                  <div class="collapse menu-dropdown" id="sidebarProjects">
-                                      <ul class="nav nav-sm flex-column">
-                                          <li class="nav-item">
-                                              <a href="{{ route('usulan_spj_barjass.index') }}" class="nav-link"
-                                                  data-key="t-list">
-                                                  Barang Jasa </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('usulan_spj_modals.index') }}" class="nav-link"
-                                                  data-key="t-overview"> Modal </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="{{ route('usulan_spj_persediaans.index') }}" class="nav-link"
-                                                  data-key="t-create-project"> Persediaan </a>
-                                          </li>
-                                      </ul>
-                                  </div>
-                              </li>
-                              <li class="nav-item">
-                                  <a href="#sidebarEcommerce" class="nav-link" data-bs-toggle="collapse"
-                                      role="button" aria-expanded="false" aria-controls="sidebarEcommerce"
-                                      data-key="t-ecommerce">
-                                      SPJ
-                                      <span class="badge badge-pill bg-warning" data-key="t-new">New</span>
-                                  </a>
-                                  <div class="collapse menu-dropdown" id="sidebarEcommerce">
-                                      <ul class="nav nav-sm flex-column">
-                                          <li class="nav-item">
-                                              <a href="{{ route('master_spjs.index') }}" class="nav-link"
-                                                  data-key="t-products"> Pengadaan Barang </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="apps-ecommerce-product-details.html" class="nav-link"
-                                                  data-key="t-product-Details"> Product Details </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="apps-ecommerce-add-product.html" class="nav-link"
-                                                  data-key="t-create-product"> Create Product </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="apps-ecommerce-orders.html" class="nav-link"
-                                                  data-key="t-orders">
-                                                  Orders </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="apps-ecommerce-order-details.html" class="nav-link"
-                                                  data-key="t-order-details"> Order Details </a>
-                                          </li>
-                                      </ul>
-                                  </div>
-                              </li>
-
-                              <li class="nav-item">
-                                  <a href="#sidebarTasks" class="nav-link" data-bs-toggle="collapse" role="button"
-                                      aria-expanded="false" aria-controls="sidebarTasks" data-key="t-tasks"> Tasks
-                                  </a>
-                                  <div class="collapse menu-dropdown" id="sidebarTasks">
-                                      <ul class="nav nav-sm flex-column">
-                                          <li class="nav-item">
-                                              <a href="apps-tasks-kanban.html" class="nav-link"
-                                                  data-key="t-kanbanboard"> Kanban Board </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="apps-tasks-list-view.html" class="nav-link"
-                                                  data-key="t-list-view"> List View </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="apps-tasks-details.html" class="nav-link"
-                                                  data-key="t-task-details"> Task Details </a>
-                                          </li>
-                                      </ul>
-                                  </div>
-                              </li>
-                              <li class="nav-item">
-                                  <a href="#sidebarCRM" class="nav-link" data-bs-toggle="collapse" role="button"
-                                      aria-expanded="false" aria-controls="sidebarCRM" data-key="t-crm"> CRM
-                                  </a>
-                                  <div class="collapse menu-dropdown" id="sidebarCRM">
-                                      <ul class="nav nav-sm flex-column">
-                                          <li class="nav-item">
-                                              <a href="apps-crm-contacts.html" class="nav-link"
-                                                  data-key="t-contacts"> Contacts </a>
-                                          </li>
-                                          <li class="nav-item">
-                                              <a href="apps-crm-companies.html" class="nav-link"
-                                                  data-key="t-companies"> Companies </a>
-                                          </li>
-                                      </ul>
-                                  </div>
-                              </li>
+                              @if (in_array(session('nama_level_user'), $level_admin_ppk1))
+                                  <li class="nav-item">
+                                      <a href="#sidebarProjects" class="nav-link" data-bs-toggle="collapse"
+                                          role="button" aria-expanded="false" aria-controls="sidebarProjects"
+                                          data-key="t-projects"> Usulan SPJ
+                                      </a>
+                                      <div class="collapse menu-dropdown" id="sidebarProjects">
+                                          <ul class="nav nav-sm flex-column">
+                                              <li class="nav-item">
+                                                  <a href="{{ route('usulan_spj_barjass.index') }}" class="nav-link"
+                                                      data-key="t-list">
+                                                      Barang Jasa </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('usulan_spj_modals.index') }}" class="nav-link"
+                                                      data-key="t-overview"> Modal </a>
+                                              </li>
+                                              <li class="nav-item">
+                                                  <a href="{{ route('usulan_spj_persediaans.index') }}"
+                                                      class="nav-link" data-key="t-create-project"> Persediaan </a>
+                                              </li>
+                                          </ul>
+                                      </div>
+                                  </li>
+                              @endif
+                              @if (in_array(session('nama_level_user'), $level_pengadaan_pej))
+                                  <li class="nav-item">
+                                      <a href="#sidebarEcommerce" class="nav-link" data-bs-toggle="collapse"
+                                          role="button" aria-expanded="false" aria-controls="sidebarEcommerce"
+                                          data-key="t-ecommerce">
+                                          SPJ
+                                          <span class="badge badge-pill bg-warning" data-key="t-new">New</span>
+                                      </a>
+                                      <div class="collapse menu-dropdown" id="sidebarEcommerce">
+                                          <ul class="nav nav-sm flex-column">
+                                              <li class="nav-item">
+                                                  <a href="{{ route('master_spjs.index') }}" class="nav-link"
+                                                      data-key="t-products"> Pengadaan Barang </a>
+                                              </li>
+                                              @if (session('nama_level_user') == 'Administrator')
+                                                  <li class="nav-item">
+                                                      <a href="{{ route('rekap_usulan_belanjas.index') }}"
+                                                          class="nav-link">
+                                                          Rekap Usulan </a>
+                                                  </li>
+                                              @endif
+                                          </ul>
+                                      </div>
+                                  </li>
+                              @endif
                           </ul>
                       </div>
                   </li>
@@ -636,74 +584,74 @@
                       </div>
                   </li>
                   @php
+                      // Daftar ID level untuk PPTK
                       $pptk = [
                           '9d7a2cd3-1ab2-4f6b-bba3-3ee6bcc06e85',
                           '9dfafd48-b536-42a0-985e-97eb47168589',
                           '9dfafd54-6bae-4814-b380-dd7b701ae2e7',
                       ];
+
+                      // Tentukan jenis level user
+                      if (in_array(session('id_level'), $pptk)) {
+                          $role = 'pptk';
+                      } elseif (session('nama_level_user') == 'Validasi RKA') {
+                          $role = 'rka';
+                      } elseif (session('nama_level_user') == 'Direktur') {
+                          $role = 'direktur';
+                      } else {
+                          $role = null;
+                      }
+
+                      // Mapping route berdasarkan level user
+                      $routes = [
+                          'pptk' => [
+                              'barang' => 'validasi_usulan_barang_pptks.index',
+                              'modal' => 'validasi_usulan_modal_pptks.index',
+                              'persediaan' => 'validasi_usulan_persediaan_pptks.index',
+                          ],
+                          'rka' => [
+                              'barang' => 'validasi_usulan_barang_rkas.index',
+                              'modal' => 'validasi_usulan_modal_rkas.index',
+                              'persediaan' => 'validasi_usulan_persediaan_rkas.index',
+                          ],
+                          'direktur' => [
+                              'barang' => 'validasi_usulan_barang_direkturs.index',
+                              'modal' => 'validasi_usulan_modal_direkturs.index',
+                              'persediaan' => 'validasi_usulan_persediaan_direkturs.index',
+                          ],
+                      ];
                   @endphp
-                  <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-components">Validasi
-                          Belanja</span>
-                  </li>
-                  <li class="nav-item">
-                      <a class="nav-link menu-link" href="#sidebarIcons" data-bs-toggle="collapse" role="button"
-                          aria-expanded="false" aria-controls="sidebarIcons">
-                          <i class="ri-compasses-2-line"></i> <span data-key="t-icons">Validasi Belanja</span>
-                      </a>
-                      @if (in_array(session('id_level'), $pptk))
-                          <div class="collapse menu-dropdown" id="sidebarIcons">
+
+                  @if ($role)
+                      <li class="menu-title">
+                          <i class="ri-more-fill"></i>
+                          <span data-key="t-components">Validasi Belanja</span>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link menu-link" href="#sidebarValidasiBelanja" data-bs-toggle="collapse"
+                              role="button" aria-expanded="false" aria-controls="sidebarValidasiBelanja">
+                              <i class="ri-compasses-2-line"></i>
+                              <span data-key="t-icons">Validasi Belanja</span>
+                          </a>
+                          <div class="collapse menu-dropdown" id="sidebarValidasiBelanja">
                               <ul class="nav nav-sm flex-column">
                                   <li class="nav-item">
-                                      <a href="{{ route('validasi_usulan_barang_pptks.index') }}" class="nav-link"
+                                      <a href="{{ route($routes[$role]['barang']) }}" class="nav-link"
                                           data-key="t-remix">Barjas</a>
                                   </li>
                                   <li class="nav-item">
-                                      <a href="{{ route('validasi_usulan_modal_pptks.index') }}" class="nav-link"
+                                      <a href="{{ route($routes[$role]['modal']) }}" class="nav-link"
                                           data-key="t-boxicons">Modal</a>
                                   </li>
                                   <li class="nav-item">
-                                      <a href="{{ route('validasi_usulan_persediaan_pptks.index') }}"
-                                          class="nav-link" data-key="t-material-design">Persediaan</a>
-                                  </li>
-                              </ul>
-                          </div>
-                      @endif
-                      @if (session('nama_level_user') == 'Validasi RKA')
-                          <div class="collapse menu-dropdown" id="sidebarIcons">
-                              <ul class="nav nav-sm flex-column">
-                                  <li class="nav-item">
-                                      <a href="{{ route('validasi_usulan_barang_rkas.index') }}" class="nav-link"
-                                          data-key="t-remix">Barjas</a>
-                                  </li>
-                                  <li class="nav-item">
-                                      <a href="{{ route('validasi_usulan_modal_rkas.index') }}" class="nav-link"
-                                          data-key="t-boxicons">Modal</a>
-                                  </li>
-                                  <li class="nav-item">
-                                      <a href="{{ route('validasi_usulan_persediaan_rkas.index') }}" class="nav-link"
+                                      <a href="{{ route($routes[$role]['persediaan']) }}" class="nav-link"
                                           data-key="t-material-design">Persediaan</a>
                                   </li>
                               </ul>
                           </div>
-                      @endif
-                      @if (session('nama_level_user') == 'Direktur')
-                          <div class="collapse menu-dropdown" id="sidebarIcons">
-                              <ul class="nav nav-sm flex-column">
-                                  <li class="nav-item">
-                                      <a href="{{ route('validasi_usulan_barang_direkturs.index') }}"
-                                          class="nav-link" data-key="t-remix">Barjas</a>
-                                  </li>
-                                  <li class="nav-item">
-                                      <a href="{{ route('validasi_usulan_modal_direkturs.index') }}" class="nav-link"
-                                          data-key="t-boxicons">Modal</a>
-                                  </li>
-                                  <li class="nav-item">
-                                      <a href="{{ route('validasi_usulan_persediaan_direkturs.index') }}"
-                                          class="nav-link" data-key="t-material-design">Persediaan</a>
-                                  </li>
-                              </ul>
-                          </div>
-                      @endif
+                      </li>
+                  @endif
+
                   </li>
                   <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-components">Asset</span>
                   </li>

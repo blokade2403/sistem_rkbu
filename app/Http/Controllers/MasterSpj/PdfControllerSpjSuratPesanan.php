@@ -301,7 +301,7 @@ class PdfControllerSpjSuratPesanan extends Controller
 
         $pdf->SetCompression(true);
         // Mengatur margin halaman dan auto page break
-        $pdf->SetMargins(15, 15, 15);
+        $pdf->SetMargins(15, 10, 15);
         $pdf->SetHeaderMargin(0);
         $pdf->SetFooterMargin(10);
         $pdf->SetAutoPageBreak(true, 25); // Auto page break dengan margin bawah
@@ -329,16 +329,14 @@ class PdfControllerSpjSuratPesanan extends Controller
               <h4 style="font-weight: normal; line-height:0; font-size:11px;">' . $judulHeaders->header1 . '</h4>
                <h5 style="font-weight: bold; font-size:15px; line-height:1;">' . $judulHeaders->header4 . '</h5>
                <h5 style="font-weight: bold; font-size:12px; line-height:0;">' . $judulHeaders->nama_rs . '</h5>
-                    <h3 style="font-weight: normal; font-size:11px; line-height:1.3;" align="center"; text="wrap">' . $judulHeaders->alamat_rs . ' </h3>
-                    <h3 style="font-weight: normal; font-size:11px; line-height:0;" align="center">Telp. ' . $judulHeaders->tlp_rs . ' Faksimile. ' . $judulHeaders->tlp_rs . '  </h3>
-                    <h3 style="font-weight: normal; font-size:11px; line-height:1;" align="center">' . $judulHeaders->header3 . '</h3>
-                    <h3 style="font-weight: normal; font-size:11px; line-height:0;" align="center">' . $judulHeaders->wilayah . '</h3>
+                    <h3 style="font-weight: normal; font-size:11px; line-height:1.3;" align="center"; text="wrap">' . $judulHeaders->alamat_rs . ' Telp. ' . $judulHeaders->tlp_rs . ' Faksimile. ' . $judulHeaders->tlp_rs . '</h3>
+                    <h3 style="font-weight: normal; font-size:11px; line-height:0;" align="center">' . $judulHeaders->header3 . '</h3>
+                    <h3 style="font-weight: normal; font-size:11px; line-height:1;" align="center">' . $judulHeaders->wilayah . '</h3>
                </th>
                <hr>
-               </tr>
-               <tr bgcolor="#ffffff">
-               <th  width="90%" align="right">
-               <h5 style="font-weight: normal; font-size:11px; line-height:1; align:right;">Kode Pos 14130</h5>
+               <th width="90%" align="right">
+               <h5 style="font-weight: normal; font-size:11px; line-height:8.2; align:right;"></h5>
+               <h3 style="font-weight: normal; font-size:11px; line-height:0; align:right;">Kode Pos ' . $judulHeaders->kode_pos . '</h3>
                </th>
                </tr>
                </thead>

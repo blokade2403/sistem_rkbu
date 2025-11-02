@@ -38,14 +38,19 @@
                                         </div>
                                     </div>
                                 </div>
-
+                                @php
+                                    $spj = ['Admin PPK', 'PPBJ', 'PPK'];
+                                @endphp
                                 <!--end col-->
-                                <div class="col-auto">
-                                    <button type="button" class="btn btn-soft-success shadow-none"
-                                        data-bs-toggle="modal" data-bs-target=".bs-example-modal-lg"
-                                        data-target="#large-Modal"><i class="ri-add-circle-line align-middle me-1"></i>
-                                        Add Product</a>
-                                </div>
+                                @if (in_array(session('nama_level_user'), $spj))
+                                    <div class="col-auto">
+                                        <button type="button" class="btn btn-soft-success shadow-none"
+                                            data-bs-toggle="modal" data-bs-target=".bs-example-modal-lg"
+                                            data-target="#large-Modal"><i
+                                                class="ri-add-circle-line align-middle me-1"></i>
+                                            Tambah Usulan SPJ</a>
+                                    </div>
+                                @endif
                                 <!--end col-->
                                 <div class="col-auto">
                                     <a href=""

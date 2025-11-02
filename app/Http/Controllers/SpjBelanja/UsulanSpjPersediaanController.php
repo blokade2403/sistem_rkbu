@@ -140,7 +140,6 @@ class UsulanSpjPersediaanController extends Controller
         return view('usulan_spj.index', compact('usulan_barangs', 'get_barangs', 'data_usulan_barangs', 'id_usulan', 'sub_kategori_rkbus'), ['title' => 'Halaman SPJ', 'routePrefix' => 'usulan_spj_persediaans']);
     }
 
-
     public function create() {}
 
     public function add(Request $request)
@@ -193,7 +192,6 @@ class UsulanSpjPersediaanController extends Controller
         return redirect()->route('usulan_spj_persediaans.index')->with('success', 'SPJ berhasil disimpan!');
     }
 
-
     public function store(Request $request)
     {
         $request->validate([
@@ -224,7 +222,6 @@ class UsulanSpjPersediaanController extends Controller
 
         return redirect()->route('usulan_spj_persediaans.index')->with('success', 'Data berhasil ditransfer ke SPJ.');
     }
-
 
     public function show($id_spj)
     {
@@ -419,33 +416,45 @@ class UsulanSpjPersediaanController extends Controller
         return view('usulan_spj.edit_persediaan', compact('usulan_barang_details', 'rkbu', 'uraian_satu', 'uraian_dua', 'invo'), ['title' => 'Halaman SPJ', 'routePrefix' => 'usulan_spj_persediaans']);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id)
     {
         // Validasi input
-        $request->validate([
-            'nama_barang'               => 'required|string|max:255',
-            'stok'                      => 'required|numeric',
-            'rata_rata_pemakaian'       => 'required|numeric',
-            'kebutuhan_per_bulan'       => 'required|numeric',
-            'buffer'                    => 'required|numeric',
-            'pengadaan_sebelumnya'      => 'required|numeric',
-            'proyeksi_sisa_stok'        => 'required|numeric',
-            'kebutuhan_plus_buffer'     => 'required|numeric',
-            'kebutuhan_tahun_x1'        => 'required|numeric',
-            'rencana_pengadaan_tahun_x1' => 'required|numeric',
-            'satuan_1_detail'           => 'required|string',
-            'vol_2_detail'              => 'nullable|numeric',
-            'spek_detail'               => 'required|string',
-            'harga_barang'              => 'required|numeric',
-            'jumlah_usulan_barang'      => 'required|numeric',
-            'ppn'                       => 'required|numeric',
-            'total_anggaran_usulan_barang' => 'required|numeric',
-            // 'link_ekatalog' => 'nullable|string',
-            // 'id_sub_kategori_rkbu' => 'required|uuid',
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'nama_barang'                   => 'required|string|max:255',
+                'satuan_1_detail'               => 'required|string',
+                'sisa_stok'                     => 'required|numeric',
+                'pengkali'                      => 'nullable|numeric',
+                'buffer_stok'                   => 'nullable|numeric',
+                'rata2_pemakaian'               => 'nullable|numeric',
+                'stok_minimal'                  => 'nullable|numeric',
+                'spek_detail'                   => 'required|string',
+                'harga_barang'                  => 'required|numeric',
+                'jumlah_usulan_barang'          => 'required|numeric',
+                'ppn'                           => 'required|numeric',
+                'total_anggaran_usulan_barang'  => 'required|numeric',
+            ],
+            [
+                'sisa_stok'                         => 'Sisa Stok wajib diisi.',
+                'pengkali'                          => 'Pengkali  wajib diisi.',
+                'buffer_stok'                       => 'Buffer Stok wajib diisi.',
+                'rata2_pemakaian'                   => 'Rata-rata Pemakaian wajib diisi.',
+                'stok_minimal'                      => 'Stok Minimal wajib diisi.',
+                'satuan_1_detail.required'          => 'Satuan 1 wajib diisi.',
+                'harga_barang.required'             => 'Harga satuan wajib diisi dan harus berupa angka.',
+                'ppn.required'                      => 'PPN wajib diisi dan harus berupa angka antara 0 hingga 12.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            $errors = $validator->errors();
+            $errorMessages = implode(' ', $errors->all());
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+        }
 
         // Ambil detail usulan barang berdasarkan id
         $usulanBarangDetail = UsulanBarangDetail::findOrFail($id);
@@ -459,8 +468,14 @@ class UsulanSpjPersediaanController extends Controller
             ->where('id_usulan_barang_detail', '!=', $id) // Kecualikan barang yang sedang di-update
             ->sum('total_anggaran_usulan_barang');
 
+        // 🔹 Fungsi bantu untuk bersihkan format angka
+        $cleanNumber = function ($value) {
+            if ($value === null || $value === '') return 0;
+            return floatval(str_replace(['.', ','], '', $value));
+        };
+
         // Ambil data dari request
-        $harga_barang           = $request->input('harga_barang');
+        $harga_barang           = $cleanNumber($request->input('harga_barang'));
         $jumlah_usulan_barang   = $request->input('jumlah_usulan_barang');
         $ppn                    = $request->input('ppn');
         $sum_total_ppn          = ($ppn / 100) * $jumlah_usulan_barang * $harga_barang;
@@ -474,23 +489,18 @@ class UsulanSpjPersediaanController extends Controller
         // Cek apakah total anggaran setelah update tidak melebihi total anggaran yang diperbolehkan di rkbu
         if ($totalAnggaranSetelahUpdate <= $rkbu->total_anggaran) {
             // Update detail usulan barang
-            $usulanBarangDetail->stok                        = $request->input('stok');
-            $usulanBarangDetail->rata_rata_pemakaian         = $request->input('rata_rata_pemakaian');
-            $usulanBarangDetail->kebutuhan_per_bulan         = $request->input('kebutuhan_per_bulan');
-            $usulanBarangDetail->buffer                      = $request->input('buffer');
-            $usulanBarangDetail->pengadaan_sebelumnya        = $request->input('pengadaan_sebelumnya');
-            $usulanBarangDetail->proyeksi_sisa_stok          = $request->input('proyeksi_sisa_stok');
-            $usulanBarangDetail->kebutuhan_plus_buffer       = $request->input('kebutuhan_plus_buffer');
-            $usulanBarangDetail->kebutuhan_tahun_x1          = $request->input('kebutuhan_tahun_x1');
-            $usulanBarangDetail->rencana_pengadaan_tahun_x1  = $request->input('rencana_pengadaan_tahun_x1');
-            $usulanBarangDetail->jumlah_vol                  = $request->input('rencana_pengadaan_tahun_x1');
-            $usulanBarangDetail->satuan_1_detail             = $request->input('satuan_1_detail');
-            $usulanBarangDetail->satuan_2_detail             = $request->input('satuan_2_detail');
-            $usulanBarangDetail->spek_detail                 = $request->input('spek_detail');
-            $usulanBarangDetail->harga_barang                = $harga_barang;
-            $usulanBarangDetail->jumlah_usulan_barang        = $jumlah_usulan_barang;
-            $usulanBarangDetail->ppn                         = $ppn;
-            $usulanBarangDetail->total_ppn                   = $sum_total_ppn;
+
+            $usulanBarangDetail->pengkali                     = $request->input('pengkali');
+            $usulanBarangDetail->sisa_stok                    = $request->input('sisa_stok');
+            $usulanBarangDetail->buffer_stok                  = $request->input('buffer_stok');
+            $usulanBarangDetail->rata2_pemakaian              = $request->input('rata2_pemakaian');
+            $usulanBarangDetail->stok_minimal                 = $request->input('stok_minimal');
+            $usulanBarangDetail->spek_detail                  = $request->input('spek_detail');
+            $usulanBarangDetail->satuan_1_detail              = $request->input('satuan_1_detail');
+            $usulanBarangDetail->harga_barang                 = $harga_barang;
+            $usulanBarangDetail->jumlah_usulan_barang         = $jumlah_usulan_barang;
+            $usulanBarangDetail->ppn                          = $ppn;
+            $usulanBarangDetail->total_ppn                    = $sum_total_ppn;
             $usulanBarangDetail->total_anggaran_usulan_barang = $totalAnggaranBarang;
             $usulanBarangDetail->save();
 
@@ -521,7 +531,6 @@ class UsulanSpjPersediaanController extends Controller
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
-
 
     public function updateStatus(Request $request, $id_spj)
     {

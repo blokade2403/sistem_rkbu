@@ -125,10 +125,17 @@
                                                 </td>
                                                 <td>
                                                     @if ($key->status_pembayaran == 'Sudah di Bayar')
-                                                        <button
-                                                            class="btn btn-sm btn-out-dashed btn-disabled btn-square disabled">No
-                                                            Action
-                                                        </button>
+                                                        <a href="{{ route($routePrefix . '.edit', $key->id_master_spj) }}"
+                                                            class="btn btn-outline-success btn-load right ms-auto nexttab nexttab"
+                                                            data-nexttab="pills-success-tab"><span
+                                                                class="d-flex align-items-center">
+                                                                <span class="flex-grow-1 me-2">
+                                                                    Selesai
+                                                                </span>
+                                                                <span class="spinner-grow flex-shrink-0" role="status">
+                                                                    <span class="visually-hidden">Selesai</span>
+                                                                </span>
+                                                            </span></a>
                                                     @else
                                                         <ul class="list-inline hstack gap-2 mb-0">
                                                             <li class="list-inline-item" data-bs-toggle="tooltip"
@@ -251,12 +258,14 @@
                                                             <span class="fs-12"> Keterangan Validasi Keuangan:
                                                                 <br /><small class="badge bg-label-danger">
                                                                     {{ $key->keterangan_spj }}</small></span>
-                                                            <p>
-                                                                <span class="fs-10">ID Master:
-                                                                    {{ $key->id_master_spj }}</span></br>
-                                                                <span class="fs-10">ID SPJ:
-                                                                    {{ $key->id_spj }}</span>
-                                                            </p>
+                                                            @if (session('nama_level_user') == 'Administrator')
+                                                                <p>
+                                                                    <span class="fs-10">ID Master:
+                                                                        {{ $key->id_master_spj }}</span></br>
+                                                                    <span class="fs-10">ID SPJ:
+                                                                        {{ $key->id_spj }}</span>
+                                                                </p>
+                                                            @endif
                                                         </li>
                                                     </ul>
                                                 </td>

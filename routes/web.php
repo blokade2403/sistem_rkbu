@@ -103,6 +103,7 @@ use App\Http\Controllers\Rkbu\ValidasiRka\ValidasiRkbuPegawaiNonPnsRkaController
 use App\Http\Controllers\RkbuHistory\RkbuHistoryBarjasController;
 use App\Http\Controllers\RkbuHistory\RkbuHistoryModalController;
 use App\Http\Controllers\RkbuHistory\RkbuHistoryPersediaanController;
+use App\Http\Controllers\UsulanBelanja\RekapUsulanBelanjaController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Rka\ValidasiUsulanModalRkaController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Rka\ValidasiUsulanBarangRkaController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Pptk\ValidasiUsulanModalPptkController;
@@ -336,6 +337,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/downloadPDF', [PdfControllerRkbuPersediaanAdmin::class, 'downloadPDF'])->name('rkbu_persediaan_admins.downloadPDF');
     });
 
+    Route::prefix('rekap_usulan_Belanja')->group(function () {
+        Route::resource('rekap_usulan_belanjas', RekapUsulanBelanjaController::class);
+    });
+
     Route::prefix('usulan-belanja-barjas')->group(function () {
         Route::resource('usulan_barang_barjass', UsulanBelanjaBarjasController::class);
         Route::get('/usulan-barang_barjass/{id_usulan_barang}/show', [UsulanBelanjaBarjasController::class, 'show'])->name('usulan_barang_barjass.show');
@@ -554,6 +559,10 @@ Route::middleware('auth')->group(function () {
             ->name('master_spjs.updateSuratPesananAdmin');
         Route::put('/master-spjs/{id}/update-barang-datang', [MasterSpjController::class, 'updateBarangDatang'])
             ->name('master_spjs.updateBarangDatang');
+        Route::put('/master-spjs/{id}/update-barang-parsial1', [MasterSpjController::class, 'UpdateParsial1'])
+            ->name('master_spjs.UpdateParsial1');
+        Route::put('/master-spjs/{id}/update-barang-parsial2', [MasterSpjController::class, 'UpdateParsial2'])
+            ->name('master_spjs.UpdateParsial2');
         Route::put('/master-spj/{id}/update-tukar-faktur', [MasterSpjController::class, 'tukarfaktur'])
             ->name('master_spjs.tukarfaktur');
         Route::put('/master-spj/{id}/update-bast', [MasterSpjController::class, 'updateBast'])

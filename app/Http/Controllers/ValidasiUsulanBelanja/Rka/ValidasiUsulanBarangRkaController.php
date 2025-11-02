@@ -50,26 +50,16 @@ class ValidasiUsulanBarangRkaController extends Controller
             ->join('ksps', 'users.id_ksp', '=', 'ksps.id_ksp')
             ->join('pejabats', 'users.id_pejabat', '=', 'pejabats.id_pejabat')
 
-            // Filter berdasarkan id_pejabat dan id_ksp bawahan
             //->where('users.id_ksp', $id_ksp)
             ->where('users.id_pejabat', $id_pejabat)
-
-            // Filter berdasarkan tahun anggaran dan status
             ->where('usulan_barangs.tahun_anggaran', $tahunAnggaran)
             ->where('usulan_barangs.status_usulan_barang', 'Selesai')
-
-            // Jika diperlukan join ke tabel lain untuk kategori
+            ->where('usulan_barangs.status_validasi_pptk', 'Disetujui PPTK')
             ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
             ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
             ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
-
-            // Optional filter kategori, uncomment jika diperlukan
             ->where('jenis_kategori_rkbus.id_jenis_kategori_rkbu', '9cdfd354-e43a-4461-9747-e15fb74038ac')
-
-            // Join ke tabel usulan_barang_details jika detail barang juga diperlukan
             ->leftJoin('usulan_barang_details', 'usulan_barang_details.id_usulan_barang', '=', 'usulan_barangs.id_usulan_barang')
-
-            // Select kolom yang ingin diambil
             ->select('usulan_barangs.*', 'usulan_barangs.id_usulan_barang') // Ambil detail barang juga jika diperlukan
             // ->select('usulan_barangs.*', 'usulan_barang_details.id_usulan_barang_detail') // Ambil detail barang juga jika diperlukan
 

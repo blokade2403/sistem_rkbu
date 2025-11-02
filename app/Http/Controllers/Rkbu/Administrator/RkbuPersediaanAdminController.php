@@ -138,6 +138,12 @@ class RkbuPersediaanAdminController extends Controller
 
         $nama_tahun_anggaran = session('tahun_anggaran');
 
+        $validasiRkbuBarjasKsp = Rkbu::find($id);
+
+        // Ambil nilai total anggaran sebelumnya
+        $total_anggaran_sebelumnya = $validasiRkbuBarjasKsp->total_anggaran;
+        $sisa_anggaran_sebelumnya = $validasiRkbuBarjasKsp->sisa_anggaran_rkbu;
+
         // Menghilangkan karakter non-digit dan menyisakan hanya angka
         $angka_tahun = (int) preg_replace('/[^0-9]/', '', $nama_tahun_anggaran);
 
@@ -165,7 +171,7 @@ class RkbuPersediaanAdminController extends Controller
         $status_validasi            = StatusValidasi::all();
         $rekening_belanja           = RekeningBelanja::all();
 
-        return view('rkbu.formatform_persediaan.edit', compact('rkbuBarangJasa', 'faseTahun', 'rekening_belanja', 'status_validasi_rka', 'user', 'status_validasi', 'komponens', 'sub_kategori_rkbus', 'uraian_satu', 'uraian_dua', 'id_kode_rekening_belanja', 'angka_tahun', 'angka_kurang_2', 'angka_kurang_1'), ['title' => 'Halaman RKBU', 'routePrefix' => 'rkbu_persediaan_admins']);
+        return view('rkbu.formatform_persediaan.edit', compact('rkbuBarangJasa', 'total_anggaran_sebelumnya', 'sisa_anggaran_sebelumnya', 'faseTahun', 'rekening_belanja', 'status_validasi_rka', 'user', 'status_validasi', 'komponens', 'sub_kategori_rkbus', 'uraian_satu', 'uraian_dua', 'id_kode_rekening_belanja', 'angka_tahun', 'angka_kurang_2', 'angka_kurang_1'), ['title' => 'Halaman RKBU', 'routePrefix' => 'rkbu_persediaan_admins']);
     }
 
     public function massValidasi(Request $request)
@@ -210,7 +216,6 @@ class RkbuPersediaanAdminController extends Controller
         // Redirect dengan pesan sukses
         return redirect()->back()->with('success', 'Validasi berhasil diperbarui.');
     }
-
 
     public function update(Request $request, $id)
     {

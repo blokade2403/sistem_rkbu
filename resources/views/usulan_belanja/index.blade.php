@@ -1,6 +1,6 @@
 @extends('layouts.main')
 @section('content')
-    @include('partials.add_buttons_belanja', ['routePrefix' => $routePrefix])
+    @include('partials.add_buttons_usulan_belanja', ['routePrefix' => $routePrefix])
     @include('usulan_belanja.partials.modal_sub_kategori_usulan_belanja')
     <div class="row">
         <div class="col-xl-12">

@@ -329,6 +329,12 @@
                                         aria-labelledby="v-pills-finish-tab">
                                         <div class="text-center pt-4 pb-2">
 
+                                            <div class="profile-user position-relative d-inline-block mx-auto mb-2">
+                                                <div class="avatar-xs p-0 rounded-circle profile-photo-edit">
+                                                    <input id="profile-img-file-input" type="file"
+                                                        class="profile-img-file-input" accept="image/png, image/jpeg">
+                                                </div>
+                                            </div>
                                             <div class="mb-4">
                                                 <lord-icon src="https://cdn.lordicon.com/lupuorrc.json" trigger="loop"
                                                     colors="primary:#0ab39c,secondary:#405189"

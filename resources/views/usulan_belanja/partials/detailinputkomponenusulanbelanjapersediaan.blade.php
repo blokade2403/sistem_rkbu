@@ -147,9 +147,9 @@
                     <label for="leaveemails" class="form-label">Total Anggaran Belanja</label>
                 </div>
                 <div class="col-lg-10">
-                    <input name="total_anggaran_usulan_barang"
-                        value="{{ $rkbuBarangJasa->total_anggaran_usulan_barang }}" id="hasil"
-                        class="form-control" placeholder="1,000,000" readonly="">
+                    <input type="text" id="hasil" class="form-control" placeholder="1.000.000" readonly>
+                    <input type="hidden" name="total_anggaran_usulan_barang" id="total_anggaran_number"
+                        value="{{ $rkbuBarangJasa->total_anggaran_usulan_barang ?? 0 }}">
                 </div>
             </div>
         </div>

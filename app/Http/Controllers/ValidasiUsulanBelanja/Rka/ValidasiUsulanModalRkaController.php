@@ -56,7 +56,7 @@ class ValidasiUsulanModalRkaController extends Controller
             // Filter berdasarkan tahun anggaran dan status
             ->where('usulan_barangs.tahun_anggaran', $tahunAnggaran)
             ->where('usulan_barangs.status_usulan_barang', 'Selesai')
-
+            ->where('usulan_barangs.status_validasi_pptk', 'Disetujui PPTK')
             // Jika diperlukan join ke tabel lain untuk kategori
             ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
             ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')

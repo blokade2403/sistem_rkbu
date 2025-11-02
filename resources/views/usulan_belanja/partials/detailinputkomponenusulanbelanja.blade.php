@@ -93,7 +93,10 @@
                 </div>
                 <div class="col-lg-10">
                     <input id="harga_barang" name="harga_barang" onkeyup="sum_modal();"
-                        value="{{ $rkbuBarangJasa->harga_barang }}" class="form-control" placeholder="Harga Satuan">
+                        value="{{ number_format($rkbuBarangJasa->harga_barang, 0, ',', '.') }}" class="form-control"
+                        placeholder="Harga Satuan">
+                    <input type="hidden" id="harga_barang_number" name="harga_barang_number"
+                        value="{{ $rkbuBarangJasa->harga_barang }}">
                 </div>
             </div>
             <div class="row mb-3">
@@ -121,9 +124,9 @@
                     <label for="leaveemails" class="form-label">Total Anggaran Belanja</label>
                 </div>
                 <div class="col-lg-10">
-                    <input name="total_anggaran_usulan_barang"
-                        value="{{ $rkbuBarangJasa->total_anggaran_usulan_barang }}" id="hasil"
-                        class="form-control" placeholder="1,000,000" readonly="">
+                    <input id="hasil" class="form-control" placeholder="1.000.000" readonly>
+                    <input type="hidden" name="total_anggaran_usulan_barang" id="total_anggaran_number"
+                        value="{{ $rkbuBarangJasa->total_anggaran_usulan_barang }}">
                 </div>
             </div>
         </div>

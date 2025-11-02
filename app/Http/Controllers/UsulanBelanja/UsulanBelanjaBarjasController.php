@@ -845,8 +845,14 @@ class UsulanBelanjaBarjasController extends Controller
             ->where('id_usulan_barang_detail', '!=', $id) // Kecualikan barang yang sedang di-update
             ->sum('total_anggaran_usulan_barang');
 
+        // 🔹 Fungsi bantu untuk bersihkan format angka
+        $cleanNumber = function ($value) {
+            if ($value === null || $value === '') return 0;
+            return floatval(str_replace(['.', ','], '', $value));
+        };
+
         // Ambil data dari request
-        $harga_barang           = $request->input('harga_barang');
+        $harga_barang           = $cleanNumber($request->input('harga_barang'));
         $jumlah_usulan_barang   = $request->input('jumlah_usulan_barang');
         $ppn                    = $request->input('ppn');
         $sum_total_ppn          = ($ppn / 100) * $jumlah_usulan_barang * $harga_barang;

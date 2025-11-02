@@ -559,7 +559,6 @@ class UsulanBelanjaPersediaanController extends Controller
         }
     }
 
-
     public function show($id_usulan_barang)
     {
         // Ambil id_ksp dari session
@@ -701,7 +700,6 @@ class UsulanBelanjaPersediaanController extends Controller
         return view('usulan_belanja.invoice', $data, compact('sub_kategori_rkbus', 'usulan_barangs', 'id_usulan', 'invoice'), ['title' => 'Halaman Show', 'routePrefix' => 'usulan_barang_persediaans']);
     }
 
-
     public function updateStatus(Request $request, $id)
     {
         // Validasi jika diperlukan
@@ -840,8 +838,14 @@ class UsulanBelanjaPersediaanController extends Controller
             ->where('id_usulan_barang_detail', '!=', $id) // Kecualikan barang yang sedang di-update
             ->sum('total_anggaran_usulan_barang');
 
+        // 🔹 Fungsi bantu untuk bersihkan format angka
+        $cleanNumber = function ($value) {
+            if ($value === null || $value === '') return 0;
+            return floatval(str_replace(['.', ','], '', $value));
+        };
+
         // Ambil data dari request
-        $harga_barang           = $request->input('harga_barang');
+        $harga_barang           = $cleanNumber($request->input('harga_barang'));
         $jumlah_usulan_barang   = $request->input('jumlah_usulan_barang');
         $ppn                    = $request->input('ppn');
         $sum_total_ppn          = ($ppn / 100) * $jumlah_usulan_barang * $harga_barang;

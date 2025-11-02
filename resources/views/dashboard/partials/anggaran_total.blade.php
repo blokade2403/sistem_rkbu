@@ -10,10 +10,12 @@
                               </h5>
                               <div class="d-flex align-items-center">
                                   <div class="flex-shrink-0">
-                                      <i class="ri-space-ship-line display-6 text-muted"></i>
+                                      <lord-icon src="https://cdn.lordicon.com/fhtaantg.json" trigger="loop"
+                                          colors="primary:#405189,secondary:#0ab39c" style="width:55px;height:55px">
+                                      </lord-icon>
                                   </div>
                                   <div class="flex-grow-1 ms-3">
-                                      <h2 class="mb-0"><span class="text-muted">Rp.
+                                      <h2 class="mb-0"><span>Rp.
                                               {{ number_format($total_apbd_blud, 0, ',', ',') }}</span>
                                       </h2>
                                   </div>
@@ -28,10 +30,12 @@
                               </h5>
                               <div class="d-flex align-items-center">
                                   <div class="flex-shrink-0">
-                                      <i class="ri-exchange-dollar-line display-6 text-muted"></i>
+                                      <lord-icon src="https://cdn.lordicon.com/qhviklyi.json" trigger="loop"
+                                          colors="primary:#405189,secondary:#0ab39c"
+                                          style="width:55px;height:55px"></lord-icon>
                                   </div>
                                   <div class="flex-grow-1 ms-3">
-                                      <h2 class="mb-0"><span class="text-muted">Rp.
+                                      <h2 class="mb-0"><span>Rp.
                                               {{ number_format($total_apbd_blud_pegawai, 0, ',', ',') }}</span>
                                       </h2>
                                   </div>
@@ -48,7 +52,7 @@
                                       <i class="ri-pulse-line display-6 text-muted"></i>
                                   </div>
                                   <div class="flex-grow-1 ms-3">
-                                      <h2 class="mb-0"><span class="text-muted">Rp.
+                                      <h2 class="mb-0"><span>Rp.
                                               {{ number_format($total_apbd_blud_barjas, 0, ',', ',') }}</span>
                                       </h2>
                                   </div>
@@ -62,10 +66,12 @@
                               </h5>
                               <div class="d-flex align-items-center">
                                   <div class="flex-shrink-0">
-                                      <i class="ri-trophy-line display-6 text-muted"></i>
+                                      <lord-icon src="https://cdn.lordicon.com/vaeagfzc.json" trigger="loop"
+                                          colors="primary:#405189,secondary:#0ab39c" style="width:55px;height:55px">
+                                      </lord-icon>
                                   </div>
                                   <div class="flex-grow-1 ms-3">
-                                      <h2 class="mb-0"><span class="text-muted">Rp.
+                                      <h2 class="mb-0"><span>Rp.
                                               {{ number_format($total_apbd_blud_modal, 0, ',', ',') }}</span>
                                       </h2>
                                   </div>

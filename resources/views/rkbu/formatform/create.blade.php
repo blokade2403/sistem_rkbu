@@ -18,10 +18,10 @@
                                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
                             </svg>
                             <div class="flex-grow-1 text-truncate">
-                                Your free trial expired in <b>17</b> days.
+                                Rencana Kebutuhan Barang Unit (RKBU) Tahun <b>{{ session('tahun_anggaran') }}</b>.
                             </div>
                             <div class="flex-shrink-0">
-                                <a href="pages-pricing.html" class="text-reset text-decoration-underline"><b>Upgrade</b></a>
+                                <a href="#" class="text-reset text-decoration-underline"><b>Upgrade</b></a>
                             </div>
                         </div>
 

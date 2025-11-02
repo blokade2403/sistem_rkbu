@@ -1,77 +1,144 @@
-<div class="modal fade" id="showModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="modalValidasi{{ $item->id_usulan_barang }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-light p-3">
-                <h5 class="modal-title" id="exampleModalLabel">Validasi Usulan Belanja</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                    id="close-modal"></button>
-            </div>
-            <div class="card-body">
-                <h5 class="fs-15 fw-semibold">Validasi Usulan Belanja</h5>
-                <div class="d-flex flex-wrap justify-content-evenly">
-                    <p class="text-muted mb-0"><i
-                            class="mdi mdi-numeric-1-circle text-success fs-18 align-middle me-2 rounded-circle shadow"></i>Completed
-                    </p>
-                    <p class="text-muted mb-0"><i
-                            class="mdi mdi-numeric-3-circle text-info fs-18 align-middle me-2 rounded-circle shadow"></i>In
-                        Progress</p>
-                    <p class="text-muted mb-0"><i
-                            class="mdi mdi-numeric-2-circle text-primary fs-18 align-middle me-2 rounded-circle shadow"></i>To
-                        Do</p>
-                </div>
-            </div>
-            <div class="progress animated-progress bg-soft-primary rounded-bottom rounded-0" style="height: 6px;">
-                <div class="progress-bar bg-success rounded-0" role="progressbar" style="width: 30%" aria-valuenow="30"
-                    aria-valuemin="0" aria-valuemax="100"></div>
-                <div class="progress-bar bg-info rounded-0" role="progressbar" style="width: 50%" aria-valuenow="50"
-                    aria-valuemin="0" aria-valuemax="100"></div>
-                <div class="progress-bar rounded-0" role="progressbar" style="width: 20%" aria-valuenow="20"
-                    aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-            <p></p>
-            <form method="POST" id="confirmUpdateForm">
+            <form id="confirmUpdateForm" action="{{ route($routePrefix . '.updateValidasi', $item->no_usulan_barang) }}"
+                method="POST">
                 @csrf
                 @method('PUT')
+
+                <div class="modal-header bg-light p-3">
+                    <h5 class="modal-title">Validasi Usulan Belanja</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
                 <div class="modal-body">
-                    <input type="hidden" name="id_usulan_barang" id="id-field" />
                     <div class="mb-3">
-                        <label for="orderId" class="form-label">No Invoice</label>
-                        <input type="text" id="orderId" class="form-control" readonly />
+                        <label class="form-label">No Usulan</label>
+                        <input type="text" class="form-control" value="{{ $item->no_usulan_barang }}" readonly>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Kategori</label>
-                        <input type="text" id="kategori-field" class="form-control" readonly />
+                        <input type="text" class="form-control"
+                            value="{{ $item->sub_kategori_rkbu->kode_sub_kategori_rkbu }}. {{ $item->sub_kategori_rkbu->nama_sub_kategori_rkbu }}"
+                            readonly>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Pengusul</label>
-                        <input type="text" id="pengusul-field" class="form-control" readonly />
+                        <input type="text" class="form-control" value="{{ $item->nama_pengusul_barang }}" readonly>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Pilih Status Validasi</label>
-                        <select class="form-select" name="status_validasi_pptk" id="status-field" data-choices
-                            data-choices-sorting="true">
-                            <option value="">-- Pilih --</option>
-                            <option value="Disetujui PPTK">Disetujui PPTK</option>
-                            <option value="Di Tolak">Di Tolak</option>
-                        </select>
-                    </div>
+                    @php
+                        $pptk = ['PPTK', 'PPTK Umum', 'PPTK Alkes'];
+                        $isApproved = $item->status_validasi_pptk == 'Disetujui PPTK';
+                        $isApprovedkabag = $item->status_validasi_kabag == 'Disetujui Kabag';
+                        $isApproveddirektur = $item->status_validasi_direktur == 'Disetujui Direktur';
+                    @endphp
+                    @if (in_array(session('nama_level_user'), $pptk))
+                        <div class="mb-3">
+                            <label class="form-label">Pilih Status Validasi</label>
+                            <select class="form-select" name="status_validasi_pptk" required
+                                {{ $isApproved ? 'disabled' : '' }}>
+                                <option value="">-- Pilih --</option>
+                                <option value="Disetujui PPTK"
+                                    {{ $item->status_validasi_pptk == 'Disetujui PPTK' ? 'selected' : '' }}>
+                                    Disetujui PPTK
+                                </option>
+                                <option value="Di Tolak"
+                                    {{ $item->status_validasi_pptk == 'Di Tolak' ? 'selected' : '' }}>
+                                    Di Tolak
+                                </option>
+                            </select>
 
-                    <div class="mb-3">
-                        <label class="form-label">Keterangan PPTK</label>
-                        <textarea name="keterangan_pptk" id="keterangan-field" class="form-control" rows="3"></textarea>
-                    </div>
+                            {{-- Jika field disabled, kirim hidden input supaya nilai tetap terkirim ke controller --}}
+                            @if ($isApproved)
+                                <input type="hidden" name="status_validasi_pptk"
+                                    value="{{ $item->status_validasi_pptk }}">
+                            @endif
+                        </div>
 
+                        <div class="mb-3">
+                            <label class="form-label">Keterangan PPTK</label>
+                            <textarea name="keterangan_pptk" class="form-control" rows="3" {{ $isApproved ? 'readonly' : '' }}>{{ $item->keterangan_pptk }}</textarea>
+                        </div>
+                    @endif
+                    @if (session('nama_level_user') == 'Validasi RKA')
+                        <div class="mb-3">
+                            <label class="form-label">Pilih Status Validasi</label>
+                            <select class="form-select" name="status_validasi_kabag" required
+                                {{ $isApprovedkabag ? 'disabled' : '' }}>
+                                <option value="">-- Pilih --</option>
+                                <option value="Disetujui Kabag"
+                                    {{ $item->status_validasi_kabag == 'Disetujui Kabag' ? 'selected' : '' }}>
+                                    Disetujui Kabag
+                                </option>
+                                <option value="Di Tolak"
+                                    {{ $item->status_validasi_kabag == 'Di Tolak' ? 'selected' : '' }}>
+                                    Di Tolak
+                                </option>
+                            </select>
+                            @if ($isApprovedkabag)
+                                <input type="hidden" name="status_validasi_kabag"
+                                    value="{{ $item->status_validasi_kabag }}">
+                            @endif
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Keterangan Kabag</label>
+                            <textarea name="keterangan_kabag" class="form-control" rows="3" {{ $isApprovedkabag ? 'readonly' : '' }}>{{ $item->keterangan_kabag }}</textarea>
+                        </div>
+                    @endif
+                    @if (session('nama_level_user') == 'Direktur')
+                        <div class="mb-3">
+                            <label class="form-label">Pilih Status Validasi</label>
+                            <select class="form-select" name="status_validasi_direktur" required
+                                {{ $isApproveddirektur ? 'disabled' : '' }}>
+                                <option value="">-- Pilih --</option>
+                                <option value="Disetujui Direktur"
+                                    {{ $item->status_validasi_direktur == 'Disetujui Direktur' ? 'selected' : '' }}>
+                                    Disetujui Direktur
+                                </option>
+                                <option value="Di Tolak"
+                                    {{ $item->status_validasi_direktur == 'Di Tolak' ? 'selected' : '' }}>
+                                    Di Tolak
+                                </option>
+                            </select>
+                            @if ($isApproveddirektur)
+                                <input type="hidden" name="status_validasi_direktur"
+                                    value="{{ $item->status_validasi_direktur }}">
+                            @endif
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Keterangan Direktur</label>
+                            <textarea name="keterangan_direktur" class="form-control" rows="3" {{ $isApproveddirektur ? 'readonly' : '' }}>{{ $item->keterangan_direktur }}</textarea>
+                        </div>
+                    @endif
                 </div>
 
+                @php
+                    $isApprovedpptk = $item->status_validasi_pptk == 'Disetujui PPTK';
+                    $isApprovedkabag = $item->status_validasi_kabag == 'Disetujui Kabag';
+                    $isApproveddirektur = $item->status_validasi_direktur == 'Disetujui Direktur';
+
+                    // Tentukan kondisi disable berdasarkan level user yang login
+                    $disableButton = false;
+
+                    if (session('nama_level_user') == 'PPTK Umum' && $isApprovedpptk) {
+                        $disableButton = true;
+                    } elseif (session('nama_level_user') == 'Validasi RKA' && $isApprovedkabag) {
+                        $disableButton = true;
+                    } elseif (session('nama_level_user') == 'Direktur' && $isApproveddirektur) {
+                        $disableButton = true;
+                    }
+                @endphp
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
-                    <button type="submit" class="btn btn-success">Simpan</button>
+                    <button type="submit" class="btn btn-success"
+                        {{ $disableButton ? 'disabled' : '' }}>Simpan</button>
                 </div>
             </form>
-
         </div>
     </div>
 </div>

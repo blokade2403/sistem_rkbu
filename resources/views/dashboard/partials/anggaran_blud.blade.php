@@ -24,7 +24,7 @@
                  </div>
                  <div class="d-flex align-items-end justify-content-between mt-4">
                      <div>
-                         <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="text-muted">Rp.
+                         <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span>Rp.
                                  {{ number_format($total_anggaran_admin), 0, ',', ',' }}</span>
                          </h4>
                          <p class="fs-10 text-muted text-truncate mb-0">Pagu Belanja BLUD</p>
@@ -65,7 +65,7 @@
                  </div>
                  <div class="d-flex align-items-end justify-content-between mt-4">
                      <div>
-                         <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="text-muted">Rp.
+                         <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span>Rp.
                                  {{ number_format($total_anggaran_pegawai_admin), 0, ',', ',' }}</span>
                          </h4>
                          <p class="fs-10 text-muted text-truncate mb-0">Pagu Belanja Pegawai BLUD</p>
@@ -113,7 +113,7 @@
                  </div>
                  <div class="d-flex align-items-end justify-content-between mt-4">
                      <div>
-                         <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="text-muted">Rp.
+                         <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span>Rp.
                                  {{ number_format($total_anggaran_barjas_admin), 0, ',', ',' }}</span>
                          </h4>
                          <p class="fs-10 text-muted text-truncate mb-0">Pagu Belanja Barjas BLUD</p>
@@ -160,7 +160,7 @@
                  </div>
                  <div class="d-flex align-items-end justify-content-between mt-4">
                      <div>
-                         <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="text-muted">Rp.
+                         <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span>Rp.
                                  {{ number_format($total_anggaran_modal_admin), 0, ',', ',' }}</span>
                          </h4>
                          <p class="fs-10 text-muted text-truncate mb-0">Pagu Belanja Modal BLUD</p>

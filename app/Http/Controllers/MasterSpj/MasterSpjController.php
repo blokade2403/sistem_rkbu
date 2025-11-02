@@ -44,19 +44,6 @@ class MasterSpjController extends Controller
         $gambar1                = $judul_headers->gambar1 ? asset('storage/uploads/' . basename($judul_headers->gambar1)) : asset('storage/uploads/foto.png');
         $gambar2                = $judul_headers->gambar2 ? asset('storage/uploads/' . basename($judul_headers->gambar2)) : asset('storage/uploads/foto.png');
 
-        // Default data collections
-        $invo                   = collect();
-        $invo_pendukung_ppk     = collect();
-        $invo_pb                = collect();
-        $invo_bendahara         = collect();
-        $invo_direktur          = collect();
-        $invo_ksp               = collect();
-
-        // Level user pengadaan PPK
-        $level_pengadaan_ppk    = ['Administrator', 'Admin PPK', 'PPTK', 'PPTK Umum', 'PPTK Alkes', 'PPK', 'PPBJ', 'Validasi Keuangan', 'Verifikator', 'PPK Keuangan', 'Direktur', 'Bendahara'];
-        $level_pb               = ['Pengurus Barang', 'Administrator'];
-        $level_pptk             = ['PPTK Alkes', 'Administrator'];
-        $level_bendahara        = ['Bendahara', 'Administrator'];
 
         $sub_kategori_rkbus = SubKategoriRkbu::join('rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
             ->join('usulan_barangs', 'usulan_barangs.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
@@ -92,43 +79,41 @@ class MasterSpjController extends Controller
         // Eksekusi query
         $filteredData = $query_sub_kategori_rkbus->get();
 
-        if (in_array($nama_level_user, $level_pengadaan_ppk)) {
-            // Query untuk pengadaan PPK
-            $invo = MasterSpj::join('spjs', 'spjs.id_spj', '=', 'master_spjs.id_spj')
-                ->leftJoin('perusahaans', 'perusahaans.id_perusahaan', '=', 'master_spjs.id_perusahaan')
-                ->join('spj_details', 'spj_details.id_spj', '=', 'spjs.id_spj')
-                ->join('usulan_barangs', 'usulan_barangs.id_usulan_barang', '=', 'spjs.id_usulan_barang')
-                ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
-                ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
-                ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
-                ->join('units', 'users.id_unit', '=', 'units.id_unit')
-                ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
-                ->when(request('sub_kategori_rkbu'), function ($query_sub_kategori_rkbus) {
-                    $query_sub_kategori_rkbus->where('sub_kategori_rkbus.id_sub_kategori_rkbu', request('sub_kategori_rkbu'));
-                }) // Tambahkan filter dinamis untuk sub_kategori_rkbu
-                ->when(request('status_pembayaran'), function ($query) {
-                    $query->where('master_spjs.status_pembayaran', request('status_pembayaran'));
-                }) // Tambahkan filter dinamis untuk status_pembayaran
-                ->distinct()
-                ->select('master_spjs.*', 'usulan_barangs.*', 'sub_kategori_rkbus.*')
-                ->get();
-        } elseif ($nama_level_user === 'Pendukung PPK') {
-            // Query untuk Pendukung PPK
-            $invo_pendukung_ppk = MasterSpj::join('spjs', 'spjs.id_spj', '=', 'master_spjs.id_spj')
-                ->leftJoin('perusahaans', 'perusahaans.id_perusahaan', '=', 'master_spjs.id_perusahaan')
-                ->join('spj_details', 'spj_details.id_spj', '=', 'spjs.id_spj')
-                ->join('usulan_barangs', 'usulan_barangs.id_usulan_barang', '=', 'spjs.id_usulan_barang')
-                ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
-                ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
-                ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
-                ->join('units', 'users.id_unit', '=', 'units.id_unit')
-                ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
-                ->where('master_spjs.id_admin_pendukung_ppk', $idAdminPendukungPpk)
-                ->where('master_spjs.status_proses_pesanan', 'Selesai')
-                ->distinct()
-                ->select('master_spjs.*', 'usulan_barangs.*')
-                ->get();
-        }
+        // Query untuk pengadaan PPK
+        $invo = MasterSpj::join('spjs', 'spjs.id_spj', '=', 'master_spjs.id_spj')
+            ->leftJoin('perusahaans', 'perusahaans.id_perusahaan', '=', 'master_spjs.id_perusahaan')
+            ->join('spj_details', 'spj_details.id_spj', '=', 'spjs.id_spj')
+            ->join('usulan_barangs', 'usulan_barangs.id_usulan_barang', '=', 'spjs.id_usulan_barang')
+            ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
+            ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
+            ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
+            ->join('units', 'users.id_unit', '=', 'units.id_unit')
+            ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
+            ->when(request('sub_kategori_rkbu'), function ($query_sub_kategori_rkbus) {
+                $query_sub_kategori_rkbus->where('sub_kategori_rkbus.id_sub_kategori_rkbu', request('sub_kategori_rkbu'));
+            }) // Tambahkan filter dinamis untuk sub_kategori_rkbu
+            ->when(request('status_pembayaran'), function ($query) {
+                $query->where('master_spjs.status_pembayaran', request('status_pembayaran'));
+            }) // Tambahkan filter dinamis untuk status_pembayaran
+            ->distinct()
+            ->select('master_spjs.*', 'usulan_barangs.*', 'sub_kategori_rkbus.*')
+            ->get();
+
+        // Query untuk Pendukung PPK
+        $invo_pendukung_ppk = MasterSpj::join('spjs', 'spjs.id_spj', '=', 'master_spjs.id_spj')
+            ->leftJoin('perusahaans', 'perusahaans.id_perusahaan', '=', 'master_spjs.id_perusahaan')
+            ->join('spj_details', 'spj_details.id_spj', '=', 'spjs.id_spj')
+            ->join('usulan_barangs', 'usulan_barangs.id_usulan_barang', '=', 'spjs.id_usulan_barang')
+            ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
+            ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
+            ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
+            ->join('units', 'users.id_unit', '=', 'units.id_unit')
+            ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
+            ->where('master_spjs.id_admin_pendukung_ppk', $idAdminPendukungPpk)
+            ->where('master_spjs.status_proses_pesanan', 'Selesai')
+            ->distinct()
+            ->select('master_spjs.*', 'usulan_barangs.*')
+            ->get();
 
         $sum_total_spj = MasterSpj::join('spjs', 'spjs.id_spj', '=', 'master_spjs.id_spj')
             ->leftJoin('perusahaans', 'perusahaans.id_perusahaan', '=', 'master_spjs.id_perusahaan')
@@ -170,75 +155,66 @@ class MasterSpjController extends Controller
             ->select('master_spjs.*', 'usulan_barangs.*', 'sub_kategori_rkbus.*')
             ->sum('master_spjs.pembayaran');
 
-        if ($nama_level_user === 'Bendahara') {
-            // Query untuk Pendukung PPK
-            $invo_bendahara = MasterSpj::join('spjs', 'spjs.id_spj', '=', 'master_spjs.id_spj')
-                ->leftJoin('perusahaans', 'perusahaans.id_perusahaan', '=', 'master_spjs.id_perusahaan')
-                ->join('spj_details', 'spj_details.id_spj', '=', 'spjs.id_spj')
-                ->join('usulan_barangs', 'usulan_barangs.id_usulan_barang', '=', 'spjs.id_usulan_barang')
-                ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
-                ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
-                ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
-                ->join('units', 'users.id_unit', '=', 'units.id_unit')
-                ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
-                ->where('master_spjs.status_serah_terima_bendahara', 'Selesai')
-                ->distinct()
-                ->select('master_spjs.*', 'usulan_barangs.*')
-                ->get();
-        }
+        // Query untuk Pendukung PPK
+        $invo_bendahara = MasterSpj::join('spjs', 'spjs.id_spj', '=', 'master_spjs.id_spj')
+            ->leftJoin('perusahaans', 'perusahaans.id_perusahaan', '=', 'master_spjs.id_perusahaan')
+            ->join('spj_details', 'spj_details.id_spj', '=', 'spjs.id_spj')
+            ->join('usulan_barangs', 'usulan_barangs.id_usulan_barang', '=', 'spjs.id_usulan_barang')
+            ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
+            ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
+            ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
+            ->join('units', 'users.id_unit', '=', 'units.id_unit')
+            ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
+            ->where('master_spjs.status_serah_terima_bendahara', 'Selesai')
+            ->distinct()
+            ->select('master_spjs.*', 'usulan_barangs.*')
+            ->get();
 
-        // dd($invo_bendahara);
-        if ($nama_level_user === 'Direktur') {
-            // Query untuk Pendukung PPK
-            $invo_direktur = MasterSpj::join('spjs', 'spjs.id_spj', '=', 'master_spjs.id_spj')
-                ->leftJoin('perusahaans', 'perusahaans.id_perusahaan', '=', 'master_spjs.id_perusahaan')
-                ->join('spj_details', 'spj_details.id_spj', '=', 'spjs.id_spj')
-                ->join('usulan_barangs', 'usulan_barangs.id_usulan_barang', '=', 'spjs.id_usulan_barang')
-                ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
-                ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
-                ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
-                ->join('units', 'users.id_unit', '=', 'units.id_unit')
-                ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
-                ->where('master_spjs.status_verifikasi_ppk_keuangan', 'Selesai')
-                ->distinct()
-                ->select('master_spjs.*', 'usulan_barangs.*')
-                ->get();
-        }
+        // Query untuk Pendukung PPK
+        $invo_direktur = MasterSpj::join('spjs', 'spjs.id_spj', '=', 'master_spjs.id_spj')
+            ->leftJoin('perusahaans', 'perusahaans.id_perusahaan', '=', 'master_spjs.id_perusahaan')
+            ->join('spj_details', 'spj_details.id_spj', '=', 'spjs.id_spj')
+            ->join('usulan_barangs', 'usulan_barangs.id_usulan_barang', '=', 'spjs.id_usulan_barang')
+            ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
+            ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
+            ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
+            ->join('units', 'users.id_unit', '=', 'units.id_unit')
+            ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
+            ->where('master_spjs.status_verifikasi_ppk_keuangan', 'Selesai')
+            ->distinct()
+            ->select('master_spjs.*', 'usulan_barangs.*')
+            ->get();
 
         // Query untuk Pengurus Barang
-        if (in_array($nama_level_user, $level_pb)) {
-            $invo_pb = MasterSpj::join('spjs', 'spjs.id_spj', '=', 'master_spjs.id_spj')
-                ->leftJoin('perusahaans', 'perusahaans.id_perusahaan', '=', 'master_spjs.id_perusahaan')
-                ->join('spj_details', 'spj_details.id_spj', '=', 'spjs.id_spj')
-                ->join('usulan_barangs', 'usulan_barangs.id_usulan_barang', '=', 'spjs.id_usulan_barang')
-                ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
-                ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
-                ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
-                ->join('units', 'users.id_unit', '=', 'units.id_unit')
-                ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
-                ->where('master_spjs.status_proses_pesanan', 'Selesai')
-                ->distinct()
-                ->select('master_spjs.*', 'usulan_barangs.*')
-                ->get();
-        }
+        $invo_pb = MasterSpj::join('spjs', 'spjs.id_spj', '=', 'master_spjs.id_spj')
+            ->leftJoin('perusahaans', 'perusahaans.id_perusahaan', '=', 'master_spjs.id_perusahaan')
+            ->join('spj_details', 'spj_details.id_spj', '=', 'spjs.id_spj')
+            ->join('usulan_barangs', 'usulan_barangs.id_usulan_barang', '=', 'spjs.id_usulan_barang')
+            ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
+            ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
+            ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
+            ->join('units', 'users.id_unit', '=', 'units.id_unit')
+            ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
+            ->where('master_spjs.status_proses_pesanan', 'Selesai')
+            ->distinct()
+            ->select('master_spjs.*', 'usulan_barangs.*')
+            ->get();
 
         // dd($invo_bendahara);
-        if ($nama_level_user === 'Validasi') {
-            // Query untuk Pendukung PPK
-            $invo_ksp = MasterSpj::join('spjs', 'spjs.id_spj', '=', 'master_spjs.id_spj')
-                ->leftJoin('perusahaans', 'perusahaans.id_perusahaan', '=', 'master_spjs.id_perusahaan')
-                ->join('spj_details', 'spj_details.id_spj', '=', 'spjs.id_spj')
-                ->join('usulan_barangs', 'usulan_barangs.id_usulan_barang', '=', 'spjs.id_usulan_barang')
-                ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
-                ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
-                ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
-                ->join('units', 'users.id_unit', '=', 'units.id_unit')
-                ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
-                ->where('usulan_barangs.id_user', session('id_user'))
-                ->distinct()
-                ->select('master_spjs.*', 'usulan_barangs.*')
-                ->get();
-        }
+        // Query untuk Pendukung PPK
+        $invo_ksp = MasterSpj::join('spjs', 'spjs.id_spj', '=', 'master_spjs.id_spj')
+            ->leftJoin('perusahaans', 'perusahaans.id_perusahaan', '=', 'master_spjs.id_perusahaan')
+            ->join('spj_details', 'spj_details.id_spj', '=', 'spjs.id_spj')
+            ->join('usulan_barangs', 'usulan_barangs.id_usulan_barang', '=', 'spjs.id_usulan_barang')
+            ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
+            ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
+            ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
+            ->join('units', 'users.id_unit', '=', 'units.id_unit')
+            ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
+            ->where('usulan_barangs.id_user', session('id_user'))
+            ->distinct()
+            ->select('master_spjs.*', 'usulan_barangs.*')
+            ->get();
 
         // dd(session()->all());
 
@@ -291,17 +267,60 @@ class MasterSpjController extends Controller
             }
         }
 
+        $invoices = collect(); // default kosong
+
+        switch ($nama_level_user) {
+            case 'Pendukung PPK':
+                $invoices = $invo_pendukung_ppk;
+                break;
+
+            case 'Validasi':
+                $invoices = $invo_ksp;
+                break;
+
+            case 'Bendahara':
+                $invoices = $invo_bendahara;
+                break;
+
+            case 'Direktur':
+                $invoices = $invo_direktur;
+                break;
+
+            case 'Validasi':
+                $invoices = $invo_ksp;
+                break;
+
+            case 'PPTK Umum':
+                $invoices = $invo_pptk_umum;
+                break;
+
+            case 'PPTK Alkes':
+                $invoices = $invo_pptk_alkes;
+                break;
+
+            case 'PPTK':
+                $invoices = $invo_pptk_penmed;
+                break;
+
+            case 'Pengurus Barang':
+                $invoices = $invo_pb;
+                break;
+
+            case 'Administrator':
+            case 'Admin PPK':
+            case 'PPBJ':
+            case 'PPK':
+                $invoices = $invo;
+                break;
+
+                // default:
+                //     $invoices = $invo; // fallback untuk Administrator, Admin PPK, dsb
+                //     break;
+        }
+
         // Data untuk view
         $data = [
-            'no_inv'                => $invo,
-            'invo_pendukung_ppk'    => $invo_pendukung_ppk,
-            'no_inv_pb'             => $invo_pb,
-            'invo_pptk_umum'        => $invo_pptk_umum,
-            'invo_direktur'         => $invo_direktur,
-            'invo_pptk_alkes'       => $invo_pptk_alkes,
-            'invo_pptk_penmed'      => $invo_pptk_penmed,
-            'invo_bendahara'        => $invo_bendahara,
-            'invo_ksp'              => $invo_ksp,
+            'no_inv'                => $invoices,
             'sum_total_spj'         => $sum_total_spj,
             'sum_total_spj_dibayar' => $sum_total_spj_dibayar,
             'judul_header1'         => $judul_header1,
@@ -649,7 +668,7 @@ class MasterSpjController extends Controller
             $keranjang = collect(); // Jika tidak ada, gunakan collection kosong
         }
 
-
+        // dd($keranjang);
         $data = [
             'no_inv'                          => $invo,
             'master_spj'                      => $master_spj,
@@ -731,31 +750,61 @@ class MasterSpjController extends Controller
         $status_validasi_rka = StatusValidasiRka::all(); // Ambil status validasi RKA
 
         // Kirim data ke view
-        return view('master_spj.edit_komponen', compact('usulan_barang_details', 'rkbu', 'uraian_satu', 'uraian_dua', 'invo'), ['title' => 'Halaman SPJ', 'routePrefix' => 'master_spjs']);
+        return view('master_spj.edit_komponen', compact('usulan_barang_details', 'usulan_barangs', 'rkbu', 'uraian_satu', 'uraian_dua', 'invo'), ['title' => 'Halaman SPJ', 'routePrefix' => 'master_spjs']);
     }
 
     public function update(Request $request, $id)
     {
 
-        // Validasi input
-        $request->validate([
-            'nama_barang'           => 'required|string|max:255',
-            'vol_1_detail'          => 'required|numeric',
-            'satuan_1_detail'       => 'required|string',
-            'vol_2_detail'          => 'nullable|numeric',
-            'satuan_2_detail'       => 'nullable|string',
-            'spek_detail'           => 'required|string',
-            'harga_barang'          => 'required|numeric',
-            'jumlah_usulan_barang'  => 'required|numeric',
-            'ppn'                   => 'required|numeric',
-            'total_anggaran_usulan_barang' => 'required|numeric',
-            // 'link_ekatalog' => 'nullable|string',
-            // 'id_sub_kategori_rkbu' => 'required|uuid',
+        $request->merge([
+            'harga_barang' => str_replace(['.', ','], '', $request->harga_barang),
+            'total_anggaran_usulan_barang' => str_replace(['.', ','], '', $request->total_anggaran_usulan_barang),
         ]);
+
+        // Validasi input
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'nama_barang'           => 'required|string|max:255',
+                'vol_1_detail'          => 'required|numeric',
+                'satuan_1_detail'       => 'required|string',
+                'vol_2_detail'          => 'nullable|numeric',
+                'satuan_2_detail'       => 'nullable|string',
+                'spek_detail'           => 'required|string',
+                'harga_barang'          => 'required|numeric',
+                'jumlah_usulan_barang'  => 'required|numeric',
+                'ppn'                   => 'required|numeric',
+                'total_anggaran_usulan_barang' => 'required|numeric',
+                'sisa_stok'                     => 'required|numeric',
+                'pengkali'                      => 'nullable|numeric',
+                'buffer_stok'                   => 'nullable|numeric',
+                'rata2_pemakaian'               => 'nullable|numeric',
+                'stok_minimal'                  => 'nullable|numeric',
+                'id_usulan_barang'              => 'nullable',
+
+            ],
+            [
+                'vol_1_detail'                      => 'Vol 1 wajib diisi.',
+                'vol_2_detail'                      => 'Vol 2 wajib diisi.',
+                'satuan_2_detail'                   => 'Satuan 2 wajib diisi.',
+                'spek_detail'                       => 'Spesifikasi wajib diisi.',
+                'satuan_1_detail.required'          => 'Satuan 1 wajib diisi.',
+                'harga_barang.required'             => 'Harga satuan wajib diisi dan harus berupa angka.',
+                'ppn.required'                      => 'PPN wajib diisi dan harus berupa angka antara 0 hingga 12.',
+            ]
+        );
+
+        if ($validator->fails()) {
+            $errors = $validator->errors();
+            $errorMessages = implode(' ', $errors->all());
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+        }
 
         // Ambil detail usulan barang berdasarkan id
         $usulanBarangDetail = UsulanBarangDetail::findOrFail($id);
-
 
         // Ambil data rkbu terkait
         $rkbu = Rkbu::findOrFail($usulanBarangDetail->id_rkbu);
@@ -765,8 +814,14 @@ class MasterSpjController extends Controller
             ->where('id_usulan_barang_detail', '!=', $id) // Kecualikan barang yang sedang di-update
             ->sum('total_anggaran_usulan_barang');
 
+        // 🔹 Fungsi bantu untuk bersihkan format angka
+        $cleanNumber = function ($value) {
+            if ($value === null || $value === '') return 0;
+            return floatval(str_replace(['.', ','], '', $value));
+        };
+
         // Ambil data dari request
-        $harga_barang           = $request->input('harga_barang');
+        $harga_barang           = $cleanNumber($request->input('harga_barang'));
         $jumlah_usulan_barang   = $request->input('jumlah_usulan_barang');
         $ppn                    = $request->input('ppn');
         $sum_total_ppn          = ($ppn / 100) * $jumlah_usulan_barang * $harga_barang;
@@ -780,15 +835,21 @@ class MasterSpjController extends Controller
         // Cek apakah total anggaran setelah update tidak melebihi total anggaran yang diperbolehkan di rkbu
         if ($totalAnggaranSetelahUpdate <= $rkbu->total_anggaran) {
             // Update detail usulan barang
-            $usulanBarangDetail->vol_1_detail = $request->input('vol_1_detail');
-            $usulanBarangDetail->satuan_1_detail = $request->input('satuan_1_detail');
-            $usulanBarangDetail->vol_2_detail = $request->input('vol_2_detail');
-            $usulanBarangDetail->satuan_2_detail = $request->input('satuan_2_detail');
-            $usulanBarangDetail->spek_detail = $request->input('spek_detail');
-            $usulanBarangDetail->harga_barang = $harga_barang;
-            $usulanBarangDetail->jumlah_usulan_barang = $jumlah_usulan_barang;
-            $usulanBarangDetail->ppn = $ppn;
-            $usulanBarangDetail->total_ppn = $sum_total_ppn;
+            $usulanBarangDetail->id_usulan_barang           = $request->input('id_usulan_barang');
+            $usulanBarangDetail->vol_1_detail               = $request->input('vol_1_detail');
+            $usulanBarangDetail->satuan_1_detail            = $request->input('satuan_1_detail');
+            $usulanBarangDetail->vol_2_detail               = $request->input('vol_2_detail');
+            $usulanBarangDetail->satuan_2_detail            = $request->input('satuan_2_detail');
+            $usulanBarangDetail->spek_detail                = $request->input('spek_detail');
+            $usulanBarangDetail->pengkali                   = $request->input('pengkali');
+            $usulanBarangDetail->sisa_stok                  = $request->input('sisa_stok');
+            $usulanBarangDetail->buffer_stok                = $request->input('buffer_stok');
+            $usulanBarangDetail->rata2_pemakaian            = $request->input('rata2_pemakaian');
+            $usulanBarangDetail->stok_minimal               = $request->input('stok_minimal');
+            $usulanBarangDetail->harga_barang               = $harga_barang;
+            $usulanBarangDetail->jumlah_usulan_barang       = $jumlah_usulan_barang;
+            $usulanBarangDetail->ppn                        = $ppn;
+            $usulanBarangDetail->total_ppn                  = $sum_total_ppn;
             $usulanBarangDetail->total_anggaran_usulan_barang = $totalAnggaranBarang;
             $usulanBarangDetail->save();
 

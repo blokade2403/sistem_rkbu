@@ -10,6 +10,7 @@
 
 
     {{-- head.blade.php --}}
+    {{-- <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet" /> --}}
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
     <link rel="stylesheet" type="text/css"
         href="{{ asset('libraries\bower_components\datatables.net-bs4\css\dataTables.bootstrap4.min.css') }}">
@@ -19,13 +20,6 @@
         href="{{ asset('libraries\bower_components\datatables.net-responsive-bs4\css\responsive.bootstrap4.min.css') }}">
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bar-rating/1.2.2/themes/bars-movie.min.css">
-
-
-    <!-- Style.css -->
-    {{-- <link rel="stylesheet" type="text/css" href="{{ asset('libraries\assets\css\style.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('libraries\assets\css\jquery.mCustomScrollbar.css') }}">
-    <link rel="stylesheet" type="text/css"
-        href="{{ asset('libraries\bower_components\jquery-bar-rating\css\bars-movie.css') }}"> --}}
 
     <!-- jsvectormap css -->
     <link href="{{ asset('assets/libs/jsvectormap/css/jsvectormap.min.css') }}" rel="stylesheet" type="text/css" />
