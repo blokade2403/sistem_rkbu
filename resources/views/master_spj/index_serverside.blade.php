@@ -13,7 +13,6 @@
                                 {!! $dataTable->table(['id' => 'masterspj-table', 'class' => 'table ...'], true) !!}
                                 {{-- {!! $dataTable->table(['class' => 'table table-hover table-centered align-middle table-nowrap mb-0'], true) !!} --}}
                             </div>
-
                         </div>
                     </div>
                 </div>

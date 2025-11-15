@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\RkbuHistory\RkbuHistory;
 use Illuminate\Support\Facades\Session;
 use App\Models\MasterBackend\SettingRkbu\Rkbu;
+use App\Models\MasterBackend\UserProfil\Pejabat;
 use App\Models\MasterBackend\SettingInput\Anggaran;
 use App\Models\MasterBackend\SettingInput\Komponen;
 use App\DataTables\ValidasiRka\ValidasiRkaDataTable;
@@ -31,6 +32,12 @@ class ValidasiRkbuBarjasRkaController extends Controller
         $tahunAnggaran       = Session::get('tahun_anggaran');
         $status_validasi_rka = StatusValidasiRka::all(); // Ambil status validasi dari model terkait
         $faseTahun           = TahunAnggaran::where('nama_tahun_anggaran', $tahunAnggaran)->value('fase_tahun');
+
+        // Ambil data pejabat sesuai user login
+        $pejabat = Pejabat::where('id_pejabat', $id_pejabat)
+            ->where('status', 'aktif')
+            ->first();
+        $id_jabatan = $pejabat->id_jabatan;
 
 
         $sumber_dana    = [
@@ -100,7 +107,7 @@ class ValidasiRkbuBarjasRkaController extends Controller
             ->join('users', 'rkbus.id_user', '=', 'users.id_user')
             ->join('ksps', 'users.id_ksp', '=', 'ksps.id_ksp')
             ->join('pejabats', 'users.id_pejabat', '=', 'pejabats.id_pejabat')
-            ->where('pejabats.id_pejabat', $id_pejabat)
+            ->where('pejabats.id_jabatan', $id_jabatan)
             ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
             ->where('jenis_kategori_rkbus.id_jenis_kategori_rkbu',  $currentJenisKategori)
             ->where('sub_kategori_rkbus.id_sub_kategori_rkbu', '!=', '9d03d062-b7d6-490e-ad71-10d92c5628cb')
@@ -115,7 +122,7 @@ class ValidasiRkbuBarjasRkaController extends Controller
             ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
             ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
             ->join('pejabats', 'users.id_pejabat', '=', 'pejabats.id_pejabat')
-            ->where('pejabats.id_pejabat', $id_pejabat)
+            ->where('pejabats.id_jabatan', $id_jabatan)
             ->where('id_status_validasi', '9cfb1edc-2263-401f-b249-361db4017932')
             ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
             ->where('sub_kategori_rkbus.id_sub_kategori_rkbu', '!=', '9d03d062-b7d6-490e-ad71-10d92c5628cb')

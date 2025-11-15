@@ -46,8 +46,8 @@
                                             <td>
                                                 <ul class="list list-unstyled">
                                                     <li>
-                                                        <span class="f-16 text-primary">
-                                                            #&nbsp;{{ $rkbus->nama_barang }}
+                                                        <span class="fs-14 text-primary">#
+                                                            <strong>{{ $rkbus->nama_barang }}</strong>
                                                         </span>
                                                     </li>
                                                     <li>

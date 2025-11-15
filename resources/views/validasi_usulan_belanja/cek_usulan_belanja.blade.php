@@ -108,16 +108,13 @@
                         <div class="card-block">
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <table id="responsive-reorder"
-                                        class="table table-hover table-centered align-middle table-nowrap mb-0">
+                                    <table id="example" class="table align-middle table-nowrap mb-0">
                                         <thead class="text-muted table-light">
-                                            <tr class="text-uppercase">
+                                            <tr>
                                                 <th>No</th>
                                                 <th>No Inv</th>
-                                                <th>Pengusul</th>
                                                 <th>Status Validasi</th>
                                                 <th>Status Proses</th>
-                                                <th>Status Usulan</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -125,20 +122,55 @@
                                                 $no = 1;
                                             @endphp
                                             @foreach ($id_usulan as $keyIndex => $item)
+                                                @php
+                                                    $tanggal = \Carbon\Carbon::parse($item->created_at)->format('d');
+                                                    $hari = \Carbon\Carbon::parse($item->created_at)->format('D');
+                                                @endphp
                                                 <tr>
                                                     <td>{{ $no++ }}</td>
                                                     <td>
-                                                        <span
-                                                            class="fs-16 text-primary">#{{ $item->no_usulan_barang }}</span>
+                                                        <strong><span
+                                                                class="fs-16 text-primary">#{{ $item->no_usulan_barang }}</span></strong>
+                                                        <ul class="list-group list-group-flush border-dashed">
+                                                            <li class="list-group-item ps-0">
+                                                                <div class="row align-items-center g-3">
+                                                                    <div class="col-auto">
+                                                                        <div
+                                                                            class="avatar-sm p-1 py-2 h-auto rounded-3 shadow">
+                                                                            <div class="text-center">
+                                                                                <h5 class="mb-0">{{ $tanggal }}</h5>
+                                                                                <div class="text-muted">{{ $hari }}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col">
+                                                                        <h5 class="text-muted mt-0 mb-1 fs-13">
+                                                                            {{ $item->created_at }}</h5>
+                                                                        <a href="#"
+                                                                            class="text-reset fs-12 mb-0"><span
+                                                                                class="f-12">Pengusul :
+                                                                                {{ $item->nama_pengusul_barang }}</span></br>
+                                                                            <span class="f-12"> Unit :
+                                                                                {{ $item->nama_unit }}</span></a>
+                                                                    </div>
+                                                                    <div class="col-sm-auto">
+                                                                        <span
+                                                                            class="badge badge-soft-success badge-border">{{ $item->status_usulan_barang }}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <!-- end row -->
+                                                            </li><!-- end -->
+                                                        </ul>
+
                                                         <p>
+                                                            <span class="f-14">
+                                                                {{ $item->sub_kategori_rkbu->kategori_rkbu->kode_kategori_rkbu }}.
+                                                                {{ $item->sub_kategori_rkbu->kategori_rkbu->nama_kategori_rkbu }}</span></br>
                                                             <span class="f-14">
                                                                 {{ $item->sub_kategori_rkbu->kode_sub_kategori_rkbu }}.
                                                                 {{ $item->sub_kategori_rkbu->nama_sub_kategori_rkbu }}</span>
                                                         </p>
-                                                    </td>
-                                                    <td>
-                                                        <span class="f-14">
-                                                            {{ $item->nama_pengusul_barang }}</span>
                                                     </td>
                                                     <td>
                                                         @include('cek_usulan_belanja.status_cek_usulan_belanja')
@@ -173,27 +205,6 @@
                                                         </ul>
                                                     </td>
                                                     @include('validasi_usulan_belanja.modal_form_validasi')
-                                                    <td>
-                                                        @if ($item->status_usulan_barang == 'Selesai')
-                                                            <div class="br-wrapper br-theme-bars-movie">
-                                                                <span class="f-12">Status Usulan</span>
-                                                                <div class="br-widget">
-                                                                    <a href="#" data-rating-value="Bad"
-                                                                        data-rating-text="Bad" class="br-selected"></a>
-                                                                    <a href="#" data-rating-value="Mediocre"
-                                                                        data-rating-text="Mediocre"
-                                                                        class="br-selected"></a>
-                                                                    <a href="#" data-rating-value="Good"
-                                                                        data-rating-text="Good" class="br-selected"></a>
-                                                                </div>
-                                                                <div class="br-current-rating f-12">
-                                                                    <span class="badge badge-label bg-success"><i
-                                                                            class="mdi mdi-circle-medium"></i>
-                                                                        {{ $item->status_usulan_barang }}</span>
-                                                                </div>
-                                                            </div>
-                                                        @endif
-                                                    </td>
                                                 </tr>
                                             @endforeach
                                         </tbody>

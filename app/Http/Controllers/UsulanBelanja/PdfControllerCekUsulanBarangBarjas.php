@@ -227,9 +227,9 @@ class PdfControllerCekUsulanBarangBarjas extends Controller
             ->select('pejabats.nama_pejabat', 'pejabats.nip_pejabat', 'jabatans.nama_jabatan')
             ->first();
 
-        $jabatan_kabag2 = $qrcode?->user?->pejabat?->jabatan?->nama_jabatan ?? 'Data tidak tersedia';
-        $nama_kabag2    = $qrcode?->user?->pejabat?->nama_pejabat ?? 'Data tidak tersedia';
-        $nip_kabag2     = $qrcode?->user?->pejabat?->nip_pejabat ?? 'Data tidak tersedia';
+        $jabatan_kabag2 = $qrcode?->validRka?->pejabat?->jabatan?->nama_jabatan ?? $qrcode?->user?->pejabat?->jabatan?->nama_jabatan;
+        $nama_kabag2    = $qrcode?->validRka?->pejabat?->nama_pejabat ?? $qrcode?->user?->pejabat?->nama_pejabat;
+        $nip_kabag2     = $qrcode?->validRka?->pejabat?->nip_pejabat ?? $qrcode?->user?->pejabat?->nip_pejabat;
 
         $jabatan_dir    = $direktur?->nama_jabatan ?? 'Data tidak tersedia';
         $nama_dir       = $direktur?->nama_pejabat ?? 'Data tidak tersedia';

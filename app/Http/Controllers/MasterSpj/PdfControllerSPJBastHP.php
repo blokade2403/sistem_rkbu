@@ -197,7 +197,9 @@ class PdfControllerSPJBastHP extends Controller
         $tahun_nama = $nama_tahun[$tahun - 2000] ?? 'Tahun Tidak Valid';
 
         $tgl_surat_pesanan = $detail_master_spj->tgl_surat_pesanan;
+        $tgl_bast = $detail_master_spj->tgl_bast;
         $tgl_waktu_pekerjaan = $detail_master_spj->jangka_waktu_pekerjaan;
+        $tgl_ba = formatTanggal($tgl_bast);
         $tgl_pesanan = formatTanggal($tgl_surat_pesanan);
         $tgl_pekerjaan = formatTanggal($tgl_waktu_pekerjaan);
         $terbilang_total = terbilangUang($sum_total_anggaran_usulan_barang);
@@ -270,6 +272,7 @@ class PdfControllerSPJBastHP extends Controller
             'converttotekstglbast'            => $converttotekstglbast,
             'pendukung'                       => $pendukung_ppk,
             'tgl_pesanan'                     => $tgl_pesanan,
+            'tgl_ba'                          => $tgl_ba,
             'tgl_pekerjaan'                   => $tgl_pekerjaan,
             'terbilang_total'                 => $terbilang_total,
             'perusahaan'                      => $perusahaan,
@@ -330,11 +333,11 @@ class PdfControllerSPJBastHP extends Controller
                <th  width="20%" align="left"><h4></h4>
                     <h6 align="top" style="line-height:11;"><img src="assets/foto_rs/jakarta.png" width="65" height="65"  ></h6>
                </th> 
-                <th  width="70%" align="center">
-              <h4 style="font-weight: normal; line-height:0; font-size:11px;">' . $judulHeaders->header1 . '</h4>
-               <h5 style="font-weight: bold; font-size:15px; line-height:1;">' . $judulHeaders->header4 . '</h5>
+               <th  width="70%" align="center">
+              <h4 style="font-weight: normal; font-size:11px;">' . $judulHeaders->header1 . '</h4>
+               <h5 style="font-weight: bold; font-size:12px; line-height:1;">' . $judulHeaders->header4 . '</h5>
                <h5 style="font-weight: bold; font-size:12px; line-height:0;">' . $judulHeaders->nama_rs . '</h5>
-                    <h3 style="font-weight: normal; font-size:11px; line-height:1;" align="center"; text="wrap">' . $judulHeaders->alamat_rs . ' </h3>
+                    <h3 style="font-weight: normal; font-size:11px; line-height:1.3;" align="center"; text="wrap">' . $judulHeaders->alamat_rs . ' </h3>
                     <h3 style="font-weight: normal; font-size:11px; line-height:0;" align="center">Telp. ' . $judulHeaders->tlp_rs . ' Faksimile. ' . $judulHeaders->tlp_rs . '  </h3>
                     <h3 style="font-weight: normal; font-size:11px; line-height:1;" align="center">' . $judulHeaders->header3 . '</h3>
                     <h3 style="font-weight: normal; font-size:11px; line-height:0;" align="center">' . $judulHeaders->wilayah . '</h3>
@@ -348,6 +351,7 @@ class PdfControllerSPJBastHP extends Controller
                </tr>
                </thead>';
         $html .= '</table>';
+
 
 
         // Tambahkan header ke PDF

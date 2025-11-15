@@ -44,7 +44,7 @@ class RkbuModalAlkesAdminDataTable extends DataTable
 
                 return '
                 <ul class="list list-unstyled">
-                    <li><span class="f-16">#&nbsp;' . e($row->nama_barang) . '</span></li>
+                    <li> <span class="fs-14 text-primary">#<strong>' . e($row->nama_barang) . '</strong></span></li>
                     <li><span class="f-12">Sumber Dana: ' . $label . '</span>
                     <span class="f-12"><span class="badge bg-info"> ' . e($row->rating) . '</span>' . $statusBadge . '</span></li>
                     <li><span class="f-12">ID: ' . e($row->id_rkbu) . '</span></li>

@@ -78,13 +78,25 @@
                                                             <span class="visually-hidden">Loading...</span>
                                                         </span>
                                                     </span></button>
-                                            @else
+                                            @elseif($master_spj->status_proses_bast == 'Selesai')
                                                 <button type="submit"
                                                     class="btn btn-success btn-label right ms-auto nexttab nexttab"
                                                     data-nexttab="v-pills-bill-address-tab"><i
                                                         class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>Kirim</button>
+                                            @else
+                                                <div class="col-12">
+                                                    <div class="alert alert-danger alert-dismissible alert-label-icon rounded-label shadow fade show mb-xl-0"
+                                                        role="alert">
+                                                        <i class="ri-error-warning-line label-icon"></i><strong>Perhatian
+                                                            !!!</strong>
+                                                        Tunggu Proses Verifikasi BAST
+                                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                                            aria-label="Close"></button>
+                                                    </div>
+                                                </div>
                                             @endif
                                         </div>
+
                                     </div>
                                     <div class="tab-pane fade" id="v-pills-finish" role="tabpanel"
                                         aria-labelledby="v-pills-finish-tab">

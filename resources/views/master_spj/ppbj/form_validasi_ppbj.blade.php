@@ -68,7 +68,7 @@
                                                     <label for="status_verifikasi_ppbj" class="form-label">Status
                                                         Verifikasi</label>
                                                     <select name="status_verifikasi_ppbj" class="form-select"
-                                                        @if ($master_spj->status_verifikasi_ppbj == 'Selesai') disabled @endif>
+                                                        @if ($master_spj->status_verifikasi_ppbj == 'Selesai' && Session::get('nama_level_user') != 'Administrator') disabled @endif>
                                                         <option value="{{ $master_spj->status_verifikasi_ppbj }}">
                                                             {{ $master_spj->status_verifikasi_ppbj ?? 'Pilih Status' }}
                                                         </option>
@@ -87,7 +87,19 @@
                                             </div>
                                         </div>
                                         <div class="d-flex align-items-start gap-3 mt-4">
-                                            <div class="text-end">
+                                            @if ($master_spj->status_verifikasi_ppbj == 'Selesai' && Session::get('nama_level_user') != 'Administrator')
+                                                <button type="button"
+                                                    class="btn btn-outline-warning btn-load right ms-auto nexttab nexttab"
+                                                    data-nexttab="pills-success-tab"><span
+                                                        class="d-flex align-items-center">
+                                                        <span class="flex-grow-1 me-2">
+                                                            Loading...
+                                                        </span>
+                                                        <span class="spinner-grow flex-shrink-0" role="status">
+                                                            <span class="visually-hidden">Loading...</span>
+                                                        </span>
+                                                    </span></button>
+                                            @elseif($master_spj->status_proses_tukar_faktur == 'Selesai')
                                                 <a href="{{ route($routePrefix . '.index') }}"
                                                     class="btn btn-secondary btn-label waves-effect waves-light">
                                                     <div class="d-flex">
@@ -100,25 +112,22 @@
                                                         </div>
                                                     </div>
                                                 </a>
-                                                @if ($master_spj->status_verifikasi_ppbj == 'Selesai')
-                                                    <button type="button"
-                                                        class="btn btn-outline-warning btn-load right ms-auto nexttab nexttab"
-                                                        data-nexttab="pills-success-tab"><span
-                                                            class="d-flex align-items-center">
-                                                            <span class="flex-grow-1 me-2">
-                                                                Loading...
-                                                            </span>
-                                                            <span class="spinner-grow flex-shrink-0" role="status">
-                                                                <span class="visually-hidden">Loading...</span>
-                                                            </span>
-                                                        </span></button>
-                                                @else
-                                                    <button type="submit"
-                                                        class="btn btn-success btn-label right ms-auto nexttab nexttab"
-                                                        data-nexttab="v-pills-bill-address-tab"><i
-                                                            class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>Kirim</button>
-                                                @endif
-                                            </div>
+                                                <button type="submit"
+                                                    class="btn btn-success btn-label right ms-auto nexttab nexttab"
+                                                    data-nexttab="v-pills-bill-address-tab"><i
+                                                        class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>Kirim</button>
+                                            @else
+                                                <div class="col-12">
+                                                    <div class="alert alert-danger alert-dismissible alert-label-icon rounded-label shadow fade show mb-xl-0"
+                                                        role="alert">
+                                                        <i class="ri-error-warning-line label-icon"></i><strong>Perhatian
+                                                            !!!</strong>
+                                                        Tunggu Proses Tukar Faktur
+                                                        <button type="button" class="btn-close"
+                                                            data-bs-dismiss="alert" aria-label="Close"></button>
+                                                    </div>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                     <div class="tab-pane fade" id="v-pills-finish" role="tabpanel"

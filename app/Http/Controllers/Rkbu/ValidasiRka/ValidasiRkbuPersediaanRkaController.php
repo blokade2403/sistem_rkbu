@@ -2,23 +2,24 @@
 
 namespace App\Http\Controllers\Rkbu\ValidasiRka;
 
-use App\DataTables\ValidasiRka\ValidasiRkaPersediaanDataTable;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\RkbuHistory\RkbuHistory;
 use Illuminate\Support\Facades\Session;
 use App\Models\MasterBackend\SettingRkbu\Rkbu;
+use App\Models\MasterBackend\UserProfil\Pejabat;
 use App\Models\MasterBackend\SettingInput\Anggaran;
 use App\Models\MasterBackend\SettingInput\Komponen;
 use App\Models\MasterBackend\SettingInput\UraianDua;
 use App\Models\MasterBackend\SettingInput\UraianSatu;
-use App\Models\MasterBackend\SettingRkbu\RkbuHistory;
 use App\Models\MasterBackend\SettingRkbu\JenisBelanja;
 use App\Models\MasterBackend\SettingInput\TahunAnggaran;
 use App\Models\MasterBackend\SettingInput\StatusValidasi;
 use App\Models\MasterBackend\SettingRkbu\SubKategoriRkbu;
 use App\Models\MasterBackend\SettingInput\StatusValidasiRka;
+use App\DataTables\ValidasiRka\ValidasiRkaPersediaanDataTable;
 
 class ValidasiRkbuPersediaanRkaController extends Controller
 {
@@ -26,11 +27,18 @@ class ValidasiRkbuPersediaanRkaController extends Controller
     public function index(ValidasiRkaPersediaanDataTable $dataTable, Request $request)
     {
         // Ambil id_ksp dari session
+        // Ambil id_ksp dari session
         $id_pejabat          = session('id_pejabat');
         $id_user             = session('id_user');
         $tahunAnggaran       = Session::get('tahun_anggaran');
         $status_validasi_rka = StatusValidasiRka::all(); // Ambil status validasi dari model terkait
         $faseTahun           = TahunAnggaran::where('nama_tahun_anggaran', $tahunAnggaran)->value('fase_tahun');
+
+        // Ambil data pejabat sesuai user login
+        $pejabat = Pejabat::where('id_pejabat', $id_pejabat)
+            ->where('status', 'aktif')
+            ->first();
+        $id_jabatan = $pejabat->id_jabatan;
 
 
         $sumber_dana    = [
@@ -100,7 +108,7 @@ class ValidasiRkbuPersediaanRkaController extends Controller
             ->join('users', 'rkbus.id_user', '=', 'users.id_user')
             ->join('ksps', 'users.id_ksp', '=', 'ksps.id_ksp')
             ->join('pejabats', 'users.id_pejabat', '=', 'pejabats.id_pejabat')
-            ->where('pejabats.id_pejabat', $id_pejabat)
+            ->where('pejabats.id_jabatan', $id_jabatan)
             ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
             ->where('jenis_kategori_rkbus.id_jenis_kategori_rkbu',  $currentJenisKategori)
             ->select('sub_kategori_rkbus.*') // Pilih data sub_kategori_rkbu
@@ -114,7 +122,7 @@ class ValidasiRkbuPersediaanRkaController extends Controller
             ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
             ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
             ->join('pejabats', 'users.id_pejabat', '=', 'pejabats.id_pejabat')
-            ->where('pejabats.id_pejabat', $id_pejabat)
+            ->where('pejabats.id_jabatan', $id_jabatan)
             ->where('id_status_validasi', '9cfb1edc-2263-401f-b249-361db4017932')
             ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
             ->where('jenis_kategori_rkbus.id_jenis_kategori_rkbu',  $currentJenisKategori);

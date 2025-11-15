@@ -97,7 +97,7 @@
                                                                 {{ number_format($key->bruto) }}</span>
                                                         </li></br>
                                                         <li>
-                                                            <span class="fs-12">Pembayaran : Rp.
+                                                            Pembayaran :<span class="badge badge-soft-success fs-12"> Rp.
                                                                 {{ number_format($key->pembayaran) }}</span>
                                                         </li>
                                                         <li>

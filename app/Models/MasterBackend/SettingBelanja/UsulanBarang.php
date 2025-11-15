@@ -23,6 +23,7 @@ use App\Models\MasterBackend\SettingRkbu\SubKategoriRkbu;
 use App\Models\MasterBackend\SettingInput\StatusValidasiRka;
 use App\Models\MasterBackend\SettingBelanja\UsulanBarangDetail;
 use App\Models\MasterBackend\SettingUser\Pptk;
+use App\Models\MasterBackend\SettingUser\Unit;
 
 class UsulanBarang extends Model
 {
@@ -129,7 +130,6 @@ class UsulanBarang extends Model
     {
         return $this->belongsTo(User::class, 'nama_valid_pptk', 'id_user');
     }
-
 
     public function validRka()
     {

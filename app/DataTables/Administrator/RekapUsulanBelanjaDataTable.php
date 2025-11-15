@@ -24,13 +24,155 @@ class RekapUsulanBelanjaDataTable extends DataTable
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         return (new EloquentDataTable($query))
-            ->addColumn('action', 'rekapusulanbelanja.action')
-            ->setRowId('id');
+
+            ->addIndexColumn() // otomatis tambahkan nomor urut
+            ->addColumn('detail_usulan', function ($row) {
+                return '
+                     <ul class="list list-unstyled">
+                        <li>
+                            <span class="f-12">&nbsp;' . ($row->no_usulan_barang) . '</span>
+                        </li>
+                        <li>
+                            <span
+                                class="fs-12">&nbsp;' . $row->kode_kategori_rkbu . '. ' . $row->nama_kategori_rkbu . '</span>
+                        </li>
+                          <li>
+                            <span
+                                class="fs-12">&nbsp;' . ($row->sub_kategori_rkbu->kode_sub_kategori_rkbu) . '
+                                ' . ($row->sub_kategori_rkbu->nama_sub_kategori_rkbu) . '</span>
+                        </li>
+                        <li></br>
+                            <span class="fs-16 text-primary">#
+                                ' . ($row->nama_barang) . '</span>
+                        </li>
+                        <li>
+                            <span class="fs-10 text-primary"># ID RKBU: 
+                                ' . ($row->id_rkbu) . '</span>
+                        </li>
+                          <li></br>
+                            <span class="fs-12">&nbsp;Tahun Anggaran :
+                                ' . ($row->tahun_anggaran) . '</span>
+                        </li>
+                        <li>
+                            <p>
+                                <span
+                                    class="fs-10 badge badge-outline-danger">&nbsp;' . ($row->status_hutang ?? 'Isi data Terlebih Dahulu') . '</span>
+                            </p>
+                        </li>
+                    </ul>
+                    ';
+            })
+            ->addColumn('uraian_spj', function ($row) {
+                return '
+                      <ul class="list list-unstyled">
+                            <li>
+                                <span class="fs-12">Pengusul : ' . $row->nama_pengusul_barang . '</span>
+                            </li>
+                            <li>
+                                <span class="fs-12"> Nama Unit :
+                                    ' . $row->unit ?? ' - ' . '</span>
+                            </li>
+                            <li>
+                                <span class="fs-12"> Nomor SP :
+                                    ' . $row->no_surat_pesanan ?? ' - ' . '</span>
+                            </li>
+                            <li>
+                                <span class="fs-12"> ID Paket :
+                                    ' . $row->idpaket ?? ' - ' . '</span>
+                            </li>
+                        </ul>';
+            })
+            ->addColumn('detail_spj', function ($row) {
+                return '
+                     <ul class="list list-unstyled">
+                        <li>
+                            <span class="fs-12">&nbsp;</span>
+                        </li>
+                        <li>
+                            <span class="fs-12">Netto: <strong>Rp.
+                                    ' . number_format($row->harga_barang) . '</strong></span>
+                        </li>
+                        <li>
+                            <span class="fs-12">PPN : ' . $row->ppn ?? '0' . '
+                                %</span>
+                        </li>
+                        <li>
+                            Bruto :<span class="badge badge-soft-info fs-12"> Rp.
+                                ' . number_format($row->bruto) . '</span>
+                        </li></br>
+                        <li>
+                            <span class="fs-12">Pembayaran : Rp.
+                                ' . number_format($row->pembayaran) . '</span>
+                        </li>
+                        <li>
+                            <span class="fs-12">Tanggal Pembayaran :<br />
+                                ' . $row->tanggal_pembayaran . '</span>
+                        </li>
+                    </ul>';
+            })
+            ->addColumn('detail_biaya', function ($row) {
+                return '
+                     <ul class="list list-unstyled">
+                        <li>
+                            <span class="fs-12">' . $row->vol_1_detail . ' ' . $row->satuan_1_detail . ' x ' . $row->vol_2_detail . ' ' . $row->satuan_2_detail . '</span>
+                        </li>
+                        <li>
+                            <span class="fs-12">Rata-rata Pemakaian : ' . $row->rata2_pemakaian . '</span>
+                        </li>
+                        <li>
+                            <span class="fs-12">Sisa Stok : ' . $row->sisa_stok . '</span>
+                        </li>
+                        <li>
+                            <span class="fs-12"> Stok Minimal : ' . $row->stok_minimal . '</span>
+                        </li></br>
+                        <li>
+                            <span class="fs-12">Buffer Stok : ' . $row->buffer_stok . '</span>
+                        </li>
+                        <li></br>
+                            <span class="fs-12">Total Vol Usulan: <strong>' . $row->jumlah_usulan_barang . '</strong></span>
+                        </li>
+                         <li>
+                            <span class="fs-12">Total Anggaran Usulan: 
+                            <p><strong> Rp. ' . number_format($row->total_anggaran_usulan_barang) . '</strong></p></span>
+                        </li>
+                    </ul>';
+            })
+            ->addColumn('status_spj', function ($row) {
+                return '<span class="fs-12"> ' . $row->spek_detail . ' </span>';
+            })
+
+            ->addColumn('action', function ($row) {
+                $routePrefix = 'rekap_usulan_belanjas'; // pastikan variabel ini ada di class DataTable
+
+                $disabledBtn = '<button class="btn btn-sm btn-out-dashed btn-disabled btn-square disabled">No Action</button>';
+
+                // Atur default
+                $editUrl = null;
+                $deleteUrl = null;
+
+                if (session('nama_level_user') == 'User') {
+                    if ($row->id_status_validasi == '9cfb1edc-2263-401f-b249-361db4017932' || session('status_edit') == 'tidak aktif') {
+                        return $disabledBtn;
+                    }
+                } elseif (session('nama_level_user') == 'Validasi') {
+                    if ($row->id_status_validasi_rka == '9cfb1f87-238b-4ea2-98f0-4255e578b1d1' || session('status_edit') == 'tidak aktif') {
+                        return $disabledBtn;
+                    }
+                } elseif (session('nama_level_user') == 'Validasi RKA') {
+                    if (session('status_edit') == 'tidak aktif') {
+                        return $disabledBtn;
+                    }
+                }
+
+                // Kalau lolos kondisi -> kasih tombol edit & delete
+                $editUrl   = route($routePrefix . '.show', $row->id_usulan_barang);
+                $deleteUrl = route($routePrefix . '.destroy', $row->id_usulan_barang);
+
+                return view('components.partials.action-buttons', compact('editUrl', 'deleteUrl'))->render();
+            })
+            ->rawColumns(['detail_usulan', 'uraian_spj', 'detail_spj', 'detail_biaya', 'status_spj',  'action', 'routePrefix' => 'rekap_usulan_belanjas']);
     }
 
-    /**
-     * Get the query source of dataTable.
-     */
     public function query(UsulanBarang $model): QueryBuilder
     {
         $tahunAnggaran = Session::get('tahun_anggaran');
@@ -78,55 +220,95 @@ class RekapUsulanBelanjaDataTable extends DataTable
             'sub_kegiatans.*',
             'programs.*',
             'rkbus.nama_barang',
-            'rkbus.sisa_vol_rkbu',
-            'rkbus.sisa_anggaran_rkbu',
             'kegiatans.*',
             'aktivitas.*',
             'users.nama_lengkap as nama_pengusul_barang',
             'units.nama_unit as unit',
             'sumber_danas.id_sumber_dana', // Retrieving id_sumber_dana
             'sumber_danas.nama_sumber_dana', // Retrieving sumber_danas field
-            'usulan_barangs.*',
+            'usulan_barangs.no_usulan_barang',
+            'usulan_barangs.nama_pengusul_barang',
+            'usulan_barangs.status_permintaan_barang',
+            'usulan_barangs.tahun_anggaran',
+            'usulan_barangs.status_validasi_direktur',
+            'usulan_barangs.nama_valid_pptk',
+            'usulan_barangs.nama_valid_rka',
+            'usulan_barangs.nama_valid_direktur',
             'usulan_barangs.tahun_anggaran as tahun'
         ]);
     }
-    /**
-     * Optional method if you want to use the html builder.
-     */
+
     public function html(): HtmlBuilder
     {
         return $this->builder()
-            ->setTableId('rekapusulanbelanja-table')
+            ->setTableId('rekap-usulan')
             ->columns($this->getColumns())
             ->minifiedAjax()
-            //->dom('Bfrtip')
-            ->orderBy(1)
-            ->selectStyleSingle()
-            ->buttons([
-                Button::make('excel'),
-                Button::make('csv'),
-                Button::make('pdf'),
-                Button::make('print'),
-                Button::make('reset'),
-                Button::make('reload')
+            ->orderBy(1) // urutkan default
+            ->parameters([
+                'responsive' => true,
+                'autoWidth' => false,
             ]);
     }
 
-    /**
-     * Get the dataTable columns definition.
-     */
     public function getColumns(): array
     {
         return [
-            Column::computed('action')
+            Column::make('DT_RowIndex')
+                ->title('No')
+                ->searchable(false)
+                ->orderable(false)
+                ->width(10)
+                ->responsivePriority(1), // selalu tampil
+
+            Column::computed('detail_usulan')
+                ->title('Detail Usulan')
                 ->exportable(false)
                 ->printable(false)
-                ->width(60)
-                ->addClass('text-center'),
-            Column::make('id'),
-            Column::make('add your columns'),
-            Column::make('created_at'),
-            Column::make('updated_at'),
+                ->addClass('text-left')
+                ->width(90)
+                ->responsivePriority(2), // tampil lebih prioritas
+
+            Column::computed('uraian_spj')
+                ->title('Uraian SPJ')
+                ->exportable(false)
+                ->printable(false)
+                ->addClass('text-left')
+                ->width(90)
+                ->responsivePriority(2), // tampil lebih prioritas
+
+            Column::computed('detail_spj')
+                ->title('Detail Biaya')
+                ->exportable(false)
+                ->printable(false)
+                ->addClass('text-left')
+                ->width(50)
+                ->responsivePriority(2), // tampil lebih prioritas
+
+            Column::computed('detail_biaya')
+                ->title('Detail Vol Usulan')
+                ->exportable(false)
+                ->printable(false)
+                ->addClass('text-left')
+                ->width(90)
+                ->responsivePriority(1), // tampil lebih prioritas
+
+            Column::computed('status_spj')
+                ->title('Spesifikasi')
+                ->exportable(false)
+                ->printable(false)
+                ->addClass('text-left')
+                ->width(50)
+                ->responsivePriority(100), // tampil lebih prioritas
+
+            Column::computed('action')
+                ->title('Action')
+                ->exportable(false)
+                ->printable(false)
+                ->width(30)
+                ->addClass('text-center')
+                ->responsivePriority(100), // usahakan selalu tampil
+
         ];
     }
 

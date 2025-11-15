@@ -46,8 +46,8 @@
                                             <td>
                                                 <ul class="list list-unstyled">
                                                     <li>
-                                                        <span class="f-16 text-primary">
-                                                            #&nbsp;{{ $rkbus->nama_barang }}
+                                                        <span class="fs-14 text-primary">#
+                                                            <strong>{{ $rkbus->nama_barang }}</strong>
                                                         </span>
                                                     </li>
                                                     <li>
@@ -82,7 +82,7 @@
                                                     <li>
                                                         <span class="f-12">{{ $rkbus->vol_1 }}
                                                             {{ $rkbus->satuan_1 }} x
-                                                            {{ $rkbus->vol_2 }}{{ $rkbus->satuan_2 }}</span>
+                                                            {{ $rkbus->vol_2 }} {{ $rkbus->satuan_2 }}</span>
                                                     </li>
                                                 </ul>
                                             </td>
@@ -177,7 +177,7 @@
                                                             class="f-12">&nbsp;{{ $rkbus->subKategoriRkbu->kode_sub_kategori_rkbu }}.
                                                             {{ $rkbus->subKategoriRkbu->nama_sub_kategori_rkbu }}</span>
                                                     </li>
-                                                    <li><span class="f-12">Sisa
+                                                    <li><span class="f-12"> Sisa
                                                             Volume:&nbsp;{{ $rkbus->sisa_vol_rkbu }}
                                                             {{ $rkbus->satuan_1 }}/{{ $rkbus->satuan_2 }}
                                                             </br><span class="f-12"> Sisa

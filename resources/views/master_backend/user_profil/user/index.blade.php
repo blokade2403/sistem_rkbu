@@ -22,12 +22,12 @@
                                         <th>Unit</th>
                                         <th>Level User</th>
                                         <th>Fase User</th>
+                                        <th>Action</th>
                                         <th>Status User</th>
                                         <th>Status Edit</th>
                                         <th>Pendukung PPK</th>
                                         <th>Tagging PPTK</th>
                                         <th>Create At</th>
-                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -38,15 +38,34 @@
                                             <td>
                                                 <ul class="list-unstyled product-desc-list">
                                                     <li class="py-0">
-                                                        <h5>#{{ $item->username }}
-                                                            ({{ $item->levelUser->nama_level_user }})
-                                                        </h5>
+                                                        <h6 class="mb-0"><span
+                                                                class="fa-sm text-primary">{{ $item->unit->nama_unit }}</span></strong>
+                                                        </h6>
                                                     </li>
                                                     <small class="text-muted">
-                                                        <li class="py-0">Nama : {{ $item->nama_lengkap }}</li>
-                                                        <li class="py-0">NIP : {{ $item->nip_user }}</li>
+                                                        <span class="text-muted">Status User :
+                                                            {!! $item->status_user === 'aktif'
+                                                                ? '<span class="badge bg-success">Aktif</span>'
+                                                                : '<span class="badge bg-danger">Non Aktif</span>' !!}</span>
                                                     </small>
                                                 </ul>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="{{ asset('assets/images/products/img-1.png') }}"
+                                                        class="me-3 rounded-circle avatar-sm p-2 bg-light" alt="user-pic">
+                                                    <div class="flex-1">
+                                                        <h6 class="mt-0 mb-1 fs-14">
+                                                            <a href="apps-ecommerce-product-details.html"
+                                                                class="text-reset">{{ $item->nama_lengkap }}
+                                                                ({{ $item->levelUser->nama_level_user }})
+                                                            </a>
+                                                        </h6>
+                                                        <p class="mb-0 fs-12 text-muted">
+                                                            Username: <span>{{ $item->username }}</span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+
 
                                             </td>
                                             <td>{{ $item->ksp->nama_ksp ?? '-' }}</td>
@@ -54,6 +73,9 @@
                                             <td>{{ $item->unit->nama_unit ?? '-' }}</td>
                                             <td>{{ $item->levelUser->nama_level_user ?? '-' }}</td>
                                             <td>{{ $item->fase->nama_fase ?? '-' }}</td>
+                                            <td>
+                                                <x-partials.action-buttons :edit-url="route('users.edit', $item->id_user)" :delete-url="route('users.destroy', $item->id_user)" />
+                                            </td>
                                             <td>
                                                 @if ($item->status_user == 'aktif')
                                                     <span
@@ -67,9 +89,7 @@
                                             <td>{{ $item->nama_pendukung_ppk ?: 'Tidak di Tagging' }}</td>
                                             <td>{{ $item->pptks->nama_pptk ?? 'Tidak di Tagging' }}</td>
                                             <td>{{ $item->created_at }}</td>
-                                            <td>
-                                                <x-partials.action-buttons :edit-url="route('users.edit', $item->id_user)" :delete-url="route('users.destroy', $item->id_user)" />
-                                            </td>
+
                                         </tr>
                                     @endforeach
                                 </tbody>

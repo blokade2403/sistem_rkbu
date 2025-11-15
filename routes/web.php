@@ -1,12 +1,12 @@
 <?php
 
-use App\Http\Controllers\Assets\AssetController;
-use App\Http\Controllers\Assets\AssetImportController;
-use App\Http\Controllers\Assets\LaporanKirController;
-use App\Http\Controllers\Assets\PenempatanController;
-use App\Http\Controllers\Assets\ReklasArbController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Assets\AssetController;
+use App\Http\Controllers\Assets\ReklasArbController;
+use App\Http\Controllers\Assets\LaporanKirController;
+use App\Http\Controllers\Assets\PenempatanController;
+use App\Http\Controllers\Assets\AssetImportController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\MasterSpj\MasterSpjController;
 use App\Http\Controllers\Rkbu\RkbuBarangJasaController;
@@ -14,25 +14,36 @@ use App\Http\Controllers\Rkbu\RkbuModalAlkesController;
 use App\Http\Controllers\Rkbu\RkbuPegawaiPnsController;
 use App\Http\Controllers\Rkbu\RkbuPersediaanController;
 use App\Http\Controllers\Rkbu\RkbuModalKantorController;
+use App\Http\Controllers\MasterSpj\PdfControllerSPJBastBP;
+use App\Http\Controllers\MasterSpj\PdfControllerSPJBastHP;
+use App\Http\Controllers\MasterSpj\PdfControllerSpjBastPK;
 use App\Http\Controllers\Rkbu\RkbuPegawaiNonPnsController;
+use App\Http\Controllers\Rkbu\KertasKerja\GrafikController;
 use App\Http\Controllers\Rkbu\Barjas\PdfControllerRkbuBarjas;
 use App\Http\Controllers\SpjBelanja\UsulanSpjModalController;
 use App\Http\Controllers\SpjBelanja\UsulanSpjBarjasController;
 use App\Http\Controllers\MasterBackend\UserProfil\KspController;
+use App\Http\Controllers\MasterSpj\PdfControllerSpjSuratPesanan;
+use App\Http\Controllers\RkbuHistory\RkbuHistoryModalController;
 use App\Http\Controllers\UsulanBelanja\ExportUsulanBarangDetail;
 use App\Http\Controllers\MasterBackend\UserProfil\UserController;
+use App\Http\Controllers\RkbuHistory\RkbuHistoryBarjasController;
 use App\Http\Controllers\UsulanBelanja\CekUsulanBarangController;
 use App\Http\Controllers\MasterBackend\SettingUser\FaseController;
 use App\Http\Controllers\MasterBackend\SettingUser\PptkController;
 use App\Http\Controllers\MasterBackend\SettingUser\UnitController;
 use App\Http\Controllers\SpjBelanja\UsulanSpjPersediaanController;
+use App\Http\Controllers\Rkbu\KertasKerja\KertasKerjaRbaController;
 use App\Http\Controllers\MasterBackend\UserProfil\PejabatController;
 use App\Http\Controllers\Rkbu\Barjas\PdfControllerValidasiBarjasKsp;
+use App\Http\Controllers\Rkbu\KertasKerja\PdfControllerRealisasiRba;
+use App\Http\Controllers\UsulanBelanja\RekapUsulanBelanjaController;
 use App\Http\Controllers\UsulanBelanja\UsulanBelanjaModalController;
 use App\Http\Controllers\MasterBackend\SettingRkbu\ProgramController;
 use App\Http\Controllers\MasterBackend\SettingUser\JabatanController;
 use App\Http\Controllers\Rkbu\ModalAlkes\PdfControllerRkbuModalAlkes;
 use App\Http\Controllers\Rkbu\Persediaan\PdfControllerRkbuPersediaan;
+use App\Http\Controllers\RkbuHistory\RkbuHistoryPersediaanController;
 use App\Http\Controllers\UsulanBelanja\UsulanBelanjaBarjasController;
 use App\Http\Controllers\MasterBackend\SettingRkbu\KegiatanController;
 use App\Http\Controllers\Rkbu\Administrator\RkbuBarjasAdminController;
@@ -40,6 +51,7 @@ use App\Http\Controllers\MasterBackend\SettingInput\AnggaranController;
 use App\Http\Controllers\MasterBackend\SettingInput\KomponenController;
 use App\Http\Controllers\MasterBackend\SettingRkbu\AktivitasController;
 use App\Http\Controllers\MasterBackend\SettingUser\LevelUserController;
+use App\Http\Controllers\Rkbu\KertasKerja\PdfControllerKertasKerjaBlud;
 use App\Http\Controllers\Rkbu\ModalKantor\PdfControllerRkbuModalKantor;
 use App\Http\Controllers\UsulanBelanja\CekUsulanBelanjaModalController;
 use App\Http\Controllers\MasterBackend\SettingInput\UraianDuaController;
@@ -67,6 +79,7 @@ use App\Http\Controllers\UsulanBelanja\PdfControllerCekUsulanBarangBarjas;
 use App\Http\Controllers\Rkbu\Administrator\RkbuModalKantorAdminController;
 use App\Http\Controllers\MasterBackend\SettingInput\TahunAnggaranController;
 use App\Http\Controllers\MasterBackend\SettingUser\AdminPendukungController;
+use App\Http\Controllers\Rkbu\KertasKerja\KertasKerjaRealisasiRbaController;
 use App\Http\Controllers\Rkbu\Pegawai\PdfControllerValidasiPegawaiNonPnsKsp;
 use App\Http\Controllers\Rkbu\Persediaan\PdfControllerValidasiPersediaanKsp;
 use App\Http\Controllers\UsulanBelanja\CekUsulanBelanjaPersediaanController;
@@ -93,17 +106,9 @@ use App\Http\Controllers\UsulanBelanja\PdfControllerCekUsulanBarangPersediaan;
 use App\Http\Controllers\MasterBackend\SettingRkbu\JenisKategoriRkbuController;
 use App\Http\Controllers\Rkbu\ValidasiRka\ValidasiRkbuModalKantorRkaController;
 use App\Http\Controllers\MasterBackend\SettingInput\StatusValidasiRkaController;
-use App\Http\Controllers\MasterSpj\PdfControllerSPJBastBP;
-use App\Http\Controllers\MasterSpj\PdfControllerSPJBastHP;
-use App\Http\Controllers\MasterSpj\PdfControllerSpjBastPK;
-use App\Http\Controllers\MasterSpj\PdfControllerSpjSuratPesanan;
 use App\Http\Controllers\Rkbu\ValidasiRka\PdfControllerValidasiPegawaiNonPnsRka;
 use App\Http\Controllers\Rkbu\ValidasiKsp\ValidasiRkbuPegawaiNonPnsKspController;
 use App\Http\Controllers\Rkbu\ValidasiRka\ValidasiRkbuPegawaiNonPnsRkaController;
-use App\Http\Controllers\RkbuHistory\RkbuHistoryBarjasController;
-use App\Http\Controllers\RkbuHistory\RkbuHistoryModalController;
-use App\Http\Controllers\RkbuHistory\RkbuHistoryPersediaanController;
-use App\Http\Controllers\UsulanBelanja\RekapUsulanBelanjaController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Rka\ValidasiUsulanModalRkaController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Rka\ValidasiUsulanBarangRkaController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Pptk\ValidasiUsulanModalPptkController;
@@ -339,7 +344,19 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('rekap_usulan_Belanja')->group(function () {
         Route::resource('rekap_usulan_belanjas', RekapUsulanBelanjaController::class);
+        Route::get('/rekap_usulan_belanjas/editkomponen/{id}', [RekapUsulanBelanjaController::class, 'editkomponen'])->name('rekap_usulan_belanjas.editkomponen');
+        Route::put('/rekap-usulan-belanjas/update-validasi/{no_usulan_barang}', [RekapUsulanBelanjaController::class, 'updateValidasi'])
+            ->name('rekap_usulan_belanjas.updateValidasi');
     });
+
+    Route::prefix('kertas-kerja')->group(
+        function () {
+            Route::resource('/kertas_kerjas', KertasKerjaRbaController::class);
+            Route::get('/download_Kertas_kerja_BLUD', [PdfControllerKertasKerjaBlud::class, 'downloadPDF'])->name('kertas_kerjas.downloadPDF_kertas_kerja');
+            Route::resource('realisasi_rba', KertasKerjaRealisasiRbaController::class);
+            Route::get('/download_Realisasi_Kertas_kerja_BLUD', [PdfControllerRealisasiRba::class, 'downloadPDF'])->name('realisasi_rba.downloadPDF_realisasi_kertas_kerja');
+        }
+    );
 
     Route::prefix('usulan-belanja-barjas')->group(function () {
         Route::resource('usulan_barang_barjass', UsulanBelanjaBarjasController::class);
@@ -394,6 +411,7 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('cek-usulan-belanja-barjas')->group(function () {
         Route::resource('cek_usulan_barang_barjass', CekUsulanBarangController::class);
+        Route::get('/grafik', [GrafikController::class, 'index'])->name('grafik.index');
         Route::get('cek_usulan_barang_barjass/{usulanBarang}', [CekUsulanBarangController::class, 'show'])->name('cek_usulan_barang_barjass.show');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangBarjas::class, 'downloadPDFCekBarjas'])->name('cek_usulan_barang_barjass.downloadPDF');
     });
@@ -555,8 +573,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/master_spjs/{id_spj_detail}', [MasterSpjController::class, 'update'])->name('master_spjs.update');
         Route::put('/master-spjs/{id}/update-surat-pesanan', [MasterSpjController::class, 'updateSuratPesanan'])
             ->name('master_spjs.updateSuratPesanan');
-        Route::put('/master-spjs/{id}/update-surat-pesanan-admin', [MasterSpjController::class, 'updateSuratPesananAdmin'])
-            ->name('master_spjs.updateSuratPesananAdmin');
+
         Route::put('/master-spjs/{id}/update-barang-datang', [MasterSpjController::class, 'updateBarangDatang'])
             ->name('master_spjs.updateBarangDatang');
         Route::put('/master-spjs/{id}/update-barang-parsial1', [MasterSpjController::class, 'UpdateParsial1'])
@@ -565,16 +582,18 @@ Route::middleware('auth')->group(function () {
             ->name('master_spjs.UpdateParsial2');
         Route::put('/master-spj/{id}/update-tukar-faktur', [MasterSpjController::class, 'tukarfaktur'])
             ->name('master_spjs.tukarfaktur');
+
         Route::put('/master-spj/{id}/update-bast', [MasterSpjController::class, 'updateBast'])
             ->name('master_spjs.updateBast');
-        Route::put('/master-spj/{id}/update-bast-admin', [MasterSpjController::class, 'updateBastAdmin'])
-            ->name('master_spjs.updateBastAdmin');
+
         Route::put('/master-spj/{id}/update-verif-pb', [MasterSpjController::class, 'updateVerifPB'])
             ->name('master_spjs.updateVerifPB');
         Route::put('/master-spj/{id}/update-verif-ppk', [MasterSpjController::class, 'updateVerifPPK'])
             ->name('master_spjs.updateVerifPPK');
+
         Route::put('/master-spj/{id}/update-verif-ppbj', [MasterSpjController::class, 'updateVerifPPBJ'])
             ->name('master_spjs.updateVerifPPBJ');
+
         Route::put('/master-spj/{id}/update-verif-pptk', [MasterSpjController::class, 'updateVerifPPTK'])
             ->name('master_spjs.updateVerifPPTK');
         Route::put('/master-spj/{id}/update-verif-Verifikator', [MasterSpjController::class, 'updateVerifVerifikator'])
@@ -589,6 +608,12 @@ Route::middleware('auth')->group(function () {
             ->name('master_spjs.updateverifikasiBendahara');
         Route::put('/master-spj/{id}/update-pembayaran-Bendahara', [MasterSpjController::class, 'updatepembayaranBendahara'])
             ->name('master_spjs.updatepembayaranBendahara');
+        Route::put('/master-spjs/{id}/update-surat-pesanan-admin', [MasterSpjController::class, 'updateSuratPesananAdmin'])
+            ->name('master_spjs.updateSuratPesananAdmin');
+        Route::put('/master-spj/{id}/update-tukar-faktur-admin', [MasterSpjController::class, 'tukarfakturAdmin'])
+            ->name('master_spjs.tukarfakturAdmin');
+        Route::put('/master-spj/{id}/update-bast-admin', [MasterSpjController::class, 'updateBastAdmin'])
+            ->name('master_spjs.updateBastAdmin');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangBarjas::class, 'downloadPDFCekBarjas'])->name('master_spjs.downloadPDF');
         Route::get('/downloadPDF_Spj_surat_pesanan/{id}', [PdfControllerSpjSuratPesanan::class, 'downloadPDF'])->name('spj_surat_pesanan.downloadPDF_Spj_surat_pesanan');
         Route::get('/downloadPDF_Spj_BAST_PK/{id}', [PdfControllerSpjBastPK::class, 'downloadPDF'])->name('bast_pk.downloadPDF_BAST_PK');

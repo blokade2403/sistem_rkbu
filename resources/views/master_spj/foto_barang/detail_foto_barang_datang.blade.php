@@ -74,11 +74,15 @@
                      </div>
                      <!-- end col -->
 
+                     @php
+                         $firstKeranjang = $keranjang->first();
+                     @endphp
+
                      <div class="col-xl-8">
                          <div class="mt-xl-0 mt-5">
                              <div class="d-flex">
                                  <div class="flex-grow-1">
-                                     <h4>{{ $no_inv->no_usulan_barang }}</h4>
+                                     <h4> {{ $firstKeranjang->no_usulan_barang ?? 'N/A' }}</h4>
                                      <div class="hstack gap-3 flex-wrap">
                                          <div><a href="#"
                                                  class="text-primary d-block">{{ $master_spj->pendukung_ppk->nama_pendukung_ppk ?? 'Belum update' }}</a>
@@ -275,6 +279,11 @@
                                                  href="#nav-detail" role="tab" aria-controls="nav-detail"
                                                  aria-selected="false">Data Penyedia</a>
                                          </li>
+                                         <li class="nav-item">
+                                             <a class="nav-link" id="nav-detail-bast" data-bs-toggle="tab"
+                                                 href="#nav-bast" role="tab" aria-controls="nav-bast"
+                                                 aria-selected="false">Data BAST</a>
+                                         </li>
                                      </ul>
                                  </nav>
                                  <div class="tab-content border border-top-0 p-4" id="nav-tabContent">
@@ -315,10 +324,18 @@
                                      <div class="tab-pane fade" id="nav-detail" role="tabpanel"
                                          aria-labelledby="nav-detail-tab">
                                          <div>
-                                             <h5 class="font-size-16 mb-3">
-                                                 {{ $master_spj->perusahaan?->nama_perusahaan ?? 'Data Perusahaan Belum di Input' }}
+                                             <h5 class="font-size-14 mb-3">
+                                                 <span
+                                                     class="text-info">{{ $master_spj->perusahaan?->nama_perusahaan ?? 'Data Perusahaan Belum di Input' }}</span>
+                                                 <p class="fs-12">
+                                                     {{ $master_spj->perusahaan?->alamat_perusahaan ?? 'Data Perusahaan Belum di Input' }}&nbsp;
+
+                                                 </p>
                                              </h5>
-                                             <p>{{ $master_spj->perusahaan?->alamat_perusahaan ?? 'Data Perusahaan Belum di Input' }}&nbsp;
+                                             <p class="text-danger"> Waktu Pekerjaan :
+                                                 {{ $master_spj->tgl_surat_pesanan ?? 'Tanggal Belum di Update' }}
+                                                 s/d
+                                                 {{ $master_spj->jangka_waktu_pekerjaan ?? 'Tanggal Belum di Update' }}
                                              </p>
                                              <div>
                                                  <p class="mb-2"><i
@@ -344,6 +361,36 @@
                                              </div>
                                          </div>
                                      </div>
+                                     <div class="tab-pane fade" id="nav-bast" role="tabpanel"
+                                         aria-labelledby="nav-detail-bast">
+                                         <div>
+
+                                             <div class="table-responsive">
+                                                 <table class="table mb-0">
+                                                     <tbody>
+                                                         <tr>
+                                                             <th scope="row" style="width: 200px;">
+                                                                 No BA Pemeriksaan Pekerjaan</th>
+                                                             <td> {{ $master_spj->no_ba_bp ?? 'null' }}</td>
+                                                         </tr>
+                                                         <tr>
+                                                             <th scope="row">No BA Serah Terima Pekerjaan</th>
+                                                             <td>{{ $master_spj->no_ba ?? 'null' }}</td>
+                                                         </tr>
+                                                         <tr>
+                                                             <th scope="row">No BA Pemeriksaan Barang/ Pekerjaan
+                                                             </th>
+                                                             <td>{{ $master_spj->no_ba_hp ?? 'null' }}</td>
+                                                         </tr>
+                                                         <tr>
+                                                             <th scope="row">No DPA</th>
+                                                             <td>{{ $master_spj->no_dpa ?? 'null' }}</td>
+                                                         </tr>
+                                                     </tbody>
+                                                 </table>
+                                             </div>
+                                         </div>
+                                     </div>
                                  </div>
                              </div>
                              <!-- end card body -->
@@ -356,20 +403,28 @@
                                          <div class="col-lg-4">
                                              <div>
                                                  <div class="pb-3">
-                                                     <div class="alert alert-info px-3 py-2 rounded-2 mb-2">
-                                                         <div class="d-flex align-items-center">
-                                                             <div class="flex-shrink-0">
-                                                                 <h3 class="mb-0">Rp.
-                                                                     {{ number_format($master_spj->pembayaran, 0, ',', ',') }},-
-                                                                 </h3>
+                                                     <div class="alert alert-success alert-dismissible alert-additional shadow fade show"
+                                                         role="alert">
+                                                         <div class="alert-body">
+                                                             <div class="d-flex">
+                                                                 <div class="flex-shrink-0 me-3">
+                                                                     <i
+                                                                         class="ri-notification-off-line fs-16 align-middle"></i>
+                                                                 </div>
+                                                                 <div class="flex-grow-1">
+                                                                     <h5 class="alert-heading">
+                                                                         Rp.
+                                                                         {{ number_format($master_spj->pembayaran, 0, ',', ',') }},-
+                                                                     </h5>
+                                                                 </div>
                                                              </div>
                                                          </div>
-                                                     </div>
-                                                     <div class="text-center">
-                                                         <small class="text-muted">Pembayaran <span
-                                                                 class="fw-medium">Tanggal: </span>
-                                                             {{ \Carbon\Carbon::parse($master_spj->tanggal_pembayaran)->translatedFormat('d F Y') }}
-                                                         </small>
+                                                         <div class="alert-content">
+                                                             <p class="mb-0"> <small>Pembayaran <span
+                                                                         class="fw-medium">Tanggal: </span>
+                                                                     {{ \Carbon\Carbon::parse($master_spj->tanggal_pembayaran)->translatedFormat('d F Y') }}
+                                                                 </small></p>
+                                                         </div>
                                                      </div>
                                                  </div>
 

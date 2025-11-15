@@ -51,7 +51,7 @@
                                                     <label for="status_verifikasi_direktur" class="form-label">Status
                                                         Verifikasi</label>
                                                     <select name="status_verifikasi_direktur" class="form-select"
-                                                        @if ($master_spj->status_verifikasi_direktur == 'Selesai') disabled @endif>
+                                                        @if ($master_spj->status_verifikasi_direktur == 'Selesai' && Session::get('nama_level_user') != 'Administrator') disabled @endif>
                                                         <option value="{{ $master_spj->status_verifikasi_direktur }}">
                                                             {{ $master_spj->status_verifikasi_direktur ?? 'Pilih Status' }}
                                                         </option>
@@ -84,7 +84,7 @@
                                                         </div>
                                                     </div>
                                                 </a>
-                                                @if ($master_spj->status_verifikasi_direktur == 'Selesai')
+                                                @if ($master_spj->status_verifikasi_direktur == 'Selesai' && Session::get('nama_level_user') != 'Administrator')
                                                     <button type="button"
                                                         class="btn btn-outline-warning btn-load right ms-auto nexttab nexttab"
                                                         data-nexttab="pills-success-tab"><span

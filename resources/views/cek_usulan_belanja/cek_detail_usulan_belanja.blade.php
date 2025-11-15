@@ -137,7 +137,6 @@
                                             <td class="text-wrap" style="white-space: normal; word-wrap: break-word;">
                                                 @php
                                                     $status = $item->status_usulan_barang_detail ?? 'Menunggu Proses';
-
                                                     switch ($status) {
                                                         case 'Menunggu Proses':
                                                             $badgeClass = 'badge-soft-warning';

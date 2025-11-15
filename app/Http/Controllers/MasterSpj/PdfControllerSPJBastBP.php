@@ -196,7 +196,9 @@ class PdfControllerSPJBastBP extends Controller
         $tahun_nama = $nama_tahun[$tahun - 2000] ?? 'Tahun Tidak Valid';
 
         $tgl_surat_pesanan = $detail_master_spj->tgl_surat_pesanan;
+        $tgl_bast = $detail_master_spj->tgl_bast;
         $tgl_waktu_pekerjaan = $detail_master_spj->jangka_waktu_pekerjaan;
+        $tgl_ba = formatTanggal($tgl_bast);
         $tgl_pesanan = formatTanggal($tgl_surat_pesanan);
         $tgl_pekerjaan = formatTanggal($tgl_waktu_pekerjaan);
         $terbilang_total = terbilangUang($sum_total_anggaran_usulan_barang + $sum_total_ppn);
@@ -269,6 +271,7 @@ class PdfControllerSPJBastBP extends Controller
             'converttotekstglbast'            => $converttotekstglbast,
             'pendukung'                       => $pendukung_ppk,
             'tgl_pesanan'                     => $tgl_pesanan,
+            'tgl_ba'                          => $tgl_ba,
             'tgl_pekerjaan'                   => $tgl_pekerjaan,
             'terbilang_total'                 => $terbilang_total,
             'perusahaan'                      => $perusahaan,

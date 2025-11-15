@@ -31,7 +31,12 @@ class AuthController extends Controller
         ]);
 
 
-        $credentials = $request->only('username', 'password');
+        $credentials = [
+            'username'    => $request->username,
+            'password'    => $request->password,
+            'status_user' => 'aktif'
+        ];
+
         // Cek apakah user dapat diotentikasi
         if (Auth::attempt($credentials)) {
             // Ambil user yang terautentikasi
@@ -60,6 +65,8 @@ class AuthController extends Controller
                 'id_ksp'                    => $user->id_ksp,
                 'status_user'               => $user->status_user,
                 'status_edit'               => $user->status_edit,
+                'id_jabatan'                => $user->pejabat->id_jabatan ?? null,
+                'nama_jabatan'              => $user->pejabat->jabatan->nama_jabatan ?? null,
                 'nama_unit'                 => $user->unit->nama_unit ?? null,   // Mengambil nama_unit dari relasi
                 'nama_fase'                 => $user->fase->nama_fase ?? null,   // Mengambil nama_fase dari relasi
                 'nama_ksp'                  => $user->ksp->nama_ksp ?? null,     // Mengambil nama_ksp dari relasi

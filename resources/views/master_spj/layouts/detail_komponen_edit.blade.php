@@ -300,6 +300,7 @@
                 'PPTK',
                 'PPTK Umum',
                 'PPTK Yanmed',
+                'Validasi RKA',
             ];
         @endphp
 

@@ -402,39 +402,95 @@
     previewImage('profile-img-file-input-3', 'preview-img-3');
 </script>
 
-<script type="text/javascript">
-    // Fungsi untuk memformat angka dengan koma sebagai pemisah ribuan
-    function formatCurrency(input) {
-        let value = input.value.replace(/\D/g, ''); // Hanya ambil angka
-        let formattedValue = new Intl.NumberFormat('id-ID').format(value); // Format ke angka dengan pemisah ribuan
-        input.value = formattedValue; // Tampilkan angka terformat di input
-    }
 
-    function sum() {
-        // Ambil nilai vol1 dan vol2
-        var vol1 = parseFloat(document.getElementById('vol1').value) || 0;
-        var vol2 = parseFloat(document.getElementById('vol2').value) || 0;
-
-        // Ambil nilai harga_barang dan konversi dari string yang sudah diformat menjadi angka
-        var hargaBarang = parseFloat(document.getElementById('harga_barang').value.replace(/\D/g, '')) || 0;
-
-        // Ambil nilai persen PPN
-        var persen = parseFloat(document.getElementById('persen').value) || 0;
-
-        // Hitung PPN
-        var ppn = ((vol1 * vol2) * hargaBarang) * persen / 100;
-
-        // Hitung total dengan PPN
-        var result = ((vol1 * vol2) * hargaBarang) + ppn;
-
-        // Format hasil sebelum ditampilkan
-        if (!isNaN(result)) {
-            document.getElementById('hasil').value = new Intl.NumberFormat('id-ID').format(
-                result); // Format angka dengan koma
+<!-- ==================== JS ==================== -->
+<script>
+    (function() {
+        // helper: hapus semua karakter non-digit (biarkan angka saja)
+        function digitsOnly(str) {
+            return String(str).replace(/[^\d]/g, '');
         }
-    }
-</script>
 
+        // format ke tampilan id-ID (ribuan)
+        function formatCurrencyInput(el) {
+            let raw = digitsOnly(el.value);
+            if (raw === '') {
+                el.value = '';
+                return;
+            }
+            // parse ke angka integer (hindari parseFloat pada string panjang)
+            let n = parseInt(raw, 10) || 0;
+            el.value = new Intl.NumberFormat('id-ID').format(n);
+        }
+
+        // fungsi hitung total
+        function sum() {
+            // ambil vol1, vol2
+            const vol1 = parseFloat(document.getElementById('vol1').value) || 0;
+            const vol2 = parseFloat(document.getElementById('vol2').value) || 0;
+
+            // ambil harga, hapus format ribuan terlebih dahulu
+            const hargaRaw = digitsOnly(document.getElementById('harga_barang').value);
+            const hargaBarang = parseFloat(hargaRaw) || 0;
+
+            const persen = parseFloat(document.getElementById('persen').value) || 0;
+
+            const subtotal = vol1 * vol2 * hargaBarang; // number
+            const ppn = subtotal * persen / 100;
+            const total = subtotal + ppn;
+
+            // tampilkan dalam format id-ID
+            document.getElementById('hasil').value =
+                (total === 0) ? '' : new Intl.NumberFormat('id-ID').format(Math.round(total));
+        }
+
+        // bind event pada element yang relevan
+        function bindEvents() {
+            const hargaEl = document.getElementById('harga_barang');
+            const vol1El = document.getElementById('vol1');
+            const vol2El = document.getElementById('vol2');
+            const persenEl = document.getElementById('persen');
+
+            // format saat mengetik, lalu hitung
+            hargaEl.addEventListener('input', function(e) {
+                // simpan posisi kursor sederhana: biarkan browser pindah (lebih aman)
+                formatCurrencyInput(hargaEl);
+                sum();
+            });
+
+            // untuk number fields, cukup hitung saat ada input
+            [vol1El, vol2El, persenEl].forEach(function(el) {
+                el.addEventListener('input', sum);
+            });
+        }
+
+        // inisialisasi saat DOM siap
+        document.addEventListener('DOMContentLoaded', function() {
+            // pastikan elemen ada
+            if (!document.getElementById('harga_barang')) return;
+
+            // 1. Format harga saat load (kalau ada)
+            const hargaEl = document.getElementById('harga_barang');
+            if (hargaEl.value && hargaEl.value.trim() !== '') {
+                // apabila Blade memberi nilai terformat (misal "1.200.000") atau plain number, normalize dulu
+                priceDigits = digitsOnly(hargaEl.value);
+                if (priceDigits !== '') {
+                    // set ke format id-ID
+                    hargaEl.value = new Intl.NumberFormat('id-ID').format(parseInt(priceDigits, 10));
+                } else {
+                    hargaEl.value = '';
+                }
+            }
+
+            // 2. Bind events
+            bindEvents();
+
+            // 3. Hitung sekali setelah format selesai
+            // gunakan setTimeout kecil untuk memastikan DOM update selesai
+            setTimeout(sum, 10);
+        });
+    })();
+</script>
 
 <script>
     $(document).ready(function() {
@@ -685,11 +741,6 @@
     });
 </script>
 
-
-
-
-
-
 <script type="text/javascript">
     $(document).ready(function() {
         $('#subKategoriSelect').change(function() {
@@ -739,8 +790,6 @@
         });
     });
 </script>
-
-
 
 <script type="text/javascript">
     $(document).ready(function() {
@@ -855,7 +904,6 @@
 
     }
 </script>
-
 
 <script>
     function formatNumber(input) {

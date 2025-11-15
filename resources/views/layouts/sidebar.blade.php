@@ -191,7 +191,7 @@
                               <ul class="nav nav-sm flex-column">
                                   <li class="nav-item">
                                       <a href="pages-starter.html" class="nav-link" data-key="t-starter">
-                                          Starter </a>
+                                          Target SPS </a>
                                   </li>
                                   <li class="nav-item">
                                       <a href="#sidebarProfile" class="nav-link" data-bs-toggle="collapse"
@@ -469,6 +469,20 @@
                       </div>
                   </li>
 
+                  <li class="nav-item">
+                      <a class="nav-link menu-link" href="{{ route('realisasi_rba.index') }}">
+                          <i class="ri-rocket-line"></i> <span data-key="t-landing">Kertas Kerja</span>
+                          <span class="badge badge-pill bg-danger" data-key="t-new">New</span>
+                      </a>
+                  </li>
+                  <li class="nav-item">
+                      <a class="nav-link menu-link" href="{{ route('grafik.index') }}">
+                          <i class="ri-rocket-line"></i> <span data-key="t-landing">Grafik</span>
+                          <span class="badge badge-pill bg-danger" data-key="t-new">New</span>
+                      </a>
+                  </li>
+
+
                   <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-components">Pengadaan
                           Belanja</span>
                   </li>
@@ -518,13 +532,11 @@
                                                   <a href="{{ route('master_spjs.index') }}" class="nav-link"
                                                       data-key="t-products"> Pengadaan Barang </a>
                                               </li>
-                                              @if (session('nama_level_user') == 'Administrator')
-                                                  <li class="nav-item">
-                                                      <a href="{{ route('rekap_usulan_belanjas.index') }}"
-                                                          class="nav-link">
-                                                          Rekap Usulan </a>
-                                                  </li>
-                                              @endif
+                                              <li class="nav-item">
+                                                  <a href="{{ route('rekap_usulan_belanjas.index') }}"
+                                                      class="nav-link">
+                                                      Rekap Usulan </a>
+                                              </li>
                                           </ul>
                                       </div>
                                   </li>
@@ -685,14 +697,6 @@
                           </ul>
                       </div>
                   </li>
-
-                  <li class="nav-item">
-                      <a class="nav-link menu-link" target="_blank" href="landing.html">
-                          <i class="ri-rocket-line"></i> <span data-key="t-landing">Landing</span>
-                          <span class="badge badge-pill bg-danger" data-key="t-new">New</span>
-                      </a>
-                  </li>
-
 
               </ul>
           </div>

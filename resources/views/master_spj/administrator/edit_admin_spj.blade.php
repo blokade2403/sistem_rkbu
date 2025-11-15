@@ -90,102 +90,25 @@
                        @include('master_spj.administrator.form_bast')
                    </div>
                    <div class="tab-pane" id="nav-border-justified-messages" role="tabpanel">
-                       <h6>Message</h6>
-                       <p class="mb-0">
-                           Consistency is the one thing that can take all of the different elements in your design, and
-                           tie
-                           them all together and make them work. In an awareness campaign, it is vital for people to
-                           begin put
-                           2 and 2 together and begin to recognize your cause. Consistency piques people’s interest is
-                           that it
-                           has become more and more popular over the years, which is excellent news to the beginner and
-                           advanced <a href="javascript:void(0);" class="text-decoration-underline"><b>Contact
-                                   Designer</b></a>.
-                       </p>
+                       @include('master_spj.administrator.form_tukar_faktur')
                    </div>
                    <div class="tab-pane" id="nav-border-justified-messages2" role="tabpanel">
-                       <h6>Message</h6>
-                       <p class="mb-0">
-                           Consistency is the one thing that can take all of the different elements in your design, and
-                           tie
-                           them all together and make them work. In an awareness campaign, it is vital for people to
-                           begin put
-                           2 and 2 together and begin to recognize your cause. Consistency piques people’s interest is
-                           that it
-                           has become more and more popular over the years, which is excellent news to the beginner and
-                           advanced <a href="javascript:void(0);" class="text-decoration-underline"><b>Contact
-                                   PPK</b></a>.
-                       </p>
+                       @include('master_spj.ppk.form_validasi_ppk')
                    </div>
                    <div class="tab-pane" id="nav-border-justified-messages3" role="tabpanel">
-                       <h6>Message</h6>
-                       <p class="mb-0">
-                           Consistency is the one thing that can take all of the different elements in your design, and
-                           tie
-                           them all together and make them work. In an awareness campaign, it is vital for people to
-                           begin put
-                           2 and 2 together and begin to recognize your cause. Consistency piques people’s interest is
-                           that it
-                           has become more and more popular over the years, which is excellent news to the beginner and
-                           advanced <a href="javascript:void(0);" class="text-decoration-underline"><b>Contact
-                                   PPBJ</b></a>.
-                       </p>
+                       @include('master_spj.ppbj.form_validasi_ppbj')
                    </div>
                    <div class="tab-pane" id="nav-border-justified-messages4" role="tabpanel">
-                       <h6>Message</h6>
-                       <p class="mb-0">
-                           Consistency is the one thing that can take all of the different elements in your design, and
-                           tie
-                           them all together and make them work. In an awareness campaign, it is vital for people to
-                           begin put
-                           2 and 2 together and begin to recognize your cause. Consistency piques people’s interest is
-                           that it
-                           has become more and more popular over the years, which is excellent news to the beginner and
-                           advanced <a href="javascript:void(0);" class="text-decoration-underline"><b>Contact
-                                   PPTK</b></a>.
-                       </p>
+                       @include('master_spj.pptk.form_validasi_pptk')
                    </div>
                    <div class="tab-pane" id="nav-border-justified-messages5" role="tabpanel">
-                       <h6>Message</h6>
-                       <p class="mb-0">
-                           Consistency is the one thing that can take all of the different elements in your design, and
-                           tie
-                           them all together and make them work. In an awareness campaign, it is vital for people to
-                           begin put
-                           2 and 2 together and begin to recognize your cause. Consistency piques people’s interest is
-                           that it
-                           has become more and more popular over the years, which is excellent news to the beginner and
-                           advanced <a href="javascript:void(0);" class="text-decoration-underline"><b>Contact
-                                   Verifikator</b></a>.
-                       </p>
+                       @include('master_spj.verifikator.form_validasi_verifikator')
                    </div>
                    <div class="tab-pane" id="nav-border-justified-messages6" role="tabpanel">
-                       <h6>Message</h6>
-                       <p class="mb-0">
-                           Consistency is the one thing that can take all of the different elements in your design, and
-                           tie
-                           them all together and make them work. In an awareness campaign, it is vital for people to
-                           begin put
-                           2 and 2 together and begin to recognize your cause. Consistency piques people’s interest is
-                           that it
-                           has become more and more popular over the years, which is excellent news to the beginner and
-                           advanced <a href="javascript:void(0);" class="text-decoration-underline"><b>Contact
-                                   PPK Keuangan</b></a>.
-                       </p>
+                       @include('master_spj.ppk_keuangan.form_validasi_ppk_keuangan')
                    </div>
                    <div class="tab-pane" id="nav-border-justified-messages7" role="tabpanel">
-                       <h6>Message</h6>
-                       <p class="mb-0">
-                           Consistency is the one thing that can take all of the different elements in your design, and
-                           tie
-                           them all together and make them work. In an awareness campaign, it is vital for people to
-                           begin put
-                           2 and 2 together and begin to recognize your cause. Consistency piques people’s interest is
-                           that it
-                           has become more and more popular over the years, which is excellent news to the beginner and
-                           advanced <a href="javascript:void(0);" class="text-decoration-underline"><b>Contact
-                                   Direktur</b></a>.
-                       </p>
+                       @include('master_spj.direktur.form_validasi_direktur')
                    </div>
                </div>
            </div><!-- end card-body -->

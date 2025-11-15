@@ -310,6 +310,7 @@ class MasterSpjController extends Controller
             case 'Admin PPK':
             case 'PPBJ':
             case 'PPK':
+            case 'Validasi RKA':
                 $invoices = $invo;
                 break;
 
@@ -614,7 +615,7 @@ class MasterSpjController extends Controller
             ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
             ->join('usulan_barang_details', 'usulan_barangs.id_usulan_barang', '=', 'usulan_barang_details.id_usulan_barang')
             ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
-            //->where('spj_details.id_usulan_barang', $invoice->id_usulan_barang) // Filter by id_usulan_barang
+            ->where('spj_details.id_usulan_barang', $invoice->id_usulan_barang) // Filter by id_usulan_barang
             ->select(
                 'spj_details.*',
                 'usulan_barangs.no_usulan_barang',
@@ -985,7 +986,7 @@ class MasterSpjController extends Controller
         $masterSpj = MasterSpj::findOrFail($id);
         $masterSpj->jangka_waktu_pekerjaan      = $request->input('jangka_waktu_pekerjaan');
         $masterSpj->tgl_surat_pesanan           = $request->input('tgl_surat_pesanan');
-        $masterSpj->status_proses_pesanan       = 'Revisi';
+        $masterSpj->status_proses_pesanan       = $request->input('status_proses_pesanan');
         $masterSpj->tgl_proses_pemesanan        = now();
 
         $masterSpj->save();
@@ -1277,9 +1278,55 @@ class MasterSpjController extends Controller
 
         $masterSpj = MasterSpj::findOrFail($id);
 
-        $masterSpj->tanggal_faktur                  = $request->input('tanggal_faktur');
+        $masterSpj->tanggal_faktur              = $request->input('tanggal_faktur');
         $masterSpj->tgl_kwitansi                = $request->input('tgl_kwitansi');
         $masterSpj->status_proses_tukar_faktur  = 'Selesai';
+        $masterSpj->tgl_proses_faktur           = now()->toDateString();
+        $masterSpj->save();
+
+        if ($masterSpj->status_proses_tukar_faktur === 'Selesai') {
+            $idDetails = SpjDetail::where('id_spj', $masterSpj->id_spj)
+                ->pluck('id_usulan_barang_detail')
+                ->toArray();
+
+            if (!empty($idDetails)) {
+                UsulanBarangDetail::whereIn('id_usulan_barang_detail', $idDetails)
+                    ->update(['status_usulan_barang_detail' => 'Proses Tukar Faktur']);
+            }
+        }
+        return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
+    }
+
+    public function tukarfakturAdmin(Request $request, $id)
+    {
+        // Pastikan session 'id_user' dan 'tahun_anggaran' tersedia
+        if (!session()->has('id_user') || !session()->has('tahun_anggaran')) {
+            return redirect()->back()->with('error', 'Data session tidak tersedia. Silakan login kembali.');
+        }
+
+        // Validasi input
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'tanggal_faktur'            => 'required|date',
+                'tgl_kwitansi'              => 'required|date',
+            ]
+        );
+
+        if ($validator->fails()) {
+            $errors = $validator->errors();
+            $errorMessages = implode(' ', $errors->all());
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+        }
+
+        $masterSpj = MasterSpj::findOrFail($id);
+
+        $masterSpj->tanggal_faktur              = $request->input('tanggal_faktur');
+        $masterSpj->tgl_kwitansi                = $request->input('tgl_kwitansi');
+        $masterSpj->status_proses_tukar_faktur  = $request->input('status_proses_tukar_faktur');
         $masterSpj->tgl_proses_faktur           = now()->toDateString();
         $masterSpj->save();
 
@@ -1788,7 +1835,6 @@ class MasterSpjController extends Controller
         $masterSpj->save();
 
 
-
         return redirect()->route('master_spjs.index')->with('success', 'Data berhasil diperbarui.');
     }
 
@@ -1907,7 +1953,7 @@ class MasterSpjController extends Controller
             $masterSpj->spj->save();
         }
 
-        if ($masterSpj->status_spj === 'Sudah di Bayar') {
+        if ($masterSpj->status_pembayaran === 'Sudah di Bayar') {
             $idDetails = SpjDetail::where('id_spj', $masterSpj->id_spj)
                 ->pluck('id_usulan_barang_detail')
                 ->toArray();

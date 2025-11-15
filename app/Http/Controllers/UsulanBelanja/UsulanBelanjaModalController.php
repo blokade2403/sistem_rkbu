@@ -487,24 +487,16 @@ class UsulanBelanjaModalController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi data input
+        // Validasi input
         $validator = Validator::make(
             $request->all(),
             [
-                'id_sub_kategori_rkbu'              => 'required|uuid',
-                'id_jenis_kategori_rkbu'            => 'required|uuid',
-                'id_user'                           => 'required|uuid',
-                'nama_pengusul_barang'              => 'required|string|max:255',
-                'tahun_anggaran'                    => 'required|string|max:4',
-                'status_usulan_barang'              => 'required|string',
-            ],
-            [
-                'id_sub_kategori_rkbu.required'     => 'id_sub_kategori_rkbu Usulan Barang harus diisi.',
-                'id_jenis_kategori_rkbu.required'   => 'id_jenis_kategori_rkbu ID Usulan Barang tidak valid.',
-                'id_user.required'                  => 'Status SPJ harus diisi.',
-                'nama_pengusul_barang.required'     => 'ID User harus diisi.',
-                'tahun_anggaran.required'           => 'ID User tidak valid.',
-                'status_usulan_barang.required'     => 'ID User tidak valid.',
+                'id_sub_kategori_rkbu'   => 'required|uuid',
+                'id_jenis_kategori_rkbu' => 'required|uuid',
+                'id_user'                => 'required|uuid',
+                'nama_pengusul_barang'   => 'required|string|max:255',
+                'tahun_anggaran'         => 'required|string|max:4',
+                'status_usulan_barang'   => 'required|string',
             ]
         );
 
@@ -516,29 +508,31 @@ class UsulanBelanjaModalController extends Controller
                 ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
         }
 
-        // Format tanggal saat ini: YYYYMMDD
-        $currentDate = date('Ymd');
-        $prefix = 'INV' . $currentDate;
-
-        // Cari no_usulan_barang terakhir yang dimulai dengan prefix ini
-        $latestUsulan = UsulanBarang::where('no_usulan_barang', 'like', $prefix . '%')
-            ->orderBy('no_usulan_barang', 'desc')
-            ->first();
-
-        if ($latestUsulan) {
-            // Ambil 4 digit terakhir sebagai nomor urut
-            $lastNumber = (int) substr($latestUsulan->no_usulan_barang, -4);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1; // Mulai dari 1 jika belum ada untuk hari ini
-        }
-
-        // Susun kode usulan baru
-        $noUsulanBarang = $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
-
-        // Simpan data ke database
         try {
-            $usulanBarang  = new UsulanBarang();
+            // Mulai transaksi agar aman dari race condition
+            DB::beginTransaction();
+
+            // Format tanggal saat ini: YYYYMMDD
+            $currentDate = date('Ymd');
+
+            // Cari nomor terakhir berdasarkan tanggal hari ini
+            $latestUsulan = UsulanBarang::where('no_usulan_barang', 'like', 'INV' . $currentDate . '%')
+                ->orderBy('no_usulan_barang', 'desc')
+                ->lockForUpdate() // mengunci baris agar tidak diakses bersamaan
+                ->first();
+
+            if ($latestUsulan) {
+                $lastNumber = (int) substr($latestUsulan->no_usulan_barang, -4);
+                $newNumber = $lastNumber + 1;
+            } else {
+                $newNumber = 1;
+            }
+
+            // Format nomor baru: INVYYYYMMDD0001
+            $noUsulanBarang = 'INV' . $currentDate . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+
+            // Simpan data ke database
+            $usulanBarang = new UsulanBarang();
             $usulanBarang->id_user = $request->id_user;
             $usulanBarang->id_sub_kategori_rkbu = $request->id_sub_kategori_rkbu;
             $usulanBarang->id_jenis_kategori_rkbu = $request->id_jenis_kategori_rkbu;
@@ -547,20 +541,22 @@ class UsulanBelanjaModalController extends Controller
             $usulanBarang->no_usulan_barang = $noUsulanBarang;
             $usulanBarang->status_usulan_barang = $request->status_usulan_barang;
             $usulanBarang->status_permintaan_barang = 'Proses Usulan Barang';
-
             $usulanBarang->save();
 
-            return redirect()->route('usulan_barang_modals.index')->with('success', 'Data usulan barang berhasil ditambahkan!');
-        } catch (\Illuminate\Database\QueryException $ex) {
-            if ($ex->getCode() == 23000) {
-                // Duplikat entri, bisa terjadi jika ada race condition
-                return redirect()->back()->withInput()->with('error', 'Gagal menyimpan data: Nomor usulan sudah digunakan. Silakan coba lagi.');
-            }
-            // Kesalahan lain
-            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $ex->getMessage());
+            // Commit transaksi
+            DB::commit();
+
+            // Redirect sukses
+            return redirect()->route('usulan_barang_modals.index')
+                ->with('success', 'Data usulan barang berhasil ditambahkan!');
+        } catch (\Exception $e) {
+            // Rollback jika ada error
+            DB::rollBack();
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
-
 
     public function show($id_usulan_barang)
     {

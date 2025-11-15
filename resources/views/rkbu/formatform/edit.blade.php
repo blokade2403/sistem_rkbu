@@ -69,6 +69,8 @@
             </div>
         </div>
 
+        @include('rkbu.partials.error_form')
+
         @include('rkbu.partials.detailinputkomponen', [
             'routePrefix' => $routePrefix,
         ])

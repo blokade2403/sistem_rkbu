@@ -109,7 +109,7 @@
         </tr>
         <tr>
             <td style="font-weight: normal; margin-left: 10px; font-size: 10px; line-height: 1.4; text-align: center;"
-                class="no-border" width="100%">Nomor : {{ $detail_master_spj->no_ba_bp }}</td>
+                class="no-border" width="100%">Nomor : {{ $detail_master_spj->no_ba_hp }}</td>
         </tr>
         <tr>
             <td style="font-weight: normal; margin-left: 10px; font-size: 10px; line-height: 0; text-align: center;"
@@ -365,7 +365,7 @@
             </td>
             <td style="font-weight: normal; margin-left: 10px; font-size: 11px; line-height: 1; text-align: left;"
                 class="no-border" width="30%">
-                : {{ $detail_master_spj->no_ba_bp }}
+                : {{ $detail_master_spj->no_ba_hp }}
             </td>
         </tr>
         <tr>

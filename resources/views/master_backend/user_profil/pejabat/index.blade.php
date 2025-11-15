@@ -16,6 +16,7 @@
                                     <tr>
                                         <th>No</th>
                                         <th>Name Pejabat</th>
+                                        <th>Jebatan</th>
                                         <th>Status</th>
                                         <th>Create At</th>
                                         <th>Action</th>
@@ -32,6 +33,9 @@
                                                 <span class="fs-12">#&nbsp;{{ $item->nama_pejabat }}</span>
                                                 <p class="fs-12">NIP:&nbsp;{{ $item->nip_pejabat }}</p>
                                                 <p class="fs-12">ID:&nbsp;{{ $item->id_pejabat }}</p>
+                                            </td>
+                                            <td>
+                                                <span class="fs-12">{{ $item->jabatan->nama_jabatan }}</span>
                                             </td>
                                             <td class="text-center">
                                                 @if ($item->status == 'aktif')
