@@ -94,7 +94,7 @@
     <!-- Header -->
     <table class="header-info">
         <tr>
-            <td style="font-weight: bold; margin-left: 10px; font-size: 13px; line-height: 1.4; text-align: center; text-decoration: underline;"
+            <td style="font-weight: bold; margin-left: 10px; font-size: 10px; line-height: 1.4; text-align: center; text-decoration: underline;"
                 class="no-border" width="100%">BERITA ACARA SERAH TERIMA HASIL PEKERJAAN</td>
         </tr>
         <tr>
@@ -353,27 +353,27 @@
 
     <table class="page-break">
         <tr>
-            <td style="font-weight: bold; margin-left: 10px; font-size: 11px; line-height: 1.5; text-align: left;"
+            <td style="font-weight: bold; margin-left: 10px; font-size: 10px; line-height: 1.5; text-align: left;"
                 class="no-border" width="100%">
                 Lampiran Berita Acara Serah Terima Pekerjaan
             </td>
         </tr>
         <tr>
-            <td style="font-weight: normal; margin-left: 10px; font-size: 11px; line-height: 1; text-align: left;"
+            <td style="font-weight: normal; margin-left: 10px; font-size: 10px; line-height: 1; text-align: left;"
                 class="no-border" width="20%">
                 Nomor
             </td>
-            <td style="font-weight: normal; margin-left: 10px; font-size: 11px; line-height: 1; text-align: left;"
+            <td style="font-weight: normal; margin-left: 10px; font-size: 10px; line-height: 1; text-align: left;"
                 class="no-border" width="30%">
                 : {{ $detail_master_spj->no_ba_hp }}
             </td>
         </tr>
         <tr>
-            <td style="font-weight: normal; margin-left: 10px; font-size: 11px; line-height: 1.5; text-align: left;"
+            <td style="font-weight: normal; margin-left: 10px; font-size: 10px; line-height: 1.5; text-align: left;"
                 class="no-border" width="20%">
                 Tanggal
             </td>
-            <td style="font-weight: normal; margin-left: 10px; font-size: 11px; line-height: 1; text-align: left;"
+            <td style="font-weight: normal; margin-left: 10px; font-size: 10px; line-height: 1; text-align: left;"
                 class="no-border" width="30%">
                 : {{ $tgl_ba }}
             </td>

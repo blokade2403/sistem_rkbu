@@ -159,7 +159,7 @@ class ValidasiRkbuBarjasRkaController extends Controller
                 'total_anggaran_barjas_admin',
 
             ),
-            ['title' => 'Halaman RKBU', 'routePrefix' => 'validasi_rka_rkbu_barjas']
+            ['title' => 'Halaman RKBU', 'routePrefix' => 'validasi_rka_rkbu_barjas', 'routePrefixPrint' => 'rkbu_barjas_admins']
         );
     }
 
@@ -318,7 +318,7 @@ class ValidasiRkbuBarjasRkaController extends Controller
             'vol_2'                         => 'nullable|numeric',
             'satuan_2'                      => 'nullable',
             'spek'                          => 'nullable',
-            'harga_satuan'                  => 'required|numeric',
+            'harga_satuan'                  => 'required|regex:/^[0-9.,]+$/',
             'ppn'                           => 'required|numeric',
             'rating'                        => 'nullable',
             'link_ekatalog'                 => 'nullable',

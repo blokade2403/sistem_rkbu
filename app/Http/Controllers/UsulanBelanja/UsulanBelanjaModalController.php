@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Models\MasterBackend\SettingRkbu\Rkbu;
 use App\Models\MasterBackend\SettingInput\UraianDua;
+use App\Models\MasterBackend\SettingRkbu\SumberDana;
 use App\Models\MasterBackend\SettingInput\UraianSatu;
 use App\Models\MasterBackend\SettingInput\JudulHeader;
 use App\Models\MasterBackend\SettingBelanja\UsulanBarang;
@@ -22,81 +23,129 @@ use App\Models\MasterBackend\SettingBelanja\UsulanBarangDetail;
 
 class UsulanBelanjaModalController extends Controller
 {
-    public function index($id_sub_kategori_rkbu = null)
+
+    public function index(Request $request)
     {
-        // dd(session()->all());
         $id_ksp = session('id_ksp');
+        $sumber_danas = SumberDana::all();
         $id_user = session('id_user');
-        $tahunAnggaran = Session::get('tahun_anggaran');
-        $inputIdUsulanBarang = request()->input('id_usulan_barang'); // Ambil input id_usulan_barang dari request
-        $id_sub_kategori_rkbu = request()->input('id_sub_kategori_rkbu');
+        $tahunAnggaran = session('tahun_anggaran');
 
-        $modals = ['9cf70e1d-18e7-40fe-bdd3-b7dabf61877d', '9cf70e31-9b9e-4dea-8b39-5459f23f3f51', '9cf70e44-a25e-462e-8bce-6fd930a91c0b'];
+        // ambil input dari request (jika ada)
+        $selectedSumber = $request->input('id_sumber_dana');
+        $selectedSubKategori = $request->input('id_sub_kategori_rkbu');
 
-        // Ambil usulan barang yang pending
-        $usulan_barangs = UsulanBarang::join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
-            ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
-            ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
+        $modals = [
+            '9cf70e1d-18e7-40fe-bdd3-b7dabf61877d',
+            '9cf70e31-9b9e-4dea-8b39-5459f23f3f51',
+            '9cf70e44-a25e-462e-8bce-6fd930a91c0b'
+        ];
+
+        // usulan pending (dipakai untuk tabel utama)
+        $usulan_barangs = UsulanBarang::select('usulan_barangs.*')
+            ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
+            ->join('kategori_rkbus', 'kategori_rkbus.id_kategori_rkbu', '=', 'sub_kategori_rkbus.id_kategori_rkbu')
+            ->join('jenis_kategori_rkbus', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu', '=', 'kategori_rkbus.id_jenis_kategori_rkbu')
             ->where('usulan_barangs.id_user', $id_user)
-            ->where('tahun_anggaran', $tahunAnggaran)
-            ->where('status_usulan_barang', 'Pending')
-            ->whereIn('jenis_kategori_rkbus.id_jenis_kategori_rkbu', $modals) // Kategori modal
-            ->select('usulan_barangs.*')
+            ->where('usulan_barangs.tahun_anggaran', $tahunAnggaran)
+            ->where('usulan_barangs.status_usulan_barang', 'Pending')
+            ->whereIn('jenis_kategori_rkbus.id_jenis_kategori_rkbu', $modals)
             ->get();
 
-
-        $id_usulan = UsulanBarang::join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
-            ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
-            ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
-            // Tambahkan leftJoin untuk memeriksa data usulan_barang_details
+        // id_usulan (dipakai di view untuk loop)
+        $id_usulan = UsulanBarang::select('usulan_barangs.*')
             ->leftJoin('usulan_barang_details', 'usulan_barang_details.id_usulan_barang', '=', 'usulan_barangs.id_usulan_barang')
             ->where('usulan_barangs.id_user', $id_user)
-            ->where('tahun_anggaran', $tahunAnggaran)
-            ->where('status_usulan_barang', 'Pending')
-            ->whereIn('jenis_kategori_rkbus.id_jenis_kategori_rkbu', $modals) // Kategori modal
-            ->select('usulan_barangs.*') // Ambil id_usulan_barang_detail juga
-            //->select('usulan_barangs.*', 'usulan_barang_details.id_usulan_barang_detail') // Ambil id_usulan_barang_detail juga
+            ->where('usulan_barangs.tahun_anggaran', $tahunAnggaran)
+            ->where('usulan_barangs.status_usulan_barang', 'Pending')
             ->distinct()
             ->get();
 
-        $sumber_Dana = ['9cdfced0-87ce-49dc-8268-25ed56420bf7', '9cdfcedb-cc19-4b65-b889-4a5e2dc0ebe3'];
-
-        $sub_kategori_rkbus = SubKategoriRkbu::join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
-            ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
-            ->join('rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
+        // sub kategori tersedia (untuk dropdown awal — tanpa filter sumber)
+        $sub_kategori_rkbus = SubKategoriRkbu::join('rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
             ->join('users', 'rkbus.id_user', '=', 'users.id_user')
             ->join('ksps', 'users.id_ksp', '=', 'ksps.id_ksp')
+            ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
+            ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
             ->where('ksps.id_ksp', $id_ksp)
             ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
             ->where('rkbus.id_status_validasi_rka', '9cfb1f87-238b-4ea2-98f0-4255e578b1d1')
-            ->whereIn('jenis_kategori_rkbus.id_jenis_kategori_rkbu', $modals) // Kategori modal
-            ->select('sub_kategori_rkbus.*') // Pilih kolom yang diinginkan dari sub_kategori_rkbus
-            ->distinct() // Menghapus duplikasi berdasarkan sub_kategori_rkbus yang sama
+            ->whereIn('jenis_kategori_rkbus.id_jenis_kategori_rkbu', $modals)
+            ->distinct()
+            ->select('sub_kategori_rkbus.*')
             ->get();
 
+        // Build get_barangs per usulan, dan FILTER berdasarkan id_sumber_dana yang tersimpan di usulan
         $get_barangs = [];
+
         foreach ($usulan_barangs as $yek) {
-            $barang = Rkbu::join('users', 'rkbus.id_user', '=', 'users.id_user')
+
+            // pastikan usulan memiliki id_sumber_dana (kolom baru di tabel usulan_barangs)
+            $sumberUsulan = $yek->id_sumber_dana ?? null;
+
+            $barangQuery = Rkbu::query()
+                ->join('users', 'rkbus.id_user', '=', 'users.id_user')
                 ->join('ksps', 'users.id_ksp', '=', 'ksps.id_ksp')
                 ->join('rekening_belanjas', 'rekening_belanjas.id_kode_rekening_belanja', '=', 'rkbus.id_kode_rekening_belanja')
                 ->join('aktivitas', 'aktivitas.id_aktivitas', '=', 'rekening_belanjas.id_aktivitas')
                 ->join('sub_kegiatans', 'sub_kegiatans.id_sub_kegiatan', '=', 'aktivitas.id_sub_kegiatan')
                 ->join('sumber_danas', 'sumber_danas.id_sumber_dana', '=', 'sub_kegiatans.id_sumber_dana')
-                ->whereIn('sumber_danas.id_sumber_dana', $sumber_Dana)
-                // ->where('sumber_danas.id_sumber_dana', '9cdfcedb-cc19-4b65-b889-4a5e2dc0ebe3')
                 ->where('rkbus.id_status_validasi_rka', '9cfb1f87-238b-4ea2-98f0-4255e578b1d1')
                 ->where('ksps.id_ksp', $id_ksp)
                 ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
-                ->where('rkbus.id_sub_kategori_rkbu', $yek->id_sub_kategori_rkbu) // Filter by sub_kategori_rkbu for this usulan
-                ->select('rkbus.*')
-                ->get();
+                ->where('rkbus.id_sub_kategori_rkbu', $yek->id_sub_kategori_rkbu);
 
-            // Simpan data barang per usulan
+            // jika usulan menyimpan id_sumber_dana, gunakan untuk filter (ini mencegah campur sumber)
+            if ($sumberUsulan) {
+                $barangQuery->where('sumber_danas.id_sumber_dana', $sumberUsulan);
+            }
+
+            $barang = $barangQuery->select('rkbus.*')->get();
+
             $get_barangs[$yek->id_usulan_barang] = $barang;
         }
 
-        return view('usulan_belanja.index', compact('usulan_barangs', 'get_barangs', 'id_usulan', 'sub_kategori_rkbus'), ['title' => 'Halaman belanja', 'routePrefix' => 'usulan_barang_modals']);
+        return view('usulan_belanja.index', compact('usulan_barangs', 'sumber_danas', 'get_barangs', 'id_usulan', 'sub_kategori_rkbus'), [
+            'title' => 'Halaman belanja',
+            'routePrefix' => 'usulan_barang_modals',
+            'routeAjaxSubKategori' => route('getSubKategoriBySumberDanaModal'),
+
+        ]);
     }
+
+    public function getSubKategoriBySumberDana(Request $request)
+    {
+        $idSumberDana = $request->id_sumber_dana;
+        $tahunAnggaran = session('tahun_anggaran');
+        $id_ksp = session('id_ksp');
+
+        $modals = [
+            '9cf70e1d-18e7-40fe-bdd3-b7dabf61877d',
+            '9cf70e31-9b9e-4dea-8b39-5459f23f3f51',
+            '9cf70e44-a25e-462e-8bce-6fd930a91c0b'
+        ];
+
+        $data = SubKategoriRkbu::join('rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
+            ->join('users', 'rkbus.id_user', '=', 'users.id_user')
+            ->join('ksps', 'users.id_ksp', '=', 'ksps.id_ksp')
+            ->join('rekening_belanjas', 'rekening_belanjas.id_kode_rekening_belanja', '=', 'rkbus.id_kode_rekening_belanja')
+            ->join('aktivitas', 'aktivitas.id_aktivitas', '=', 'rekening_belanjas.id_aktivitas')
+            ->join('sub_kegiatans', 'sub_kegiatans.id_sub_kegiatan', '=', 'aktivitas.id_sub_kegiatan')
+            ->join('sumber_danas', 'sumber_danas.id_sumber_dana', '=', 'sub_kegiatans.id_sumber_dana')
+            ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
+            ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
+            ->where('ksps.id_ksp', $id_ksp)
+            ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
+            ->where('rkbus.id_status_validasi_rka', '9cfb1f87-238b-4ea2-98f0-4255e578b1d1')
+            ->whereIn('jenis_kategori_rkbus.id_jenis_kategori_rkbu', $modals)
+            ->where('sumber_danas.id_sumber_dana', $idSumberDana)
+            ->select('sub_kategori_rkbus.*')
+            ->distinct()
+            ->get();
+
+        return response()->json($data);
+    }
+
 
     public function create()
     {
@@ -487,55 +536,37 @@ class UsulanBelanjaModalController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi input
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'id_sub_kategori_rkbu'   => 'required|uuid',
-                'id_jenis_kategori_rkbu' => 'required|uuid',
-                'id_user'                => 'required|uuid',
-                'nama_pengusul_barang'   => 'required|string|max:255',
-                'tahun_anggaran'         => 'required|string|max:4',
-                'status_usulan_barang'   => 'required|string',
-            ]
-        );
+        $validator = Validator::make($request->all(), [
+            'id_sub_kategori_rkbu'   => 'required|uuid',
+            'id_jenis_kategori_rkbu' => 'required|uuid',
+            'id_user'                => 'required|uuid',
+            'id_sumber_dana'         => 'nullable|uuid',
+            'nama_pengusul_barang'   => 'required|string|max:255',
+            'tahun_anggaran'         => 'required|string|max:4',
+            'status_usulan_barang'   => 'required|string',
+        ]);
 
         if ($validator->fails()) {
-            $errors = $validator->errors();
-            $errorMessages = implode(' ', $errors->all());
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+            return redirect()->back()->withInput()->with('error', $validator->errors()->first());
         }
 
+        DB::beginTransaction();
         try {
-            // Mulai transaksi agar aman dari race condition
-            DB::beginTransaction();
-
-            // Format tanggal saat ini: YYYYMMDD
+            // generate no usulan seperti Anda sebelumnya...
             $currentDate = date('Ymd');
-
-            // Cari nomor terakhir berdasarkan tanggal hari ini
             $latestUsulan = UsulanBarang::where('no_usulan_barang', 'like', 'INV' . $currentDate . '%')
                 ->orderBy('no_usulan_barang', 'desc')
-                ->lockForUpdate() // mengunci baris agar tidak diakses bersamaan
+                ->lockForUpdate()
                 ->first();
 
-            if ($latestUsulan) {
-                $lastNumber = (int) substr($latestUsulan->no_usulan_barang, -4);
-                $newNumber = $lastNumber + 1;
-            } else {
-                $newNumber = 1;
-            }
-
-            // Format nomor baru: INVYYYYMMDD0001
+            $newNumber = $latestUsulan ? ((int)substr($latestUsulan->no_usulan_barang, -4)) + 1 : 1;
             $noUsulanBarang = 'INV' . $currentDate . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
 
-            // Simpan data ke database
             $usulanBarang = new UsulanBarang();
             $usulanBarang->id_user = $request->id_user;
             $usulanBarang->id_sub_kategori_rkbu = $request->id_sub_kategori_rkbu;
             $usulanBarang->id_jenis_kategori_rkbu = $request->id_jenis_kategori_rkbu;
+            $usulanBarang->id_sumber_dana = $request->id_sumber_dana; // simpan sumber dana
             $usulanBarang->nama_pengusul_barang = $request->nama_pengusul_barang;
             $usulanBarang->tahun_anggaran = $request->tahun_anggaran;
             $usulanBarang->no_usulan_barang = $noUsulanBarang;
@@ -543,18 +574,12 @@ class UsulanBelanjaModalController extends Controller
             $usulanBarang->status_permintaan_barang = 'Proses Usulan Barang';
             $usulanBarang->save();
 
-            // Commit transaksi
             DB::commit();
 
-            // Redirect sukses
-            return redirect()->route('usulan_barang_modals.index')
-                ->with('success', 'Data usulan barang berhasil ditambahkan!');
+            return redirect()->route('usulan_barang_modals.index')->with('success', 'Data usulan barang berhasil ditambahkan!');
         } catch (\Exception $e) {
-            // Rollback jika ada error
             DB::rollBack();
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
@@ -806,7 +831,7 @@ class UsulanBelanjaModalController extends Controller
                 'vol_2_detail'          => 'nullable|numeric',
                 'satuan_2_detail'       => 'nullable|string',
                 'spek_detail'           => 'required|string',
-                'harga_barang'          => 'required|numeric',
+                'harga_barang'          => 'required|regex:/^[0-9.,]+$/',
                 'jumlah_usulan_barang'  => 'required|numeric',
                 'ppn'                   => 'required|numeric',
                 'total_anggaran_usulan_barang' => 'required|numeric',

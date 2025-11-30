@@ -171,7 +171,7 @@ class RkbuBarangJasaController extends Controller
                 'vol_2'                         => 'nullable|numeric|min:0',
                 'satuan_2'                      => 'nullable|string|max:255',
                 'spek'                          => 'nullable|string|max:1000',
-                'harga_satuan'                  => 'required|numeric|min:0',
+                'harga_satuan'                  => 'required|regex:/^[0-9.,]+$/',
                 'ppn'                           => 'required|numeric|min:0|max:100',
                 'rating'                        => 'nullable',
                 'link_ekatalog'                 => 'required|string|max:500',
@@ -401,6 +401,7 @@ class RkbuBarangJasaController extends Controller
 
     public function update(Request $request, Rkbu $rkbuBarangJasa)
     {
+
         // Pastikan session tersedia
         if (!session()->has('id_user') || !session()->has('tahun_anggaran')) {
             return redirect()->back()->with('error', 'Data session tidak tersedia. Silakan login kembali.');
@@ -424,7 +425,7 @@ class RkbuBarangJasaController extends Controller
                 'vol_2'                         => 'nullable|numeric',
                 'satuan_2'                      => 'nullable',
                 'spek'                          => 'nullable',
-                'harga_satuan'                  => 'required|numeric',
+                'harga_satuan'                  => 'required|regex:/^[0-9.,]+$/',
                 'ppn'                           => 'required|numeric',
                 'rating'                        => 'nullable',
                 'link_ekatalog'                 => 'nullable',
@@ -433,6 +434,40 @@ class RkbuBarangJasaController extends Controller
                 'upload_file_2'                 => 'nullable|mimes:pdf',
                 'upload_file_3'                 => 'nullable|mimes:pdf',
                 'upload_file_4'                 => 'nullable|mimes:pdf',
+            ],
+            [
+                'id_sub_kategori_rkbu.required'      => 'Sub Kategori RKBU wajib dipilih.',
+                'id_kode_rekening_belanja.uuid'      => 'Format Kode Rekening Belanja tidak valid.',
+                'barang.string'                      => 'Nama barang harus berupa teks.',
+                'barang.max'                         => 'Nama barang maksimal 255 karakter.',
+                'nama_barang.string'                 => 'Nama barang harus berupa teks.',
+                'nama_barang.max'                    => 'Nama barang maksimal 255 karakter.',
+                'vol_1.required'                     => 'Volume 1 wajib diisi.',
+                'vol_1.numeric'                      => 'Volume 1 harus berupa angka.',
+                'vol_1.min'                          => 'Volume 1 minimal 1.',
+                'satuan_1.required'                  => 'Satuan 1 wajib diisi.',
+                'satuan_1.max'                       => 'Satuan maksimal 50 karakter.',
+                'vol_2.numeric'                      => 'Volume 2 harus berupa angka.',
+                'vol_2.min'                          => 'Volume 2 minimal 1.',
+                'satuan_2.max'                       => 'Satuan 2 maksimal 50 karakter.',
+                'spek.string'                        => 'Spesifikasi harus berupa teks.',
+                'harga_satuan.required'              => 'Harga satuan wajib diisi.',
+                'harga_satuan.numeric'               => 'Harga satuan harus berupa angka ya.',
+                'harga_satuan.min'                   => 'Harga satuan minimal 0.',
+                'ppn.required'                       => 'PPN wajib diisi.',
+                'ppn.numeric'                        => 'PPN harus berupa angka.',
+                'ppn.min'                            => 'PPN minimal 0.',
+                'rating.numeric'                     => 'Rating harus berupa angka.',
+                'rating.between'                     => 'Rating harus antara 1 sampai 5.',
+                'link_ekatalog.url'                  => 'Link e-katalog harus berupa URL yang valid.',
+                'upload_file_1.mimes'                => 'File 1 harus berupa file PDF.',
+                'upload_file_1.max'                  => 'Ukuran file 1 maksimal 2MB.',
+                'upload_file_2.mimes'                => 'File 2 harus berupa file PDF.',
+                'upload_file_2.max'                  => 'Ukuran file 2 maksimal 2MB.',
+                'upload_file_3.mimes'                => 'File 3 harus berupa file PDF.',
+                'upload_file_3.max'                  => 'Ukuran file 3 maksimal 2MB.',
+                'upload_file_4.mimes'                => 'File 4 harus berupa file PDF.',
+                'upload_file_4.max'                  => 'Ukuran file 4 maksimal 2MB.',
             ]
         );
 
@@ -476,6 +511,7 @@ class RkbuBarangJasaController extends Controller
         // Hitung sisa (pastikan tidak negatif)
         $sisa_vol_rkbu = max(0, $jumlahVol - $totalJumlahUsulan);
         $sisa_anggaran_rkbu = max(0, $totalAnggaran - $totalAnggaranUsulan);
+
 
         // Isi data ke model
         $rkbuBarangJasa->fill([
@@ -534,6 +570,7 @@ class RkbuBarangJasaController extends Controller
             'sisa_vol_rkbu'                 => $sisa_vol_rkbu,
             'sisa_anggaran_rkbu'            => $sisa_anggaran_rkbu,
         ]);
+
 
         // Simpan perubahan
         $rkbuBarangJasa->save();

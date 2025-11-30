@@ -14,177 +14,154 @@
             <div class="card-block">
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-striped table-bordered wrap">
+                        <table class="table table-modern wrap">
                             <thead class="thead-primary">
-                                <tr class="col-md-12">
-                                    <th class="text-left fs-14 text" width="2%">#</th>
-                                    <th class="text-left fs-14 text" width="34%">Kode Rek. Belanja / Keg. / Sub
-                                        Kegiatan</th>
-                                    <th class="text-center fs-14 text" width="11%">Anggaran</th>
-                                    <th class="text-center fs-14 text" width="11%">Realisasi Anggaran</th>
-                                    <th class="text-center fs-14 text" width="11%">Proses SPJ</th>
-                                    <th class="text-center fs-14 text" width="11%">Sisa Anggaran</th>
-                                    <th class="text-center fs-14 text" width="3%">%</th>
-                                    {{-- @for ($i = 1; $i <= 12; $i++)
-                                        <th>{{ DateTime::createFromFormat('!m', $i)->format('F') }}</th>
-                                    @endfor --}}
+                                <tr>
+                                    <th width="2%">#</th>
+                                    <th width="34%">Kode Rek. Belanja / Kegiatan</th>
+                                    <th class="text-center" width="11%">Anggaran</th>
+                                    <th class="text-center" width="11%">Realisasi</th>
+                                    <th class="text-center" width="11%">Proses SPJ</th>
+                                    <th class="text-center" width="11%">SPJ Keuangan</th>
+                                    <th class="text-center" width="11%">Sisa</th>
+                                    <th class="text-center" width="3%">%</th>
                                 </tr>
                             </thead>
 
-                            @if ($dataKosong)
-                                <div class="alert alert-warning text-center">
-                                    <strong>Data tidak tersedia!</strong>
-                                </div>
-                            @else
-                                @foreach ($categories as $jenisBelanja)
-                                    <thead class="fs-14 text-primary">
+                            @foreach ($categories as $jenisBelanja)
+                                <thead class="level-1">
+                                    <tr>
+                                        <th colspan="2">
+                                            {{ $jenisBelanja->kode_jenis_belanja }}.
+                                            {{ $jenisBelanja->nama_jenis_belanja }}
+                                        </th>
+                                        <th class="text-right">{{ number_format($jenisBelanja->total_anggaran) }}</th>
+                                        <th class="text-right">{{ number_format($jenisBelanja->realisasi_anggaran) }}
+                                        </th>
+                                        <th class="text-right">{{ number_format($jenisBelanja->proses_anggaran) }}</th>
+                                        <th class="text-right">
+                                            {{ number_format($jenisBelanja->proses_anggaran_bendahara) }}</th>
+                                        <th class="text-right">
+                                            {{ number_format($jenisBelanja->total_anggaran - ($jenisBelanja->realisasi_anggaran + $jenisBelanja->proses_anggaran + $jenisBelanja->proses_anggaran_bendahara)) }}
+                                        </th>
+                                        <th class="text-center">
+                                            {{ $jenisBelanja->total_anggaran > 0 ? number_format(($jenisBelanja->realisasi_anggaran / $jenisBelanja->total_anggaran) * 100, 2) : 0 }}%
+                                        </th>
+                                    </tr>
+                                </thead>
+
+                                @foreach ($jenisBelanja->jenis_kategori_rkbus as $jenisKategori)
+                                    <thead class="level-2">
                                         <tr>
-                                            <td colspan="2" class="fs-14">
-                                                <strong>{{ $jenisBelanja->kode_jenis_belanja }}.
-                                                    {{ $jenisBelanja->nama_jenis_belanja }}</strong>
+                                            <th colspan="2">
+                                                {{ $jenisKategori->kode_jenis_kategori_rkbu }}.
+                                                {{ $jenisKategori->nama_jenis_kategori_rkbu }}
+                                            </th>
+                                            <td class="text-right">
+                                                <small>{{ number_format($jenisKategori->total_anggaran) }}</small>
                                             </td>
-                                            <td class="text-center fs-14">
-                                                <strong>{{ number_format($jenisBelanja->total_anggaran, 0, ',', ',') }}</strong>
+                                            <td class="text-right">
+                                                <small>{{ number_format($jenisKategori->realisasi_anggaran) }}</small>
                                             </td>
-                                            <td class="text-center fs-14">
-                                                <strong>{{ number_format($jenisBelanja->realisasi_anggaran, 0, ',', ',') }}</strong>
+                                            <td class="text-right">
+                                                <small>{{ number_format($jenisKategori->proses_anggaran) }}</small>
                                             </td>
-                                            <td class="text-center fs-14">
-                                                <strong>{{ number_format($jenisBelanja->proses_anggaran, 0, ',', ',') }}</strong>
+                                            <td class="text-right">
+                                                <small>{{ number_format($jenisKategori->proses_anggaran_bendahara) }}</small>
                                             </td>
-                                            <td class="text-center fs-14">
-                                                {{ number_format($jenisBelanja->total_anggaran - ($jenisBelanja->realisasi_anggaran + $jenisBelanja->proses_anggaran), 0, ',', ',') }}
+                                            <td class="text-right">
+                                                {{ number_format($jenisKategori->total_anggaran - ($jenisKategori->realisasi_anggaran + $jenisKategori->proses_anggaran + $jenisKategori->proses_anggaran_bendahara)) }}
                                             </td>
-                                            <td class="text-center fs-14">
-                                                @if ($jenisBelanja->total_anggaran > 0)
-                                                    {{ number_format(($jenisBelanja->realisasi_anggaran / $jenisBelanja->total_anggaran) * 100, 2, ',', '.') }}%
-                                                @else
-                                                    0%
-                                                @endif
+                                            <td class="text-center">
+                                                {{ $jenisKategori->total_anggaran > 0 ? number_format(($jenisKategori->realisasi_anggaran / $jenisKategori->total_anggaran) * 100, 2) : 0 }}%
                                             </td>
                                         </tr>
                                     </thead>
 
-                                    @foreach ($jenisBelanja->jenis_kategori_rkbus as $jenisKategori)
-                                        <thead>
-                                            <tr class="fs-14"
-                                                style="background-color: #e0e9f4; color: rgb(63, 63, 63); opacity: 212;">
-                                                <th colspan="2">{{ $jenisKategori->kode_jenis_kategori_rkbu }}.
-                                                    {{ $jenisKategori->nama_jenis_kategori_rkbu }}</th>
-                                                <td class="text-center fs-14">
-                                                    <small>{{ number_format($jenisKategori->total_anggaran, 0, ',', ',') }}</small>
-                                                </td>
-                                                <td class="text-center fs-14">
-                                                    <small>{{ number_format($jenisKategori->realisasi_anggaran, 0, ',', ',') }}</small>
-                                                </td>
-                                                <td class="text-center fs-14">
-                                                    <small>{{ number_format($jenisKategori->proses_anggaran, 0, ',', ',') }}</small>
-                                                </td>
-                                                <td class="text-center fs-14">
-                                                    {{ number_format($jenisKategori->total_anggaran - ($jenisKategori->realisasi_anggaran + $jenisKategori->proses_anggaran), 0, ',', ',') }}
-                                                </td>
-                                                <td class="text-center fs-14">
-                                                    @if ($jenisKategori->total_anggaran > 0)
-                                                        {{ number_format(($jenisKategori->realisasi_anggaran / $jenisKategori->total_anggaran) * 100, 2, ',', '.') }}%
-                                                    @else
-                                                        0%
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        </thead>
+                                    @foreach ($jenisKategori->obyek_belanjas as $obyek)
+                                        @foreach ($obyek->kategori_rkbus as $kategori)
+                                            <thead class="level-3">
+                                                <tr>
+                                                    <th colspan="2">
+                                                        {{ $kategori->kode_kategori_rkbu }}.
+                                                        {{ $kategori->nama_kategori_rkbu }}
+                                                    </th>
+                                                    <td class="text-right">
+                                                        <small>{{ number_format($kategori->total_anggaran) }}</small>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <small>{{ number_format($kategori->realisasi_anggaran) }}</small>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <small>{{ number_format($kategori->proses_anggaran) }}</small>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <small>{{ number_format($kategori->proses_anggaran_bendahara) }}</small>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        {{ number_format($kategori->total_anggaran - ($kategori->realisasi_anggaran + $kategori->proses_anggaran + $kategori->proses_anggaran_bendahara)) }}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        {{ $kategori->total_anggaran > 0 ? number_format(($kategori->realisasi_anggaran / $kategori->total_anggaran) * 100, 2) : 0 }}%
+                                                    </td>
+                                                </tr>
+                                            </thead>
 
-                                        @foreach ($jenisKategori->obyek_belanjas as $obyekBelanja)
-                                            @foreach ($obyekBelanja->kategori_rkbus as $kategoriRkbu)
-                                                <thead>
-                                                    <tr class="fs-14"
-                                                        style="background-color: #f2f3f3; color: rgb(63, 63, 63); opacity: 212;">
-                                                        <th colspan="2">
-                                                            {{ $kategoriRkbu->kode_kategori_rkbu }}.
-                                                            {{ $kategoriRkbu->nama_kategori_rkbu }}</th>
-                                                        <td class="text-center fs-14">
-                                                            <small>{{ number_format($kategoriRkbu->total_anggaran, 0, ',', ',') }}</small>
+                                            @foreach ($kategori->sub_kategori_rkbus as $sub)
+                                                <thead class="level-4">
+                                                    <tr>
+                                                        <th></th>
+                                                        <th>{{ $sub->kode_sub_kategori_rkbu }}.
+                                                            {{ $sub->nama_sub_kategori_rkbu }}</th>
+                                                        <td class="text-right">
+                                                            <small>{{ number_format($sub->total_anggaran) }}</small>
                                                         </td>
-                                                        <td class="text-center fs-14">
-                                                            <small>{{ number_format($kategoriRkbu->realisasi_anggaran, 0, ',', ',') }}</small>
+                                                        <td class="text-right">
+                                                            <small>{{ number_format($sub->realisasi_anggaran) }}</small>
                                                         </td>
-                                                        <td class="text-center fs-14">
-                                                            <small>{{ number_format($kategoriRkbu->proses_anggaran, 0, ',', ',') }}</small>
+                                                        <td class="text-right">
+                                                            <small>{{ number_format($sub->proses_anggaran) }}</small>
                                                         </td>
-                                                        <td class="text-center fs-14">
-                                                            {{ number_format($kategoriRkbu->total_anggaran - ($kategoriRkbu->realisasi_anggaran + $kategoriRkbu->proses_anggaran), 0, ',', ',') }}
+                                                        <td class="text-right">
+                                                            <small>{{ number_format($sub->proses_anggaran_bendahara) }}</small>
                                                         </td>
-                                                        <td class="text-center fs-14">
-                                                            @if ($kategoriRkbu->total_anggaran > 0)
-                                                                {{ number_format(($kategoriRkbu->realisasi_anggaran / $kategoriRkbu->total_anggaran) * 100, 2, ',', '.') }}%
-                                                            @else
-                                                                0%
-                                                            @endif
+                                                        <td class="text-right">
+                                                            {{ number_format($sub->total_anggaran - ($sub->realisasi_anggaran + $sub->proses_anggaran + $sub->proses_anggaran_bendahara)) }}
+                                                        </td>
+                                                        <td class="text-center">
+                                                            {{ $sub->total_anggaran > 0 ? number_format(($sub->realisasi_anggaran / $sub->total_anggaran) * 100, 2) : 0 }}%
                                                         </td>
                                                     </tr>
                                                 </thead>
-
-                                                @foreach ($kategoriRkbu->sub_kategori_rkbus as $subKategoriRkbu)
-                                                    <thead>
-                                                        <tr class="fs-14">
-                                                            <th></th>
-                                                            <th class="text-left fs-14 text-nowrap">
-                                                                <small>{{ $subKategoriRkbu->kode_sub_kategori_rkbu }}.
-                                                                    {{ $subKategoriRkbu->nama_sub_kategori_rkbu }}</small>
-                                                            </th>
-                                                            <td class="text-center fs-14">
-                                                                <small>{{ number_format($subKategoriRkbu->total_anggaran, 0, ',', ',') }}</small>
-                                                            </td>
-                                                            <td class="text-center fs-14">
-                                                                <small>{{ number_format($subKategoriRkbu->realisasi_anggaran, 0, ',', ',') }}</small>
-                                                            </td>
-                                                            <td class="text-center fs-14">
-                                                                <small>{{ number_format($subKategoriRkbu->proses_anggaran, 0, ',', ',') }}</small>
-                                                            </td>
-                                                            <td class="text-center fs-14">
-                                                                {{ number_format($subKategoriRkbu->total_anggaran - ($subKategoriRkbu->realisasi_anggaran + $subKategoriRkbu->proses_anggaran), 0, ',', ',') }}
-                                                            </td>
-                                                            <td class="text-center fs-14">
-                                                                @if ($subKategoriRkbu->total_anggaran > 0)
-                                                                    {{ number_format(($subKategoriRkbu->realisasi_anggaran / $subKategoriRkbu->total_anggaran) * 100, 2, ',', '.') }}%
-                                                                @else
-                                                                    0%
-                                                                @endif
-                                                            </td>
-                                                        </tr>
-                                                    </thead>
-                                                @endforeach
                                             @endforeach
                                         @endforeach
                                     @endforeach
                                 @endforeach
-                            @endif
+                            @endforeach
 
-                            <tfoot class="thead-primary">
+
+                            <tfoot>
                                 <tr>
                                     <th></th>
-                                    <th class="text-center fs-14 text">Total Anggaran</th>
-                                    <th class="text-left fs-14 text">
-                                        {{ number_format($total_anggaran_blud, 0, ',', ',') }}</th>
-                                    <th class="text-left fs-14 text">
-                                        {{ number_format($total_realisasi_blud, 0, ',', ',') }}</th>
-                                    <th class="text-left fs-14 text">
-                                        {{ number_format($total_proses_spj_blud, 0, ',', ',') }}</th>
-                                    <th class="text-left fs-14 text">
-                                        {{ number_format($total_anggaran_blud - ($total_realisasi_blud + $total_proses_spj_blud), 0, ',', ',') }}
+                                    <th>Total Anggaran</th>
+                                    <th class="text-right">{{ number_format($total_anggaran_blud) }}</th>
+                                    <th class="text-right">{{ number_format($total_realisasi_blud) }}</th>
+                                    <th class="text-right">{{ number_format($total_proses_spj_blud) }}</th>
+                                    <th class="text-right">{{ number_format($total_proses_spj_bendahara_blud) }}</th>
+                                    <th class="text-right">
+                                        {{ number_format($total_anggaran_blud - ($total_realisasi_blud + $total_proses_spj_blud + $total_proses_spj_bendahara_blud)) }}
                                     </th>
-                                    <th class="text-center fs-14 text">
-                                        @if ($total_anggaran_blud > 0)
-                                            {{ number_format(($total_realisasi_blud / $total_anggaran_blud) * 100, 2, ',', '.') }}%
-                                        @else
-                                            0%
-                                        @endif
+                                    <th class="text-center">
+                                        {{ $total_anggaran_blud > 0 ? number_format(($total_realisasi_blud / $total_anggaran_blud) * 100, 2) : 0 }}%
                                     </th>
                                 </tr>
                             </tfoot>
-                        </table><!-- end table -->
+
+                        </table>
                     </div>
                 </div>
             </div>
+
         </div> <!-- .card-->
     </div> <!-- .col-->
 </div> <!-- end row-->

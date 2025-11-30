@@ -174,7 +174,7 @@ class RkbuModalAlkesController extends Controller
                 'vol_2'                         => 'nullable|numeric|min:0',
                 'satuan_2'                      => 'nullable|string|max:255',
                 'spek'                          => 'nullable|string|max:1000',
-                'harga_satuan'                  => 'required|numeric|min:0',
+                'harga_satuan'                  => 'required|regex:/^[0-9.,]+$/',
                 'ppn'                           => 'required|numeric|min:0|max:100',
                 'rating'                        => 'nullable',
                 'link_ekatalog'                 => 'required|string',
@@ -337,8 +337,6 @@ class RkbuModalAlkesController extends Controller
         return view('frontend.partials.detail_rkbu', compact('rkbuBarangJasa', 'ppn', 'sub_total'));
     }
 
-
-
     public function edit($id)
     {
         $rkbuBarangJasa = Rkbu::with([
@@ -382,7 +380,7 @@ class RkbuModalAlkesController extends Controller
             'vol_2'                         => 'nullable|numeric',
             'satuan_2'                      => 'nullable',
             'spek'                          => 'nullable',
-            'harga_satuan'                  => 'required|numeric',
+            'harga_satuan'                  => 'required|regex:/^[0-9.,]+$/',
             'ppn'                           => 'required|numeric',
             'rating'                        => 'nullable',
             'link_ekatalog'                 => 'nullable',
@@ -478,7 +476,6 @@ class RkbuModalAlkesController extends Controller
         // Redirect dengan pesan sukses
         return redirect()->route('rkbu_modal_alkess.index')->with('success', 'Data berhasil diperbarui.');
     }
-
 
     public function destroy($id)
     {

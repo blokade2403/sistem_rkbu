@@ -1,6 +1,7 @@
 
 <?php
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use App\Models\MasterBackend\SettingBelanja\UsulanBarang;
 
@@ -282,5 +283,36 @@ if (!function_exists('terbilangUang')) {
 
             return $notifications;
         }
+    }
+}
+
+if (! function_exists('getRealisasiPerRkbu')) {
+    function getRealisasiPerRkbu($tahunAnggaran)
+    {
+        return DB::table('master_spjs')
+            ->select(
+                'rkbus.id_rkbu',
+                DB::raw("
+                    SUM(
+                        CASE WHEN master_spjs.status_pembayaran = 'Sudah di Bayar'
+                        THEN master_spjs.pembayaran ELSE 0 END
+                    ) AS realisasi_bayar
+                "),
+                DB::raw("
+                    SUM(
+                        CASE WHEN master_spjs.ket_verif_bendahara = 'Proses'
+                        THEN master_spjs.bruto ELSE 0 END
+                    ) AS realisasi_proses
+                ")
+            )
+            ->join('spjs', 'master_spjs.id_spj', '=', 'spjs.id_spj')
+            ->join('spj_details', 'spjs.id_spj', '=', 'spj_details.id_spj')
+            ->join('usulan_barangs', 'spj_details.id_usulan_barang', '=', 'usulan_barangs.id_usulan_barang')
+            ->join('rkbus', 'spj_details.id_rkbu', '=', 'rkbus.id_rkbu')
+            ->join('sub_kategori_rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
+            ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
+            ->groupBy('rkbus.id_rkbu')
+            ->get()
+            ->keyBy('id_rkbu');
     }
 }

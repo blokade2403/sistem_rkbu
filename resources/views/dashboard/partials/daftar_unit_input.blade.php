@@ -1,16 +1,8 @@
-<div class="row">
-    <div class="col-xl-12">
+    <div class="col-xl-9 col-md-6">
         <div class="card">
             <div class="card-header align-items-center d-flex">
                 <h4 class="card-title mb-0 flex-grow-1">Daftar Inputan</h4>
-                <div class="flex-shrink-0">
-                    <button type="button" class="btn btn-soft-info btn-sm shadow-none">
-                        <i class="ri-file-list-3-line align-middle"></i> Generate
-                        Report
-                    </button>
-                </div>
             </div><!-- end card header -->
-            @include('partials.animate_progress_form')
             <div class="card-block">
                 <div class="card-body">
                     <div class="table-responsive">
@@ -63,4 +55,3 @@
             </div>
         </div> <!-- .card-->
     </div> <!-- .col-->
-</div> <!-- end row-->

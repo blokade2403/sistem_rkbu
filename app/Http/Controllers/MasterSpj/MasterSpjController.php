@@ -4,8 +4,10 @@ namespace App\Http\Controllers\MasterSpj;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use App\Exports\MasterSpjEksport;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -310,13 +312,11 @@ class MasterSpjController extends Controller
             case 'Admin PPK':
             case 'PPBJ':
             case 'PPK':
+            case 'Verifikator':
+            case 'PPK Keuangan':
             case 'Validasi RKA':
                 $invoices = $invo;
                 break;
-
-                // default:
-                //     $invoices = $invo; // fallback untuk Administrator, Admin PPK, dsb
-                //     break;
         }
 
         // Data untuk view
@@ -619,6 +619,7 @@ class MasterSpjController extends Controller
             ->select(
                 'spj_details.*',
                 'usulan_barangs.no_usulan_barang',
+                'usulan_barangs.status_permintaan_barang',
                 'rkbus.*',
                 'programs.*',
                 'sub_kategori_rkbus.nama_sub_kategori_rkbu',
@@ -687,12 +688,12 @@ class MasterSpjController extends Controller
             'website'                         => $website,
             'gambar1'                         => $gambar1,
             'gambar2'                         => $gambar2,
-            'title'                           => ''
+            'title'                           => '',
         ];
 
 
         // dd($data);
-        return view('master_spj.layouts.edit', $data, compact('master_spj'), ['title' => '', 'routePrefix' => 'master_spjs']);
+        return view('master_spj.layouts.edit', $data, compact('master_spj'), ['title' => '', 'routePrefix' => 'master_spjs',]);
     }
 
     public function editkomponen($id)
@@ -1984,5 +1985,10 @@ class MasterSpjController extends Controller
                 ->back()
                 ->with('error', 'Gagal menghapus detail: ' . $e->getMessage());
         }
+    }
+
+    public function downloadReport()
+    {
+        return Excel::download(new MasterSpjEksport, 'laporan_spj.xlsx');
     }
 }

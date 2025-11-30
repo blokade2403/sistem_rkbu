@@ -112,7 +112,6 @@
                              </div>
                          </div>
 
-
                          <div class="row mb-3">
                              <div class="col-lg-2">
                                  <label for="contactNumber" class="form-label">Link Ekatalog</label>
@@ -211,93 +210,90 @@
                  </div>
              </div>
              @include('rkbu.partials.formvalidasirkbu')
-             <div class="card">
-                 <div class="card-header align-items-center d-flex">
-                     <h4 class="card-title mb-0 flex-grow-1">Upload Data Penunjang</h4>
-                     <div class="flex-shrink-0">
-                         <div class="form-check form-switch form-switch-right form-switch-md">
-                             <label for="horizontal-form-showcode" class="form-label text-muted">Show Code</label>
-                             <input class="form-check-input code-switcher" type="checkbox"
-                                 id="horizontal-form-showcode">
-                         </div>
+             <div class="card-header align-items-center d-flex">
+                 <h4 class="card-title mb-0 flex-grow-1">Upload Data Penunjang</h4>
+                 <div class="flex-shrink-0">
+                     <div class="form-check form-switch form-switch-right form-switch-md">
+                         <label for="horizontal-form-showcode" class="form-label text-muted">Show Code</label>
+                         <input class="form-check-input code-switcher" type="checkbox" id="horizontal-form-showcode">
                      </div>
-                 </div><!-- end card header -->
-                 <div class="card-body">
-                     <p class="text-muted">Create horizontal forms with the grid by adding the <code>row</code> class
-                         to
-                         form groups and using the <code>col-*-*</code> class to specify the width of your labels and
-                         controls. Be sure to add <code>col-form-label</code> class to your <code>&lt;label&gt;</code>s
-                         as
-                         well so they’re vertically centered with their associated form controls.</p>
-                     <div class="live-preview">
-                         <div class="row mb-3">
-                             <div class="col-lg-2">
-                                 <label for="contactNumber" class="form-label">Upload Dokumen KAP</label>
-                             </div>
-                             <div class="col-lg-10">
-                                 <input type="file" name="upload_file_1" id="formFileMultiple" multiple
-                                     class="form-control">
+                 </div>
+             </div><!-- end card header -->
+             <div class="card-body">
+                 <p class="text-muted">Create horizontal forms with the grid by adding the <code>row</code> class
+                     to
+                     form groups and using the <code>col-*-*</code> class to specify the width of your labels and
+                     controls. Be sure to add <code>col-form-label</code> class to your <code>&lt;label&gt;</code>s
+                     as
+                     well so they’re vertically centered with their associated form controls.</p>
+                 <div class="live-preview">
+                     <div class="row mb-3">
+                         <div class="col-lg-2">
+                             <label for="contactNumber" class="form-label">Upload Dokumen KAP</label>
+                         </div>
+                         <div class="col-lg-10">
+                             <input type="file" name="upload_file_1" id="formFileMultiple" multiple
+                                 class="form-control">
 
-                                 {{-- kalau ada file tersimpan (hanya di edit) --}}
-                                 @if (isset($rkbuBarangJasa) && !empty($rkbuBarangJasa->upload_file_1))
-                                     <div class="mt-2">
-                                         <a href="{{ asset('storage/' . $rkbuBarangJasa->upload_file_1) }}"
-                                             target="_blank" class="label label-inverse"> Lihat Dokumen KAP
-                                         </a>
-                                     </div>
-                                 @endif
-                             </div>
+                             {{-- kalau ada file tersimpan (hanya di edit) --}}
+                             @if (isset($rkbuBarangJasa) && !empty($rkbuBarangJasa->upload_file_1))
+                                 <div class="mt-2">
+                                     <a href="{{ asset('storage/uploads/' . basename($rkbuBarangJasa->upload_file_1)) }}"
+                                         target="_blank" class="label label-inverse"><span
+                                             class="fs-10 badge bg-info">Lihat Dokumen KAP</span>
+                                     </a>
+                                 </div>
+                             @endif
                          </div>
-                         <div class="row mb-3">
-                             <div class="col-lg-2">
-                                 <label for="contactNumber" class="form-label">Upload SPH 1</label>
-                             </div>
-                             <div class="col-lg-10">
-                                 <input type="file" name="upload_file_2" id="formFile" class="form-control">
-                                 @if (isset($rkbuBarangJasa) && !empty($rkbuBarangJasa->upload_file_2))
-                                     <div class="mt-2">
-                                         <a href="{{ asset('storage/' . $rkbuBarangJasa->upload_file_2) }}"
-                                             target="_blank" class="label label-inverse"> Lihat SPH 1
-                                         </a>
-                                     </div>
-                                 @endif
-                             </div>
-                         </div>
-                         <div class="row mb-3">
-                             <div class="col-lg-2">
-                                 <label for="contactNumber" class="form-label">Upload SPH 2</label>
-                             </div>
-                             <div class="col-lg-10">
-                                 <input type="file" name="upload_file_3" id="formFileMultiple" multiple
-                                     class="form-control">
-                                 @if (isset($rkbuBarangJasa) && !empty($rkbuBarangJasa->upload_file_3))
-                                     <div class="mt-2">
-                                         <a href="{{ asset('storage/' . $rkbuBarangJasa->upload_file_3) }}"
-                                             target="_blank" class="label label-inverse"> Lihat SPH 2
-                                         </a>
-                                     </div>
-                                 @endif
-                             </div>
-                         </div>
-                         <div class="row mb-3">
-                             <div class="col-lg-2">
-                                 <label for="contactNumber" class="form-label">Upload SPH 3</label>
-                             </div>
-                             <div class="col-lg-10">
-                                 <input type="file" name="upload_file_4" id="formFileMultiple"
-                                     class="form-control">
-                                 @if (isset($rkbuBarangJasa) && !empty($rkbuBarangJasa->upload_file_4))
-                                     <div class="mt-2">
-                                         <a href="{{ asset('storage/' . $rkbuBarangJasa->upload_file_4) }}"
-                                             target="_blank" class="label label-inverse"> Lihat SPH 3
-                                         </a>
-                                     </div>
-                                 @endif
-                             </div>
-                         </div>
-                         @include('partials.submit_buttons')
                      </div>
-                     <div class="d-none code-view">
+                     <div class="row mb-3">
+                         <div class="col-lg-2">
+                             <label for="contactNumber" class="form-label">Upload SPH 1</label>
+                         </div>
+                         <div class="col-lg-10">
+                             <input type="file" name="upload_file_2" id="formFile" class="form-control">
+                             @if (isset($rkbuBarangJasa) && !empty($rkbuBarangJasa->upload_file_2))
+                                 <div class="mt-2">
+                                     <a href="{{ asset('storage/uploads/' . basename($rkbuBarangJasa->upload_file_2)) }}"
+                                         target="_blank" class="label label-inverse"> Lihat SPH 1
+                                     </a>
+                                 </div>
+                             @endif
+                         </div>
                      </div>
+                     <div class="row mb-3">
+                         <div class="col-lg-2">
+                             <label for="contactNumber" class="form-label">Upload SPH 2</label>
+                         </div>
+                         <div class="col-lg-10">
+                             <input type="file" name="upload_file_3" id="formFileMultiple" multiple
+                                 class="form-control">
+                             @if (isset($rkbuBarangJasa) && !empty($rkbuBarangJasa->upload_file_3))
+                                 <div class="mt-2">
+                                     <a href="{{ asset('storage/uploads/' . basename($rkbuBarangJasa->upload_file_3)) }}"
+                                         target="_blank" class="label label-inverse"> Lihat SPH 2
+                                     </a>
+                                 </div>
+                             @endif
+                         </div>
+                     </div>
+                     <div class="row mb-3">
+                         <div class="col-lg-2">
+                             <label for="contactNumber" class="form-label">Upload SPH 3</label>
+                         </div>
+                         <div class="col-lg-10">
+                             <input type="file" name="upload_file_4" id="formFileMultiple" class="form-control">
+                             @if (isset($rkbuBarangJasa) && !empty($rkbuBarangJasa->upload_file_4))
+                                 <div class="mt-2">
+                                     <a href="{{ asset('storage/uploads/' . basename($rkbuBarangJasa->upload_file_4)) }}"
+                                         target="_blank" class="label label-inverse"> Lihat SPH 3
+                                     </a>
+                                 </div>
+                             @endif
+                         </div>
+                     </div>
+                     @include('partials.submit_buttons')
+                 </div>
+                 <div class="d-none code-view">
                  </div>
              </div>

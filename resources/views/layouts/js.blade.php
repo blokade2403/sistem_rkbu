@@ -65,6 +65,7 @@
 </script>
 
 
+
 <script>
     // JS: inisialisasi DataTables + toggle child row pada tombol .details-btn
     $(document).ready(function() {
@@ -608,14 +609,122 @@
                 // Menyimpan hasil ke dalam input "hasil"
                 $("#hasil").val(result);
 
-                // Menutup modal
-                $('#large-Modal').modal('hide');
+                // Menutup modal (ini bagian yang salah sebelumnya)
+                $('.bs-example-modal-xl').modal('hide');
             } else {
                 alert('Please select an item.');
             }
         });
     });
 </script>
+
+
+<script>
+    // Inisialisasi Choices untuk SUB KATEGORI
+    let subKategoriChoices = new Choices('#subKategoriSelect2', {
+        searchEnabled: true,
+        searchPlaceholderValue: 'Cari sub kategori...',
+        itemSelectText: '',
+        shouldSort: true
+    });
+
+    // Ketika pilih sumber dana
+    $('#pilihSumberDana').on('change', function() {
+
+        let idSumberDana = $(this).val();
+
+        // === WAJIB! SIMPAN KE INPUT HIDDEN ===
+        $('#id_sumber_dana').val(idSumberDana);
+
+        // Reset pilihan
+        subKategoriChoices.clearChoices();
+        subKategoriChoices.setChoices(
+            [{
+                value: '',
+                label: '-- Mengambil Data... --',
+                selected: true
+            }],
+            'value',
+            'label',
+            true
+        );
+
+        if (idSumberDana === '') {
+            subKategoriChoices.setChoices(
+                [{
+                    value: '',
+                    label: '-- Pilih Sumber Dana Terlebih Dahulu --',
+                    selected: true
+                }],
+                'value',
+                'label',
+                true
+            );
+            return;
+        }
+
+        // AJAX load sub kategori
+        $.ajax({
+            url: routeSubKategori,
+            type: "GET",
+            data: {
+                id_sumber_dana: idSumberDana
+            },
+            success: function(data) {
+
+                subKategoriChoices.clearChoices();
+
+                let list = data.map(item => {
+                    return {
+                        value: item.id_sub_kategori_rkbu,
+                        label: item.kode_sub_kategori_rkbu + ' ' + item
+                            .nama_sub_kategori_rkbu
+                    };
+                });
+
+                subKategoriChoices.setChoices(list, 'value', 'label', true);
+            }
+        });
+
+    });
+</script>
+
+
+{{-- <script>
+    $('#pilihSumberDana').on('change', function() {
+        let sumberDana = $(this).val();
+        $('#id_sumber_dana').val(sumberDana); // ⬅ penting untuk store()
+
+        if (sumberDana === '') {
+            $('#subKategoriSelect2').html('<option value="">-- Pilih Sumber Dana Terlebih Dahulu --</option>');
+            return;
+        }
+
+        $.ajax({
+            url: '/get-sub-kategori-by-sumber-dana/' + sumberDana,
+            type: 'GET',
+            success: function(res) {
+                $('#subKategoriSelect2').empty();
+                $('#subKategoriSelect2').append(
+                    '<option value="">-- Pilih Sub Kategori --</option>');
+                $.each(res, function(i, item) {
+                    $('#subKategoriSelect2').append(
+                        '<option value="' + item.id_sub_kategori_rkbu +
+                        '" data-jenis="' + item.id_jenis_kategori_rkbu + '">' + item
+                        .nama_sub_kategori_rkbu + '</option>'
+                    );
+                });
+            }
+        });
+    });
+
+    $('#subKategoriSelect2').on('change', function() {
+        let jenisKategori = $('option:selected', this).data('jenis');
+        $('#id_jenis_kategori_rkbu').val(jenisKategori);
+    });
+</script> --}}
+
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {

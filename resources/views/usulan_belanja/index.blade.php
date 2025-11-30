@@ -1,5 +1,8 @@
 @extends('layouts.main')
 @section('content')
+    <script>
+        const routeSubKategori = "{{ $routeAjaxSubKategori }}";
+    </script>
     @include('partials.add_buttons_usulan_belanja', ['routePrefix' => $routePrefix])
     @include('usulan_belanja.partials.modal_sub_kategori_usulan_belanja')
     <div class="row">

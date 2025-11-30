@@ -34,9 +34,11 @@
                                  <input id="proyeksi_sisa_stok" name="proyeksi_sisa_stok" onkeyup="total();"
                                      value="{{ $rkbuBarangJasa->proyeksi_sisa_stok }}" class="form-control"
                                      placeholder="Prediksi Sisa Stok Tahun {{ $angka_tahun }}" readonly>
-                                 <span class="input-group-text" id="basic-addon2"data-toggle="tooltip"
-                                     data-placement="left" title=""
-                                     data-original-title="Prediksi Sisa Stok s/d Desember <?php echo $angka_tahun; ?> = (Sisa Stok Desember <?php echo $angka_tahun - 2; ?> + Pengadaan Tahun <?php echo $angka_tahun - 1; ?>) - (Rata2 Pemakaian Per Bulan Selama <?php echo $angka_tahun - 1; ?> X Kebutuhan/Bulan)">#</span>
+                                 <span class="input-group-text" data-bs-toggle="tooltip" data-bs-placement="left"
+                                     title="Prediksi Sisa Stok s/d Desember {{ $angka_tahun }} = (Sisa Stok Desember {{ $angka_tahun - 2 }} + Pengadaan Tahun {{ $angka_tahun - 1 }}) - (Rata2 Pemakaian Per Bulan Selama {{ $angka_tahun - 1 }} x Kebutuhan/Bulan)">
+                                     #
+                                 </span>
+
                              </div>
                          </div>
                      </div>
@@ -60,9 +62,8 @@
                                  <input id="kebutuhan_tahun_x1" name="kebutuhan_tahun_x1" onkeyup="total();"
                                      value="{{ $rkbuBarangJasa->kebutuhan_tahun_x1 }}" class="form-control"
                                      placeholder="Perkiraan Kebutuhan Tahun {{ $angka_tahun }}" readonly>
-                                 <span class="input-group-text" id="basic-addon2"data-toggle="tooltip"
-                                     data-placement="left" title=""
-                                     data-original-title="Kebutuhan Tahun <?php echo $angka_tahun; ?> = Rata2 Pemakaian Per Bulan Selama <?php echo $angka_tahun - 1; ?> X Kebutuhan/Bulan">#</span>
+                                 <span class="input-group-text" data-bs-toggle="tooltip" data-placement="left"
+                                     title="Kebutuhan Tahun <?php echo $angka_tahun; ?> = Rata2 Pemakaian Per Bulan Selama <?php echo $angka_tahun - 1; ?> X Kebutuhan/Bulan">#</span>
                              </div>
                          </div>
                      </div>
@@ -85,9 +86,8 @@
                                  <input id="kebutuhan_plus_buffer" name="kebutuhan_plus_buffer" onkeyup="total();"
                                      value="{{ $rkbuBarangJasa->kebutuhan_plus_buffer }}" class="form-control"
                                      placeholder="Kebutuhan Tahun {{ $angka_tahun }} + Buffer" readonly>
-                                 <span class="input-group-text" id="basic-addon2"data-toggle="tooltip"
-                                     data-placement="left" title=""
-                                     data-original-title="Kebutuhan Tahun <?php echo $angka_tahun; ?> + Buffer = Perkiraan Kebutuhan Tahun <?php echo $angka_tahun; ?> + (Rata2 Pemakaian Per Bulan Selama <?php echo $angka_tahun - 1; ?> X Buffer Bulan)">#</span>
+                                 <span class="input-group-text" data-bs-toggle="tooltip" data-placement="left"
+                                     title="Kebutuhan Tahun <?php echo $angka_tahun; ?> + Buffer = Perkiraan Kebutuhan Tahun <?php echo $angka_tahun; ?> + (Rata2 Pemakaian Per Bulan Selama <?php echo $angka_tahun - 1; ?> X Buffer Bulan)">#</span>
                              </div>
                          </div>
                      </div>
@@ -110,9 +110,9 @@
                                  <input id="rencana_pengadaan_tahun_x1" name="rencana_pengadaan_tahun_x1"
                                      onkeyup="total();" value="{{ $rkbuBarangJasa->rencana_pengadaan_tahun_x1 }}"
                                      class="form-control" placeholder="Rencana Pengadaan" readonly>
-                                 <span class="input-group-text" id="basic-addon2"data-toggle="tooltip"
-                                     data-placement="left" title=""
-                                     data-original-title="Rencana Pengadaan Tahun <?php echo $angka_tahun; ?> = Kebutuhan Tahun <?php echo $angka_tahun; ?> + Buffer - Prediksi Sisa Stok s/d Desember <?php echo $angka_tahun; ?>">#</span>
+                                 <span class="input-group-text" id="basic-addon2" data-bs-toggle="tooltip"
+                                     data-placement="left"
+                                     title="Rencana Pengadaan Tahun <?php echo $angka_tahun; ?> = Kebutuhan Tahun <?php echo $angka_tahun; ?> + Buffer - Prediksi Sisa Stok s/d Desember <?php echo $angka_tahun; ?>">#</span>
                              </div>
                          </div>
                      </div>
@@ -313,8 +313,9 @@
                              {{-- kalau ada file tersimpan (hanya di edit) --}}
                              @if (isset($rkbuBarangJasa) && !empty($rkbuBarangJasa->upload_file_1))
                                  <div class="mt-2">
-                                     <a href="{{ asset('storage/' . $rkbuBarangJasa->upload_file_1) }}"
-                                         target="_blank" class="label label-inverse"> Lihat Dokumen KAP
+                                     <a href="{{ asset('storage/uploads/' . basename($rkbuBarangJasa->upload_file_1)) }}"
+                                         target="_blank" class="label label-inverse"> <span
+                                             class="fs-10 badge bg-info">Lihat Dokumen KAP</span>
                                      </a>
                                  </div>
                              @endif
@@ -328,7 +329,7 @@
                              <input type="file" name="upload_file_2" id="formFile" class="form-control">
                              @if (isset($rkbuBarangJasa) && !empty($rkbuBarangJasa->upload_file_2))
                                  <div class="mt-2">
-                                     <a href="{{ asset('storage/' . $rkbuBarangJasa->upload_file_2) }}"
+                                     <a href="{{ asset('storage/uploads/' . basename($rkbuBarangJasa->upload_file_2)) }}"
                                          target="_blank" class="label label-inverse"> Lihat SPH 1
                                      </a>
                                  </div>
@@ -344,7 +345,7 @@
                                  class="form-control">
                              @if (isset($rkbuBarangJasa) && !empty($rkbuBarangJasa->upload_file_3))
                                  <div class="mt-2">
-                                     <a href="{{ asset('storage/' . $rkbuBarangJasa->upload_file_3) }}"
+                                     <a href="{{ asset('storage/uploads/' . basename($rkbuBarangJasa->upload_file_3)) }}"
                                          target="_blank" class="label label-inverse"> Lihat SPH 2
                                      </a>
                                  </div>
@@ -359,7 +360,7 @@
                              <input type="file" name="upload_file_4" id="formFileMultiple" class="form-control">
                              @if (isset($rkbuBarangJasa) && !empty($rkbuBarangJasa->upload_file_4))
                                  <div class="mt-2">
-                                     <a href="{{ asset('storage/' . $rkbuBarangJasa->upload_file_4) }}"
+                                     <a href="{{ asset('storage/uploads/' . basename($rkbuBarangJasa->upload_file_4)) }}"
                                          target="_blank" class="label label-inverse"> Lihat SPH 3
                                      </a>
                                  </div>

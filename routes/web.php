@@ -1,5 +1,6 @@
 <?php
 
+use App\Exports\MasterSpjEksport;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Assets\AssetController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Rkbu\RkbuBarangJasaController;
 use App\Http\Controllers\Rkbu\RkbuModalAlkesController;
 use App\Http\Controllers\Rkbu\RkbuPegawaiPnsController;
 use App\Http\Controllers\Rkbu\RkbuPersediaanController;
+use App\Http\Controllers\Pengadaan\PerusahaanController;
 use App\Http\Controllers\Rkbu\RkbuModalKantorController;
 use App\Http\Controllers\MasterSpj\PdfControllerSPJBastBP;
 use App\Http\Controllers\MasterSpj\PdfControllerSPJBastHP;
@@ -44,6 +46,7 @@ use App\Http\Controllers\MasterBackend\SettingUser\JabatanController;
 use App\Http\Controllers\Rkbu\ModalAlkes\PdfControllerRkbuModalAlkes;
 use App\Http\Controllers\Rkbu\Persediaan\PdfControllerRkbuPersediaan;
 use App\Http\Controllers\RkbuHistory\RkbuHistoryPersediaanController;
+use App\Http\Controllers\UsulanBelanja\PdfControllerSuratPerintahKpa;
 use App\Http\Controllers\UsulanBelanja\UsulanBelanjaBarjasController;
 use App\Http\Controllers\MasterBackend\SettingRkbu\KegiatanController;
 use App\Http\Controllers\Rkbu\Administrator\RkbuBarjasAdminController;
@@ -51,9 +54,11 @@ use App\Http\Controllers\MasterBackend\SettingInput\AnggaranController;
 use App\Http\Controllers\MasterBackend\SettingInput\KomponenController;
 use App\Http\Controllers\MasterBackend\SettingRkbu\AktivitasController;
 use App\Http\Controllers\MasterBackend\SettingUser\LevelUserController;
+use App\Http\Controllers\Rkbu\Administrator\PdfControllerPrintByFilter;
 use App\Http\Controllers\Rkbu\KertasKerja\PdfControllerKertasKerjaBlud;
 use App\Http\Controllers\Rkbu\ModalKantor\PdfControllerRkbuModalKantor;
 use App\Http\Controllers\UsulanBelanja\CekUsulanBelanjaModalController;
+use App\Http\Controllers\MasterBackend\SettingInput\TargetSpsController;
 use App\Http\Controllers\MasterBackend\SettingInput\UraianDuaController;
 use App\Http\Controllers\MasterBackend\SettingRkbu\SumberDanaController;
 use App\Http\Controllers\MasterBackend\SettingUser\FungsionalController;
@@ -93,6 +98,7 @@ use App\Http\Controllers\Rkbu\ValidasiRka\PdfControllerValidasiPegawaiPnsRka;
 use App\Http\Controllers\Rkbu\ValidasiRka\PdfControllerValidasiPersediaanRka;
 use App\Http\Controllers\MasterBackend\SettingRkbu\KategoriRekeningController;
 use App\Http\Controllers\MasterBackend\SettingUser\PejabatPengadaanController;
+use App\Http\Controllers\Rkbu\Administrator\PdfControllerPrintByFilterPegawai;
 use App\Http\Controllers\Rkbu\Administrator\PdfControllerRkbuModalKantorAdmin;
 use App\Http\Controllers\Rkbu\ModalKantor\PdfControllerValidasiModalKantorKsp;
 use App\Http\Controllers\Rkbu\ValidasiKsp\ValidasiRkbuModalAlkesKspController;
@@ -107,6 +113,10 @@ use App\Http\Controllers\MasterBackend\SettingRkbu\JenisKategoriRkbuController;
 use App\Http\Controllers\Rkbu\ValidasiRka\ValidasiRkbuModalKantorRkaController;
 use App\Http\Controllers\MasterBackend\SettingInput\StatusValidasiRkaController;
 use App\Http\Controllers\Rkbu\ValidasiRka\PdfControllerValidasiPegawaiNonPnsRka;
+use App\Http\Controllers\Rkbu\Administrator\PdfControllerPrintByFilterPersediaan;
+use App\Http\Controllers\Rkbu\Administrator\PdfControllerPrintByFilterRka;
+use App\Http\Controllers\Rkbu\Administrator\PdfControllerRkaBarjasAdmin;
+use App\Http\Controllers\Rkbu\Administrator\RkaBarjasAdminController;
 use App\Http\Controllers\Rkbu\ValidasiKsp\ValidasiRkbuPegawaiNonPnsKspController;
 use App\Http\Controllers\Rkbu\ValidasiRka\ValidasiRkbuPegawaiNonPnsRkaController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Rka\ValidasiUsulanModalRkaController;
@@ -182,6 +192,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('status_validasi_rkas', StatusValidasiRkaController::class);
         Route::resource('judul_headers', JudulHeaderController::class);
         Route::resource('anggarans', AnggaranController::class);
+        Route::resource('target_sps', TargetSpsController::class);
     });
 
     Route::prefix('setting-rkbu')->group(function () {
@@ -196,6 +207,10 @@ Route::middleware('auth')->group(function () {
         Route::resource('obyek_belanjas', ObyekBelanjaController::class);
         Route::resource('kategori_rkbus', KategoriRkbuController::class);
         Route::resource('sub_kategori_rkbus', SubKategoriRkbuController::class);
+    });
+
+    Route::prefix('pengadaan')->group(function () {
+        Route::resource('perusahaans', PerusahaanController::class);
     });
 
     Route::prefix('rkbu-barjas')->group(function () {
@@ -313,12 +328,16 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('admin-rkbu-pegawai-pns')->group(function () {
+        Route::get('/rkbu_pegawai_pns_admins/print', [PdfControllerPrintByFilterPegawai::class, 'print'])
+            ->name('rkbu_pegawai_pns_admins.print');
         Route::resource('rkbu_pegawai_pns_admins', RkbuPegawaiPnsAdminController::class);
         Route::post('rkbu_pegawai_pns_admins/get_data_by_subkategori', [RkbuPegawaiPnsAdminController::class, 'getDataBySubKategori'])->name('rkbu_pegawai_pns_admins.get_data_by_subkategori');
         Route::get('/downloadPDF', [PdfControllerRkbuPegawaiPnsAdmin::class, 'downloadPDF'])->name('rkbu_pegawai_pns_admins.downloadPDF');
     });
 
     Route::prefix('admin-rkbu-barjas')->group(function () {
+        Route::get('/rkbu_barjas_admins/print', [PdfControllerPrintByFilter::class, 'print'])
+            ->name('rkbu_barjas_admins.print');
         Route::resource('rkbu_barjas_admins', RkbuBarjasAdminController::class);
         Route::post('rkbu_barjas_admins/get_data_by_subkategori', [RkbuBarjasAdminController::class, 'getDataBySubKategori'])->name('rkbu_barjas_admins.get_data_by_subkategori');
         Route::get('/downloadPDF', [PdfControllerRkbuBarjasAdmin::class, 'downloadPDF'])->name('rkbu_barjas_admins.downloadPDF');
@@ -337,6 +356,8 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('admin-rkbu-persediaan')->group(function () {
+        Route::get('/rkbu_persediaan_admins/print', [PdfControllerPrintByFilterPersediaan::class, 'print'])
+            ->name('rkbu_persediaan_admins.print');
         Route::resource('rkbu_persediaan_admins', RkbuPersediaanAdminController::class);
         Route::post('rkbu_persediaan_admins/get_data_by_subkategori', [RkbuPersediaanAdminController::class, 'getDataBySubKategori'])->name('rkbu_persediaan_admins.get_data_by_subkategori');
         Route::get('/downloadPDF', [PdfControllerRkbuPersediaanAdmin::class, 'downloadPDF'])->name('rkbu_persediaan_admins.downloadPDF');
@@ -358,6 +379,15 @@ Route::middleware('auth')->group(function () {
         }
     );
 
+    Route::prefix('rka')->group(
+        function () {
+            Route::get('/rka_barjas_admins/print', [PdfControllerPrintByFilterRka::class, 'print'])
+                ->name('rka_barjas_admins.print');
+            Route::resource('/rka_barjas_admins', RkaBarjasAdminController::class);
+            Route::get('/downloadPDF', [PdfControllerRkaBarjasAdmin::class, 'downloadPDF'])->name('rka_barjas_admins.downloadPDF');
+        }
+    );
+
     Route::prefix('usulan-belanja-barjas')->group(function () {
         Route::resource('usulan_barang_barjass', UsulanBelanjaBarjasController::class);
         Route::get('/usulan-barang_barjass/{id_usulan_barang}/show', [UsulanBelanjaBarjasController::class, 'show'])->name('usulan_barang_barjass.show');
@@ -373,23 +403,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/usulan_barang_details/download-report-export/{id_usulan_barang}', [ExportUsulanBarangDetail::class, 'downloadReportExport'])
             ->name('usulan_barang_details.downloadReportExport');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangBarjas::class, 'downloadPDFCekBarjas'])->name('usulan_barang_barjass.downloadPDF');
-    });
-
-    Route::prefix('usulan-belanja-persediaan')->group(function () {
-        Route::resource('usulan_barang_persediaans', UsulanBelanjaPersediaanController::class);
-        Route::get('/usulan-barang_persediaans/{id_usulan_barang}/show', [UsulanBelanjaPersediaanController::class, 'show'])->name('usulan_barang_persediaans.show');
-        Route::post('/usulan_barang_persediaans/update-status/{id}', [UsulanBelanjaPersediaanController::class, 'updateStatus'])->name('usulan_barang_persediaans.updateStatus');
-        Route::delete('/usulan_barang_persediaans/{usulan_barang}', [UsulanBelanjaPersediaanController::class, 'destroy'])->name('usulan_barang_persediaans.destroy');
-        Route::delete('/usulan_barang_persediaans.delete/{id_usulan_barang}', [UsulanBelanjaPersediaanController::class, 'doDelete'])->name('usulan_barang_persediaans.delete');
-        Route::delete('/usulan_barang_persediaans.delete_detail/{id_usulan_barang_detail}', [UsulanBelanjaPersediaanController::class, 'doDeleteDetailKeranjang'])->name('usulan_barang_persediaans.delete_detail');
-        Route::post('usulan_barang_persediaans/get_data_by_subkategori', [UsulanBelanjaPersediaanController::class, 'getDataBySubKategori'])->name('usulan_barang_persediaans.get_data_by_subkategori');
-        Route::get('/get-rkbu-data', [UsulanBelanjaPersediaanController::class, 'getRkbuData']);
-        Route::post('/add-to-cart/{id_usulan_barang}', [UsulanBelanjaPersediaanController::class, 'addToCart'])->name('add-to-cart');
-        Route::post('/add-to-cart-multiple-persediaan', [UsulanBelanjaPersediaanController::class, 'addToCartMultiple'])->name('add-to-cart-multiple-persediaan');
-        Route::get('/usulan_barang_persediaans/keranjang/{id}', [UsulanBelanjaPersediaanController::class, 'keranjang'])->name('usulan_barang_persediaans.keranjang');
-        Route::get('/usulan_barang_details/download-report-export/{id_usulan_barang}', [ExportUsulanBarangDetail::class, 'downloadReportExport'])
-            ->name('usulan_barang_details.downloadReportExport');
-        Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangPersediaan::class, 'downloadPDFCekBarjas'])->name('usulan_barang_persediaans.downloadPDF');
+        Route::get('/get-sub-kategori-by-sumber-dana', [UsulanBelanjaBarjasController::class, 'getSubKategoriBySumberDana'])
+            ->name('getSubKategoriBySumberDanaBarjas');
     });
 
     Route::prefix('usulan-belanja-modal')->group(function () {
@@ -407,6 +422,27 @@ Route::middleware('auth')->group(function () {
         Route::get('/usulan_barang_details/download-report-export/{id_usulan_barang}', [ExportUsulanBarangDetail::class, 'downloadReportExport'])
             ->name('usulan_barang_details.downloadReportExport');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangModal::class, 'downloadPDFCekBarjas'])->name('usulan_barang_modals.downloadPDF');
+        Route::get('/get-sub-kategori-by-sumber-dana', [UsulanBelanjaModalController::class, 'getSubKategoriBySumberDana'])->name('getSubKategoriBySumberDanaModal');
+        // Route::get('/get-sub-kategori-by-sumber-dana/{id_sumber_dana}', [UsulanBelanjaModalController::class, 'getSubKategoriBySumberDana'])->name('getSubKategoriBySumberDana');
+    });
+
+    Route::prefix('usulan-belanja-persediaan')->group(function () {
+        Route::resource('usulan_barang_persediaans', UsulanBelanjaPersediaanController::class);
+        Route::get('/usulan-barang_persediaans/{id_usulan_barang}/show', [UsulanBelanjaPersediaanController::class, 'show'])->name('usulan_barang_persediaans.show');
+        Route::post('/usulan_barang_persediaans/update-status/{id}', [UsulanBelanjaPersediaanController::class, 'updateStatus'])->name('usulan_barang_persediaans.updateStatus');
+        Route::delete('/usulan_barang_persediaans/{usulan_barang}', [UsulanBelanjaPersediaanController::class, 'destroy'])->name('usulan_barang_persediaans.destroy');
+        Route::delete('/usulan_barang_persediaans.delete/{id_usulan_barang}', [UsulanBelanjaPersediaanController::class, 'doDelete'])->name('usulan_barang_persediaans.delete');
+        Route::delete('/usulan_barang_persediaans.delete_detail/{id_usulan_barang_detail}', [UsulanBelanjaPersediaanController::class, 'doDeleteDetailKeranjang'])->name('usulan_barang_persediaans.delete_detail');
+        Route::post('usulan_barang_persediaans/get_data_by_subkategori', [UsulanBelanjaPersediaanController::class, 'getDataBySubKategori'])->name('usulan_barang_persediaans.get_data_by_subkategori');
+        Route::get('/get-rkbu-data', [UsulanBelanjaPersediaanController::class, 'getRkbuData']);
+        Route::post('/add-to-cart/{id_usulan_barang}', [UsulanBelanjaPersediaanController::class, 'addToCart'])->name('add-to-cart');
+        Route::post('/add-to-cart-multiple-persediaan', [UsulanBelanjaPersediaanController::class, 'addToCartMultiple'])->name('add-to-cart-multiple-persediaan');
+        Route::get('/usulan_barang_persediaans/keranjang/{id}', [UsulanBelanjaPersediaanController::class, 'keranjang'])->name('usulan_barang_persediaans.keranjang');
+        Route::get('/usulan_barang_details/download-report-export/{id_usulan_barang}', [ExportUsulanBarangDetail::class, 'downloadReportExport'])
+            ->name('usulan_barang_details.downloadReportExport');
+        Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangPersediaan::class, 'downloadPDFCekBarjas'])->name('usulan_barang_persediaans.downloadPDF');
+        Route::get('/get-sub-kategori-by-sumber-dana', [UsulanBelanjaPersediaanController::class, 'getSubKategoriBySumberDana'])
+            ->name('getSubKategoriBySumberDanaPersediaan');
     });
 
     Route::prefix('cek-usulan-belanja-barjas')->group(function () {
@@ -414,18 +450,21 @@ Route::middleware('auth')->group(function () {
         Route::get('/grafik', [GrafikController::class, 'index'])->name('grafik.index');
         Route::get('cek_usulan_barang_barjass/{usulanBarang}', [CekUsulanBarangController::class, 'show'])->name('cek_usulan_barang_barjass.show');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangBarjas::class, 'downloadPDFCekBarjas'])->name('cek_usulan_barang_barjass.downloadPDF');
+        Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('cek_usulan_barang_barjass.downloadPDFPerintahKerja');
     });
 
     Route::prefix('cek-usulan-belanja-modal')->group(function () {
         Route::resource('cek_usulan_barang_modals', CekUsulanBelanjaModalController::class);
         Route::get('cek_usulan_barang_modals/{usulanBarang}', [CekUsulanBelanjaModalController::class, 'show'])->name('cek_usulan_barang_modals.show');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangModal::class, 'downloadPDFCekBarjas'])->name('cek_usulan_barang_modals.downloadPDF');
+        Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('cek_usulan_barang_modals.downloadPDFPerintahKerja');
     });
 
     Route::prefix('cek-usulan-belanja-persediaan')->group(function () {
         Route::resource('cek_usulan_barang_persediaans', CekUsulanBelanjaPersediaanController::class);
         Route::get('cek_usulan_barang_persediaans/{usulanBarang}', [CekUsulanBelanjaPersediaanController::class, 'show'])->name('cek_usulan_barang_persediaans.show');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangPersediaan::class, 'downloadPDFCekBarjas'])->name('cek_usulan_barang_persediaans.downloadPDF');
+        Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('cek_usulan_barang_persediaans.downloadPDFPerintahKerja');
     });
 
     Route::prefix('validasi-usulan-belanja-pptk')->group(function () {
@@ -438,6 +477,7 @@ Route::middleware('auth')->group(function () {
             ->name('validasi_usulan_barang_pptks.delete');
         Route::delete('/validasi_usulan_barang_pptks.delete_detail/{id_usulan_barang_detail}', [ValidasiUsulanBarangPptkController::class, 'doDeleteDetailKeranjang'])->name('validasi_usulan_barang_pptks.delete_detail');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangBarjas::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_barang_pptks.downloadPDF');
+        Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('validasi_usulan_barang_pptks.downloadPDFPerintahKerja');
     });
 
     Route::prefix('validasi-usulan-modal-pptk')->group(function () {
@@ -450,6 +490,7 @@ Route::middleware('auth')->group(function () {
             ->name('validasi_usulan_modal_pptks.delete');
         Route::delete('/validasi_usulan_modal_pptks.delete_detail/{id_usulan_barang_detail}', [ValidasiUsulanModalPptkController::class, 'doDeleteDetailKeranjang'])->name('validasi_usulan_modal_pptks.delete_detail');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangModal::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_modal_pptks.downloadPDF');
+        Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('validasi_usulan_modal_pptks.downloadPDFPerintahKerja');
     });
 
     Route::prefix('validasi-usulan-persediaan-pptk')->group(function () {
@@ -462,6 +503,7 @@ Route::middleware('auth')->group(function () {
             ->name('validasi_usulan_persediaan_pptks.delete');
         Route::delete('/validasi_usulan_persediaan_pptks.delete_detail/{id_usulan_barang_detail}', [ValidasiUsulanPersediaanPptkController::class, 'doDeleteDetailKeranjang'])->name('validasi_usulan_persediaan_pptks.delete_detail');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangModal::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_persediaan_pptks.downloadPDF');
+        Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('validasi_usulan_persediaan_pptks.downloadPDFPerintahKerja');
     });
 
     Route::prefix('validasi-usulan-belanja-rka')->group(function () {
@@ -473,6 +515,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/validasi-usulan-barang-rkas/{id_usulan_barang}', [ValidasiUsulanBarangRkaController::class, 'doDelete'])
             ->name('validasi_usulan_barang_rkas.delete');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangBarjas::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_barang_rkas.downloadPDF');
+        Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('validasi_usulan_barang_rkas.downloadPDFPerintahKerja');
     });
 
     Route::prefix('validasi-usulan-modal-rka')->group(function () {
@@ -484,6 +527,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/validasi-usulan-modal-rkas/{id_usulan_barang}', [ValidasiUsulanModalRkaController::class, 'doDelete'])
             ->name('validasi_usulan_modal_rkas.delete');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangModal::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_modal_rkas.downloadPDF');
+        Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('validasi_usulan_modal_rkas.downloadPDFPerintahKerja');
     });
 
     Route::prefix('validasi-usulan-persediaan-rka')->group(function () {
@@ -495,6 +539,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/validasi-usulan-persediaan-rkas/{id_usulan_barang}', [ValidasiUsulanPersediaanRkaController::class, 'doDelete'])
             ->name('validasi_usulan_persediaan_rkas.delete');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangModal::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_persediaan_rkas.downloadPDF');
+        Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('validasi_usulan_persediaan_rkas.downloadPDFPerintahKerja');
     });
 
     Route::prefix('validasi-usulan-belanja-direktur')->group(function () {
@@ -506,6 +551,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/validasi-usulan-barang-direkturs/{id_usulan_barang}', [ValidasiUsulanBarangDirekturController::class, 'doDelete'])
             ->name('validasi_usulan_barang_direkturs.delete');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangBarjas::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_barang_direkturs.downloadPDF');
+        Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('validasi_usulan_barang_direkturs.downloadPDFPerintahKerja');
     });
 
     Route::prefix('validasi-usulan-modal-direktur')->group(function () {
@@ -517,6 +563,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/validasi-usulan-modal-direkturs/{id_usulan_barang}', [ValidasiUsulanModalDirekturController::class, 'doDelete'])
             ->name('validasi_usulan_modal_direkturs.delete');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangBarjas::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_modal_direkturs.downloadPDF');
+        Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('validasi_usulan_modal_direkturs.downloadPDFPerintahKerja');
     });
 
     Route::prefix('validasi-usulan-persediaan-direktur')->group(function () {
@@ -530,6 +577,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/validasi-usulan-persediaan-direkturs/{id_usulan_barang}', [ValidasiUsulanPersediaanDirekturController::class, 'doDelete'])
             ->name('validasi_usulan_persediaan_direkturs.delete');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangBarjas::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_persediaan_direkturs.downloadPDF');
+        Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('validasi_usulan_persediaan_direkturs.downloadPDFPerintahKerja');
     });
 
     Route::prefix('usulan-spj-barjas')->group(function () {
@@ -619,7 +667,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/downloadPDF_Spj_BAST_PK/{id}', [PdfControllerSpjBastPK::class, 'downloadPDF'])->name('bast_pk.downloadPDF_BAST_PK');
         Route::get('/downloadPDF_Spj_BAST_BP/{id}', [PdfControllerSPJBastBP::class, 'downloadPDF'])->name('bast_bp.downloadPDF_BAST_BP');
         Route::get('/downloadPDF_Spj_BAST_HP/{id}', [PdfControllerSPJBastHP::class, 'downloadPDF'])->name('bast_hp.downloadPDF_BAST_HP');
-        // Route::get('/rkbu/download-report-spj', [MasterSpjEksport::class, 'downloadReport'])->name('master_spj.downloadReport');
+        Route::get(
+            '/rkbu/download-report-spj',
+            [MasterSpjController::class, 'downloadReport']
+        )->name('master_spjs.downloadReport');
         // Route::get('/downloadPDF-report-spj', [PdfControllerMasterSpj::class, 'downloadPDF'])->name('master_spj.downloadPDF_report_spj');
         // Route::get('/downloadPDF-realisasi-report-spj', [PdfControllerRealisasiMasterSpj::class, 'downloadPDF'])->name('master_spj.downloadPDF_realisasi_spj');
     });

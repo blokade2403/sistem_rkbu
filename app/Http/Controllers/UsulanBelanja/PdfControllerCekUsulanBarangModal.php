@@ -384,7 +384,7 @@ class PdfControllerCekUsulanBarangModal extends Controller
         </table>';
 
         // Tambahkan header ke PDF
-        $pdf->writeHTML($html, true, false, true, false, '');
+        $pdf->writeHTML($html, false, false, true, false, '');
 
         // Cek dan tambahkan halaman baru jika diperlukan sebelum menulis konten tabel
         $requiredSpace = 50; // Tentukan tinggi yang diperlukan untuk elemen (misalnya tabel)

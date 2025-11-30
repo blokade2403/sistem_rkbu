@@ -3,7 +3,7 @@
         <form action="{{ route($routePrefix . '.index') }}" method="GET">
             <div class="card-block">
                 <div class="form-group row">
-                    <div class="col-sm-5">
+                    <div class="col-sm-3">
                         <div class="col-sm-12">
                             <label for="userName-2" class="block">Filter by Sub Kategori Rkbu</label>
                         </div>
@@ -21,7 +21,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-sm-4">
+                    <div class="col-sm-2">
                         <div class="col-sm-12">
                             <label for="userName-2" class="form-label">Filter by Status Validasi</label>
                         </div>
@@ -33,6 +33,23 @@
                                     <option value="{{ $status->id_status_validasi_rka }}"
                                         {{ request('id_status_validasi_rka') == $status->id_status_validasi_rka ? 'selected' : '' }}>
                                         {{ $status->nama_validasi_rka }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div class="col-sm-12">
+                            <label for="userName-2" class="form-label">Filter by Sumber Dana</label>
+                        </div>
+                        <div class="col-sm-12">
+                            <select name="id_sumber_dana" class="form-control" class="form-select" data-choices
+                                data-choices-sorting="true">
+                                <option value="">-- Pilih Status Validasi --</option>
+                                @foreach ($daftarSumberDana as $sd)
+                                    <option value="{{ $sd->id_sumber_dana }}"
+                                        {{ request('id_sumber_dana') == $sd->id_sumber_dana ? 'selected' : '' }}>
+                                        {{ $sd->nama_sumber_dana }}
                                     </option>
                                 @endforeach
                             </select>
@@ -53,6 +70,11 @@
                                     Reset
                                 </div>
                             </div>
+                        </a>
+                        <a href="{{ route($routePrefixPrint . '.print', request()->query()) }}" target="_blank"
+                            class="btn btn-danger btn-label waves-effect waves-light ms-2">
+                            <i class="ri-printer-line label-icon align-middle fs-16 me-2"></i>
+                            Print PDF
                         </a>
                     </div>
                 </div>

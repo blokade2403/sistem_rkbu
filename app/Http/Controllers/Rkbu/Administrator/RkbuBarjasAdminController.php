@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Rkbu\Administrator;
 
+use App\Pdf\MYPDF;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -9,10 +10,13 @@ use App\Models\RkbuHistory\RkbuHistory;
 use Illuminate\Support\Facades\Session;
 use App\Models\MasterBackend\UserProfil\User;
 use App\Models\MasterBackend\SettingRkbu\Rkbu;
+use App\Models\MasterBackend\UserProfil\Pejabat;
 use App\Models\MasterBackend\SettingInput\Anggaran;
 use App\Models\MasterBackend\SettingInput\Komponen;
 use App\Models\MasterBackend\SettingInput\UraianDua;
+use App\Models\MasterBackend\SettingRkbu\SumberDana;
 use App\Models\MasterBackend\SettingInput\UraianSatu;
+use App\Models\MasterBackend\SettingInput\JudulHeader;
 use App\Models\MasterBackend\SettingInput\TahunAnggaran;
 use App\Models\MasterBackend\SettingInput\StatusValidasi;
 use App\Models\MasterBackend\SettingRkbu\RekeningBelanja;
@@ -30,7 +34,7 @@ class RkbuBarjasAdminController extends Controller
         $tahunAnggaran       = Session::get('tahun_anggaran');
         $status_validasi_rka = StatusValidasiRka::all(); // Ambil status validasi dari model terkait
         $faseTahun           = TahunAnggaran::where('nama_tahun_anggaran', $tahunAnggaran)->value('fase_tahun');
-
+        $daftarSumberDana = SumberDana::all();
 
         $sumber_dana    = [
             '9cdfcedb-cc19-4b65-b889-4a5e2dc0ebe3', // BLUD
@@ -89,7 +93,7 @@ class RkbuBarjasAdminController extends Controller
         $selisih = $jumlah_anggaran - $total_anggaran_barjas_admin;
 
         // dd($selisih);
-
+        $currentSumberDana = $request->input('sumber_dana', '');
         $currentJenisKategori = $request->input('jenis_kategori_rkbu', '9cdfd354-e43a-4461-9747-e15fb74038ac');
 
         // Ambil sub kategori rkbu berdasarkan id_user dari session dan id_jenis_kategori_rkbu
@@ -108,13 +112,28 @@ class RkbuBarjasAdminController extends Controller
             ->get();
 
         // Query untuk mengambil data rkbu
+        // $query = Rkbu::join('users', 'rkbus.id_user', '=', 'users.id_user')
+        //     ->join('ksps', 'users.id_ksp', '=', 'ksps.id_ksp')
+        //     ->join('sub_kategori_rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
+        //     ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
+        //     ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
+        //     ->join('pejabats', 'users.id_pejabat', '=', 'pejabats.id_pejabat')
+        //     // ->where('pejabats.id_pejabat', $id_pejabat)
+        //     ->where('id_status_validasi', '9cfb1edc-2263-401f-b249-361db4017932')
+        //     ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
+        //     ->where('sub_kategori_rkbus.id_sub_kategori_rkbu', '!=', '9d03d062-b7d6-490e-ad71-10d92c5628cb')
+        //     ->where('jenis_kategori_rkbus.id_jenis_kategori_rkbu',  $currentJenisKategori);
+
         $query = Rkbu::join('users', 'rkbus.id_user', '=', 'users.id_user')
             ->join('ksps', 'users.id_ksp', '=', 'ksps.id_ksp')
             ->join('sub_kategori_rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
             ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
             ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
             ->join('pejabats', 'users.id_pejabat', '=', 'pejabats.id_pejabat')
-            // ->where('pejabats.id_pejabat', $id_pejabat)
+            ->join('rekening_belanjas', 'rekening_belanjas.id_kode_rekening_belanja', '=', 'rkbus.id_kode_rekening_belanja')
+            ->join('aktivitas', 'aktivitas.id_aktivitas', '=', 'rekening_belanjas.id_aktivitas')
+            ->join('sub_kegiatans', 'sub_kegiatans.id_sub_kegiatan', '=', 'aktivitas.id_sub_kegiatan')
+            ->join('sumber_danas', 'sumber_danas.id_sumber_dana', '=', 'sub_kegiatans.id_sumber_dana')
             ->where('id_status_validasi', '9cfb1edc-2263-401f-b249-361db4017932')
             ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
             ->where('sub_kategori_rkbus.id_sub_kategori_rkbu', '!=', '9d03d062-b7d6-490e-ad71-10d92c5628cb')
@@ -130,6 +149,11 @@ class RkbuBarjasAdminController extends Controller
         if ($request->filled('id_status_validasi_rka')) {
             $query->where('rkbus.id_status_validasi_rka', $request->id_status_validasi_rka);
         }
+
+        if ($request->filled('sumber_dana')) {
+            $query->where('sumber_danas.id_sumber_dana', $currentSumberDana);
+        }
+
 
         // Dapatkan data rkbu setelah filter
         $rkbus = $query->select('rkbus.*')->get();
@@ -149,11 +173,14 @@ class RkbuBarjasAdminController extends Controller
                 'selisih',
                 'jumlah_anggaran',
                 'total_anggaran_barjas_admin',
+                'daftarSumberDana',
+                'currentSumberDana'
 
             ),
-            ['title' => 'Halaman RKBU', 'routePrefix' => 'rkbu_barjas_admins']
+            ['title' => 'Halaman RKBU', 'routePrefix' => 'rkbu_barjas_admins', 'routePrefixPrint' => 'rkbu_barjas_admins']
         );
     }
+
 
     public function create() {}
     public function store(Request $request) {}
@@ -315,7 +342,7 @@ class RkbuBarjasAdminController extends Controller
                 'vol_2'                         => 'nullable|numeric',
                 'satuan_2'                      => 'nullable',
                 'spek'                          => 'nullable',
-                'harga_satuan'                  => 'required|numeric',
+                'harga_satuan'                  => 'required|regex:/^[0-9.,]+$/',
                 'ppn'                           => 'required|numeric',
                 'rating'                        => 'nullable',
                 'link_ekatalog'                 => 'nullable',
@@ -559,7 +586,6 @@ class RkbuBarjasAdminController extends Controller
         // Redirect dengan pesan sukses
         return redirect()->route('rkbu_barjas_admins.index')->with('success', 'Data berhasil diperbarui.');
     }
-
 
     public function destroy(string $id)
     {

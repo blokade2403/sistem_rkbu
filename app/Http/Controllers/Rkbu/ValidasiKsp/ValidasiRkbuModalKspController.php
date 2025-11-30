@@ -158,8 +158,9 @@ class ValidasiRkbuModalKspController extends Controller
         $uraian_satu                = UraianSatu::all();
         $uraian_dua                 = UraianDua::all();
         $status_validasi            = StatusValidasi::all();
+        $selectedId                 = $rkbuBarangJasa->id_status_validasi;
 
-        return view('rkbu.formatform.edit', compact('rkbuBarangJasa', 'faseTahun', 'status_validasi', 'komponens', 'sub_kategori_rkbus', 'uraian_satu', 'uraian_dua', 'id_kode_rekening_belanja'), [
+        return view('rkbu.formatform.edit', compact('rkbuBarangJasa', 'faseTahun', 'status_validasi', 'selectedId', 'komponens', 'sub_kategori_rkbus', 'uraian_satu', 'uraian_dua', 'id_kode_rekening_belanja'), [
             'title' => 'Halaman RKBU',
             'routePrefix' => 'validasi_ksp_rkbu_modal_kantors',
         ]);
@@ -191,7 +192,7 @@ class ValidasiRkbuModalKspController extends Controller
             'vol_2'                         => 'nullable|numeric',
             'satuan_2'                      => 'nullable',
             'spek'                          => 'nullable',
-            'harga_satuan'                  => 'required|numeric',
+            'harga_satuan'                  => 'required|regex:/^[0-9.,]+$/',
             'ppn'                           => 'required|numeric',
             'rating'                        => 'nullable',
             'link_ekatalog'                 => 'nullable',

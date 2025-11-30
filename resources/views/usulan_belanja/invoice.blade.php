@@ -132,9 +132,9 @@
                                                                 <td><small class="text-info">{{ $key + 1 }}</small>
                                                                 </td>
                                                                 <td>
-                                                                    <small
-                                                                        class="text-info">{{ $item->nama_barang }}</small><br />
-                                                                    <span class="fa-xs">ID RKBU:
+                                                                    <span
+                                                                        class="text-info fs-16"><strong>{{ $item->nama_barang }}</strong></span><br />
+                                                                    <span class="fs-10">ID RKBU:
                                                                         {{ $item->id_rkbu }}</span>
                                                                 </td>
                                                                 <td class="text-wrap"

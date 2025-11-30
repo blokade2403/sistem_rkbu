@@ -167,7 +167,7 @@ class ValidasiRkbuBarjasKspController extends Controller
             'vol_2'                         => 'nullable|numeric',
             'satuan_2'                      => 'nullable',
             'spek'                          => 'nullable',
-            'harga_satuan'                  => 'required|numeric',
+            'harga_satuan'                  => 'required|regex:/^[0-9.,]+$/',
             'ppn'                           => 'required|numeric',
             'rating'                        => 'nullable',
             'link_ekatalog'                 => 'nullable',

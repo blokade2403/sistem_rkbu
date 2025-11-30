@@ -34,6 +34,7 @@ class UsulanBarang extends Model
 
     protected $fillable = [
         'id_usulan_barang',
+        'id_sumber_dana',
         'status_validasi_pengadaan',
         'keterangan_validasi_pengadaan',
         'tanggal_validasi_pengadaan',

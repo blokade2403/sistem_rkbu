@@ -111,7 +111,6 @@ class PdfControllerRkbuBarjasAdmin extends Controller
             $nip_direktur       = $first_direktur->nip_pejabat ?? '...............';
         }
 
-
         // Dapatkan data rkbu
         $rkbus_total = $query->select('rkbus.*')->get();
 
@@ -278,7 +277,27 @@ class PdfControllerRkbuBarjasAdmin extends Controller
         $this->checkPageBreak($pdf, $requiredSpace);
 
         // Tambahkan konten body dari view 'print_rkbu_modal_kantor'
-        $htmlBody = view('rkbu.partials.print_rkbu_barjas_admin', compact('rkbus', 'tanggal_perencanaans', 'jabatan_kabag', 'nama_rumah_sakit', 'nama_pejabat', 'nip_pejabat_kabag', 'nip_direktur', 'nama_direktur', 'pdf', 'sub_kategori_rkbus', 'status_validasi_rka', 'total_anggaran', 'categories', 'namaProgram', 'namaKegiatan', 'namaSubKegiatan', 'kodeProgram', 'kodeKegiatan', 'kodeSubKegiatan'))->render();
+        $htmlBody = view('rkbu.partials.print_rkbu_barjas_admin', compact(
+            'rkbus',
+            'tanggal_perencanaans',
+            'jabatan_kabag',
+            'nama_rumah_sakit',
+            'nama_pejabat',
+            'nip_pejabat_kabag',
+            'nip_direktur',
+            'nama_direktur',
+            'pdf',
+            'sub_kategori_rkbus',
+            'status_validasi_rka',
+            'total_anggaran',
+            'categories',
+            'namaProgram',
+            'namaKegiatan',
+            'namaSubKegiatan',
+            'kodeProgram',
+            'kodeKegiatan',
+            'kodeSubKegiatan'
+        ))->render();
 
         // Tuliskan konten body ke PDF
         $pdf->writeHTML($htmlBody, true, false, true, false, '');

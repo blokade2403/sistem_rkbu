@@ -2,18 +2,16 @@
 
 namespace App\Exports;
 
-use App\Models\MasterSpj;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Events\AfterSheet;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use App\Models\MasterBackend\SettingBelanja\MasterSpj;
 
 class MasterSpjEksport implements FromCollection, WithHeadings, WithEvents
 {
-    /**
-     * @return \Illuminate\Support\Collection
-     */
+
     public function collection()
     {
         // Mengambil session id_user dan tahun_anggaran

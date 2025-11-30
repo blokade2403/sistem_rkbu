@@ -13,6 +13,7 @@ use App\Models\MasterBackend\SettingUser\Fase;
 use App\Models\MasterBackend\SettingInput\Anggaran;
 use App\Models\MasterBackend\SettingInput\Komponen;
 use App\Models\MasterBackend\SettingInput\UraianDua;
+use App\Models\MasterBackend\SettingRkbu\SumberDana;
 use App\Models\MasterBackend\SettingInput\UraianSatu;
 use App\Models\MasterBackend\SettingInput\TahunAnggaran;
 use App\Models\MasterBackend\SettingInput\StatusValidasi;
@@ -29,6 +30,7 @@ class RkbuPersediaanAdminController extends Controller
         $id_user             = session('id_user');
         $status_validasi_rka = StatusValidasiRka::all();
         $tahunAnggaran       = session('tahun_anggaran');
+        $daftarSumberDana = SumberDana::all();
 
         $id_tahun_anggaran   = TahunAnggaran::where('nama_tahun_anggaran', $tahunAnggaran)->value('id');
         $id_fase = session('id_fase');
@@ -73,7 +75,7 @@ class RkbuPersediaanAdminController extends Controller
 
         $total_anggaran_barjas_admin = $query_admin($idKodeRekeningBelanja_blud);
         $selisih = $jumlah_anggaran - $total_anggaran_barjas_admin;
-
+        $currentSumberDana = $request->input('sumber_dana', '');
         $currentJenisKategori = $request->input('jenis_kategori_rkbu', '9cdfd364-2946-4ea1-bec2-e1130e8d9f2c');
 
         $sub_kategori_rkbus = SubKategoriRkbu::join('rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
@@ -109,6 +111,10 @@ class RkbuPersediaanAdminController extends Controller
             $query->where('rkbus.id_status_validasi_rka', $request->id_status_validasi_rka);
         }
 
+        if ($request->filled('sumber_dana')) {
+            $query->where('sumber_danas.id_sumber_dana', $currentSumberDana);
+        }
+
         $rkbus = $query->select('rkbus.*')->get();
 
         $total_anggaran = $rkbus->sum('total_anggaran');
@@ -121,7 +127,9 @@ class RkbuPersediaanAdminController extends Controller
             'total_anggaran'                => $total_anggaran,
             'jumlah_anggaran'               => $jumlah_anggaran,
             'total_anggaran_barjas_admin'   => $total_anggaran_barjas_admin,
-        ], ['title' => 'Halaman RKBU', 'routePrefix' => 'rkbu_persediaan_admins']);
+            'daftarSumberDana'              => $daftarSumberDana,
+            'currentSumberDana'             => $currentSumberDana
+        ], ['title' => 'Halaman RKBU', 'routePrefix' => 'rkbu_persediaan_admins', 'routePrefixPrint' => 'rkbu_persediaan_admins']);
     }
 
     public function create() {}

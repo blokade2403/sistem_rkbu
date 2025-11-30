@@ -320,26 +320,24 @@ class PdfControllerSpjSuratPesanan extends Controller
 
         // Buat konten HTML untuk tabel header
         $html = '<table lines="none" bgcolor="white">
-                <thead>
                <tr bgcolor="#ffffff">
-               <th  width="20%" align="left"><h4></h4>
-                    <h6 align="top" style="line-height:11;"><img src="assets/foto_rs/jakarta.png" width="65" height="65"  ></h6>
+               <th  width="10%" align="left"><h4></h4>
+                    <h6 align="center"><img src="' . $gambar2 . '" width="65" height="65"  ></h6>
                </th> 
-               <th  width="70%" align="center">
-              <h4 style="font-weight: normal; line-height:0; font-size:11px;">' . $judulHeaders->header1 . '</h4>
-               <h5 style="font-weight: bold; font-size:15px; line-height:1;">' . $judulHeaders->header4 . '</h5>
-               <h5 style="font-weight: bold; font-size:12px; line-height:0;">' . $judulHeaders->nama_rs . '</h5>
-                    <h3 style="font-weight: normal; font-size:11px; line-height:1.3;" align="center"; text="wrap">' . $judulHeaders->alamat_rs . ' Telp. ' . $judulHeaders->tlp_rs . ' Faksimile. ' . $judulHeaders->tlp_rs . '</h3>
-                    <h3 style="font-weight: normal; font-size:11px; line-height:0;" align="center">' . $judulHeaders->header3 . '</h3>
-                    <h3 style="font-weight: normal; font-size:11px; line-height:1;" align="center">' . $judulHeaders->wilayah . '</h3>
+               <th  width="80%" align="center">
+                    <h3 align="center" style="font-size:11px; font-weight: normal;">' . $judulHeaders->header1 . '</h3>
+                    <h3 style="font-weight: bold; font-size:11px; line-height:0;" align="center">' . $judulHeaders->header4 . '</h3>
+                    <h3 style="font-weight: normal; font-size:10px; " align="center">' . $judulHeaders->nama_rs . '</h3>
+                    <h3 align="center" style="font-size:9px; font-weight: normal; line-height:0;">' . $judulHeaders->alamat_rs . '</h3>
+                    <h3 align="center" style="font-size:9px; font-weight: normal; ">Telp. ' . $judulHeaders->tlp_rs . ' Faksimile. ' . $judulHeaders->tlp_rs . '</h3>
+                    <h3 align="center" style="font-size:9px; font-weight: normal; line-height:0;">' . $judulHeaders->header3 . '</h3>
+                    <h3 align="right" style="font-size:9px; font-weight: normal; line-height:0;">Kode Pos : ' . $judulHeaders->kode_pos . '</h3>
                </th>
-               <hr>
-               <th width="90%" align="right">
-               <h5 style="font-weight: normal; font-size:11px; line-height:8.2; align:right;"></h5>
-               <h3 style="font-weight: normal; font-size:11px; line-height:0; align:right;">Kode Pos ' . $judulHeaders->kode_pos . '</h3>
-               </th>
+               <th  width="10%" align="right"><h4></h4>
+                    <h6 align="center"><img src="" width="75" height="45"  ></h6>
+               </th> 
                </tr>
-               </thead>
+               <hr>
         </table>';
 
 
@@ -360,62 +358,62 @@ class PdfControllerSpjSuratPesanan extends Controller
         $htmlSignatureTable = '
              <table>
                 <tr >
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.5; text-align: center;" class="no-border" width="40%"></td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.5; text-align: left;" class="no-border" width="20%"></td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 2; text-align: center;" class="no-border" width="40%">Jakarta, ' . $tgl_pesanan . ' </td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.5; text-align: center;" class="no-border" width="40%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.5; text-align: left;" class="no-border" width="20%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 2; text-align: center;" class="no-border" width="40%">Jakarta, ' . $tgl_pesanan . ' </td>
                 </tr>
                 <tr>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 0; text-align: center;" class="no-border" width="40%">Pejabat Pembuat Komitmen</td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 0; text-align: left;" class="no-border" width="20%"></td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 0; text-align: center; text:wrap" class="no-border" width="40%">Pejabat Pengadaan Barang/Jasa</td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 0; text-align: center;" class="no-border" width="40%">Pejabat Pembuat Komitmen</td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 0; text-align: left;" class="no-border" width="20%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 0; text-align: center; text:wrap" class="no-border" width="40%">Pejabat Pengadaan Barang/Jasa</td>
                 </tr>
                 <tr>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 2; text-align: center;" class="no-border" width="40%">' . ucwords(strtolower($judulHeaders->nama_rs)) . '</td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.5; text-align: left;" class="no-border" width="20%"></td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 2; text-align: center; text:wrap" class="no-border" width="40%">' . ucwords(strtolower($judulHeaders->nama_rs)) . '</td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 2; text-align: center;" class="no-border" width="40%">' . ucwords(strtolower($judulHeaders->nama_rs)) . '</td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.5; text-align: left;" class="no-border" width="20%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 2; text-align: center; text:wrap" class="no-border" width="40%">' . ucwords(strtolower($judulHeaders->nama_rs)) . '</td>
                 </tr>
                 <tr>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 5; text-align: center;" class="no-border" width="40%"></td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 5; text-align: left;" class="no-border" width="20%"></td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 5; text-align: center; text:wrap" class="no-border" width="40%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 5; text-align: center;" class="no-border" width="40%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 5; text-align: left;" class="no-border" width="20%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 5; text-align: center; text:wrap" class="no-border" width="40%"></td>
                 </tr>
                 <tr>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 2; text-align: center;" class="no-border" width="40%">' . $detail_master_spj->nama_ppk . '</td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 2; text-align: left;" class="no-border" width="20%"></td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 2; text-align: center; text:wrap" class="no-border" width="40%">' . $detail_master_spj->nama_ppbj . '</td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 2; text-align: center;" class="no-border" width="40%">' . $detail_master_spj->nama_ppk . '</td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 2; text-align: left;" class="no-border" width="20%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 2; text-align: center; text:wrap" class="no-border" width="40%">' . $detail_master_spj->nama_ppbj . '</td>
                 </tr>
                 <tr>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 0; text-align: center;" class="no-border" width="40%">NIP ' . $detail_master_spj->nip_ppk . '</td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 0; text-align: left;" class="no-border" width="20%"></td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 0; text-align: center; text:wrap" class="no-border" width="40%">NIP ' . $detail_master_spj->nip_ppbj . '</td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 0; text-align: center;" class="no-border" width="40%">NIP ' . $detail_master_spj->nip_ppk . '</td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 0; text-align: left;" class="no-border" width="20%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 0; text-align: center; text:wrap" class="no-border" width="40%">NIP ' . $detail_master_spj->nip_ppbj . '</td>
                 </tr>
                 <tr>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 2; text-align: center;" class="no-border" width="40%"></td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 2; text-align: left;" class="no-border" width="20%"></td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 2; text-align: center; text:wrap" class="no-border" width="40%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 2; text-align: center;" class="no-border" width="40%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 2; text-align: left;" class="no-border" width="20%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 2; text-align: center; text:wrap" class="no-border" width="40%"></td>
                 </tr>
                 <tr>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 0; text-align: center;" class="no-border" width="100%">Untuk dan atas nama</td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 0; text-align: center;" class="no-border" width="100%">Untuk dan atas nama</td>
                 </tr>
                 <tr>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 2; text-align: center;" class="no-border" width="30%"></td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 2; text-align: center;" class="no-border" width="40%">' . $detail_master_spj->nama_perusahaan . '</td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 2; text-align: center; text:wrap" class="no-border" width="30%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 2; text-align: center;" class="no-border" width="30%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 2; text-align: center;" class="no-border" width="40%">' . $detail_master_spj->nama_perusahaan . '</td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 2; text-align: center; text:wrap" class="no-border" width="30%"></td>
                 </tr>
                 <tr>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 5; text-align: center;" class="no-border" width="30%"></td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 5; text-align: center;" class="no-border" width="40%"></td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 5; text-align: center; text:wrap" class="no-border" width="30%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 5; text-align: center;" class="no-border" width="30%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 5; text-align: center;" class="no-border" width="40%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 5; text-align: center; text:wrap" class="no-border" width="30%"></td>
                 </tr>
                 <tr>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 2; text-align: center;" class="no-border" width="30%"></td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 2; text-align: center;" class="no-border" width="40%">' . $detail_master_spj->nama_direktur_perusahaan . '</td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 2; text-align: center; text:wrap" class="no-border" width="30%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 2; text-align: center;" class="no-border" width="30%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 2; text-align: center;" class="no-border" width="40%">' . $detail_master_spj->nama_direktur_perusahaan . '</td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 2; text-align: center; text:wrap" class="no-border" width="30%"></td>
                 </tr>
                 <tr>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 0; text-align: center;" class="no-border" width="30%"></td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 0; text-align: center;" class="no-border" width="40%">' . $detail_master_spj->jabatan_perusahaan . '</td>
-                    <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 0; text-align: center; text:wrap" class="no-border" width="30%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 0; text-align: center;" class="no-border" width="30%"></td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 0; text-align: center;" class="no-border" width="40%">' . $detail_master_spj->jabatan_perusahaan . '</td>
+                    <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 0; text-align: center; text:wrap" class="no-border" width="30%"></td>
                 </tr>
             </table>';
 

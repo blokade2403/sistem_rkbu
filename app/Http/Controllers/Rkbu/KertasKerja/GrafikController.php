@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Rkbu\KertasKerja;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Session;
 
 class GrafikController extends Controller
 {
@@ -26,11 +27,13 @@ class GrafikController extends Controller
         ]);
 
         $filterBulan = (int) ($request->input('bulan') ?? now()->month);
-        $namaTahunAnggaran = session('nama_tahun_anggaran');
+        // $namaTahunAnggaran = session('nama_tahun_anggaran');
+        $namaTahunAnggaran = Session::get('tahun_anggaran');
 
         // === Ambil data REALISASI ===
         $realisasi = DB::table('master_spjs')
             ->selectRaw('MONTH(tanggal_pembayaran) as bulan_ke, SUM(pembayaran) as total')
+            ->where('tahun_anggaran', $namaTahunAnggaran)
             ->whereNotNull('tanggal_pembayaran')
             ->whereNotNull('pembayaran')
             ->groupBy('bulan_ke')

@@ -8,7 +8,7 @@
                 <div class="card-header align-items-center d-flex">
                     <h4 class="card-title mb-0 flex-grow-1">{{ $title }}</h4>
                 </div><!-- end card header -->
-                @include('rkbu.partials.filter_rkbu', ['routePrefix' => $routePrefix])
+                @include('rkbu.partials.filter_rkbu_user', ['routePrefix' => $routePrefix])
                 <div class="card-block">
                     <div class="card-body">
                         <div class="table-responsive">
@@ -78,13 +78,24 @@
                                                 </ul>
                                             </td>
                                             <td>
-                                                <ul class="list list-unstyled">
-                                                    <li>
-                                                        <span class="f-12">{{ $rkbus->vol_1 }}
-                                                            {{ $rkbus->satuan_1 }} x
-                                                            {{ $rkbus->vol_2 }}{{ $rkbus->satuan_2 }}</span>
-                                                    </li>
-                                                </ul>
+                                                <span class="fs-12">Stok Tahun {{ $angka_kurang_2 }} :
+                                                    {{ $rkbus->stok }}</span><br />
+                                                <span class="fs-12">Rata2 Pemakaian {{ $angka_kurang_1 }} :
+                                                    {{ $rkbus->rata_rata_pemakaian }}</span><br />
+                                                <span class="fs-12">Kebutuhan :
+                                                    {{ $rkbus->kebutuhan_per_bulan }}</span><br />
+                                                <span class="fs-12">Pengadaan Tahun {{ $angka_kurang_1 }} :
+                                                    {{ $rkbus->pengadaan_sebelumnya }}</span><br />
+                                                <span class="fs-12">Proyeksi Sisa Stok {{ $angka_tahun }} :
+                                                    {{ $rkbus->proyeksi_sisa_stok }}</span><br />
+                                                <span class="fs-12">Kebutuhan Tahun {{ $angka_tahun }} :
+                                                    {{ $rkbus->kebutuhan_tahun_x1 }}</span><br />
+                                                <span class="fs-12">Buffer : {{ $rkbus->buffer }}</span><br />
+                                                <span class="fs-12">Kebutuhan + Buffer :
+                                                    {{ $rkbus->kebutuhan_plus_buffer }}</span><br />
+                                                <span class="fs-12 text-info mb-0">Rencana Pengadaan Tahun
+                                                    {{ $angka_tahun }} : {{ $rkbus->rencana_pengadaan_tahun_x1 }}<strong>
+                                                    </strong></span><br />
                                             </td>
                                             <td>
                                                 <ul class="list list-unstyled">

@@ -176,4 +176,10 @@
              </div><!-- end card body -->
          </div><!-- end card -->
      </div><!-- end col -->
+
+     @include('dashboard.partials.daftar_unit_input')
+     @include('dashboard.partials.grafik_pie')
+     {{-- @include('dashboard.partials.grafik_realisasi') --}}
+
+
  </div> <!-- end row-->

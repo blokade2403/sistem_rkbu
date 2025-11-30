@@ -4,13 +4,6 @@
         <div class="col-xl-9">
             <div class="card">
                 <div class="card-header">
-                    {{-- <div class="d-flex align-items-center">
-                        <h5 class="card-title flex-grow-1 mb-0">Order #VL2667</h5>
-                        <div class="flex-shrink-0">
-                            <a href="apps-invoices-details.html" class="btn btn-success btn-sm"><i
-                                    class="ri-download-2-fill align-middle me-1"></i> Invoice</a>
-                        </div>
-                    </div> --}}
                     <div class="col-xl-12">
                         <div class="card-body p-0">
                             <div class="alert alert-warning border-0 rounded-top rounded-0 m-0 d-flex align-items-center"
@@ -225,6 +218,21 @@
                                                         </div>
                                                     </div>
                                                 </a>
+                                                {{-- <dd>{{ $no_inv->id_usulan_barang }}</dd> --}}
+                                                @if ($no_inv->status_permintaan_barang == 'Disetujui Direktur')
+                                                    <a href="{{ route($routePrefix . '.downloadPDFPerintahKerja', ['id_usulan_barang' => $invoice->id_usulan_barang]) }}"
+                                                        class="btn btn-warning btn-label waves-effect waves-light">
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0">
+                                                                <i
+                                                                    class="ri-chat-quote-line label-icon align-middle fs-16 me-2"></i>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                Surat Perintah Belanja
+                                                            </div>
+                                                        </div>
+                                                    </a>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>

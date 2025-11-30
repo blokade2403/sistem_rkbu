@@ -246,6 +246,21 @@
                                                         </div>
                                                     </div>
                                                 </a>
+                                                {{-- <dd>{{ $no_inv->id_usulan_barang }}</dd> --}}
+                                                @if ($no_inv->status_permintaan_barang == 'Disetujui Direktur')
+                                                    <a href="{{ route($routePrefix . '.downloadPDFPerintahKerja', ['id_usulan_barang' => $invoice->id_usulan_barang]) }}"
+                                                        class="btn btn-warning btn-label waves-effect waves-light">
+                                                        <div class="d-flex">
+                                                            <div class="flex-shrink-0">
+                                                                <i
+                                                                    class="ri-chat-quote-line label-icon align-middle fs-16 me-2"></i>
+                                                            </div>
+                                                            <div class="flex-grow-1">
+                                                                Surat Perintah Belanja
+                                                            </div>
+                                                        </div>
+                                                    </a>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>

@@ -284,6 +284,7 @@
             $level_ksp = ['Validasi'];
             $level_kabag = ['Validasi RKA'];
             $level_admin_ppk = ['Admin PPK'];
+            $level_pptk = ['PPTK', 'PPTK Umum', 'PPTK Yanmed'];
             $level_pengadaan_ppk = [
                 'Administrator',
                 'Pendukung PPK',
@@ -323,7 +324,7 @@
         @if (session('nama_level_user') == 'PPK')
             @include('master_spj.ppk.form_validasi_ppk')
         @endif
-        @if (session('nama_level_user') == 'PPTK')
+        @if (in_array(session('nama_level_user'), $level_pptk))
             @include('master_spj.pptk.form_validasi_pptk')
         @endif
         @if (session('nama_level_user') == 'Verifikator')

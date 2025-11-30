@@ -224,8 +224,12 @@
         <!-- Header Section -->
         <table cellspacing="0" bgcolor="#666666" cellpadding="0">
             <tr bgcolor="#ffffff">
-                <th rowspan="2" width="100%" align="center" style="height:30px">
+                <th rowspan="2" width="100%" align="center" style="height:30px;">
                     <h2>USULAN BARANG DAN JASA</h2>
+                </th>
+            </tr>
+            <tr bgcolor="#ffffff" style="line-height: 5px;">
+                <th rowspan="2" width="100%" align="center" style="height:20px">
                 </th>
             </tr>
         </table>
@@ -238,7 +242,8 @@
                     Nomor</th>
                 <th width="2%" align="center" style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
                     :</th>
-                <th width="20%" align="left" style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
+                <th width="20%" align="left"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
                     <b>{{ $no_inv->no_usulan_barang }}</b>
                 </th>
                 <th width="30%" align="center"></th>

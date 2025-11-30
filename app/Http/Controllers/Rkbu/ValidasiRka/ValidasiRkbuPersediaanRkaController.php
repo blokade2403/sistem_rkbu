@@ -157,7 +157,7 @@ class ValidasiRkbuPersediaanRkaController extends Controller
                 'jumlah_anggaran',
                 'total_anggaran_barjas_admin',
             ),
-            ['title' => 'Halaman RKBU', 'routePrefix' => 'validasi_rka_rkbu_persediaans']
+            ['title' => 'Halaman RKBU', 'routePrefix' => 'validasi_rka_rkbu_persediaans', 'routePrefixPrint' => 'rkbu_persediaan_admins']
         );
     }
 

@@ -6,13 +6,13 @@
                 <h4 class="card-title mb-0 flex-grow-1">Daftar Inputan</h4>
                 <div class="flex-shrink-0">
                     <button type="button" class="btn btn-soft-info btn-sm shadow-none">
-                        <i class="ri-file-list-3-line align-middle"></i> Generate
-                        Report
+                        <i class="ri-file-list-3-line align-middle"></i> Generate Report
                     </button>
                 </div>
-            </div><!-- end card header -->
+            </div>
+
             <div class="table-responsive">
-                <table class="table table-striped">
+                <table class="table table-modern">
                     <thead>
                         <tr>
                             <th>Kategori</th>
@@ -21,6 +21,7 @@
                             @endforeach
                         </tr>
                     </thead>
+
                     <tbody>
                         <tr>
                             <th>Target</th>
@@ -28,6 +29,7 @@
                                 <td class="fa-sm">{{ number_format($item['target'], 0, ',', '.') }}</td>
                             @endforeach
                         </tr>
+
                         <tr>
                             <th>Pembayaran</th>
                             @foreach ($dataGabungan as $item)
@@ -37,9 +39,11 @@
                     </tbody>
                 </table>
             </div>
+
         </div>
     </div>
 </div>
+
 
 {{-- @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

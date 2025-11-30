@@ -21,19 +21,16 @@
                     </div>
                     <div class="col-lg-10">
 
-                        {{-- Select tetap tampil tapi tidak bisa diubah --}}
                         <select class="form-select" name="id_status_validasi" data-choices data-choices="true">
-                            <option value="" disabled {{ $selectedId ? '' : 'selected' }}>
-                                Pilih Status Validasi
-                            </option>
+                            <option value="" disabled>Pilih Status Validasi</option>
+
                             @foreach ($status_validasi as $sub)
                                 <option value="{{ $sub->id_status_validasi }}"
-                                    {{ (string) $selectedId === (string) $sub->id_status_validasi ? 'selected' : '' }}>
+                                    {{ (string) $rkbuBarangJasa->id_status_validasi === (string) $sub->id_status_validasi ? 'selected' : '' }}>
                                     {{ $sub->nama_validasi }}
                                 </option>
                             @endforeach
                         </select>
-
                     </div>
                 </div>
                 <div class="row mb-3">

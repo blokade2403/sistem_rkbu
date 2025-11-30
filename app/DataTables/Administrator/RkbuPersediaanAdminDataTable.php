@@ -202,6 +202,22 @@ class RkbuPersediaanAdminDataTable extends DataTable
                 $editUrl = null;
                 $deleteUrl = null;
 
+                $level_view = [
+                    'PPK',
+                    'PPBJ',
+                    'Pengurus Barang',
+                    'PPK Keuangan',
+                    'PPTK',
+                    'PPTK Alkes',
+                    'PPTK Umum',
+                    'Validasi Keuangan',
+                    'Verifikator',
+                    'Direktur',
+                    'Admin PPK',
+                    'Bendahara',
+                    'Pendukung PPK',
+                ];
+
                 if (session('nama_level_user') == 'User') {
                     if ($row->id_status_validasi == '9cfb1edc-2263-401f-b249-361db4017932' || session('status_edit') == 'tidak aktif') {
                         return $disabledBtn;
@@ -214,6 +230,8 @@ class RkbuPersediaanAdminDataTable extends DataTable
                     if (session('status_edit') == 'tidak aktif') {
                         return $disabledBtn;
                     }
+                } elseif (in_array(session('nama_level_user'), $level_view)) {
+                    return $disabledBtn;
                 }
 
                 // Kalau lolos kondisi -> kasih tombol edit & delete
@@ -233,6 +251,7 @@ class RkbuPersediaanAdminDataTable extends DataTable
         $search                 = request()->input('search.value');  // Ambil parameter pencarian dari DataTable
         $subKategoriFilter      = request()->input('sub_kategori_rkbu');
         $statusValidasiFilter   = request()->input('id_status_validasi_rka');
+        $sumberDanaFilter       = request()->input('id_sumber_dana');
 
         $id_pejabat          = session('id_pejabat');
         $id_user             = session('id_user');
@@ -331,6 +350,10 @@ class RkbuPersediaanAdminDataTable extends DataTable
         // 🔄 Filter Berdasarkan Status Validasi
         if (!empty($statusValidasiFilter)) {
             $query->where('rkbus.id_status_validasi_rka', $statusValidasiFilter);
+        }
+
+        if (!empty($sumberDanaFilter)) {
+            $query->where('sumber_danas.id_sumber_dana', $sumberDanaFilter);
         }
 
         // 🔍 Pencarian

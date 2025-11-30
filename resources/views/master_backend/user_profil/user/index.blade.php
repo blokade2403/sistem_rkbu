@@ -19,8 +19,6 @@
                                         <th>Nama User</th>
                                         <th>KSP</th>
                                         <th>Atasan</th>
-                                        <th>Unit</th>
-                                        <th>Level User</th>
                                         <th>Fase User</th>
                                         <th>Action</th>
                                         <th>Status User</th>
@@ -70,8 +68,6 @@
                                             </td>
                                             <td>{{ $item->ksp->nama_ksp ?? '-' }}</td>
                                             <td>{{ $item->pejabat->nama_pejabat ?? '-' }}</td>
-                                            <td>{{ $item->unit->nama_unit ?? '-' }}</td>
-                                            <td>{{ $item->levelUser->nama_level_user ?? '-' }}</td>
                                             <td>{{ $item->fase->nama_fase ?? '-' }}</td>
                                             <td>
                                                 <x-partials.action-buttons :edit-url="route('users.edit', $item->id_user)" :delete-url="route('users.destroy', $item->id_user)" />

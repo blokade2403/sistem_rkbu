@@ -32,7 +32,8 @@
                                          @if ($img)
                                              <div class="swiper-slide">
                                                  <img src="{{ asset('storage/' . $img) }}" alt="Foto Barang Datang"
-                                                     class="img-fluid d-block rounded" />
+                                                     class="img-fluid d-block rounded"
+                                                     style="width: 640px; height: 640px; object-fit: cover;">
                                              </div>
                                          @endif
                                      @empty
@@ -461,7 +462,7 @@
                                          <div class="col-lg-8">
                                              <div class="ps-lg-4">
                                                  <div class="d-flex flex-wrap align-items-start gap-3">
-                                                     <h5 class="fs-14">Reviews: </h5>
+                                                     <h5 class="fs-14">Bukti Pembayaran: </h5>
                                                  </div>
 
                                                  <div class="me-lg-n3 pe-lg-4" data-simplebar
@@ -471,8 +472,7 @@
                                                              <div class="border border-dashed rounded p-3">
                                                                  <div class="d-flex align-items-start mb-3">
                                                                      <div class="hstack gap-3">
-                                                                         <div
-                                                                             class="badge rounded-pill bg-success mb-0">
+                                                                         <div class="badge rounded-pill bg-info mb-0">
                                                                              <i class="mdi mdi-star"></i>
                                                                              {{ $no_inv->nama_sumber_dana }}
                                                                          </div>
@@ -489,7 +489,7 @@
                                                                      @if (!empty($master_spj->bukti_bayar))
                                                                          <a href="{{ asset('storage/' . $master_spj->bukti_bayar) }}"
                                                                              target="_blank"
-                                                                             class="badge bg-primary-subtle text-primary text-decoration-none">
+                                                                             class="badge badge-soft-danger badge-border">
                                                                              Lihat Bukti Pembayaran
                                                                          </a>
                                                                      @else

@@ -42,19 +42,26 @@
                  </div>
                  <form class="row g-3" method="POST" action="{{ route($routePrefix . '.store') }}">
                      @csrf
-                     <div class="col-lg-12">
-                         <select id="subKategoriSelect2" name="id_sub_kategori_rkbu" class="form-select" data-choices
-                             data-choices-sorting="true">
-                             <option data-display="Select">Pilih Sub Kategori RKBU</option>
-                             @foreach ($sub_kategori_rkbus as $sub_kategori)
-                                 <option value="{{ $sub_kategori->id_sub_kategori_rkbu }}">
-                                     {{ $sub_kategori->kode_sub_kategori_rkbu }}.
-                                     {{ $sub_kategori->nama_sub_kategori_rkbu }}</option>
+                     <div class="col-lg-12 mb-3">
+                         <label class="form-label">Pilih Sumber Dana</label>
+                         <select id="pilihSumberDana" class="form-select" data-choices data-choices-sorting="true">
+                             <option value="">-- Pilih Sumber Dana --</option>
+                             @foreach ($sumber_danas as $sd)
+                                 <option value="{{ $sd->id_sumber_dana }}">{{ $sd->nama_sumber_dana }}</option>
                              @endforeach
                          </select>
                      </div>
+
+                     <div class="col-lg-12 mb-3">
+                         <label class="form-label">Pilih Sub Kategori</label>
+                         <select id="subKategoriSelect2" name="id_sub_kategori_rkbu" class="form-select">
+                             <option value="">-- Pilih Sub Kategori --</option>
+                         </select>
+                     </div>
+
                      <div class="col-lg-2 d-flex align-items-end">
                          <input type="hidden" name="id_user" value="{{ session('id_user') }}">
+                         <input type="hidden" name="id_sumber_dana" id="id_sumber_dana">
                          <input type="hidden" name="nama_pengusul_barang" value="{{ session('nama_lengkap') }}">
                          <input type="hidden" name="tahun_anggaran" value="{{ session('tahun_anggaran') }}">
                          <input type="hidden" name="status_usulan_barang" value="Pending">

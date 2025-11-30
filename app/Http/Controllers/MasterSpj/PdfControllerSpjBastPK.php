@@ -324,29 +324,25 @@ class PdfControllerSpjBastPK extends Controller
 
         // Buat konten HTML untuk tabel header
         $html = '<table lines="none" bgcolor="white">
-                <thead>
                <tr bgcolor="#ffffff">
-               <th  width="20%" align="left"><h4></h4>
-                    <h6 align="top" style="line-height:11;"><img src="assets/foto_rs/jakarta.png" width="65" height="65"  ></h6>
+               <th  width="10%" align="left"><h4></h4>
+                    <h6 align="center"><img src="' . $gambar2 . '" width="65" height="65"  ></h6>
                </th> 
-               <th  width="70%" align="center">
-              <h4 style="font-weight: normal; font-size:11px;">' . $judulHeaders->header1 . '</h4>
-               <h5 style="font-weight: bold; font-size:12px; line-height:1;">' . $judulHeaders->header4 . '</h5>
-               <h5 style="font-weight: bold; font-size:12px; line-height:0;">' . $judulHeaders->nama_rs . '</h5>
-                    <h3 style="font-weight: normal; font-size:11px; line-height:1.3;" align="center"; text="wrap">' . $judulHeaders->alamat_rs . ' </h3>
-                    <h3 style="font-weight: normal; font-size:11px; line-height:0;" align="center">Telp. ' . $judulHeaders->tlp_rs . ' Faksimile. ' . $judulHeaders->tlp_rs . '  </h3>
-                    <h3 style="font-weight: normal; font-size:11px; line-height:1;" align="center">' . $judulHeaders->header3 . '</h3>
-                    <h3 style="font-weight: normal; font-size:11px; line-height:0;" align="center">' . $judulHeaders->wilayah . '</h3>
+               <th  width="80%" align="center">
+                    <h3 align="center" style="font-size:11px; font-weight: normal;">' . $judulHeaders->header1 . '</h3>
+                    <h3 style="font-weight: bold; font-size:11px; line-height:0;" align="center">' . $judulHeaders->header4 . '</h3>
+                    <h3 style="font-weight: normal; font-size:10px; " align="center">' . $judulHeaders->nama_rs . '</h3>
+                    <h3 align="center" style="font-size:9px; font-weight: normal; line-height:0;">' . $judulHeaders->alamat_rs . '</h3>
+                    <h3 align="center" style="font-size:9px; font-weight: normal; ">Telp. ' . $judulHeaders->tlp_rs . ' Faksimile. ' . $judulHeaders->tlp_rs . '</h3>
+                    <h3 align="center" style="font-size:9px; font-weight: normal; line-height:0;">' . $judulHeaders->header3 . '</h3>
+                    <h3 align="right" style="font-size:9px; font-weight: normal; line-height:0;">Kode Pos : ' . $judulHeaders->kode_pos . '</h3>
                </th>
+               <th  width="10%" align="right"><h4></h4>
+                    <h6 align="center"><img src="" width="75" height="45"  ></h6>
+               </th> 
+               </tr>
                <hr>
-               </tr>
-               <tr bgcolor="#ffffff">
-               <th  width="90%" align="right">
-               <h5 style="font-weight: normal; font-size:11px; line-height:1; align:right;">Kode Pos ' . $judulHeaders->kode_pos . '</h5>
-               </th>
-               </tr>
-               </thead>';
-        $html .= '</table>';
+        </table>';
 
 
         // Tambahkan header ke PDF

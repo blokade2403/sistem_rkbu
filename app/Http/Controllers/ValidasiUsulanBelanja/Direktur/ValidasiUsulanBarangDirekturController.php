@@ -179,7 +179,6 @@ class ValidasiUsulanBarangDirekturController extends Controller
             ->with('success', 'Data usulan barang berhasil divalidasi dan QR code berhasil dihasilkan.');
     }
 
-
     public function keranjang($id_usulan_barang)
     {
         // Ambil detail invoice berdasarkan id_usulan_barang
@@ -288,7 +287,6 @@ class ValidasiUsulanBarangDirekturController extends Controller
     {
         //
     }
-
 
     public function store(Request $request)
     {

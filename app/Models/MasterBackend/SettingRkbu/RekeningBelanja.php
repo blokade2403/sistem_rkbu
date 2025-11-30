@@ -4,6 +4,7 @@ namespace App\Models\MasterBackend\SettingRkbu;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\MasterBackend\UserProfil\User;
+use App\Models\MasterBackend\SettingInput\Anggaran;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -26,6 +27,11 @@ class RekeningBelanja extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'id_user');
+    }
+
+    public function anggarans()
+    {
+        return $this->hasMany(Anggaran::class, 'id_kode_rekening_belanja');
     }
 
     public function sub_kategori_rkbu()

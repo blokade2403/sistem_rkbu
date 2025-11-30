@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('target_sps', function (Blueprint $table) {
-            $table->string('bulan')->nullable();
-            $table->bigInteger('target')->nullable();
+            $table->uuid('id')->primary();
+            $table->tinyInteger('bulan'); // 1 = Januari ... 12 = Desember
+            $table->bigInteger('target')->default(0);
             $table->string('nama_tahun_anggaran');
             $table->timestamps();
         });
@@ -24,10 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('target_sps', function (Blueprint $table) {
-            $table->dropColumn('bulan');
-            $table->dropColumn('target');
-            $table->dropColumn('nama_tahun_anggaran');
-        });
+        Schema::dropIfExists('target_sps');
     }
 };

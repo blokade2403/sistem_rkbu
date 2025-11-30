@@ -43,7 +43,7 @@
                                     <a href="{{ route($routePrefix . '.create') }}"
                                         class="btn btn-soft-success shadow-none"><i
                                             class="ri-add-circle-line align-middle me-1"></i>
-                                        Add Product</a>
+                                        Tambah Data</a>
                                 </div>
                                 <!--end col-->
                                 <div class="col-auto">

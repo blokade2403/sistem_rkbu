@@ -2,6 +2,7 @@
 @section('content')
     <div class="row">
         <!-- Basic row reorder table start -->
+        @include('partials.add_buttons_report_spj', ['routePrefix' => $routePrefix])
         <div class="card">
             <div class="card-header">
                 <div class="col-xl-12">

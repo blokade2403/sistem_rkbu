@@ -6,7 +6,7 @@
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 11px;
+            font-size: 10px;
             margin: 0;
             padding: 0;
         }
@@ -39,11 +39,11 @@
 
         h4 {
             margin: 2px 0;
-            font-size: 11px;
+            font-size: 10px;
         }
 
         .header-info {
-            font-size: 11px;
+            font-size: 10px;
             text-align: center;
         }
 
@@ -56,7 +56,7 @@
 
         .footer {
             margin-top: 30px;
-            font-size: 11px;
+            font-size: 10px;
             text-align: center;
         }
     </style>
@@ -88,15 +88,15 @@
     <!-- Header -->
     <table class="header-info">
         <tr>
-            <td style="font-weight: bold; margin-left: 10px; font-size: 13px; line-height: 1.2; text-align: center; text-decoration: underline;"
+            <td style="font-weight: bold; margin-left: 10px; font-size: 11px; line-height: 1.2; text-align: center; text-decoration: underline;"
                 class="no-border" width="100%">BERITA ACARA PEMERIKSAAN PEKERJAAN</td>
         </tr>
         <tr>
-            <td style="font-weight: normal; margin-left: 10px; font-size: 11px; line-height: 0; text-align: center;"
+            <td style="font-weight: normal; margin-left: 10px; font-size: 10px; line-height: 0; text-align: center;"
                 class="no-border" width="100%">Nomor : {{ $detail_master_spj->no_ba ?? 'Nomor BA Tidak Ada' }}</td>
         </tr>
         <tr>
-            <td style="font-weight: normal; margin-left: 10px; font-size: 11px; line-height: 1; text-align: center;"
+            <td style="font-weight: normal; margin-left: 10px; font-size: 10px; line-height: 1; text-align: center;"
                 class="no-border" width="100%">Nomor Usulan:
                 @if ($keranjang->isNotEmpty())
                     {{ $keranjang->first()->no_usulan_barang }}
@@ -114,21 +114,21 @@
     <!-- Informasi Penerima -->
     <table>
         <tr>
-            <td style="font-weight: normal; margin-left: 10px; font-size: 11px; line-height: 1.5; text-align: left;"
+            <td style="font-weight: normal; margin-left: 10px; font-size: 10px; line-height: 1.5; text-align: left;"
                 class="no-border" width="100%">Pada hari ini, {{ $converttotekstglbast }} bertempat di
                 {{ ucwords(strtolower($judulHeaders->nama_rs)) }}
                 telah diadakan pemeriksaan barang/jasa sebagai berikut</td>
         </tr>
         <tr>
-            <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.2; text-align: left;"
+            <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.2; text-align: left;"
                 class="no-border" width="4%"></td>
-            <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.2; text-align: left;"
+            <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.2; text-align: left;"
                 class="no-border" width="4%">1.</td>
-            <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.2; text-align: left;"
+            <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.2; text-align: left;"
                 class="no-border" width="30%">Nama Pekerjaan</td>
-            <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.2; text-align: left;"
+            <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.2; text-align: left;"
                 class="no-border" width="2%">:</td>
-            <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.2; text-align: left;"
+            <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.2; text-align: left;"
                 class="no-border" width="60%">
                 @if ($keranjang->isNotEmpty())
                     {{ $keranjang->first()->kode_sub_kategori_rkbu }}. {{ $keranjang->first()->nama_sub_kategori_rkbu }}
@@ -138,38 +138,38 @@
             </td>
         </tr>
         <tr>
-            <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.2; text-align: left;"
+            <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.2; text-align: left;"
                 class="no-border" width="4%"></td>
-            <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.2; text-align: left;"
+            <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.2; text-align: left;"
                 class="no-border" width="4%">2.</td>
-            <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.2; text-align: left;"
+            <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.2; text-align: left;"
                 class="no-border" width="30%">Nomor Surat Pesanan</td>
-            <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.2; text-align: left;"
+            <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.2; text-align: left;"
                 class="no-border" width="2%">:</td>
-            <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.2; text-align: left;"
+            <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.2; text-align: left;"
                 class="no-border" width="60%">{{ $detail_master_spj->no_surat_pesanan }}</td>
         </tr>
         <tr>
-            <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.2; text-align: left;"
+            <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.2; text-align: left;"
                 class="no-border" width="4%"></td>
-            <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.2; text-align: left;"
+            <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.2; text-align: left;"
                 class="no-border" width="4%">3.</td>
-            <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.2; text-align: left;"
+            <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.2; text-align: left;"
                 class="no-border" width="30%">Tanggal Surat Pesanan</td>
-            <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.2; text-align: left;"
+            <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.2; text-align: left;"
                 class="no-border" width="2%">:</td>
-            <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 1.2; text-align: left;"
+            <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 1.2; text-align: left;"
                 class="no-border" width="60%">{{ $tgl_pesanan }}</td>
         </tr>
     </table>
     <table>
         <tr>
-            <td style="font-weight: normal; margin-left: 50px; font-size: 11px; line-height: 0;" class="no-border"></td>
+            <td style="font-weight: normal; margin-left: 50px; font-size: 10px; line-height: 0;" class="no-border"></td>
         </tr>
     </table>
     <table>
         <tr>
-            <td style="font-weight: normal; margin-left: 10px; font-size: 11px; line-height: 2; text-align: left;"
+            <td style="font-weight: normal; margin-left: 10px; font-size: 10px; line-height: 2; text-align: left;"
                 class="no-border" width="100%">Dengan Rincian sebagai berikut : </td>
         </tr>
     </table>
@@ -209,7 +209,7 @@
     </table>
     <table>
         <tr>
-            <td style="font-weight: normal; margin-left: 10px; font-size: 11px; line-height: 1.5; text-align: left;"
+            <td style="font-weight: normal; margin-left: 10px; font-size: 10px; line-height: 1.5; text-align: left;"
                 class="no-border" width="100%">Demikian Berita Acara Pemeriksaan ini dibuat dengan sebenarnya dalam
                 rangkap 2 (Dua) untuk dipergunakan
                 sebagaimana mestinya.</td>

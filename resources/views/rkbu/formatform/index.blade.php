@@ -8,7 +8,7 @@
                 <div class="card-header align-items-center d-flex">
                     <h4 class="card-title mb-0 flex-grow-1">{{ $title }}</h4>
                 </div><!-- end card header -->
-                @include('rkbu.partials.filter_rkbu', ['routePrefix' => $routePrefix])
+                @include('rkbu.partials.filter_rkbu_user', ['routePrefix' => $routePrefix])
                 <div class="card-block">
                     <div class="card-body">
                         <div class="table-responsive">

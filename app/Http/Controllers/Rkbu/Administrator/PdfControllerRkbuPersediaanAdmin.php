@@ -109,7 +109,6 @@ class PdfControllerRkbuPersediaanAdmin extends Controller
             $nip_direktur       = $first_direktur->nip_pejabat ?? '...............';
         }
 
-
         // Dapatkan data rkbu
         $rkbus_total = $query->select('rkbus.*')->get();
 

@@ -32,6 +32,21 @@
           $level_kabag = ['Administrator', 'Validasi RKA'];
           $level_pb = ['Administrator', 'Pengurus Barang'];
           $level_admin_ppk1 = ['Administrator', 'Admin PPK', 'PPK', 'PPBJ'];
+          $level_view = [
+              'PPK',
+              'PPBJ',
+              'Pengurus Barang',
+              'PPK Keuangan',
+              'PPTK',
+              'PPTK Alkes',
+              'PPTK Umum',
+              'Validasi Keuangan',
+              'Verifikator',
+              'Direktur',
+              'Admin PPK',
+              'Bendahara',
+              'Pendukung PPK',
+          ];
           $level_admin_ppk = ['PPTK', 'PPTK Alkes', 'PPTK Umum'];
           $level_pengadaan_pej = [
               'Administrator',
@@ -190,7 +205,8 @@
                           <div class="collapse menu-dropdown" id="sidebarPages">
                               <ul class="nav nav-sm flex-column">
                                   <li class="nav-item">
-                                      <a href="pages-starter.html" class="nav-link" data-key="t-starter">
+                                      <a href="{{ route('target_sps.index') }}" class="nav-link"
+                                          data-key="t-starter">
                                           Target SPS </a>
                                   </li>
                                   <li class="nav-item">
@@ -326,6 +342,16 @@
                                                   data-key="t-form-select">
                                                   Remunerasi PNS</a>
                                           @endif
+                                          @if (session('nama_level_user') == 'Administrator')
+                                              <a href="{{ route('rkbu_pegawai_pns_admins.index') }}" class="nav-link"
+                                                  data-key="t-form-select">
+                                                  Remunerasi PNS</a>
+                                          @endif
+                                          @if (in_array(session('nama_level_user'), $level_view))
+                                              <a href="{{ route('rkbu_pegawai_pns_admins.index') }}" class="nav-link"
+                                                  data-key="t-form-select">
+                                                  Remunerasi PNS </a>
+                                          @endif
                                       </li>
                                   </ul>
                               </div>
@@ -368,6 +394,12 @@
                                           data-key="t-form-select">
                                           Barang dan Jasa </a>
                                   @endif
+                                  @if (in_array(session('nama_level_user'), $level_view))
+                                      <a href="{{ route('rkbu_barjas_admins.index') }}" class="nav-link"
+                                          data-key="t-form-select">
+                                          Barang dan Jasa </a>
+                                  @endif
+
                               </li>
                               <li class="nav-item">
                                   @if (session('nama_level_user') == 'User')
@@ -385,6 +417,11 @@
                                   @if (session('nama_level_user') == 'Administrator')
                                       <a href="{{ route('rkbu_persediaan_admins.index') }}" class="nav-link"
                                           data-key="t-checkboxs-radios">Persediaan</a>
+                                  @endif
+                                  @if (in_array(session('nama_level_user'), $level_view))
+                                      <a href="{{ route('rkbu_persediaan_admins.index') }}" class="nav-link"
+                                          data-key="t-form-select">
+                                          Persediaan </a>
                                   @endif
                               </li>
                           </ul>
@@ -419,6 +456,11 @@
                                           data-key="t-basic-elements">Modal
                                           Alkes</a>
                                   @endif
+                                  @if (in_array(session('nama_level_user'), $level_view))
+                                      <a href="{{ route('rkbu_modal_alkes_admins.index') }}" class="nav-link"
+                                          data-key="t-form-select">
+                                          Modal Alkes </a>
+                                  @endif
                               </li>
                               <li class="nav-item">
                                   @if (session('nama_level_user') == 'User')
@@ -441,11 +483,36 @@
                                           data-key="t-form-select">
                                           Modal Kantor </a>
                                   @endif
+                                  @if (in_array(session('nama_level_user'), $level_view))
+                                      <a href="{{ route('rkbu_modal_kantor_admins.index') }}" class="nav-link"
+                                          data-key="t-form-select">
+                                          Modal Kantor </a>
+                                  @endif
                               </li>
                           </ul>
                       </div>
                   </li>
 
+                  <li class="nav-item">
+                      <a class="nav-link menu-link" href="#sidebarForms2" data-bs-toggle="collapse" role="button"
+                          aria-expanded="false" aria-controls="sidebarForms">
+                          <i class="ri-file-list-3-line"></i> <span data-key="t-forms">APBD</span>
+                          <span class="badge badge-pill bg-success" data-key="t-new">New</span>
+                      </a>
+                      <div class="collapse menu-dropdown" id="sidebarForms2">
+                          <ul class="nav nav-sm flex-column">
+                              <li class="nav-item">
+                                  <a href="{{ route('rka_barjas_admins.index') }}" class="nav-link"
+                                      data-key="t-form-select">
+                                      Barang dan Jasa </a>
+                              </li>
+                              <li class="nav-item">
+                                  <a href="" class="nav-link" data-key="t-form-select">
+                                      Modal </a>
+                              </li>
+                          </ul>
+                      </div>
+                  </li>
                   <li class="nav-item">
                       <a class="nav-link menu-link collapsed" href="#sidebarMultilevel" data-bs-toggle="collapse"
                           role="button" aria-expanded="false" aria-controls="sidebarMultilevel">
@@ -472,13 +539,13 @@
                   <li class="nav-item">
                       <a class="nav-link menu-link" href="{{ route('realisasi_rba.index') }}">
                           <i class="ri-rocket-line"></i> <span data-key="t-landing">Kertas Kerja</span>
-                          <span class="badge badge-pill bg-danger" data-key="t-new">New</span>
+                          <span class="badge badge-pill bg-success" data-key="t-new">New</span>
                       </a>
                   </li>
                   <li class="nav-item">
                       <a class="nav-link menu-link" href="{{ route('grafik.index') }}">
                           <i class="ri-rocket-line"></i> <span data-key="t-landing">Grafik</span>
-                          <span class="badge badge-pill bg-danger" data-key="t-new">New</span>
+                          <span class="badge badge-pill bg-success" data-key="t-new">New</span>
                       </a>
                   </li>
 
@@ -486,6 +553,15 @@
                   <li class="menu-title"><i class="ri-more-fill"></i> <span data-key="t-components">Pengadaan
                           Belanja</span>
                   </li>
+                  @if (in_array(session('nama_level_user'), $level_admin_ppk1))
+                      <li class="nav-item">
+                          <a class="nav-link menu-link" href="{{ route('perusahaans.index') }}">
+                              <i class="ri-rocket-line"></i> <span data-key="t-landing">Perusahaan</span>
+                              <span class="badge badge-pill bg-warning" data-key="t-new">New</span>
+                          </a>
+                      </li>
+                  @endif
+
                   <li class="nav-item">
                       <a class="nav-link menu-link" href="#sidebarApps" data-bs-toggle="collapse" role="button"
                           aria-expanded="false" aria-controls="sidebarApps">
