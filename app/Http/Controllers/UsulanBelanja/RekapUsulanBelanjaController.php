@@ -20,113 +20,48 @@ use App\Models\MasterBackend\SettingBelanja\UsulanBarangDetail;
 
 class RekapUsulanBelanjaController extends Controller
 {
-    public function index(RekapUsulanBelanjaDataTable $dataTable, Request $request, $id_usulan_barang = null)
+    public function index(RekapUsulanBelanjaDataTable $dataTable)
     {
-        // dd(session('nama_level_user'));
-
         $id_ksp = session('id_ksp');
         $id_user = session('id_user');
-        $tahunAnggaran = Session::get('tahun_anggaran');
-        $inputIdUsulanBarang = request()->input('id_usulan_barang'); // Ambil input id_usulan_barang dari request
-        $id_sub_kategori_rkbu = request()->input('id_sub_kategori_rkbu');
+        $tahun = session('tahun_anggaran');
 
-        $usulan_barangs = UsulanBarang::join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
-            ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
-            ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
-            ->join('usulan_barang_details', 'usulan_barang_details.id_usulan_barang', '=', 'usulan_barangs.id_usulan_barang')
-            ->where('tahun_anggaran', $tahunAnggaran)
+        // === 1. Ambil daftar usulan dengan join minimum ===
+        $usulan_barangs = UsulanBarang::with(['sub_kategori_rkbu.kategori_rkbu.jenis_kategori_rkbu'])
+            ->where('tahun_anggaran', $tahun)
             ->where('status_usulan_barang', 'Selesai')
-            ->select('usulan_barangs.*')
+            ->select('id_usulan_barang', 'id_sub_kategori_rkbu', 'no_usulan_barang', 'tahun_anggaran')
             ->get();
 
-        $id_usulan = UsulanBarang::join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
-            ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
-            ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
-            ->leftJoin('usulan_barang_details', 'usulan_barang_details.id_usulan_barang', '=', 'usulan_barangs.id_usulan_barang')
-            ->where('tahun_anggaran', $tahunAnggaran)
-            ->where('status_usulan_barang', 'Selesai')
-            ->select('usulan_barangs.*') // Ambil id_usulan_barang_detail juga
+        // === 2. Ambil distinct ID usulan ===
+        $id_usulan = $usulan_barangs->unique('id_usulan_barang');
+
+        // === 3. Ambil sub kategori ===
+        $sub_kategori_rkbus = SubKategoriRkbu::with(['kategori_rkbu.jenis_kategori_rkbu'])
+            ->whereHas('rkbus', function ($q) use ($tahun) {
+                $q->where('id_status_validasi_rka', '9cfb1f87-238b-4ea2-98f0-4255e578b1d1')
+                    ->where('nama_tahun_anggaran', $tahun);
+            })
+            ->select('id_sub_kategori_rkbu', 'nama_sub_kategori_rkbu', 'kode_sub_kategori_rkbu')
             ->distinct()
             ->get();
 
-        $sub_kategori_rkbus = SubKategoriRkbu::join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
-            ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
-            ->join('rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
-            ->join('users', 'rkbus.id_user', '=', 'users.id_user')
-            ->join('ksps', 'users.id_ksp', '=', 'ksps.id_ksp')
-            ->where('rkbus.id_status_validasi_rka', '9cfb1f87-238b-4ea2-98f0-4255e578b1d1')
-            ->select('sub_kategori_rkbus.*') // Pilih kolom yang diinginkan dari sub_kategori_rkbus
-            ->distinct() // Menghapus duplikasi berdasarkan sub_kategori_rkbus yang sama
-            ->get();
+        // === 4. Ambil data RKBU hanya sekali ===
+        $get_barangs = Rkbu::where('id_status_validasi', '9cfb1edc-2263-401f-b249-361db4017932')
+            ->where('nama_tahun_anggaran', $tahun)
+            ->whereHas('user.ksp', fn($q) => $q->where('id_ksp', $id_ksp))
+            ->select('id_rkbu', 'nama_barang', 'spek', 'sisa_vol_rkbu', 'sisa_anggaran_rkbu', 'id_sub_kategori_rkbu')
+            ->get()
+            ->groupBy('id_sub_kategori_rkbu'); // dikelompokkan agar cepat dipanggil
 
-        // Ambil semua barang sesuai dengan sub_kategori_rkbu dan usulan yang diinputkan
-        $get_barangs = [];
-
-        foreach ($usulan_barangs as $yek) {
-            $barang = Rkbu::join('users', 'rkbus.id_user', '=', 'users.id_user')
-                ->join('ksps', 'users.id_ksp', '=', 'ksps.id_ksp')
-                ->where('rkbus.id_status_validasi', '9cfb1edc-2263-401f-b249-361db4017932')
-                ->where('ksps.id_ksp', $id_ksp)
-                ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
-                ->select('rkbus.*')
-                ->get();
-
-            // Simpan data barang per usulan
-            $get_barangs[$yek->id_usulan_barang] = $barang;
-        }
-
-        $invoice = UsulanBarangDetail::where('id_usulan_barang', $id_usulan_barang)->first();
-
-        $invo = DB::table('usulan_barang_details')
-            ->join('usulan_barangs', 'usulan_barangs.id_usulan_barang', '=', 'usulan_barang_details.id_usulan_barang')
-            ->join('rkbus', 'rkbus.id_rkbu', '=', 'usulan_barang_details.id_rkbu')
-            ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'rkbus.id_sub_kategori_rkbu')
-            ->join('kategori_rkbus', 'kategori_rkbus.id_kategori_rkbu', '=', 'sub_kategori_rkbus.id_kategori_rkbu')
-            ->join('sub_kategori_rekenings', 'sub_kategori_rekenings.id_sub_kategori_rekening', '=', 'sub_kategori_rkbus.id_sub_kategori_rekening')
-            ->join('rekening_belanjas', 'rekening_belanjas.id_kode_rekening_belanja', '=', 'rkbus.id_kode_rekening_belanja')
-            ->join('aktivitas', 'aktivitas.id_aktivitas', '=', 'rekening_belanjas.id_aktivitas')
-            ->join('sub_kegiatans', 'sub_kegiatans.id_sub_kegiatan', '=', 'aktivitas.id_sub_kegiatan')
-            ->join('kegiatans', 'kegiatans.id_kegiatan', '=', 'sub_kegiatans.id_kegiatan')
-            ->join('programs', 'programs.id_program', '=', 'kegiatans.id_program')
-            ->join('sumber_danas', 'sumber_danas.id_sumber_dana', '=', 'sub_kegiatans.id_sumber_dana')
-            ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
-            ->join('units', 'users.id_unit', '=', 'units.id_unit')
-            //->where('usulan_barang_details.id_usulan_barang', $id_usulan_barang) // Filter by id_usulan_barang
-            ->select(
-                'usulan_barang_details.*',
-                'sub_kategori_rkbus.nama_sub_kategori_rkbu',
-                'sub_kategori_rkbus.kode_sub_kategori_rkbu',
-                'kategori_rkbus.kode_kategori_rkbu',
-                'kategori_rkbus.nama_kategori_rkbu',
-                'rekening_belanjas.*',
-                'sub_kegiatans.*',
-                'programs.*',
-                'rkbus.nama_barang',
-                'rkbus.sisa_vol_rkbu',
-                'rkbus.sisa_anggaran_rkbu',
-                'kegiatans.*',
-                'aktivitas.*',
-                'users.nama_lengkap as nama_pengusul_barang',
-                'units.nama_unit as unit',
-                'sumber_danas.id_sumber_dana', // Retrieving id_sumber_dana
-                'sumber_danas.nama_sumber_dana', // Retrieving sumber_danas field
-                'usulan_barangs.*',
-                'usulan_barangs.tahun_anggaran as tahun'
-            )
-            ->get();
-
-        // Cek apakah invoice ditemukan
-        if ($invoice) {
-            $keranjang = UsulanBarangDetail::where('usulan_barang_details.id_usulan_barang', $invoice->id_usulan_barang)
-                ->join('rkbus', 'rkbus.id_rkbu', '=', 'usulan_barang_details.id_rkbu') // Join ke tabel rkbus
-                ->select('usulan_barang_details.*', 'rkbus.nama_barang', 'rkbus.spek') // Select kolom yang diinginkan dari rkbus
-                ->get();
-        } else {
-            $keranjang = collect(); // Jika tidak ada, gunakan collection kosong
-        }
-
-        return $dataTable->render('rekap_usulan.index', compact('usulan_barangs', 'invo', 'get_barangs', 'id_usulan', 'sub_kategori_rkbus'));
+        return $dataTable->render('rekap_usulan.index', compact(
+            'usulan_barangs',
+            'id_usulan',
+            'sub_kategori_rkbus',
+            'get_barangs'
+        ));
     }
+
 
     public function create()
     {

@@ -33,6 +33,7 @@ class ValidasiRkbuBarjasRkaController extends Controller
         $status_validasi_rka = StatusValidasiRka::all(); // Ambil status validasi dari model terkait
         $faseTahun           = TahunAnggaran::where('nama_tahun_anggaran', $tahunAnggaran)->value('fase_tahun');
 
+
         // Ambil data pejabat sesuai user login
         $pejabat = Pejabat::where('id_pejabat', $id_pejabat)
             ->where('status', 'aktif')

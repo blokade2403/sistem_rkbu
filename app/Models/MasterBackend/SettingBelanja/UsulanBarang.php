@@ -22,6 +22,7 @@ use App\Models\MasterBackend\SettingRkbu\RekeningBelanja;
 use App\Models\MasterBackend\SettingRkbu\SubKategoriRkbu;
 use App\Models\MasterBackend\SettingInput\StatusValidasiRka;
 use App\Models\MasterBackend\SettingBelanja\UsulanBarangDetail;
+use App\Models\MasterBackend\SettingRkbu\JenisKategoriRkbu;
 use App\Models\MasterBackend\SettingUser\Pptk;
 use App\Models\MasterBackend\SettingUser\Unit;
 
@@ -45,6 +46,7 @@ class UsulanBarang extends Model
     {
         return $this->belongsTo(SubKategoriRkbu::class, 'id_sub_kategori_rkbu');
     }
+
 
 
     public function kategori_rkbu()

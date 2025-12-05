@@ -23,12 +23,30 @@ class MasterSpjEksport implements FromCollection, WithHeadings, WithEvents
             ->leftJoin('perusahaans', 'perusahaans.id_perusahaan', '=', 'master_spjs.id_perusahaan')
             ->join('spj_details', 'spj_details.id_spj', '=', 'spjs.id_spj')
             ->join('usulan_barangs', 'usulan_barangs.id_usulan_barang', '=', 'spjs.id_usulan_barang')
+            ->join('usulan_barang_details', 'usulan_barang_details.id_usulan_barang', '=', 'spj_details.id_usulan_barang')
             ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
             ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
             ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
             ->join('units', 'users.id_unit', '=', 'units.id_unit')
             ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
+            ->select(
+                'master_spjs.id_master_spj',
+                'master_spjs.id_spj',
+                'master_spjs.id_perusahaan',
+                'master_spjs.id_paket',
+                'spj_details.*',
+                'usulan_barangs.no_usulan_barang',
+                'usulan_barangs.nama_pengusul_barang',
+                'spj_details.id_usulan_barang_detail',
+                // 'master_spjs.*',
+                // 'spj_details.*',
+                // 'usulan_barangs.no_usulan_barang',
+                // 'usulan_barangs.nama_pengusul_barang',
+                // 'spj_details.id_usulan_barang_detail'
+            )
             ->get();
+
+        // dd($data);
 
         // dd($data);
         // Menampilkan semua id_master_spj
@@ -37,7 +55,7 @@ class MasterSpjEksport implements FromCollection, WithHeadings, WithEvents
                 'id_master_spj'                 => $master_spj->id_master_spj,
                 'no_usulan_barang'              => $master_spj->usulanBarang->no_usulan_barang ?? 'N/A',
                 'nama_pengusul_barang'          => $master_spj->usulanBarang->nama_pengusul_barang ?? 'N/A',
-                'tgl_validasi_perencana'        => $master_spj->usulanBarang->tgl_validasi_perencana ?? 'N/A',
+                'tgl_validasi_pptk'             => $master_spj->usulanBarang->tgl_validasi_pptk ?? 'N/A',
                 'tgl_validasi_kabag'            => $master_spj->usulanBarang->tgl_validasi_kabag ?? 'N/A',
                 'tgl_validasi_direktur'         => $master_spj->usulanBarang->tgl_validasi_direktur ?? 'N/A',
                 'tanggal_validasi_pengadaan'    => $master_spj->usulanBarang->tanggal_validasi_pengadaan ?? 'N/A',
@@ -80,6 +98,9 @@ class MasterSpjEksport implements FromCollection, WithHeadings, WithEvents
                 'sisa_pembayaran'               => $master_spj->sisa_pembayaran ?? 'N/A',
                 'nama_validasi_keuangan'        => $master_spj->nama_validasi_keuangan ?? 'N/A',
                 'bulan_pembayaran'              => $master_spj->bulan_pembayaran ?? 'N/A',
+                'id_spj'                        => $master_spj->id_spj ?? 'N/A',
+                'id_spj'                        => $master_spj->id_spj ?? 'N/A',
+                'id_usulan_barang_detail'       => $master_spj->id_usulan_barang_detail ?? 'N/A',
 
             ];
         });
@@ -99,8 +120,6 @@ class MasterSpjEksport implements FromCollection, WithHeadings, WithEvents
             [
                 'id_master_spj',
                 'No Usulan Barang',
-                'id_master_spj',
-                'no_usulan_barang',
                 'nama_pengusul_barang',
                 'tgl_validasi_perencana',
                 'tgl_validasi_kabag',
@@ -145,6 +164,8 @@ class MasterSpjEksport implements FromCollection, WithHeadings, WithEvents
                 'sisa_pembayaran',
                 'nama_validasi_keuangan',
                 'bulan_pembayaran',
+                'id_spj',
+                'id_usulan_barang_detail'
 
             ]
         ];
