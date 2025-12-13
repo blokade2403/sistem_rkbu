@@ -17,8 +17,15 @@ class RkbuHistoryModalController extends Controller
             '9cf70e44-a25e-462e-8bce-6fd930a91c0b'
         ];
 
-        // Menggunakan whereIn dengan array
-        $rkbu_history = RkbuHistory::whereIn('id_jenis_kategori_rkbu', $modal)->get();
+        $tahunAnggaran = session('tahun_anggaran');
+
+        $rkbu_history = RkbuHistory::whereIn('id_jenis_kategori_rkbu', $modal)
+            ->get()
+            ->filter(function ($item) use ($tahunAnggaran) {
+                $json = json_decode($item->data_sebelum, true);
+                return $json['nama_tahun_anggaran'] == $tahunAnggaran;
+            });
+
 
         // Mengirimkan data ke view
         return view('rkbu.history.index', compact('rkbu_history'));

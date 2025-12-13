@@ -29,7 +29,6 @@ class RkbuPersediaanAdminDataTable extends DataTable
                 $sumberDana = $row->nama_sumber_dana ?? 'Tidak ada data';
 
                 // Tentukan label sesuai kondisi
-                // Tentukan label sesuai kondisi
                 $label = $sumberDana === 'BLUD'
                     ? '<span class="badge badge-outline-primary">' . $sumberDana . '</span>'
                     : '<span class="badge badge-outline-danger">' . $sumberDana . '</span>';
@@ -39,12 +38,34 @@ class RkbuPersediaanAdminDataTable extends DataTable
                 ])->render();
 
                 return '
-                <ul class="list list-unstyled">
-                    <li> <span class="fs-14 text-primary">#<strong>' . e($row->nama_barang) . '</strong></span></li>
+                <ul class="list-unstyled product-desc-list">
                     <li><span class="f-12">Sumber Dana: ' . $label . '</span>
                     <span class="f-12"><span class="badge bg-info"> ' . e($row->rating) . '</span>' . $statusBadge . '</span></li>
-                    <li><span class="f-12">ID: ' . e($row->id_rkbu) . '</span></li>
                 </ul>
+                <div class="d-flex align-items-center">
+                     <img src="' . asset('assets/images/companies/img-1.png') . '"
+                        class="me-3 rounded-circle avatar-sm p-2 bg-light" alt="user-pic">
+                    <div class="flex-1">
+                        <h6 class="mt-0 mb-1 fs-14">
+                            <a href=""
+                                class="fs-16">' . e($row->nama_barang) . '
+                            </a>
+                        </h6>
+                        <p class="mb-0 fs-12 text-muted">
+                            <span>' . e($row->created_at) . '</span>
+                        </p>
+                    </div>
+                </div>
+                <p>
+                 <ul class="list-unstyled product-desc-list">
+                    <li class="py-0">
+                       <span class="f-12">User: ' . ($row->user->nama_lengkap) . '</span></br>
+                        <span class="f-12">KSP: ' . ($row->user->ksp->nama_ksp) . '</span>
+                    </li></br>
+                    <li> <span class="f-12">' . ($row->subKategoriRkbu->kode_sub_kategori_rkbu) . '.
+                                ' . ($row->subKategoriRkbu->nama_sub_kategori_rkbu) . '</span>
+                                </li>
+                </ul></p>
             ';
             })
             ->addColumn('harga_satuan', function ($row) {
@@ -104,10 +125,6 @@ class RkbuPersediaanAdminDataTable extends DataTable
                 return '<span class="f-12">' . $row->jumlah_vol . ' ' . $row->satuan_1 . ' / ' . $row->satuan_2 . ' </span>';
             })
 
-            ->addColumn('pengusul', function ($row) {
-                return '<span class="f-12">User: ' . ($row->user->nama_lengkap) . '</span></br>
-                        <span class="f-12">KSP: ' . ($row->user->ksp->nama_ksp) . '</span>';
-            })
             ->addColumn('detail_anggaran', function ($row) {
                 return '
                      <ul class="list list-unstyled">
@@ -435,13 +452,6 @@ class RkbuPersediaanAdminDataTable extends DataTable
                 ->responsivePriority(2), // tampil lebih prioritas
 
             Column::make('total_anggaran')->title('Total Anggaran')->responsivePriority(2),
-
-            Column::computed('pengusul')
-                ->title('Pengusul')
-                ->exportable(false)
-                ->printable(false)
-                ->addClass('text-left')
-                ->responsivePriority(1), // tampil lebih prioritas
 
             Column::computed('detail_anggaran')
                 ->title('Detail Anggaran')

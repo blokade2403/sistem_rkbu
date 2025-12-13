@@ -292,7 +292,7 @@
                              @endif
                          </div>
                      </div>
-                     @include('partials.submit_buttons')
+                     @include('partials.submit_buttons_rkbu')
                  </div>
                  <div class="d-none code-view">
                  </div>

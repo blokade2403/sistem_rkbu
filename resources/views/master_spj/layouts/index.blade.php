@@ -21,7 +21,6 @@
                                             <th>Detail Biaya</th>
                                             <th>Status</th>
                                             <th>Action</th>
-                                            <th>Detail Pengusul</th>
                                             <th>Detail Perusahaan</th>
                                             <th>Rincian Belanja</th>
                                             <th>Detail SPJ</th>
@@ -36,27 +35,50 @@
                                             <tr>
                                                 <td>{{ $no++ }}</td>
                                                 <td class="text-wrap" style="white-space: normal; word-wrap: break-word;">
-                                                    <ul class="list list-unstyled">
-                                                        <li>
-                                                            <span
-                                                                class="fs-16 text-primary">#&nbsp;{{ $key->no_usulan_barang }}</span>
-                                                        </li>
-                                                        <li>
-                                                            <span
-                                                                class="fs-12">&nbsp;{{ $key->sub_kategori_rkbu->kode_sub_kategori_rkbu }}.
-                                                                {{ $key->sub_kategori_rkbu->nama_sub_kategori_rkbu }}</span>
-                                                        </li>
-                                                        <li></br>
-                                                            <span class="fs-12">&nbsp;Tahun Anggaran :
-                                                                {{ $key->tahun_anggaran }}</span>
-                                                        </li>
-                                                        <li>
-                                                            <p>
-                                                                <span
-                                                                    class="fs-10 badge badge-outline-danger">&nbsp;{{ $key->status_hutang ?? 'Isi data Terlebih Dahulu' }}</span>
-                                                            </p>
+                                                    <ul class="list-unstyled product-desc-list">
+                                                        <li><span class="f-12">Status: </span>
+                                                            <span class="f-12"><span
+                                                                    class="badge bg-info">{{ $key->status_hutang ?? 'Isi data Terlebih Dahulu' }}
+                                                                </span>
                                                         </li>
                                                     </ul>
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="{{ asset('assets/images/companies/img-5.png') }}"
+                                                            class="me-3 rounded-circle avatar-sm p-2 bg-light"
+                                                            alt="user-pic">
+                                                        <div class="flex-1">
+                                                            <h6 class="mt-0 mb-1 fs-14">
+                                                                <a href=""
+                                                                    class="fs-16">{{ $key->no_usulan_barang }}
+                                                                </a>
+                                                            </h6>
+                                                            <p class="mb-0 fs-12 text-muted">
+                                                                <span>{{ $key->created_at }}</span>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <ul class="list-unstyled product-desc-list">
+                                                        <li class="py-0">
+                                                            <span class="f-12">User:
+                                                                {{ $key->nama_pengusul_barang }}</span></br>
+                                                            <span class="fs-12">Unit:
+                                                                {{ $key->user->unit->nama_unit ?? ' - ' }}</span>
+                                                        </li></br>
+                                                        <li> <span class="fs-12">{{ $key->kode_kategori_rkbu }}.
+                                                                {{ $key->nama_kategori_rkbu }}</span>
+                                                        </li>
+                                                        <li> <span class="fs-12">
+                                                                {{ $key->sub_kategori_rkbu->kode_sub_kategori_rkbu }}.
+                                                                {{ $key->sub_kategori_rkbu->nama_sub_kategori_rkbu }}</span>
+                                                        </li>
+                                                        @if (session('nama_level_user') == 'Administrator')
+                                                            <li>
+                                                                <span class="fs-10 text-primary"># ID Master SPJ:
+                                                                    {{ $key->id_master_spj }}</span>
+                                                            </li>
+                                                        @endif
+                                                    </ul>
+                                                    </p>
                                                 </td>
                                                 <td>
                                                     <ul class="list list-unstyled">
@@ -109,20 +131,6 @@
                                                 </td>
                                                 <td>
                                                     @include('master_spj.partials.status_spj')
-                                                </td>
-                                                <td>
-                                                    <ul class="list list-unstyled">
-                                                        <li>
-                                                            <span class="fs-12">Pengusul
-                                                                :&nbsp;{{ $key->nama_pengusul_barang }}</span></br>
-                                                            <span class="fs-12">Tgl Usulan
-                                                                :&nbsp;{{ $key->created_at }}</span></br>
-                                                            <span class="fs-12">Unit
-                                                                :&nbsp;
-                                                                {{ $key->user->unit->nama_unit }}</span>
-                                                        </li>
-
-                                                    </ul>
                                                 </td>
                                                 <td>
                                                     @if ($key->status_pembayaran == 'Sudah di Bayar')
@@ -218,7 +226,8 @@
                                                                     Lihat SPJ 2
                                                                 </a>
                                                             @else
-                                                                <span class="badge bg-secondary-subtle text-muted">Belum ada
+                                                                <span class="badge bg-secondary-subtle text-muted">Belum
+                                                                    ada
                                                                     SPJ 1</span>
                                                             @endif
 
@@ -230,7 +239,8 @@
                                                                     Lihat SPJ 2
                                                                 </a>
                                                             @else
-                                                                <span class="badge bg-secondary-subtle text-muted">Belum ada
+                                                                <span class="badge bg-secondary-subtle text-muted">Belum
+                                                                    ada
                                                                     SPJ 2</span>
                                                             @endif
                                                         </li>
@@ -284,11 +294,10 @@
                                             <th>Detail Biaya</th>
                                             <th>Status</th>
                                             <th>Action</th>
-                                            <th>Detail Pengusul</th>
                                             <th>Detail Perusahaan</th>
                                             <th>Rincian Belanja</th>
                                             <th>Detail SPJ</th>
-                                            <th>Resource</th>
+                                            <th style="width: 10%;">Resource</th>
                                         </tr>
                                     </tfoot>
                                 </table>

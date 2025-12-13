@@ -1,49 +1,43 @@
-<div class="modal fade" id="large-Modal" tabindex="-1" role="dialog" style="z-index: 1050; display: none;"
+<div class="modal fade bs-example-modal-xl" tabindex="-1" role="dialog" aria-labelledby="modalKeteranganLabel"
     aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title">Tuliskan Keterangan Perubahan</h4>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">×</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Tulikan Keterangan atas Perubahan Komponen Anggaran</p>
-                <form id="keteranganForm">
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <h4 class="sub-title">Keterangan Status</h4>
-                            <div class="row">
-                                <label class="col-sm-4 col-lg-2 col-form-label">Keterangan</label>
-                                <div class="col-sm-8 col-lg-10">
-                                    <div class="input-group">
-                                        <span class="input-group-addon" id="basic-addon1">*</span>
-                                        <textarea name="keterangan_status" rows="5" cols="5" class="form-control"
-                                            placeholder="Spesifikasi Komponen"></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+
+            <div class="modal-body pb-2">
+
+                <!-- Gambar -->
+                <div class="onboarding-media text-center mb-3">
+                    <img src="{{ asset('assets/images/file.png') }}" alt="file" width="335" class="img-fluid"
+                        data-app-light-img="images/file.png" data-app-dark-img="images/file.png" />
+                </div>
+
+                <!-- Keterangan -->
+                <div class="onboarding-content mb-3">
+                    <h4 class="onboarding-title text-body mb-1">Tuliskan Keterangan Perubahan</h4>
+                    <div class="onboarding-info mb-3">
+                        Contoh : Perubahan harga karena menyesuaikan harga e-katalog, dan lain-lain.
                     </div>
-                    <div class="row">
-                        <div class="col-sm-12">
-                            <h4 class="sub-title">Upload File Pendukung</h4>
-                            <div class="row">
-                                <div class="col-sm-8 col-lg-12">
-                                    <div class="input-group">
-                                        <input class="form-control" type="file" name="upload_file_5"
-                                            id="formFileMultiple" multiple />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="form-floating form-floating-outline mb-4">
+                        <textarea class="form-control" placeholder="Tuliskan Keterangan" name="keterangan_status" id="keteranganInput"
+                            style="height: 120px"></textarea>
+                        <label for="keteranganInput">Keterangan</label>
                     </div>
-                </form>
+                    <!-- Upload -->
+                    <h4 class="onboarding-title text-body mb-1">Upload File Pendukung</h4>
+                    <div class="onboarding-info mb-3">
+                        Contoh : Nota Dinas, KAP, dan dokumen pendukung lainnya.
+                    </div>
+                    <div>
+                        <input class="form-control form-control-sm" type="file" name="upload_file_5" />
+                    </div>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default waves-effect " data-dismiss="modal">Close</button>
-                <button type="submit" class="btn btn-primary waves-effect waves-light ">Save changes</button>
+            <div class="modal-footer border-0">
+                <a href="javascript:void(0);" class="btn btn-link link-success fw-medium shadow-none"
+                    data-bs-dismiss="modal">
+                    <i class="ri-close-line me-1 align-middle"></i> Tutup
+                </a>
+                <button type="submit" class="btn btn-primary">Simpan</button>
             </div>
         </div>
     </div>

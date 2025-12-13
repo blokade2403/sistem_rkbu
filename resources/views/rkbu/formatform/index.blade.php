@@ -44,12 +44,7 @@
                                         <tr>
                                             <td>{{ $no++ }}</td>
                                             <td>
-                                                <ul class="list list-unstyled">
-                                                    <li>
-                                                        <span class="fs-14 text-primary">#
-                                                            <strong>{{ $rkbus->nama_barang }}</strong>
-                                                        </span>
-                                                    </li>
+                                                <ul class="list-unstyled product-desc-list">
                                                     <li>
                                                         <span class="f-12">
                                                             Sumber Dana : &nbsp;
@@ -70,12 +65,35 @@
                                                                 class="badge bg-info">{{ $rkbus->rating }}</span></span>
                                                         @include('rkbu.partials.status_badge_validasi')
                                                     </li>
-                                                    </br>
-                                                    <li>
-                                                        <span>Penempatan
-                                                            :&nbsp;{{ $rkbus->penempatan }}</span>
+                                                </ul>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="{{ asset('assets/images/companies/img-1.png') }}"
+                                                        class="me-3 rounded-circle avatar-sm p-2 bg-light" alt="user-pic">
+                                                    <div class="flex-1">
+                                                        <h6 class="mt-0 mb-1 fs-14">
+                                                            <a href="" class="fs-16">{{ $rkbus->nama_barang }}
+                                                            </a>
+                                                        </h6>
+                                                        <p class="mb-0 fs-12 text-muted">
+                                                            <span>{{ $rkbus->created_at }}</span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <p>
+                                                <ul class="list-unstyled product-desc-list">
+                                                    <li class="py-0">
+                                                        <span class="f-12">User:
+                                                            {{ $rkbus->user->nama_lengkap }}</span></br>
+                                                        <span class="f-12">KSP: {{ $rkbus->user->ksp->nama_ksp }}</span>
+                                                    </li></br>
+                                                    <li> <span
+                                                            class="f-12">{{ $rkbus->subKategoriRkbu->kode_sub_kategori_rkbu . $rkbus->subKategoriRkbu->nama_sub_kategori_rkbu }}</span>
+                                                    </li>
+                                                    <li> <span class="f-12 text-muted">Penempatan:
+                                                            {{ $rkbus->penempatan }}</span>
                                                     </li>
                                                 </ul>
+                                                </p>
                                             </td>
                                             <td>
                                                 <ul class="list list-unstyled">
@@ -177,12 +195,14 @@
                                                             class="f-12">&nbsp;{{ $rkbus->subKategoriRkbu->kode_sub_kategori_rkbu }}.
                                                             {{ $rkbus->subKategoriRkbu->nama_sub_kategori_rkbu }}</span>
                                                     </li>
-                                                    <li><span class="f-12"> Sisa
+                                                    <li><span class="fs-12 badge badge-soft-danger badge-border text-left">
+                                                            Sisa
                                                             Volume:&nbsp;{{ $rkbus->sisa_vol_rkbu }}
-                                                            {{ $rkbus->satuan_1 }}/{{ $rkbus->satuan_2 }}
-                                                            </br><span class="f-12"> Sisa
-                                                                Anggaran:&nbsp;Rp.
-                                                                {{ number_format($rkbus->sisa_anggaran_rkbu) }}</span>
+                                                            {{ $rkbus->satuan_1 }}/{{ $rkbus->satuan_2 }}</span>
+                                                        <span class="fs-12 badge badge-soft-danger badge-border text-left">
+                                                            Sisa
+                                                            Anggaran:&nbsp;Rp.
+                                                            {{ number_format($rkbus->sisa_anggaran_rkbu) }}
                                                         </span>
                                                     </li>
                                                 </ul>

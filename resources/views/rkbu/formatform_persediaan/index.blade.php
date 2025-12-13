@@ -18,12 +18,12 @@
                                     <tr>
                                         <th style="width: 4%;">No</th>
                                         <th style="width: 10%;">Nama Barang</th>
-                                        <th style="width: 7%;">Detail Quantity</th>
                                         <th style="width: 10%;">Harga Satuan</th>
                                         <th style="width: 5%;">Total Vol</th>
                                         <th style="width: 10%;">Total Anggaran</th>
                                         <th>Pengusul</th>
                                         <th>Action</th>
+                                        <th style="width: 7%;">Detail Quantity</th>
                                         <th>Detail Anggaran</th>
                                         <th style="width: 10%; white-space: normal; word-wrap: break-word;">
                                             Spesifikasi</th>
@@ -44,12 +44,7 @@
                                         <tr>
                                             <td>{{ $no++ }}</td>
                                             <td>
-                                                <ul class="list list-unstyled">
-                                                    <li>
-                                                        <span class="fs-14 text-primary">#
-                                                            <strong>{{ $rkbus->nama_barang }}</strong>
-                                                        </span>
-                                                    </li>
+                                                <ul class="list-unstyled product-desc-list">
                                                     <li>
                                                         <span class="f-12">
                                                             Sumber Dana : &nbsp;
@@ -70,32 +65,35 @@
                                                                 class="badge bg-info">{{ $rkbus->rating }}</span></span>
                                                         @include('rkbu.partials.status_badge_validasi')
                                                     </li>
-                                                    </br>
-                                                    <li>
-                                                        <span>Penempatan
-                                                            :&nbsp;{{ $rkbus->penempatan }}</span>
+                                                </ul>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="{{ asset('assets/images/companies/img-1.png') }}"
+                                                        class="me-3 rounded-circle avatar-sm p-2 bg-light" alt="user-pic">
+                                                    <div class="flex-1">
+                                                        <h6 class="mt-0 mb-1 fs-14">
+                                                            <a href="" class="fs-16">{{ $rkbus->nama_barang }}
+                                                            </a>
+                                                        </h6>
+                                                        <p class="mb-0 fs-12 text-muted">
+                                                            <span>{{ $rkbus->created_at }}</span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <p>
+                                                <ul class="list-unstyled product-desc-list">
+                                                    <li class="py-0">
+                                                        <span class="f-12">User:
+                                                            {{ $rkbus->user->nama_lengkap }}</span></br>
+                                                        <span class="f-12">KSP: {{ $rkbus->user->ksp->nama_ksp }}</span>
+                                                    </li></br>
+                                                    <li> <span
+                                                            class="f-12">{{ $rkbus->subKategoriRkbu->kode_sub_kategori_rkbu . $rkbus->subKategoriRkbu->nama_sub_kategori_rkbu }}</span>
+                                                    </li>
+                                                    <li> <span class="f-12 text-muted">Penempatan:
+                                                            {{ $rkbus->penempatan }}</span>
                                                     </li>
                                                 </ul>
-                                            </td>
-                                            <td>
-                                                <span class="fs-12">Stok Tahun {{ $angka_kurang_2 }} :
-                                                    {{ $rkbus->stok }}</span><br />
-                                                <span class="fs-12">Rata2 Pemakaian {{ $angka_kurang_1 }} :
-                                                    {{ $rkbus->rata_rata_pemakaian }}</span><br />
-                                                <span class="fs-12">Kebutuhan :
-                                                    {{ $rkbus->kebutuhan_per_bulan }}</span><br />
-                                                <span class="fs-12">Pengadaan Tahun {{ $angka_kurang_1 }} :
-                                                    {{ $rkbus->pengadaan_sebelumnya }}</span><br />
-                                                <span class="fs-12">Proyeksi Sisa Stok {{ $angka_tahun }} :
-                                                    {{ $rkbus->proyeksi_sisa_stok }}</span><br />
-                                                <span class="fs-12">Kebutuhan Tahun {{ $angka_tahun }} :
-                                                    {{ $rkbus->kebutuhan_tahun_x1 }}</span><br />
-                                                <span class="fs-12">Buffer : {{ $rkbus->buffer }}</span><br />
-                                                <span class="fs-12">Kebutuhan + Buffer :
-                                                    {{ $rkbus->kebutuhan_plus_buffer }}</span><br />
-                                                <span class="fs-12 text-info mb-0">Rencana Pengadaan Tahun
-                                                    {{ $angka_tahun }} : {{ $rkbus->rencana_pengadaan_tahun_x1 }}<strong>
-                                                    </strong></span><br />
+                                                </p>
                                             </td>
                                             <td>
                                                 <ul class="list list-unstyled">
@@ -108,7 +106,8 @@
                                                     </li>
                                                 </ul>
                                             </td>
-                                            <td> <span class="f-12">{{ $rkbus->jumlah_vol }}
+                                            <td>
+                                                <span class="f-12">{{ $rkbus->jumlah_vol }}
                                                     {{ $rkbus->satuan_1 }}/{{ $rkbus->satuan_2 }}</span>
                                             </td>
                                             <td> <span class="f-12">Rp.
@@ -192,15 +191,39 @@
                                                             class="f-12">&nbsp;{{ $rkbus->subKategoriRkbu->kode_sub_kategori_rkbu }}.
                                                             {{ $rkbus->subKategoriRkbu->nama_sub_kategori_rkbu }}</span>
                                                     </li>
-                                                    <li><span class="f-12">Sisa
+                                                    <li>
+                                                    <li><span class="fs-12 badge badge-soft-danger badge-border text-left">
+                                                            Sisa
                                                             Volume:&nbsp;{{ $rkbus->sisa_vol_rkbu }}
-                                                            {{ $rkbus->satuan_1 }}/{{ $rkbus->satuan_2 }}
-                                                            </br><span class="f-12"> Sisa
-                                                                Anggaran:&nbsp;Rp.
-                                                                {{ number_format($rkbus->sisa_anggaran_rkbu) }}</span>
+                                                            {{ $rkbus->satuan_1 }}/{{ $rkbus->satuan_2 }}</span>
+                                                        <span class="fs-12 badge badge-soft-danger badge-border text-left">
+                                                            Sisa
+                                                            Anggaran:&nbsp;Rp.
+                                                            {{ number_format($rkbus->sisa_anggaran_rkbu) }}
                                                         </span>
                                                     </li>
+                                                    </li>
                                                 </ul>
+                                            </td>
+                                            <td>
+                                                <span class="fs-12">Stok Tahun {{ $angka_kurang_2 }} :
+                                                    {{ $rkbus->stok }}</span><br />
+                                                <span class="fs-12">Rata2 Pemakaian {{ $angka_kurang_1 }} :
+                                                    {{ $rkbus->rata_rata_pemakaian }}</span><br />
+                                                <span class="fs-12">Kebutuhan :
+                                                    {{ $rkbus->kebutuhan_per_bulan }}</span><br />
+                                                <span class="fs-12">Pengadaan Tahun {{ $angka_kurang_1 }} :
+                                                    {{ $rkbus->pengadaan_sebelumnya }}</span><br />
+                                                <span class="fs-12">Proyeksi Sisa Stok {{ $angka_tahun }} :
+                                                    {{ $rkbus->proyeksi_sisa_stok }}</span><br />
+                                                <span class="fs-12">Kebutuhan Tahun {{ $angka_tahun }} :
+                                                    {{ $rkbus->kebutuhan_tahun_x1 }}</span><br />
+                                                <span class="fs-12">Buffer : {{ $rkbus->buffer }}</span><br />
+                                                <span class="fs-12">Kebutuhan + Buffer :
+                                                    {{ $rkbus->kebutuhan_plus_buffer }}</span><br />
+                                                <span class="fs-12 text-info mb-0">Rencana Pengadaan Tahun
+                                                    {{ $angka_tahun }} : {{ $rkbus->rencana_pengadaan_tahun_x1 }}<strong>
+                                                    </strong></span><br />
                                             </td>
                                             <td>
                                                 <ul class="list list-unstyled">

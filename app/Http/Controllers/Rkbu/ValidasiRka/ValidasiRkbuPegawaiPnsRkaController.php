@@ -86,10 +86,6 @@ class ValidasiRkbuPegawaiPnsRkaController extends Controller
 
         $selisih = $jumlah_anggaran - $total_anggaran_barjas_admin;
 
-        // dd($selisih);
-
-        $currentJenisKategori = $request->input('jenis_kategori_rkbu', '9cdfd329-6524-4d3f-aca5-93eade93046d');
-
         // Ambil sub kategori rkbu berdasarkan id_user dari session dan id_jenis_kategori_rkbu
         $sub_kategori_rkbus = SubKategoriRkbu::join('rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
             ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
@@ -99,7 +95,8 @@ class ValidasiRkbuPegawaiPnsRkaController extends Controller
             ->join('pejabats', 'users.id_pejabat', '=', 'pejabats.id_pejabat')
             ->where('pejabats.id_jabatan', $id_jabatan)
             ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
-            ->where('jenis_kategori_rkbus.id_jenis_kategori_rkbu',  $currentJenisKategori)
+            ->where('jenis_kategori_rkbus.id_jenis_kategori_rkbu', '9cdfd329-6524-4d3f-aca5-93eade93046d')
+            ->where('sub_kategori_rkbus.id_sub_kategori_rkbu', '9cf7e481-2dba-4482-bd27-bd0face739ed')
             ->select('sub_kategori_rkbus.*') // Pilih data sub_kategori_rkbu
             ->distinct() // Hilangkan duplikasi
             ->get();
@@ -112,20 +109,10 @@ class ValidasiRkbuPegawaiPnsRkaController extends Controller
             ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
             ->join('pejabats', 'users.id_pejabat', '=', 'pejabats.id_pejabat')
             ->where('pejabats.id_jabatan', $id_jabatan)
+            ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
             ->where('id_status_validasi', '9cfb1edc-2263-401f-b249-361db4017932')
-            ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
-            ->where('jenis_kategori_rkbus.id_jenis_kategori_rkbu',  $currentJenisKategori);
-
-        $query_sum = Rkbu::join('users', 'rkbus.id_user', '=', 'users.id_user')
-            ->join('ksps', 'users.id_ksp', '=', 'ksps.id_ksp')
-            ->join('sub_kategori_rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
-            ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
-            ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
-            ->join('pejabats', 'users.id_pejabat', '=', 'pejabats.id_pejabat')
-            ->where('pejabats.id_pejabat', $id_pejabat)
-            ->where('id_status_validasi_rka', '9cfb1f87-238b-4ea2-98f0-4255e578b1d1')
-            ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
-            ->where('jenis_kategori_rkbus.id_jenis_kategori_rkbu',  $currentJenisKategori);
+            ->where('sub_kategori_rkbus.id_sub_kategori_rkbu', '9cf7e481-2dba-4482-bd27-bd0face739ed')
+            ->where('jenis_kategori_rkbus.id_jenis_kategori_rkbu', '9cdfd329-6524-4d3f-aca5-93eade93046d');
 
 
         // Cek apakah ada filter sub_kategori_rkbu yang dipilih
@@ -140,10 +127,9 @@ class ValidasiRkbuPegawaiPnsRkaController extends Controller
 
         // Dapatkan data rkbu setelah filter
         $rkbus = $query->select('rkbus.*')->get();
-        $rkbus_sum = $query_sum->select('rkbus.*')->get();
 
         // Hitung total anggaran dari data yang diambil
-        $total_anggaran = $rkbus_sum->sum('total_anggaran');
+        $total_anggaran = $rkbus->sum('total_anggaran');
 
         return view('rkbu.formatform_pegawai.index', compact(
             'rkbus',

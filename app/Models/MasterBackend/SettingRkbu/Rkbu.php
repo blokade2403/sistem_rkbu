@@ -207,6 +207,15 @@ class Rkbu extends Model
         return $this->hasMany(UsulanBarangDetail::class, 'id_rkbu', 'id_rkbu');
     }
 
+    public function usulan_barang_details()
+    {
+        return $this->hasMany(
+            UsulanBarangDetail::class,
+            'id_rkbu',
+            'id_rkbu'
+        );
+    }
+
 
     public function getMasterSpjsAttribute()
     {

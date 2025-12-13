@@ -71,6 +71,11 @@ class MasterSpj extends Model
         return $this->hasMany(Rkbu::class, 'id_rkbu');
     }
 
+    public function RkbusAll()
+    {
+        return $this->belongsTo(Rkbu::class, 'id_rkbu');
+    }
+
     public function kegiatans()
     {
         return $this->belongsTo(Kegiatan::class, 'id_kegiatan');

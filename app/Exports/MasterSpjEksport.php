@@ -22,28 +22,36 @@ class MasterSpjEksport implements FromCollection, WithHeadings, WithEvents
         $data = MasterSpj::join('spjs', 'spjs.id_spj', '=', 'master_spjs.id_spj')
             ->leftJoin('perusahaans', 'perusahaans.id_perusahaan', '=', 'master_spjs.id_perusahaan')
             ->join('spj_details', 'spj_details.id_spj', '=', 'spjs.id_spj')
+            ->join('rkbus', 'spj_details.id_rkbu', '=', 'rkbus.id_rkbu')
             ->join('usulan_barangs', 'usulan_barangs.id_usulan_barang', '=', 'spjs.id_usulan_barang')
-            ->join('usulan_barang_details', 'usulan_barang_details.id_usulan_barang', '=', 'spj_details.id_usulan_barang')
+            ->join('usulan_barang_details', 'usulan_barang_details.id_usulan_barang_detail', '=', 'spj_details.id_usulan_barang_detail')
             ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
             ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
             ->join('users', 'users.id_user', '=', 'usulan_barangs.id_user')
             ->join('units', 'users.id_unit', '=', 'units.id_unit')
             ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
+            // ->where('master_spjs.id_master_spj', '77940797-f300-4005-84e6-69a9a38c8605')
             ->select(
                 'master_spjs.id_master_spj',
                 'master_spjs.id_spj',
                 'master_spjs.id_perusahaan',
-                'master_spjs.id_paket',
+                'master_spjs.idpaket',
                 'spj_details.*',
                 'usulan_barangs.no_usulan_barang',
                 'usulan_barangs.nama_pengusul_barang',
                 'spj_details.id_usulan_barang_detail',
                 // 'master_spjs.*',
-                // 'spj_details.*',
-                // 'usulan_barangs.no_usulan_barang',
-                // 'usulan_barangs.nama_pengusul_barang',
+                'spj_details.id_rkbu',
+                'rkbus.nama_barang',
+                'usulan_barang_details.jumlah_usulan_barang',
+                'usulan_barang_details.harga_barang',
+                'usulan_barang_details.total_ppn',
+                'usulan_barang_details.total_anggaran_usulan_barang',
+                'usulan_barang_details.spek_detail',
+                'usulan_barang_details.status_usulan_barang_detail',
                 // 'spj_details.id_usulan_barang_detail'
             )
+            ->distinct()
             ->get();
 
         // dd($data);
@@ -53,12 +61,21 @@ class MasterSpjEksport implements FromCollection, WithHeadings, WithEvents
         $result = $data->map(function ($master_spj) {
             return [
                 'id_master_spj'                 => $master_spj->id_master_spj,
+                'id_spj'                        => $master_spj->id_spj ?? 'N/A',
+                'id_usulan_barang_detail'       => $master_spj->id_usulan_barang_detail ?? 'N/A',
                 'no_usulan_barang'              => $master_spj->usulanBarang->no_usulan_barang ?? 'N/A',
                 'nama_pengusul_barang'          => $master_spj->usulanBarang->nama_pengusul_barang ?? 'N/A',
                 'tgl_validasi_pptk'             => $master_spj->usulanBarang->tgl_validasi_pptk ?? 'N/A',
                 'tgl_validasi_kabag'            => $master_spj->usulanBarang->tgl_validasi_kabag ?? 'N/A',
                 'tgl_validasi_direktur'         => $master_spj->usulanBarang->tgl_validasi_direktur ?? 'N/A',
                 'tanggal_validasi_pengadaan'    => $master_spj->usulanBarang->tanggal_validasi_pengadaan ?? 'N/A',
+                'nama_barang'                   => $master_spj->RkbusAll->nama_barang ?? 'N/A',
+                'jumlah_usulan_barang'          => $master_spj->usulan_barang_detail->jumlah_usulan_barang ?? 'N/A',
+                'harga_barang'                  => $master_spj->usulan_barang_detail->harga_barang ?? 'N/A',
+                'total_ppn'                     => $master_spj->usulan_barang_detail->total_ppn ?? 'N/A',
+                'total_anggaran_usulan_barang'  => $master_spj->usulan_barang_detail->total_anggaran_usulan_barang ?? 'N/A',
+                'spek_detail'                   => $master_spj->usulan_barang_detail->spek_detail ?? 'N/A',
+                'status_usulan_barang_detail'   => $master_spj->usulan_barang_detail->status_usulan_barang_detail ?? 'N/A',
                 'status_hutang'                 => $master_spj->status_hutang ?? 'N/A',
                 'nama_perusahaan'               => $master_spj->perusahaan->nama_perusahaan ?? 'N/A',
                 'idpaket'                       => $master_spj->idpaket ?? 'N/A',
@@ -98,9 +115,8 @@ class MasterSpjEksport implements FromCollection, WithHeadings, WithEvents
                 'sisa_pembayaran'               => $master_spj->sisa_pembayaran ?? 'N/A',
                 'nama_validasi_keuangan'        => $master_spj->nama_validasi_keuangan ?? 'N/A',
                 'bulan_pembayaran'              => $master_spj->bulan_pembayaran ?? 'N/A',
-                'id_spj'                        => $master_spj->id_spj ?? 'N/A',
-                'id_spj'                        => $master_spj->id_spj ?? 'N/A',
-                'id_usulan_barang_detail'       => $master_spj->id_usulan_barang_detail ?? 'N/A',
+
+
 
             ];
         });
@@ -119,12 +135,21 @@ class MasterSpjEksport implements FromCollection, WithHeadings, WithEvents
 
             [
                 'id_master_spj',
+                'id_spj',
+                'id_usulan_barang_detail',
                 'No Usulan Barang',
                 'nama_pengusul_barang',
                 'tgl_validasi_perencana',
                 'tgl_validasi_kabag',
                 'tgl_validasi_direktur',
                 'tanggal_validasi_pengadaan',
+                'nama_barang',
+                'jumlah_usulan_barang',
+                'harga_barang',
+                'total_ppn',
+                'total_anggaran_usulan_barang',
+                'spek_detail',
+                'status_usulan_barang_detail',
                 'status_hutang',
                 'nama_perusahaan',
                 'idpaket',
@@ -164,8 +189,7 @@ class MasterSpjEksport implements FromCollection, WithHeadings, WithEvents
                 'sisa_pembayaran',
                 'nama_validasi_keuangan',
                 'bulan_pembayaran',
-                'id_spj',
-                'id_usulan_barang_detail'
+
 
             ]
         ];

@@ -18,8 +18,6 @@
                                     <tr>
                                         <th style="width: 4%;">No</th>
                                         <th style="width: 10%;">Nama Pegawai</th>
-                                        <th style="width: 7%;">Profil Pegawai</th>
-                                        <th style="width: 10%;">Detail Jabatan</th>
                                         <th style="width: 5%;">Penggajian</th>
                                         <th style="width: 10%;">Detail Jaminan</th>
                                         <th>Detail Pendapatan</th>
@@ -40,13 +38,7 @@
                                         <tr>
                                             <td>{{ $no++ }}</td>
                                             <td>
-                                                <ul class="list list-unstyled">
-                                                    <li>
-                                                        <span class="f-16">#&nbsp;{{ $rkbus->nama_pegawai }}</span>
-                                                    </li>
-                                                    <li>
-                                                        <span class="f-12">NIP&nbsp;{{ $rkbus->nomor_kontrak }}</span>
-                                                    </li>
+                                                <ul class="list-unstyled product-desc-list">
                                                     <li>
                                                         <span class="f-12">
                                                             Sumber Dana : &nbsp;
@@ -68,23 +60,39 @@
                                                         @include('rkbu.partials.status_badge_validasi')
                                                     </li>
                                                 </ul>
-                                            </td>
-                                            <td>
-                                                <ul class="list list-unstyled">
-                                                    <li>
-                                                        <span class="f-12">Lahir:
-                                                            {{ $rkbus->tempat_lahir }}</span></br>
-                                                        <span class="f-12">Tgl Lahir:
-                                                            {{ $rkbus->tanggal_lahir }}</span></br>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="{{ asset('assets/images/companies/img-2.png') }}"
+                                                        class="me-3 rounded-circle avatar-sm p-2 bg-light" alt="user-pic">
+                                                    <div class="flex-1">
+                                                        <h6 class="mt-0 mb-1 fs-14">
+                                                            <a href="" class="fs-16">{{ $rkbus->nama_pegawai }}
+                                                            </a>
+                                                        </h6>
+                                                        <p class="mb-0 fs-12 text-muted">
+                                                            <span>{{ $rkbus->tempat_lahir }},
+                                                                {{ $rkbus->tanggal_lahir }}</span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <p>
+                                                <ul class="list-unstyled product-desc-list">
+                                                    <li><span class="f-12">Jabatan : {{ $rkbus->pendidikan }}</span></li>
+                                                    <li><span class="f-12">Pendidikan : {{ $rkbus->jabatan }}</span>
                                                     </li>
+                                                    <p>
+                                                        <li class="py-0">
+                                                            <span class="f-12">User:
+                                                                {{ $rkbus->user->nama_lengkap }}</span></br>
+                                                            <span class="f-12">KSP:
+                                                                {{ $rkbus->user->ksp->nama_ksp }}</span>
+                                                        </li></br>
+                                                        <li> <span
+                                                                class="f-12">{{ $rkbus->subKategoriRkbu->kode_sub_kategori_rkbu }}.
+                                                                {{ $rkbus->subKategoriRkbu->nama_sub_kategori_rkbu }}</span>
+                                                        </li>
+                                                        </li>
                                                 </ul>
-                                            </td>
-                                            <td>
-                                                <span class="f-12">Jabatan : {{ $rkbus->jabatan }}</span></br>
-                                                <span class="f-12">Pendidikan :
-                                                    {{ $rkbus->pendidikan }}</span><br />
-                                                <span class="f-12">Status Kawin :
-                                                    {{ $rkbus->id_status_kawin }}</span><br />
+                                                </p>
                                             </td>
                                             <td> <span class="f-12">Gaji Pokok
                                                     Rp.{{ number_format($rkbus->gaji_pokok, 0, ',', ',') }}</span><br />
@@ -173,8 +181,6 @@
                                     <tr>
                                         <th style="width: 4%;">No</th>
                                         <th style="width: 10%;">Nama Pegawai</th>
-                                        <th style="width: 7%;">Profil Pegawai</th>
-                                        <th style="width: 10%;">Detail Jabatan</th>
                                         <th style="width: 5%;">Penggajian</th>
                                         <th style="width: 10%;">Detail Jaminan</th>
                                         <th>Detail Pendapatan</th>

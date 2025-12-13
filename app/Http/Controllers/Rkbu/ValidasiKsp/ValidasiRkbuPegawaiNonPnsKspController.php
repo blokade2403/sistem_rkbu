@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Session;
 use App\Models\MasterBackend\SettingRkbu\Rkbu;
 use App\Models\MasterBackend\SettingUser\Fase;
+use App\Models\MasterBackend\SettingInput\Anggaran;
 use App\Models\MasterBackend\SettingInput\Komponen;
 use App\Models\MasterBackend\SettingInput\UraianDua;
 use App\Models\MasterBackend\SettingInput\UraianSatu;
@@ -44,6 +45,41 @@ class ValidasiRkbuPegawaiNonPnsKspController extends Controller
             ->distinct() // Hilangkan duplikasi
             ->get();
 
+        $sumber_dana    = [
+            '9cdfcedb-cc19-4b65-b889-4a5e2dc0ebe3',
+            '9cdfced0-87ce-49dc-8268-25ed56420bf7',
+            '9cf6ed93-0b31-4941-a31a-82d07eb81873'
+        ];
+        $idKodeRekeningBelanja_blud     = '9cf603bb-bfd0-4b1e-8a24-7339459d9507';
+        $idSumberDana                   = '9cdfcedb-cc19-4b65-b889-4a5e2dc0ebe3';
+
+        $anggaran = Anggaran::where('id_kode_rekening_belanja', $idKodeRekeningBelanja_blud)
+            ->where('id_sumber_dana', $idSumberDana)
+            ->where('tahun_anggaran', $tahunAnggaran)
+            ->select('jumlah_anggaran')
+            ->first();
+
+        $jumlah_anggaran = $anggaran ? $anggaran->jumlah_anggaran : 0;
+
+        $query_admin = function ($id_kode_rekening_belanja) use ($tahunAnggaran, $sumber_dana) {
+            return Rkbu::join('users', 'rkbus.id_user', '=', 'users.id_user')
+                ->join('pejabats', 'users.id_pejabat', '=', 'pejabats.id_pejabat')
+                ->join('rekening_belanjas', 'rekening_belanjas.id_kode_rekening_belanja', '=', 'rkbus.id_kode_rekening_belanja')
+                ->join('aktivitas', 'aktivitas.id_aktivitas', '=', 'rekening_belanjas.id_aktivitas')
+                ->join('sub_kegiatans', 'sub_kegiatans.id_sub_kegiatan', '=', 'aktivitas.id_sub_kegiatan')
+                ->join('sumber_danas', 'sumber_danas.id_sumber_dana', '=', 'sub_kegiatans.id_sumber_dana')
+                ->join('sub_kategori_rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
+                ->whereIn('sumber_danas.id_sumber_dana', $sumber_dana)
+                ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
+                ->where('rkbus.id_kode_rekening_belanja', $id_kode_rekening_belanja)
+                ->where('id_status_validasi_rka', '9cfb1f87-238b-4ea2-98f0-4255e578b1d1')
+                ->where('sub_kategori_rkbus.id_sub_kategori_rkbu', '9d03d062-b7d6-490e-ad71-10d92c5628cb')
+                ->sum('total_anggaran');
+        };
+
+        $total_anggaran_barjas_admin = $query_admin($idKodeRekeningBelanja_blud);
+        $selisih = $jumlah_anggaran - $total_anggaran_barjas_admin;
+
         // Query untuk mengambil data rkbu
         $query = Rkbu::join('users', 'rkbus.id_user', '=', 'users.id_user')
             ->join('ksps', 'users.id_ksp', '=', 'ksps.id_ksp')
@@ -72,7 +108,18 @@ class ValidasiRkbuPegawaiNonPnsKspController extends Controller
         // Hitung total anggaran dari data yang diambil
         $total_anggaran = $rkbus->sum('total_anggaran');
 
-        return view('rkbu.formatform_pegawai.index', compact('rkbus', 'total_anggaran', 'sub_kategori_rkbus', 'status_validasi_rka'), ['title' => 'Halaman RKBU', 'routePrefix' => 'validasi_ksp_rkbu_non_pnss']);
+        return view('rkbu.formatform_pegawai.index', compact(
+            'rkbus',
+            'total_anggaran',
+            'sub_kategori_rkbus',
+            'status_validasi_rka'
+        ), [
+            'title' => 'Halaman RKBU',
+            'routePrefix' => 'validasi_ksp_rkbu_non_pnss',
+            'sub_kategori_rkbus'    => $sub_kategori_rkbus,
+            'status_validasi_rka'   => $status_validasi_rka,
+            'selisih'               => $selisih
+        ]);
     }
 
     /**

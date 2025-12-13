@@ -42,19 +42,36 @@
                                 @if (session('status_edit') == 'aktif' && in_array(session('nama_level_user'), ['User', 'Administrator']))
                                     <div class="col-auto">
                                         <a href="{{ route($routePrefix . '.create') }}"
-                                            class="btn btn-soft-success shadow-none">
+                                            class="btn btn-sm btn-soft-success shadow-none">
                                             <i class="ri-add-circle-line align-middle me-1"></i>
                                             Tambah Data
                                         </a>
                                     </div>
                                 @endif
-
                                 <!--end col-->
                                 <div class="col-auto">
                                     <a href="{{ route($routePrefix . '.downloadPDF') }}"
-                                        class="btn btn-soft-info btn-icon waves-effect waves-light layout-rightside-btn shadow-none"><i
-                                            class="ri-printer-line"></i></a>
+                                        class="btn btn-sm btn-soft-primary shadow-none"><i class="ri-printer-line"></i>
+                                        Print Rincian</a>
                                 </div>
+                                @if (session('nama_level_user') == 'Administrator')
+                                    <div class="col-auto">
+                                        <a href="{{ route($routePrefix . '.downloadPDFRba') }}"
+                                            class="btn btn-sm btn-soft-danger shadow-none"><i
+                                                class="ri-printer-line"></i>
+                                            Print RBA
+                                        </a>
+                                    </div>
+                                    @if ($routePrefix == 'rkbu_barjas_admins')
+                                        <div class="col-auto">
+                                            <a href="{{ route($routePrefix . '.downloadPDFRbaBarjasLainnya') }}"
+                                                class="btn btn-sm btn-soft-danger shadow-none">
+                                                <i class="ri-printer-line"></i>
+                                                Print RBA Barjas Lainnya
+                                            </a>
+                                        </div>
+                                    @endif
+                                @endif
                                 <!--end col-->
                             </div>
                             <!--end row-->

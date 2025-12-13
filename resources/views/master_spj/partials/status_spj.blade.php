@@ -57,7 +57,7 @@
             [
                 'label' => 'PPK',
                 'status' => $key->status_verifikasi_ppk,
-                'tgl' => $key->tgl_verif_ppk,
+                'tgl' => $key->tgl_verif,
                 'ket' => $key->ket_verif_ppk ?? null,
             ],
             [

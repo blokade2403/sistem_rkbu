@@ -43,15 +43,37 @@ class RkbuPegawaiPnsAdminDataTable extends DataTable
                 ])->render();
 
                 return '
-                <ul class="list list-unstyled">
-                    <li> <span class="fs-14 text-primary">#<strong>' . e($row->nama_pegawai) . '</strong></span></li>
-                    <li><span class="f-12">' . ($row->tempat_lahir) . ', ' . ($row->tanggal_lahir) . '</span></li>
-                    <li><span class="f-12">Jabatan : ' . ($row->pendidikan) . '</span></li>
-                    <li><span class="f-12">Pendidikan : ' . ($row->jabatan) . '</span></li><p>
+                <ul class="list-unstyled product-desc-list">
                     <li><span class="f-12">Sumber Dana: ' . $label . '</span>
                     <span class="f-12"><span class="badge bg-info"> ' . e($row->rating) . '</span>' . $statusBadge . '</span></li>
-                    <li><span class="f-12">ID: ' . e($row->id_rkbu) . '</span></li>
                 </ul>
+                <div class="d-flex align-items-center">
+                     <img src="' . asset('assets/images/companies/img-2.png') . '"
+                        class="me-3 rounded-circle avatar-sm p-2 bg-light" alt="user-pic">
+                    <div class="flex-1">
+                        <h6 class="mt-0 mb-1 fs-14">
+                            <a href=""
+                                class="fs-16">' . e($row->nama_pegawai) . '
+                            </a>
+                        </h6>
+                        <p class="mb-0 fs-12 text-muted">
+                            <span>' . ($row->tempat_lahir) . ', ' . ($row->tanggal_lahir) . '</span>
+                        </p>
+                    </div>
+                </div>
+                 <p>
+                 <ul class="list-unstyled product-desc-list">
+                    <li><span class="f-12">Jabatan : ' . ($row->pendidikan) . '</span></li>
+                    <li><span class="f-12">Pendidikan : ' . ($row->jabatan) . '</span></li><p>
+                    <li class="py-0">
+                       <span class="f-12">User: ' . ($row->user->nama_lengkap) . '</span></br>
+                        <span class="f-12">KSP: ' . ($row->user->ksp->nama_ksp) . '</span>
+                    </li></br>
+                    <li> <span class="f-12">' . ($row->subKategoriRkbu->kode_sub_kategori_rkbu) . '.
+                                ' . ($row->subKategoriRkbu->nama_sub_kategori_rkbu) . '</span>
+                                </li>
+                    </li>
+                </ul></p>
             ';
             })
             ->addColumn('profil_pegawai', function ($row) {

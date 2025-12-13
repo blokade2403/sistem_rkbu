@@ -103,6 +103,7 @@
                         </div>
                     </div><!-- end card header -->
                     @include('partials.animate_progress_form')
+
                     <div class="card-header shadow-sm rounded-3 p-0">
                         <table class="table modern-table table-bordered align-middle">
                             <thead class="table-primary text-center">
@@ -121,22 +122,31 @@
 
                                 @foreach ($programs as $program)
                                     @php
-                                        $programRealisasi = 0;
                                         $programAnggaran = 0;
+                                        $programRealisasi = 0;
 
-                                        foreach ($program->kegiatans as $k) {
-                                            foreach ($k->sub_kegiatans as $sub) {
-                                                foreach ($sub->aktivitass as $act) {
-                                                    foreach ($act->rekening_belanjas as $rek) {
-                                                        foreach ($rek->rkbus as $rk) {
+                                        foreach ($program->kegiatans ?? collect() as $kegiatan) {
+                                            foreach ($kegiatan->sub_kegiatans ?? collect() as $sub) {
+                                                foreach ($sub->aktivitass ?? collect() as $act) {
+                                                    foreach ($act->rekening_belanjas ?? collect() as $rek) {
+                                                        foreach ($rek->rkbus ?? collect() as $rk) {
                                                             if ($rk->id_status_validasi_rka == $statusValidasi) {
                                                                 $programAnggaran += $rk->total_anggaran;
 
-                                                                $real = $realisasi[$rk->id_rkbu] ?? null;
-                                                                if ($real) {
-                                                                    $programRealisasi +=
-                                                                        $real->realisasi_bayar +
-                                                                        $real->realisasi_proses;
+                                                                // 🔑 REALISASI DARI UBD
+                                                                foreach (
+                                                                    $rk->usulan_barang_details ?? collect()
+                                                                    as $ubd
+                                                                ) {
+                                                                    $real =
+                                                                        $realisasi[$ubd->id_usulan_barang_detail] ??
+                                                                        null;
+
+                                                                    if ($real) {
+                                                                        $programRealisasi +=
+                                                                            ($real->realisasi ?? 0) +
+                                                                            ($real->proses ?? 0);
+                                                                    }
                                                                 }
                                                             }
                                                         }
@@ -153,18 +163,19 @@
                                     <tr class="table-info fw-bold">
                                         <td>{{ $program->kode_program }}</td>
                                         <td>{{ $program->nama_program }}</td>
-                                        <td class="white-nowrap">Rp {{ number_format($programAnggaran, 0, ',', '.') }}
+                                        <td class="white-nowrap"> {{ number_format($programAnggaran, 0, ',', '.') }}
                                         </td>
-                                        <td class="white-nowrap">Rp {{ number_format($programRealisasi, 0, ',', '.') }}
+                                        <td class="white-nowrap"> {{ number_format($programRealisasi, 0, ',', '.') }}
                                         </td>
-                                        <td class="white-nowrap">Rp {{ number_format($programSisa, 0, ',', '.') }}</td>
+                                        <td class="white-nowrap"> {{ number_format($programSisa, 0, ',', '.') }}
+                                        </td>
                                         <td class="white-nowrap">{{ number_format($programPersen, 2) }}%</td>
                                     </tr>
 
                                     @foreach ($program->kegiatans as $kegiatan)
                                         @php
-                                            $kegiatanRealisasi = 0;
                                             $kegiatanAnggaran = 0;
+                                            $kegiatanRealisasi = 0;
 
                                             foreach ($kegiatan->sub_kegiatans as $sub) {
                                                 foreach ($sub->aktivitass as $act) {
@@ -173,18 +184,23 @@
                                                             if ($rk->id_status_validasi_rka == $statusValidasi) {
                                                                 $kegiatanAnggaran += $rk->total_anggaran;
 
-                                                                $real = $realisasi[$rk->id_rkbu] ?? null;
-                                                                if ($real) {
-                                                                    $kegiatanRealisasi +=
-                                                                        $real->realisasi_bayar +
-                                                                        $real->realisasi_proses;
+                                                                foreach (
+                                                                    $rk->usulan_barang_details ?? collect()
+                                                                    as $ubd
+                                                                ) {
+                                                                    $real =
+                                                                        $realisasi[$ubd->id_usulan_barang_detail] ??
+                                                                        null;
+                                                                    if ($real) {
+                                                                        $kegiatanRealisasi +=
+                                                                            $real->realisasi + $real->proses;
+                                                                    }
                                                                 }
                                                             }
                                                         }
                                                     }
                                                 }
                                             }
-
                                             $kegiatanSisa = $kegiatanAnggaran - $kegiatanRealisasi;
                                             $kegiatanPersen =
                                                 $kegiatanAnggaran > 0
@@ -195,11 +211,12 @@
                                         <tr class="table-light kegiatan-row">
                                             <td>— {{ $kegiatan->kode_kegiatan }}</td>
                                             <td>{{ $kegiatan->nama_kegiatan }}</td>
-                                            <td class="white-nowrap">Rp
+                                            <td class="white-nowrap">
                                                 {{ number_format($kegiatanAnggaran, 0, ',', '.') }}</td>
-                                            <td class="white-nowrap">Rp
+                                            <td class="white-nowrap">
                                                 {{ number_format($kegiatanRealisasi, 0, ',', '.') }}</td>
-                                            <td class="white-nowrap">Rp {{ number_format($kegiatanSisa, 0, ',', '.') }}
+                                            <td class="white-nowrap">
+                                                {{ number_format($kegiatanSisa, 0, ',', '.') }}
                                             </td>
                                             <td class="white-nowrap">{{ number_format($kegiatanPersen, 2) }}%</td>
 
@@ -207,8 +224,8 @@
 
                                         @foreach ($kegiatan->sub_kegiatans as $sub)
                                             @php
-                                                $subRealisasi = 0;
                                                 $subAnggaran = 0;
+                                                $subRealisasi = 0;
 
                                                 foreach ($sub->aktivitass as $act) {
                                                     foreach ($act->rekening_belanjas as $rek) {
@@ -216,11 +233,14 @@
                                                             if ($rk->id_status_validasi_rka == $statusValidasi) {
                                                                 $subAnggaran += $rk->total_anggaran;
 
-                                                                $real = $realisasi[$rk->id_rkbu] ?? null;
-                                                                if ($real) {
-                                                                    $subRealisasi +=
-                                                                        $real->realisasi_bayar +
-                                                                        $real->realisasi_proses;
+                                                                foreach ($rk->usulan_barang_details as $ubd) {
+                                                                    $real =
+                                                                        $realisasi[$ubd->id_usulan_barang_detail] ??
+                                                                        null;
+                                                                    if ($real) {
+                                                                        $subRealisasi +=
+                                                                            $real->realisasi + $real->proses;
+                                                                    }
                                                                 }
                                                             }
                                                         }
@@ -232,14 +252,15 @@
                                                     $subAnggaran > 0 ? ($subRealisasi / $subAnggaran) * 100 : 0;
                                             @endphp
 
+
                                             <tr class="sub-row">
                                                 <td>—— {{ $sub->kode_sub_kegiatan }}</td>
                                                 <td>{{ $sub->nama_sub_kegiatan }}</td>
-                                                <td class="white-nowrap">Rp
+                                                <td class="white-nowrap">
                                                     {{ number_format($subAnggaran, 0, ',', '.') }}</td>
-                                                <td class="white-nowrap">Rp
+                                                <td class="white-nowrap">
                                                     {{ number_format($subRealisasi, 0, ',', '.') }}</td>
-                                                <td class="white-nowrap">Rp {{ number_format($subSisa, 0, ',', '.') }}
+                                                <td class="white-nowrap"> {{ number_format($subSisa, 0, ',', '.') }}
                                                 </td>
                                                 <td class="white-nowrap">{{ number_format($subPersen, 2) }}%</td>
 
@@ -250,6 +271,7 @@
                             </tbody>
                         </table>
                     </div>
+
 
                 </div>
             </div>

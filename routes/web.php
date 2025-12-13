@@ -37,12 +37,14 @@ use App\Http\Controllers\MasterBackend\SettingUser\UnitController;
 use App\Http\Controllers\SpjBelanja\UsulanSpjPersediaanController;
 use App\Http\Controllers\Rkbu\KertasKerja\KertasKerjaRbaController;
 use App\Http\Controllers\MasterBackend\UserProfil\PejabatController;
+use App\Http\Controllers\Rkbu\Administrator\RkaModalAdminController;
 use App\Http\Controllers\Rkbu\Barjas\PdfControllerValidasiBarjasKsp;
 use App\Http\Controllers\Rkbu\KertasKerja\PdfControllerRealisasiRba;
 use App\Http\Controllers\UsulanBelanja\RekapUsulanBelanjaController;
 use App\Http\Controllers\UsulanBelanja\UsulanBelanjaModalController;
 use App\Http\Controllers\MasterBackend\SettingRkbu\ProgramController;
 use App\Http\Controllers\MasterBackend\SettingUser\JabatanController;
+use App\Http\Controllers\Rkbu\Administrator\RkaBarjasAdminController;
 use App\Http\Controllers\Rkbu\ModalAlkes\PdfControllerRkbuModalAlkes;
 use App\Http\Controllers\Rkbu\Persediaan\PdfControllerRkbuPersediaan;
 use App\Http\Controllers\RkbuHistory\RkbuHistoryPersediaanController;
@@ -55,6 +57,8 @@ use App\Http\Controllers\MasterBackend\SettingInput\KomponenController;
 use App\Http\Controllers\MasterBackend\SettingRkbu\AktivitasController;
 use App\Http\Controllers\MasterBackend\SettingUser\LevelUserController;
 use App\Http\Controllers\Rkbu\Administrator\PdfControllerPrintByFilter;
+use App\Http\Controllers\Rkbu\Administrator\PdfControllerRbaModalAdmin;
+use App\Http\Controllers\Rkbu\Administrator\PdfControllerRkaModalAdmin;
 use App\Http\Controllers\Rkbu\KertasKerja\PdfControllerKertasKerjaBlud;
 use App\Http\Controllers\Rkbu\ModalKantor\PdfControllerRkbuModalKantor;
 use App\Http\Controllers\UsulanBelanja\CekUsulanBelanjaModalController;
@@ -62,6 +66,8 @@ use App\Http\Controllers\MasterBackend\SettingInput\TargetSpsController;
 use App\Http\Controllers\MasterBackend\SettingInput\UraianDuaController;
 use App\Http\Controllers\MasterBackend\SettingRkbu\SumberDanaController;
 use App\Http\Controllers\MasterBackend\SettingUser\FungsionalController;
+use App\Http\Controllers\Rkbu\Administrator\PdfControllerRbaBarjasAdmin;
+use App\Http\Controllers\Rkbu\Administrator\PdfControllerRkaBarjasAdmin;
 use App\Http\Controllers\MasterBackend\SettingInput\UraianSatuController;
 use App\Http\Controllers\MasterBackend\SettingRkbu\SubKegiatanController;
 use App\Http\Controllers\MasterBackend\SettingUser\PpkKeuanganController;
@@ -75,6 +81,7 @@ use App\Http\Controllers\MasterBackend\SettingInput\JudulHeaderController;
 use App\Http\Controllers\MasterBackend\SettingRkbu\JenisBelanjaController;
 use App\Http\Controllers\MasterBackend\SettingRkbu\KategoriRkbuController;
 use App\Http\Controllers\MasterBackend\SettingRkbu\ObyekBelanjaController;
+use App\Http\Controllers\Rkbu\Administrator\PdfControllerPrintByFilterRka;
 use App\Http\Controllers\Rkbu\Administrator\RkbuModalAlkesAdminController;
 use App\Http\Controllers\Rkbu\Administrator\RkbuPegawaiPnsAdminController;
 use App\Http\Controllers\Rkbu\Administrator\RkbuPersediaanAdminController;
@@ -84,6 +91,7 @@ use App\Http\Controllers\UsulanBelanja\PdfControllerCekUsulanBarangBarjas;
 use App\Http\Controllers\Rkbu\Administrator\RkbuModalKantorAdminController;
 use App\Http\Controllers\MasterBackend\SettingInput\TahunAnggaranController;
 use App\Http\Controllers\MasterBackend\SettingUser\AdminPendukungController;
+use App\Http\Controllers\Rkbu\Administrator\PdfControllerRbaPegawaiPnsAdmin;
 use App\Http\Controllers\Rkbu\KertasKerja\KertasKerjaRealisasiRbaController;
 use App\Http\Controllers\Rkbu\Pegawai\PdfControllerValidasiPegawaiNonPnsKsp;
 use App\Http\Controllers\Rkbu\Persediaan\PdfControllerValidasiPersediaanKsp;
@@ -93,6 +101,7 @@ use App\Http\Controllers\MasterBackend\SettingRkbu\SubKategoriRkbuController;
 use App\Http\Controllers\Rkbu\Administrator\PdfControllerRkbuModalAlkesAdmin;
 use App\Http\Controllers\Rkbu\Administrator\PdfControllerRkbuPegawaiPnsAdmin;
 use App\Http\Controllers\Rkbu\Administrator\PdfControllerRkbuPersediaanAdmin;
+use App\Http\Controllers\Rkbu\Administrator\RkbuPegawaiNonPnsAdminController;
 use App\Http\Controllers\Rkbu\ValidasiRka\PdfControllerValidasiModalAlkesRka;
 use App\Http\Controllers\Rkbu\ValidasiRka\PdfControllerValidasiPegawaiPnsRka;
 use App\Http\Controllers\Rkbu\ValidasiRka\PdfControllerValidasiPersediaanRka;
@@ -110,13 +119,13 @@ use App\Http\Controllers\Rkbu\ValidasiRka\ValidasiRkbuPegawaiPnsRkaController;
 use App\Http\Controllers\Rkbu\ValidasiRka\ValidasiRkbuPersediaanRkaController;
 use App\Http\Controllers\UsulanBelanja\PdfControllerCekUsulanBarangPersediaan;
 use App\Http\Controllers\MasterBackend\SettingRkbu\JenisKategoriRkbuController;
+use App\Http\Controllers\Rkbu\Administrator\PdfControllerRbaBarjasLainnyaAdmin;
+use App\Http\Controllers\Rkbu\Administrator\PdfControllerRbaPegawaiNonPnsAdmin;
 use App\Http\Controllers\Rkbu\ValidasiRka\ValidasiRkbuModalKantorRkaController;
 use App\Http\Controllers\MasterBackend\SettingInput\StatusValidasiRkaController;
+use App\Http\Controllers\Rkbu\Administrator\PdfControllerRkbuPegawaiNonPnsAdmin;
 use App\Http\Controllers\Rkbu\ValidasiRka\PdfControllerValidasiPegawaiNonPnsRka;
 use App\Http\Controllers\Rkbu\Administrator\PdfControllerPrintByFilterPersediaan;
-use App\Http\Controllers\Rkbu\Administrator\PdfControllerPrintByFilterRka;
-use App\Http\Controllers\Rkbu\Administrator\PdfControllerRkaBarjasAdmin;
-use App\Http\Controllers\Rkbu\Administrator\RkaBarjasAdminController;
 use App\Http\Controllers\Rkbu\ValidasiKsp\ValidasiRkbuPegawaiNonPnsKspController;
 use App\Http\Controllers\Rkbu\ValidasiRka\ValidasiRkbuPegawaiNonPnsRkaController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Rka\ValidasiUsulanModalRkaController;
@@ -333,6 +342,16 @@ Route::middleware('auth')->group(function () {
         Route::resource('rkbu_pegawai_pns_admins', RkbuPegawaiPnsAdminController::class);
         Route::post('rkbu_pegawai_pns_admins/get_data_by_subkategori', [RkbuPegawaiPnsAdminController::class, 'getDataBySubKategori'])->name('rkbu_pegawai_pns_admins.get_data_by_subkategori');
         Route::get('/downloadPDF', [PdfControllerRkbuPegawaiPnsAdmin::class, 'downloadPDF'])->name('rkbu_pegawai_pns_admins.downloadPDF');
+        Route::get('/downloadPDFRba', [PdfControllerRbaPegawaiPnsAdmin::class, 'downloadPDFRba'])->name('rkbu_pegawai_pns_admins.downloadPDFRba');
+    });
+
+    Route::prefix('admin-rkbu-pegawai-non-pns')->group(function () {
+        Route::get('/rkbu_pegawai_non_pns_admins/print', [PdfControllerPrintByFilterPegawai::class, 'print'])
+            ->name('rkbu_pegawai_non_pns_admins.print');
+        Route::resource('rkbu_pegawai_non_pns_admins', RkbuPegawaiNonPnsAdminController::class);
+        Route::post('rkbu_pegawai_non_pns_admins/get_data_by_subkategori', [RkbuPegawaiNonPnsAdminController::class, 'getDataBySubKategori'])->name('rkbu_pegawai_non_pns_admins.get_data_by_subkategori');
+        Route::get('/downloadPDF', [PdfControllerRkbuPegawaiNonPnsAdmin::class, 'downloadPDF'])->name('rkbu_pegawai_non_pns_admins.downloadPDF');
+        Route::get('/downloadPDFRba', [PdfControllerRbaPegawaiNonPnsAdmin::class, 'downloadPDFRba'])->name('rkbu_pegawai_non_pns_admins.downloadPDFRba');
     });
 
     Route::prefix('admin-rkbu-barjas')->group(function () {
@@ -341,18 +360,22 @@ Route::middleware('auth')->group(function () {
         Route::resource('rkbu_barjas_admins', RkbuBarjasAdminController::class);
         Route::post('rkbu_barjas_admins/get_data_by_subkategori', [RkbuBarjasAdminController::class, 'getDataBySubKategori'])->name('rkbu_barjas_admins.get_data_by_subkategori');
         Route::get('/downloadPDF', [PdfControllerRkbuBarjasAdmin::class, 'downloadPDF'])->name('rkbu_barjas_admins.downloadPDF');
+        Route::get('/downloadPDFRba', [PdfControllerRbaBarjasAdmin::class, 'downloadPDFRba'])->name('rkbu_barjas_admins.downloadPDFRba');
+        Route::get('/downloadPDFRbaBarjasLainnya', [PdfControllerRbaBarjasLainnyaAdmin::class, 'downloadPDFRbaBarjasLainnya'])->name('rkbu_barjas_admins.downloadPDFRbaBarjasLainnya');
     });
 
     Route::prefix('admin-rkbu-modal-kantor')->group(function () {
         Route::resource('rkbu_modal_kantor_admins', RkbuModalKantorAdminController::class);
         Route::post('rkbu_modal_kantor_admins/get_data_by_subkategori', [RkbuModalKantorAdminController::class, 'getDataBySubKategori'])->name('rkbu_modal_kantor_admins.get_data_by_subkategori');
         Route::get('/downloadPDF', [PdfControllerRkbuModalKantorAdmin::class, 'downloadPDF'])->name('rkbu_modal_kantor_admins.downloadPDF');
+        Route::get('/downloadPDFRba', [PdfControllerRbaModalAdmin::class, 'downloadPDFRba'])->name('rkbu_modal_kantor_admins.downloadPDFRba');
     });
 
     Route::prefix('admin-rkbu-modal-alkes')->group(function () {
         Route::resource('rkbu_modal_alkes_admins', RkbuModalAlkesAdminController::class);
         Route::post('rkbu_modal_alkes_admins/get_data_by_subkategori', [RkbuModalAlkesAdminController::class, 'getDataBySubKategori'])->name('rkbu_modal_alkes_admins.get_data_by_subkategori');
         Route::get('/downloadPDF', [PdfControllerRkbuModalAlkesAdmin::class, 'downloadPDF'])->name('rkbu_modal_alkes_admins.downloadPDF');
+        Route::get('/downloadPDFRba', [PdfControllerRbaModalAdmin::class, 'downloadPDFRba'])->name('rkbu_modal_alkes_admins.downloadPDFRba');
     });
 
     Route::prefix('admin-rkbu-persediaan')->group(function () {
@@ -385,6 +408,13 @@ Route::middleware('auth')->group(function () {
                 ->name('rka_barjas_admins.print');
             Route::resource('/rka_barjas_admins', RkaBarjasAdminController::class);
             Route::get('/downloadPDF', [PdfControllerRkaBarjasAdmin::class, 'downloadPDF'])->name('rka_barjas_admins.downloadPDF');
+        }
+    );
+
+    Route::prefix('rka-modal')->group(
+        function () {
+            Route::resource('/rka_modal_admins', RkaModalAdminController::class);
+            Route::get('/downloadPDF', [PdfControllerRkaBarjasAdmin::class, 'downloadPDF'])->name('rka_modal_admins.downloadPDF');
         }
     );
 

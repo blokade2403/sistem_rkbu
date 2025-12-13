@@ -28,60 +28,43 @@ class RekapUsulanBelanjaDataTable extends DataTable
             ->addIndexColumn() // otomatis tambahkan nomor urut
             ->addColumn('detail_usulan', function ($row) {
                 return '
-                     <ul class="list list-unstyled">
-                        <li>
-                            <span class="f-12">&nbsp;' . ($row->no_usulan_barang) . '</span>
-                        </li>
-                        <li>
-                            <span
-                                class="fs-12">&nbsp;' . $row->kode_kategori_rkbu . '. ' . $row->nama_kategori_rkbu . '</span>
-                        </li>
-                          <li>
-                            <span
-                                class="fs-12">&nbsp;' . ($row->sub_kategori_rkbu->kode_sub_kategori_rkbu) . '
+
+                    <ul class="list-unstyled product-desc-list">
+                    <li><span class="f-12">Status: </span>
+                    <span class="f-12"><span class="badge bg-info">' . ($row->status_hutang ?? 'Isi data Terlebih Dahulu') . ' </span></li>
+                </ul>
+                <div class="d-flex align-items-center">
+                     <img src="' . asset('assets/images/companies/img-1.png') . '"
+                        class="me-3 rounded-circle avatar-sm p-2 bg-light" alt="user-pic">
+                    <div class="flex-1">
+                        <h6 class="mt-0 mb-1 fs-14">
+                            <a href=""
+                                class="fs-16">' . e($row->no_usulan_barang) . '
+                            </a>
+                        </h6>
+                        <p class="mb-0 fs-12 text-muted">
+                            <span>' . e($row->created_at) . '</span>
+                        </p>
+                    </div>
+                </div>
+                <p>
+                 <ul class="list-unstyled product-desc-list">
+                    <li class="py-0">
+                       <span class="f-12">User: ' . ($row->nama_pengusul_barang) . '</span></br>
+                        <span class="f-12">Unit: ' . ($row->unit ?? ' - ') . '</span>
+                    </li></br>
+                    <li> <span class="f-12">' . $row->kode_kategori_rkbu . '. ' . $row->nama_kategori_rkbu . '</span>
+                                </li>
+                    <li> <span class="f-12 text-muted">' . ($row->sub_kategori_rkbu->kode_sub_kategori_rkbu) . '
                                 ' . ($row->sub_kategori_rkbu->nama_sub_kategori_rkbu) . '</span>
-                        </li>
-                        <li></br>
-                            <span class="fs-16 text-primary">#
-                                ' . ($row->nama_barang) . '</span>
-                        </li>
-                        <li>
+                    </li>
+                    <li>
                             <span class="fs-10 text-primary"># ID RKBU: 
                                 ' . ($row->id_rkbu) . '</span>
                         </li>
-                          <li></br>
-                            <span class="fs-12">&nbsp;Tahun Anggaran :
-                                ' . ($row->tahun_anggaran) . '</span>
-                        </li>
-                        <li>
-                            <p>
-                                <span
-                                    class="fs-10 badge badge-outline-danger">&nbsp;' . ($row->status_hutang ?? 'Isi data Terlebih Dahulu') . '</span>
-                            </p>
-                        </li>
-                    </ul>
-                    ';
+                </ul></p>';
             })
-            ->addColumn('uraian_spj', function ($row) {
-                return '
-                      <ul class="list list-unstyled">
-                            <li>
-                                <span class="fs-12">Pengusul : ' . $row->nama_pengusul_barang . '</span>
-                            </li>
-                            <li>
-                                <span class="fs-12"> Nama Unit :
-                                    ' . $row->unit ?? ' - ' . '</span>
-                            </li>
-                            <li>
-                                <span class="fs-12"> Nomor SP :
-                                    ' . $row->no_surat_pesanan ?? ' - ' . '</span>
-                            </li>
-                            <li>
-                                <span class="fs-12"> ID Paket :
-                                    ' . $row->idpaket ?? ' - ' . '</span>
-                            </li>
-                        </ul>';
-            })
+
             ->addColumn('detail_spj', function ($row) {
                 return '
                      <ul class="list list-unstyled">
@@ -263,14 +246,6 @@ class RekapUsulanBelanjaDataTable extends DataTable
 
             Column::computed('detail_usulan')
                 ->title('Detail Usulan')
-                ->exportable(false)
-                ->printable(false)
-                ->addClass('text-left')
-                ->width(90)
-                ->responsivePriority(2), // tampil lebih prioritas
-
-            Column::computed('uraian_spj')
-                ->title('Uraian SPJ')
                 ->exportable(false)
                 ->printable(false)
                 ->addClass('text-left')

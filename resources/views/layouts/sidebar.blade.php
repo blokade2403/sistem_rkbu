@@ -347,6 +347,16 @@
                                                   data-key="t-form-select">
                                                   Remunerasi PNS</a>
                                           @endif
+                                          @if (session('nama_level_user') == 'Validasi')
+                                              <a href="{{ route('validasi_ksp_rkbu_pnss.index') }}" class="nav-link"
+                                                  data-key="t-form-select">
+                                                  Remunerasi PNS</a>
+                                          @endif
+                                          @if (session('nama_level_user') == 'Validasi RKA')
+                                              <a href="{{ route('validasi_rka_pegawai_pnss.index') }}"
+                                                  class="nav-link" data-key="t-form-select">
+                                                  Remunerasi PNS</a>
+                                          @endif
                                           @if (in_array(session('nama_level_user'), $level_view))
                                               <a href="{{ route('rkbu_pegawai_pns_admins.index') }}" class="nav-link"
                                                   data-key="t-form-select">
@@ -371,6 +381,25 @@
                                       <a href="{{ route('rkbu_pegawai_non_pnss.index') }}" class="nav-link"
                                           data-key="t-form-select">
                                           Remunerasi Non PNS</a>
+                                  @endif
+                                  @if (session('nama_level_user') == 'Administrator')
+                                      <a href="{{ route('rkbu_pegawai_non_pns_admins.index') }}" class="nav-link"
+                                          data-key="t-form-select">
+                                          Remunerasi Non PNS</a>
+                                  @endif
+                                  @if (session('nama_level_user') == 'Validasi')
+                                      <a href="{{ route('validasi_ksp_rkbu_non_pnss.index') }}" class="nav-link"
+                                          data-key="t-form-select">
+                                          Remunerasi Non PNS</a>
+                                  @endif
+                                  @if (session('nama_level_user') == 'Validasi RKA')
+                                      <a href="{{ route('validasi_rka_pegawai_non_pnss.index') }}" class="nav-link"
+                                          data-key="t-form-select">
+                                          Remunerasi Non PNS</a>
+                                  @endif
+                                  @if (in_array(session('nama_level_user'), $level_view))
+                                      <a href="" class="nav-link" data-key="t-form-select">
+                                          Remunerasi Non PNS </a>
                                   @endif
                               </li>
                               <li class="nav-item">
@@ -507,7 +536,8 @@
                                       Barang dan Jasa </a>
                               </li>
                               <li class="nav-item">
-                                  <a href="" class="nav-link" data-key="t-form-select">
+                                  <a href="{{ route('rka_modal_admins.index') }}" class="nav-link"
+                                      data-key="t-form-select">
                                       Modal </a>
                               </li>
                           </ul>

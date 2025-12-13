@@ -91,43 +91,57 @@
                                                 {{ number_format(($item->harga_barang * $item->ppn) / 100, 0, ',', '.') }}
                                             </td>
                                             <td>
-                                                @if ($master_spj->status_serah_terima_bendahara == 'Selesai')
-                                                    <button
-                                                        class="btn btn-sm btn-outline-success btn-load right ms-auto nexttab nexttab"
-                                                        data-nexttab="pills-success-tab"><span
-                                                            class="d-flex align-items-center">
-                                                            <span class="flex-grow-1 me-2">
-                                                                Selesai
-                                                            </span>
+                                                @if ($master_spj->status_serah_terima_bendahara === 'Selesai')
+                                                    <button class="btn btn-sm btn-outline-success">
+                                                        <span class="d-flex align-items-center">
+                                                            <span class="flex-grow-1 me-2">Selesai</span>
                                                             <span class="spinner-grow flex-shrink-0" role="status">
                                                                 <span class="visually-hidden">Selesai</span>
                                                             </span>
-                                                        </span></button>
+                                                        </span>
+                                                    </button>
                                                 @else
-                                                    <ul class="list-inline hstack gap-2 mb-0">
-                                                        <li class="list-inline-item" data-bs-toggle="tooltip"
-                                                            data-bs-trigger="hover" data-bs-placement="top" title="View">
-                                                            <a href="" class="text-primary d-inline-block">
-                                                                <i class="ri-eye-fill fs-16"></i>
-                                                            </a>
-                                                        </li>
-                                                        <li class="list-inline-item edit" data-bs-toggle="tooltip"
-                                                            data-bs-trigger="hover" data-bs-placement="top" title="Edit">
-                                                            <a href="{{ route($routePrefix . '.editkomponen', $item->id_usulan_barang_detail) }}"
-                                                                class="text-primary d-inline-block edit-item-btn">
-                                                                <i class="ri-pencil-fill fs-16"></i>
-                                                            </a>
-                                                        </li>
-                                                        <li class="list-inline-item remove" data-bs-toggle="tooltip"
-                                                            data-bs-trigger="hover" data-bs-placement="top" title="Remove">
-                                                            <a data-bs-toggle="modal" href="#deleteOrder"
-                                                                class="text-danger d-inline-block remove-item-btn">
-                                                                <i class="ri-delete-bin-5-fill fs-16"></i>
-                                                            </a>
-                                                        </li>
-                                                    </ul>
+                                                    @php
+                                                        $level_user = ['Administrator', 'Admin PPK', 'PPBJ', 'PPK'];
+                                                    @endphp
+
+                                                    @if (in_array(session('nama_level_user'), $level_user))
+                                                        <ul class="list-inline hstack gap-2 mb-0">
+                                                            <li class="list-inline-item" data-bs-toggle="tooltip"
+                                                                title="View">
+                                                                <a href="#" class="text-primary d-inline-block">
+                                                                    <i class="ri-eye-fill fs-16"></i>
+                                                                </a>
+                                                            </li>
+
+                                                            <li class="list-inline-item edit" data-bs-toggle="tooltip"
+                                                                title="Edit">
+                                                                <a href="{{ route($routePrefix . '.editkomponen', $item->id_usulan_barang_detail) }}"
+                                                                    class="text-primary d-inline-block">
+                                                                    <i class="ri-pencil-fill fs-16"></i>
+                                                                </a>
+                                                            </li>
+
+                                                            <li class="list-inline-item remove" data-bs-toggle="tooltip"
+                                                                title="Remove">
+                                                                <a data-bs-toggle="modal" href="#deleteOrder"
+                                                                    class="text-danger d-inline-block">
+                                                                    <i class="ri-delete-bin-5-fill fs-16"></i>
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    @else
+                                                        <button type="button" class="btn btn-sm btn-outline-danger">
+                                                            <span class="d-flex align-items-center">
+                                                                <span class="spinner-grow flex-shrink-0"
+                                                                    role="status"></span>
+                                                                <span class="flex-grow-1 ms-2">No action...</span>
+                                                            </span>
+                                                        </button>
+                                                    @endif
                                                 @endif
                                             </td>
+
                                         </tr>
                                     @endforeach
                                 </tbody>

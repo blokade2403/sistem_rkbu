@@ -286,33 +286,64 @@ if (!function_exists('terbilangUang')) {
     }
 }
 
-if (! function_exists('getRealisasiPerRkbu')) {
-    function getRealisasiPerRkbu($tahunAnggaran)
+
+if (! function_exists('getRealisasiPerUsulanDetail')) {
+    function getRealisasiPerUsulanDetail($tahunAnggaran)
     {
-        return DB::table('master_spjs')
+        return DB::table('usulan_barang_details as ubd')
             ->select(
-                'rkbus.id_rkbu',
+                'ubd.id_usulan_barang_detail',
+                DB::raw('ubd.total_anggaran_usulan_barang as total_anggaran'),
+
+                // REALISASI DIBATASI OLEH ANGGARAN
                 DB::raw("
-                    SUM(
-                        CASE WHEN master_spjs.status_pembayaran = 'Sudah di Bayar'
-                        THEN master_spjs.pembayaran ELSE 0 END
-                    ) AS realisasi_bayar
+                    LEAST(
+                        ubd.total_anggaran_usulan_barang,
+                        SUM(
+                            CASE
+                                WHEN ms.status_pembayaran = 'Sudah di Bayar'
+                                THEN ms.pembayaran
+                                ELSE 0
+                            END
+                        )
+                    ) as realisasi
                 "),
+
+                // PROSES DIBATASI OLEH SISA ANGGARAN
                 DB::raw("
-                    SUM(
-                        CASE WHEN master_spjs.ket_verif_bendahara = 'Proses'
-                        THEN master_spjs.bruto ELSE 0 END
-                    ) AS realisasi_proses
+                    LEAST(
+                        ubd.total_anggaran_usulan_barang
+                        -
+                        LEAST(
+                            ubd.total_anggaran_usulan_barang,
+                            SUM(
+                                CASE
+                                    WHEN ms.status_pembayaran = 'Sudah di Bayar'
+                                    THEN ms.pembayaran
+                                    ELSE 0
+                                END
+                            )
+                        ),
+                        SUM(
+                            CASE
+                                WHEN ms.status_pembayaran IS NULL
+                                  OR ms.status_pembayaran != 'Sudah di Bayar'
+                                THEN ms.bruto
+                                ELSE 0
+                            END
+                        )
+                    ) as proses
                 ")
             )
-            ->join('spjs', 'master_spjs.id_spj', '=', 'spjs.id_spj')
-            ->join('spj_details', 'spjs.id_spj', '=', 'spj_details.id_spj')
-            ->join('usulan_barangs', 'spj_details.id_usulan_barang', '=', 'usulan_barangs.id_usulan_barang')
-            ->join('rkbus', 'spj_details.id_rkbu', '=', 'rkbus.id_rkbu')
-            ->join('sub_kategori_rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
-            ->where('master_spjs.tahun_anggaran', $tahunAnggaran)
-            ->groupBy('rkbus.id_rkbu')
+            ->join('spj_details as sd', 'sd.id_usulan_barang_detail', '=', 'ubd.id_usulan_barang_detail')
+            ->join('spjs as s', 's.id_spj', '=', 'sd.id_spj')
+            ->join('master_spjs as ms', 'ms.id_spj', '=', 's.id_spj')
+            ->where('ms.tahun_anggaran', $tahunAnggaran)
+            ->groupBy(
+                'ubd.id_usulan_barang_detail',
+                'ubd.total_anggaran_usulan_barang'
+            )
             ->get()
-            ->keyBy('id_rkbu');
+            ->keyBy('id_usulan_barang_detail');
     }
 }

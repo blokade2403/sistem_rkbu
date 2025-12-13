@@ -701,7 +701,9 @@ class DashboardController extends Controller
         $total_anggaran_modal_admin_apbd   = $query_admin_apbd($modal_apbd);
         $total_anggaran_barjas_admin_apbd  = $query_admin_apbd($barjas_apbd);
 
-        $realisasi = getRealisasiPerRkbu($tahunAnggaran);
+        $realisasi = getRealisasiPerUsulanDetail($tahunAnggaran);
+
+        // dd($realisasi);
 
         $rkbu_with_value = Rkbu::where('nama_tahun_anggaran', $tahunAnggaran)
             ->where('id_status_validasi_rka', '9cfb1f87-238b-4ea2-98f0-4255e578b1d1')
@@ -753,6 +755,7 @@ class DashboardController extends Controller
                 'kegiatans.sub_kegiatans.aktivitass.rekening_belanja.rkbus'
             ])
             ->get();
+
 
         return view('dashboard.dashboard_apbd', compact(
             'programs',

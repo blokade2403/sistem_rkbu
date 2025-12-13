@@ -540,6 +540,33 @@ class RkbuPegawaiNonPnsController extends Controller
         // Dapatkan data rkbu
         $rkbus = $query->get();
 
+        $rkbus = $query->with([
+            'rekening_belanjas.aktivitas.sub_kegiatan.kegiatan.program'
+        ])->get();
+
+        // Pastikan $rkbus ada dan tidak kosong
+        if ($rkbus->isNotEmpty()) {
+            // Ambil data program, kegiatan, dan sub kegiatan dengan pengecekan null yang lebih aman
+            $firstRkbu = $rkbus->first();
+
+            $namaProgram = optional($firstRkbu->rekening_belanjas->aktivitas->sub_kegiatan->kegiatan->program)->nama_program ?? 'Nama Program Tidak Ada';
+            $kodeProgram = optional($firstRkbu->rekening_belanjas->aktivitas->sub_kegiatan->kegiatan->program)->kode_program ?? 'Kode Program Tidak Ada';
+
+            $namaKegiatan = optional($firstRkbu->rekening_belanjas->aktivitas->sub_kegiatan->kegiatan)->nama_kegiatan ?? 'Nama Kegiatan Tidak Ada';
+            $kodeKegiatan = optional($firstRkbu->rekening_belanjas->aktivitas->sub_kegiatan->kegiatan)->kode_kegiatan ?? 'Kode Kegiatan Tidak Ada';
+
+            $namaSubKegiatan = optional($firstRkbu->rekening_belanjas->aktivitas->sub_kegiatan)->nama_sub_kegiatan ?? 'Nama Sub Kegiatan Tidak Ada';
+            $kodeSubKegiatan = optional($firstRkbu->rekening_belanjas->aktivitas->sub_kegiatan)->kode_sub_kegiatan ?? 'Kode Sub Kegiatan Tidak Ada';
+        } else {
+            // Jika tidak ada data di $rkbus, berikan nilai default
+            $namaProgram = 'Nama Program Tidak Ada';
+            $kodeProgram = 'Kode Program Tidak Ada';
+            $namaKegiatan = 'Nama Kegiatan Tidak Ada';
+            $kodeKegiatan = 'Kode Kegiatan Tidak Ada';
+            $namaSubKegiatan = 'Nama Sub Kegiatan Tidak Ada';
+            $kodeSubKegiatan = 'Kode Sub Kegiatan Tidak Ada';
+        }
+
         // Ambil total anggaran berdasarkan id_user dari session
         $total_anggaran = Rkbu::where('id_user', $id_user)
             ->where('nama_tahun_anggaran', $tahunAnggaran) // Filter berdasarkan tahun anggaran dari session
@@ -588,7 +615,19 @@ class RkbuPegawaiNonPnsController extends Controller
             ])->get();
 
         // Generate PDF dengan data
-        $pdf = PDF::loadView('frontend.prints.print_rkbu_modal_kantor', compact('rkbus', 'sub_kategori_rkbus', 'status_validasi_rka', 'total_anggaran', 'categories'));
+        $pdf = PDF::loadView('rkbu.partials.print_rkbu_pegawai_user', compact(
+            'rkbus',
+            'sub_kategori_rkbus',
+            'status_validasi_rka',
+            'total_anggaran',
+            'categories',
+            'namaProgram',
+            'namaKegiatan',
+            'namaSubKegiatan',
+            'kodeProgram',
+            'kodeKegiatan',
+            'kodeSubKegiatan',
+        ));
 
         // Tampilkan PDF sebagai preview di browser
         return $pdf->stream('rkbu_data_preview.pdf');
