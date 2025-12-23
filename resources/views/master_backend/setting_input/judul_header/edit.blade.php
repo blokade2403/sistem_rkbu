@@ -247,7 +247,7 @@
 
                                         {{-- Header Fields --}}
                                         <div class="row mt-4">
-                                            @for ($i = 1; $i <= 5; $i++)
+                                            @for ($i = 1; $i <= 6; $i++)
                                                 <div class="col-lg-6">
                                                     <div class="mb-3">
                                                         <label class="form-label">Header {{ $i }}</label>

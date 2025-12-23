@@ -221,147 +221,91 @@
         }
     @endphp
     <div class="container">
+        <!-- Header Section -->
         <!-- Informasi Usulan -->
-        <table lines="none" bgcolor="#666666">
+        <table lines="none">
             <tr bgcolor="#ffffff" style="line-height: 15px;">
-                <th width="13%" align="left" style="word-wrap: break-word; white-space: normal; line-height: 2.5;">
+                <th width="13%" align="left" style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
+                </th>
+            </tr>
+            <tr bgcolor="#ffffff">
+                <th width="10%" align="left"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">
                     Nomor</th>
-                <th width="2%" align="center" style="word-wrap: break-word; white-space: normal; line-height: 2.5;">
-                    :</th>
-                <th width="50%" align="left" style="word-wrap: break-word; white-space: normal; line-height: 2.5;">
-                </th>
-                <th width="4%" align="center" style="word-wrap: break-word; white-space: normal; line-height: 2.5;">
-                </th>
-                <th width="20%" align="left" style="word-wrap: break-word; white-space: normal; line-height: 2.5;">
-                    {{ \Carbon\Carbon::parse($no_inv->created_at)->translatedFormat('d F Y') }} </th>
-                <th width="2%" align="left" style="word-wrap: break-word; white-space: normal; line-height: 2.5;">
-                </th>
-                <th width="5%" align="left" style="word-wrap: break-word; white-space: normal; line-height: 2.5;">
-                </th>
-            </tr>
-            <tr bgcolor="#ffffff" style="line-height: 15px;">
-                <th width="13%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
-                    SIfat</th>
                 <th width="2%" align="center"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">
                     :</th>
-                <th width="45%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
-                    Penting</th>
-                <th width="5%" align="center"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
-                <th width="15%" align="right"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
-                <th width="2%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
-                <th width="20%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
+                <th width="50%" align="left"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">
                 </th>
+                <th width="3%" align="center"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">
+                </th>
+                <th width="20%" align="right"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">
+                    {{ \Carbon\Carbon::parse($no_inv->created_at)->translatedFormat('d F Y') }}</th>
             </tr>
-            <tr bgcolor="#ffffff" style="line-height: 15px;">
-                <th width="13%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
+            <tr bgcolor="#ffffff">
+                <th width="10%" align="left"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">
+                    Sifat</th>
+                <th width="2%" align="center"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">
+                    :</th>
+                <th width="50%" align="left"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;"> Penting
+                </th>
+                <th width="5%" align="center"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;"></th>
+            </tr>
+            <tr bgcolor="#ffffff">
+                <th width="10%" align="left"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">
                     Lampiran</th>
                 <th width="2%" align="center"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">
                     :</th>
-                <th width="45%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
-                    -</th>
-                <th width="5%" align="center"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
-                <th width="15%" align="right"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
-                <th width="2%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
-                <th width="20%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
+                <th width="50%" align="left"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;"> -
                 </th>
+                <th width="5%" align="center"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;"></th>
             </tr>
-            <tr bgcolor="#ffffff" style="line-height: 15px;">
-                <th width="13%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
+            <tr bgcolor="#ffffff">
+                <th width="10%" align="left"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">
                     Hal</th>
                 <th width="2%" align="center"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">
                     :</th>
                 <th width="50%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
-                    {{ $no_inv->nama_sub_kategori_rkbu }}</th>
-                <th width="5%" align="center"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
-                <th width="20%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">Kepada </th>
-                <th width="2%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
-                <th width="5%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">
+                    {{ $no_inv->nama_sub_kategori_rkbu }}
                 </th>
+                <th width="5%" align="center"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;"></th>
+                <th width="11%" align="right"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">Kepada</th>
             </tr>
-            <tr bgcolor="#ffffff" style="line-height: 15px;">
-                <th width="13%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
+            <tr bgcolor="#ffffff">
+                <th width="10%" align="left"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">
                 </th>
                 <th width="2%" align="center"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">
+                </th>
+                <th width="45%" align="left"
                     style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
                 </th>
-                <th width="50%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
-                </th>
-                <th width="5%" align="center"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">Yth.</th>
+                <th width="9%" align="center"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
                 <th width="30%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">PPK
-                    {{ ucwords(strtolower($nama)) }} </th>
-                <th width="2%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
-                <th width="0%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
-                </th>
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">Yth. &nbsp;
+                    PPK
+                    RSUD Cilincing</th>
             </tr>
-            <tr bgcolor="#ffffff" style="line-height: 15px;">
-                <th width="13%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
-                </th>
-                <th width="2%" align="center"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
-                </th>
-                <th width="50%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
-                </th>
-                <th width="5%" align="center"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
-                <th width="20%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">di </th>
-                <th width="2%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
-                <th width="5%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
-                </th>
-            </tr>
-            <tr bgcolor="#ffffff" style="line-height: 15px;">
-                <th width="13%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
-                </th>
-                <th width="2%" align="center"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
-                </th>
-                <th width="50%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
-                </th>
-                <th width="5%" align="center"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
-                <th width="20%" align="center"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">Jakarta </th>
-                <th width="2%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
-                <th width="5%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
-                </th>
-            </tr>
-            <tr bgcolor="#ffffff" style="line-height: 15px;">
-                <th width="13%" align="left"
+            <tr bgcolor="#ffffff">
+                <th width="10%" align="left"
                     style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
                 </th>
                 <th width="2%" align="center"
@@ -370,30 +314,45 @@
                 <th width="45%" align="left"
                     style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
                 </th>
-                <th width="5%" align="center"
+                <th width="14%" align="center"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;"></th>
+                <th width="13%" align="left"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">di</th>
+            </tr>
+            <tr bgcolor="#ffffff">
+                <th width="10%" align="left"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
+                </th>
+                <th width="2%" align="center"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
+                </th>
+                <th width="45%" align="left"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
+                </th>
+                <th width="12%" align="center"
                     style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
                 <th width="15%" align="right"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
-                <th width="2%" align="left"
-                    style="word-wrap: break-word; white-space: normal; line-height: 1.5;"></th>
-                <th width="20%" align="left"
+                    style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;">Jakarta</th>
+            </tr>
+            <tr bgcolor="#ffffff" style="line-height: 15px;">
+                <th width="13%" align="left"
                     style="word-wrap: break-word; white-space: normal; line-height: 1.5;">
+
                 </th>
             </tr>
 
         </table>
-        </br>
         <table lines="none">
             <tr>
                 <th width="20%"></th>
-                <th style="word-wrap: break-word; white-space: normal; line-height: 1.5;" class="no-border"
-                    width="80%">Bersama surat ini, mohon PPK {{ ucwords(strtolower($nama)) }} untuk melakukan
-                    pengadaan </th>
+                <th style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;"
+                    class="no-border" width="80%">Bersama surat ini, mohon PPK RSUD Cilincing untuk melakukan
+                    pengadaan</th>
             </tr>
             <tr>
                 <th width="13%"></th>
-                <th style="word-wrap: break-word; white-space: normal; line-height: 1.5;" class="no-border"
-                    width="80%">belanja sebagai berikut : </th>
+                <th style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;"
+                    class="no-border" width="80%">belanja sebagai berikut : </th>
             </tr>
             <tr bgcolor="#ffffff" style="line-height: 15px;">
                 <th width="13%" align="left"
@@ -409,25 +368,52 @@
                     <table cellspacing="0.5" bgcolor="#666666" cellpadding="2" width="100%"
                         style="font-size: 8px;">
                         <thead>
-                            <tr bgcolor="#ffffff">
+                            <tr bgcolor="#ffffff" style="font-size: 7px;">
                                 <th width="4%" align="center">No</th>
-                                <th width="30%" align="center">Nama / Jenis Barang</th>
-                                <th width="30%" align="center">Spesifikasi Merk/Ukuran</th>
-                                <th width="15%" align="center">Jumlah Permintaan</th>
-                                <th width="10%" align="center">Satuan</th>
+                                <th width="25%" align="center">Nama / Jenis Barang</th>
+                                <th width="25%" align="center">Spesifikasi Merk/Ukuran</th>
+                                <th width="10%" align="center">Jumlah Permintaan</th>
+                                <th width="15%" align="center">Harga Satuan</th>
+                                <th width="15%" align="center">Jumlah Biaya</th>
                             </tr>
                         </thead>
 
                         @php $no = 1; @endphp
                         @foreach ($keranjang as $item)
-                            <tr bgcolor="#ffffff">
+                            @php
+                                $total_anggaran_usulan_barang_non_ppn =
+                                    $item->total_anggaran_usulan_barang - $item->total_ppn;
+                                $total_anggaran_usulan_barang =
+                                    $total_anggaran_usulan_barang_non_ppn + $item->total_ppn;
+                                $sub_total = $get_total - $sum_ppn;
+                            @endphp
+                            <tr bgcolor="#ffffff" style="font-size: 7px;">
                                 <td align="center">{{ $no++ }}</td>
                                 <td align="center">{{ $item->nama_barang }}</td>
                                 <td align="center">{{ $item->spek_detail }}</td>
-                                <td align="center">{{ $item->vol_1_detail }}</td>
-                                <td align="center">{{ $item->satuan_1_detail }}</td>
+                                <td align="center">{{ $item->jumlah_usulan_barang }} {{ $item->satuan_1_detail }}
+                                </td>
+                                <td align="center">{{ number_format($item->harga_barang, 0, ',', ',') }}</td>
+                                <td align="center">
+                                    {{ number_format($total_anggaran_usulan_barang_non_ppn, 0, ',', '.') }}</td>
                             </tr>
                         @endforeach
+                        <tr bgcolor="#ffffff" style="font-size: 7px;">
+                            <th colspan="5" width="79%" align="right">Subtotal</th>
+                            <th width="15%" align="center">
+                                {{ number_format($subtotal, 0, ',', '.') }}</th>
+                        </tr>
+                        <tr bgcolor="#ffffff" style="font-size: 7px;">
+                            <th colspan="5" width="79%" align="right">PPN</th>
+                            <th width="15%" align="center">
+                                {{ number_format($sum_ppn, 0, ',', '.') }}</th>
+                        </tr>
+                        <tr bgcolor="#ffffff" style="font-size: 7px;">
+                            <th colspan="5" width="79%" align="right">Total</th>
+                            <th width="15%" align="center">
+                                <strong>{{ number_format($get_total, 0, ',', '.') }}</strong>
+                            </th>
+                        </tr>
                     </table>
 
                 </th>
@@ -435,15 +421,20 @@
             </tr>
             <tr>
                 <th width="20%"></th>
-                <th style="word-wrap: break-word; white-space: normal; line-height: 1.5; " class="no-border"
-                    width="80%"></th>
+                <th style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;"
+                    class="no-border" width="80%"></th>
             </tr>
             <tr>
                 <th width="20%"></th>
-                <th style="word-wrap: break-word; white-space: normal; line-height: 1.5; " class="no-border"
-                    width="80%">Demikian surat ini disampaikan, atas perhatian dan kerjasamanya
-                    diucapkan terima kasih
+                <th style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;"
+                    class="no-border" width="80%">Demikian surat ini disampaikan, atas perhatian dan kerjasamanya
+                    diucapkan
                 </th>
+            </tr>
+            <tr>
+                <th width="13%"></th>
+                <th style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;"
+                    class="no-border" width="80%">terima kasih </th>
             </tr>
         </table>
     </div>

@@ -285,6 +285,15 @@
                                                             placeholder="Enter Email">
                                                     </div>
                                                 </div>
+                                                <div class="col-lg-6">
+                                                    <div class="mb-3">
+                                                        <label for="VertimeassageInput" class="form-label">Header
+                                                            6</label>
+                                                        <input type="text" class="form-control"
+                                                            id="gen-info-username-input" name="header6"
+                                                            placeholder="Enter Email">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="d-flex align-items-start gap-3 mt-4">

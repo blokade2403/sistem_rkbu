@@ -45,7 +45,11 @@
                     <div class="table-responsive">
                         <div class="table-responsive">
                             <form id="cartForm{{ $index }}" method="POST"
-                                action="{{ route('add-to-cart-multiple-barjas') }}">
+                                action="
+        @if ($routePrefix === 'usulan_pegawai') {{ route('add-to-cart-multiple-pegawai') }}
+        @else
+            {{ route('add-to-cart-multiple-barjas') }} @endif
+    ">
                                 @csrf
                                 <table id="example{{ $index }}" class="table table-striped mb-0 datatable"
                                     style="min-width: 845px">
@@ -68,30 +72,63 @@
                                                 <td>
                                                     <input type="checkbox" name="selected_ids[]"
                                                         value="{{ $rkbu->id_rkbu }}"
-                                                        {{ $rkbu->sisa_anggaran_rkbu < $rkbu->harga_satuan ? 'disabled title=Tidak cukup anggaran' : '' }} />
+                                                        {{ request()->is('usulan-belanja-pegawai/usulan_pegawai')
+                                                            ? ($rkbu->sisa_anggaran_rkbu < $rkbu->remunerasi
+                                                                ? 'disabled title=Tidak cukup anggaran'
+                                                                : '')
+                                                            : ($rkbu->sisa_anggaran_rkbu < $rkbu->harga_satuan
+                                                                ? 'disabled title=Tidak cukup anggaran'
+                                                                : '') }} />
                                                     <input type="hidden" name="id_usulan_barang"
                                                         value="{{ $yek->id_usulan_barang }}" />
                                                 </td>
+
                                                 <td class="text-wrap"
                                                     style="white-space: normal; word-wrap: break-word;">
-                                                    <span
-                                                        class="text-primary"><strong>{{ $rkbu->nama_barang }}</strong></span></br>
-                                                    <small class="fs-12">Spesifikasi:
-                                                        {{ $rkbu->spek }}</small>
+                                                    <span class="text-primary">
+                                                        <strong>
+                                                            @php
+                                                                $isPegawai = $routePrefix === 'usulan_pegawai';
+                                                            @endphp
+
+                                                            @if ($isPegawai)
+                                                                {{ $rkbu->nama_pegawai }}
+                                                            @else
+                                                                {{ $rkbu->nama_barang }}
+                                                            @endif
+
+                                                        </strong>
+                                                    </span><br>
+                                                    <small class="fs-12">
+                                                        Spesifikasi:
+                                                        @if ($isPegawai)
+                                                            {{ $rkbu->jabatan }}
+                                                        @else
+                                                            {{ $rkbu->spek }}
+                                                        @endif
+                                                    </small>
                                                 </td>
+
                                                 <td>{{ $rkbu->jumlah_vol }}</td>
                                                 <td>{{ $rkbu->sisa_vol_rkbu }}</td>
+
                                                 <td>
                                                     <span class="fs-12">
-                                                        Harga Satuan:
-                                                        Rp.{{ number_format($rkbu->harga_satuan, 0, ',', '.') }}
+                                                        @if (request()->is('usulan-belanja-pegawai/usulan_pegawai'))
+                                                            Remunerasi:
+                                                            Rp.{{ number_format($rkbu->remunerasi, 0, ',', '.') }}
+                                                        @else
+                                                            Harga Satuan:
+                                                            Rp.{{ number_format($rkbu->harga_satuan, 0, ',', '.') }}
+                                                        @endif
                                                     </span>
                                                 </td>
+
                                                 <td>
                                                     <span class="fs-12">
                                                         Total Anggaran:
                                                         Rp.{{ number_format($rkbu->total_anggaran, 0, ',', '.') }}
-                                                    </span><br />
+                                                    </span><br>
                                                     <p class="fs-12 text-danger">
                                                         Sisa Anggaran:
                                                         Rp.{{ number_format($rkbu->sisa_anggaran_rkbu, 0, ',', '.') }}
@@ -99,6 +136,7 @@
                                                 </td>
                                             </tr>
                                         @endforeach
+
                                     </tbody>
                                     <tfoot>
                                         <tr>

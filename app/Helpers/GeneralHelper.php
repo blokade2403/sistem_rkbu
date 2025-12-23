@@ -286,7 +286,6 @@ if (!function_exists('terbilangUang')) {
     }
 }
 
-
 if (! function_exists('getRealisasiPerUsulanDetail')) {
     function getRealisasiPerUsulanDetail($tahunAnggaran)
     {
@@ -295,7 +294,7 @@ if (! function_exists('getRealisasiPerUsulanDetail')) {
                 'ubd.id_usulan_barang_detail',
                 DB::raw('ubd.total_anggaran_usulan_barang as total_anggaran'),
 
-                // REALISASI DIBATASI OLEH ANGGARAN
+                // ✅ REALISASI (SUDAH DIBAYAR)
                 DB::raw("
                     LEAST(
                         ubd.total_anggaran_usulan_barang,
@@ -309,7 +308,7 @@ if (! function_exists('getRealisasiPerUsulanDetail')) {
                     ) as realisasi
                 "),
 
-                // PROSES DIBATASI OLEH SISA ANGGARAN
+                // ✅ PROSES (SERAH TERIMA SELESAI, BELUM DIBAYAR)
                 DB::raw("
                     LEAST(
                         ubd.total_anggaran_usulan_barang
@@ -326,8 +325,9 @@ if (! function_exists('getRealisasiPerUsulanDetail')) {
                         ),
                         SUM(
                             CASE
-                                WHEN ms.status_pembayaran IS NULL
-                                  OR ms.status_pembayaran != 'Sudah di Bayar'
+                                WHEN ms.status_serah_terima_bendahara = 'Selesai'
+                                 AND (ms.status_pembayaran IS NULL
+                                      OR ms.status_pembayaran != 'Sudah di Bayar')
                                 THEN ms.bruto
                                 ELSE 0
                             END
@@ -347,3 +347,66 @@ if (! function_exists('getRealisasiPerUsulanDetail')) {
             ->keyBy('id_usulan_barang_detail');
     }
 }
+
+
+
+// if (! function_exists('getRealisasiPerUsulanDetail')) {
+//     function getRealisasiPerUsulanDetail($tahunAnggaran)
+//     {
+//         return DB::table('usulan_barang_details as ubd')
+//             ->select(
+//                 'ubd.id_usulan_barang_detail',
+//                 DB::raw('ubd.total_anggaran_usulan_barang as total_anggaran'),
+
+//                 // REALISASI DIBATASI OLEH ANGGARAN
+//                 DB::raw("
+//                     LEAST(
+//                         ubd.total_anggaran_usulan_barang,
+//                         SUM(
+//                             CASE
+//                                 WHEN ms.status_pembayaran = 'Sudah di Bayar'
+//                                 THEN ms.pembayaran
+//                                 ELSE 0
+//                             END
+//                         )
+//                     ) as realisasi
+//                 "),
+
+//                 // PROSES DIBATASI OLEH SISA ANGGARAN
+//                 DB::raw("
+//                     LEAST(
+//                         ubd.total_anggaran_usulan_barang
+//                         -
+//                         LEAST(
+//                             ubd.total_anggaran_usulan_barang,
+//                             SUM(
+//                                 CASE
+//                                     WHEN ms.status_pembayaran = 'Sudah di Bayar'
+//                                     THEN ms.pembayaran
+//                                     ELSE 0
+//                                 END
+//                             )
+//                         ),
+//                         SUM(
+//                             CASE
+//                                 WHEN ms.status_pembayaran IS NULL
+//                                   OR ms.status_pembayaran != 'Sudah di Bayar'
+//                                 THEN ms.bruto
+//                                 ELSE 0
+//                             END
+//                         )
+//                     ) as proses
+//                 ")
+//             )
+//             ->join('spj_details as sd', 'sd.id_usulan_barang_detail', '=', 'ubd.id_usulan_barang_detail')
+//             ->join('spjs as s', 's.id_spj', '=', 'sd.id_spj')
+//             ->join('master_spjs as ms', 'ms.id_spj', '=', 's.id_spj')
+//             ->where('ms.tahun_anggaran', $tahunAnggaran)
+//             ->groupBy(
+//                 'ubd.id_usulan_barang_detail',
+//                 'ubd.total_anggaran_usulan_barang'
+//             )
+//             ->get()
+//             ->keyBy('id_usulan_barang_detail');
+//     }
+// }

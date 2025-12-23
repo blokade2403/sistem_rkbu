@@ -255,6 +255,7 @@ class PdfControllerSuratPerintahKpa extends Controller
             'keranjang'         => $keranjang,
             'riwayatData'       => $riwayatData,
             'get_total'         => $sum_total_anggaran_usulan_barang,
+            'subtotal'          => $sum_total_anggaran_usulan_barang_non_ppn,
             'sum_ppn'           => $sum_total_ppn,
             'judul_header1'     => $judul_header1,
             'nama'              => $nama,

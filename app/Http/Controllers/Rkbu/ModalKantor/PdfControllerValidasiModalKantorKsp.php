@@ -259,6 +259,10 @@ class PdfControllerValidasiModalKantorKsp extends Controller
             ->distinct() // Ini memastikan hasil tidak duplikat
             ->get();
 
+        if (ob_get_length()) {
+            ob_end_clean();
+        }
+
         // Inisialisasi TCPDF
         $pdf = new MYPDF();
 
@@ -302,7 +306,7 @@ class PdfControllerValidasiModalKantorKsp extends Controller
                         <td width="60%" align="center">
                             <h3 style="font-size:8px; font-weight: normal;">' . $judulHeaders->header1 . '</h3>
                             <h3 style="font-weight: normal; font-size:8px; line-height:0;">' . $judulHeaders->nama_rs . '</h3>
-                            <h3 style="font-size:8px; font-weight: normal;">' . $judulHeaders->header2 . '</h3>
+                            <h3 style="font-size:8px; font-weight: normal;">' . $judulHeaders->header6 . '</h3>
                             <h3 style="font-weight: normal; font-size:8px; line-height:0;">TAHUN ANGGARAN ' . $tahunAnggaran . '</h3>
                         </td>
                         <td width="20%" align="right">
@@ -319,13 +323,15 @@ class PdfControllerValidasiModalKantorKsp extends Controller
         $this->checkPageBreak($pdf, $requiredSpace);
 
         // Tambahkan konten body dari view 'print_rkbu_modal_kantor'
-        $htmlBody = view('frontend.prints.print_rkbu_modal_kantor', compact('rkbus', 'total_anggaran_terbilang', 'sumberDana', 'jabatan_kabag', 'nama_rumah_sakit', 'nama_pejabat', 'nip_pejabat_kabag', 'nip_direktur', 'nama_direktur', 'pdf', 'sub_kategori_rkbus', 'status_validasi_rka', 'total_anggaran', 'categories', 'namaProgram', 'namaAktivitas', 'namaKegiatan', 'namaSubKegiatan', 'kodeProgram', 'kodeKegiatan', 'kodeSubKegiatan'))->render();
+        $htmlBody = view('rkbu.partials.print_rkbu_validasi', compact('rkbus', 'total_anggaran_terbilang', 'sumberDana', 'jabatan_kabag', 'nama_rumah_sakit', 'nama_pejabat', 'nip_pejabat_kabag', 'nip_direktur', 'nama_direktur', 'pdf', 'sub_kategori_rkbus', 'status_validasi_rka', 'total_anggaran', 'categories', 'namaProgram', 'namaAktivitas', 'namaKegiatan', 'namaSubKegiatan', 'kodeProgram', 'kodeKegiatan', 'kodeSubKegiatan'))->render();
 
         // Tuliskan konten body ke PDF
         $pdf->writeHTML($htmlBody, true, false, true, false, '');
 
         // Tampilkan PDF sebagai preview di browser
-        $pdf->Output('rkbu_data_preview.pdf', 'I');
+        return response($pdf->Output('rkbu_data_preview.pdf', 'S'))
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="rkbu_data_preview.pdf"');
 
         // Fungsi untuk memeriksa pemecahan halaman sebelum menambah konten baru
 

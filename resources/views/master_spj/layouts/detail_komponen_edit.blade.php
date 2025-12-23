@@ -298,7 +298,7 @@
             $level_ksp = ['Validasi'];
             $level_kabag = ['Validasi RKA'];
             $level_admin_ppk = ['Admin PPK'];
-            $level_pptk = ['PPTK', 'PPTK Umum', 'PPTK Yanmed'];
+            $level_pptk = ['PPTK', 'PPTK Umum', 'PPTK Yanmed', 'PPTK Alkes'];
             $level_pengadaan_ppk = [
                 'Administrator',
                 'Pendukung PPK',
@@ -315,6 +315,7 @@
                 'PPTK',
                 'PPTK Umum',
                 'PPTK Yanmed',
+                'PPTK Alkes',
                 'Validasi RKA',
             ];
         @endphp

@@ -658,7 +658,11 @@
                           </a>
                           <div class="collapse menu-dropdown" id="sidebarCharts">
                               <ul class="nav nav-sm flex-column">
-
+                                  <li class="nav-item">
+                                      <a href="{{ route('usulan_pegawai.index') }}" class="nav-link"
+                                          data-key="t-chartjs">
+                                          Pegawai </a>
+                                  </li>
                                   <li class="nav-item">
                                       <a href="{{ route('usulan_barang_barjass.index') }}" class="nav-link"
                                           data-key="t-chartjs">
@@ -686,6 +690,10 @@
                       </a>
                       <div class="menu-dropdown collapse" id="sidebarLayouts" style="">
                           <ul class="nav nav-sm flex-column">
+                              <li class="nav-item">
+                                  <a href="{{ route('cek_usulan_pegawai.index') }}" class="nav-link"
+                                      data-key="t-horizontal">Pegawai</a>
+                              </li>
                               <li class="nav-item">
                                   <a href="{{ route('cek_usulan_barang_barjass.index') }}" class="nav-link"
                                       data-key="t-horizontal">Barang Jasa</a>

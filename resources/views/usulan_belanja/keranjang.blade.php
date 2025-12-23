@@ -102,13 +102,27 @@
                             <thead class="table-light border-top">
                                 <tr>
                                     <th>No</th>
-                                    <th>Nama Barang</th>
-                                    <th>Harga Satuan</th>
-                                    <th>Vol</th>
-                                    <th>PPN</th>
-                                    <th>Total Anggaran</th>
-                                    <th>Action</th>
-                                    <th>Spesifikasi</th>
+                                    @php
+                                        $isPegawai = $routePrefix === 'usulan_pegawai';
+                                    @endphp
+
+                                    @if ($isPegawai)
+                                        <th>Nama Pegawai</th>
+                                        <th>Remunerasi</th>
+                                        <th>Vol</th>
+                                        <th>Total Anggaran</th>
+                                        <th>Action</th>
+                                        <th>Jabatan</th>
+                                    @else
+                                        <th>Nama Barang</th>
+                                        <th>Harga Satuan</th>
+                                        <th>Vol</th>
+                                        <th>PPN</th>
+                                        <th>Total Anggaran</th>
+                                        <th>Action</th>
+                                        <th>Spesifikasi</th>
+                                    @endif
+
                                 </tr>
                             </thead>
                             <tbody>
@@ -117,21 +131,41 @@
                                         <td class="text-nowrap">
                                             {{ $key + 1 }}
                                         </td>
-                                        <td class="text-wrap">
-                                            <span class="text-primary f-16">#&nbsp;{{ $item->nama_barang }}</span><br />
-                                            <span class="f-12">ID RKBU:
-                                                {{ $item->id_rkbu }}</span>
-                                        </td>
+                                        @php
+                                            $isPegawai = $routePrefix === 'usulan_pegawai';
+                                        @endphp
 
-                                        <td>Rp.{{ number_format($item->harga_barang, 0, ',', '.') }}
-                                        </td>
-                                        <td>{{ $item->jumlah_usulan_barang }}
-                                            {{ $item->satuan_1_detail }}/{{ $item->satuan_2_detail }}
-                                        </td>
-                                        <td>Rp.{{ number_format(($item->harga_barang * $item->ppn) / 100, 0, ',', '.') }}
-                                        </td>
-                                        <td>Rp.{{ number_format($item->total_anggaran_usulan_barang, 0, ',', '.') }}
-                                        </td>
+                                        @if ($isPegawai)
+                                            <td class="text-wrap">
+                                                <span
+                                                    class="text-primary f-16">#&nbsp;{{ $item->nama_pegawai }}</span><br />
+                                                <span class="f-12">ID RKBU:
+                                                    {{ $item->id_rkbu }}</span>
+                                            </td>
+                                            <td>Rp.{{ number_format($item->remunerasi, 0, ',', '.') }} </td>
+                                            <td>{{ $item->jumlah_usulan_barang }}
+                                                {{ $item->satuan_1_detail }}/{{ $item->satuan_2_detail }}
+                                            </td>
+                                            <td>Rp.{{ number_format($item->total_anggaran_usulan_barang, 0, ',', '.') }}
+                                            </td>
+                                        @else
+                                            <td class="text-wrap">
+                                                <span
+                                                    class="text-primary f-16">#&nbsp;{{ $item->nama_barang }}</span><br />
+                                                <span class="f-12">ID RKBU:
+                                                    {{ $item->id_rkbu }}</span>
+                                            </td>
+
+                                            <td>Rp.{{ number_format($item->harga_barang, 0, ',', '.') }} </td>
+                                            <td>{{ $item->jumlah_usulan_barang }}
+                                                {{ $item->satuan_1_detail }}/{{ $item->satuan_2_detail }}
+                                            </td>
+                                            <td>Rp.{{ number_format(($item->harga_barang * $item->ppn) / 100, 0, ',', '.') }}
+                                            </td>
+                                            <td>Rp.{{ number_format($item->total_anggaran_usulan_barang, 0, ',', '.') }}
+                                            </td>
+                                        @endif
+
                                         <td class="action-icon d-flex align-items-center">
                                             <div class="hstack gap-2 ">
                                                 <a href="{{ route($routePrefix . '.edit', $item->id_usulan_barang_detail) }}"

@@ -55,9 +55,13 @@ class UsulanBelanjaModalController extends Controller
         // id_usulan (dipakai di view untuk loop)
         $id_usulan = UsulanBarang::select('usulan_barangs.*')
             ->leftJoin('usulan_barang_details', 'usulan_barang_details.id_usulan_barang', '=', 'usulan_barangs.id_usulan_barang')
+            ->join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
+            ->join('kategori_rkbus', 'kategori_rkbus.id_kategori_rkbu', '=', 'sub_kategori_rkbus.id_kategori_rkbu')
+            ->join('jenis_kategori_rkbus', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu', '=', 'kategori_rkbus.id_jenis_kategori_rkbu')
             ->where('usulan_barangs.id_user', $id_user)
             ->where('usulan_barangs.tahun_anggaran', $tahunAnggaran)
             ->where('usulan_barangs.status_usulan_barang', 'Pending')
+            ->whereIn('jenis_kategori_rkbus.id_jenis_kategori_rkbu', $modals)
             ->distinct()
             ->get();
 

@@ -112,6 +112,7 @@
                                     <th>Nama</th>
                                     <th>Total Anggaran</th>
                                     <th>Realisasi</th>
+                                    <th>Proses</th>
                                     <th>Sisa</th>
                                     <th>% Realisasi</th>
                                 </tr>
@@ -124,6 +125,7 @@
                                     @php
                                         $programAnggaran = 0;
                                         $programRealisasi = 0;
+                                        $programProses = 0;
 
                                         foreach ($program->kegiatans ?? collect() as $kegiatan) {
                                             foreach ($kegiatan->sub_kegiatans ?? collect() as $sub) {
@@ -143,9 +145,8 @@
                                                                         null;
 
                                                                     if ($real) {
-                                                                        $programRealisasi +=
-                                                                            ($real->realisasi ?? 0) +
-                                                                            ($real->proses ?? 0);
+                                                                        $programRealisasi += $real->realisasi ?? 0;
+                                                                        $programProses += $real->proses ?? 0;
                                                                     }
                                                                 }
                                                             }
@@ -155,7 +156,7 @@
                                             }
                                         }
 
-                                        $programSisa = $programAnggaran - $programRealisasi;
+                                        $programSisa = $programAnggaran - ($programRealisasi + $programProses);
                                         $programPersen =
                                             $programAnggaran > 0 ? ($programRealisasi / $programAnggaran) * 100 : 0;
                                     @endphp
@@ -167,6 +168,8 @@
                                         </td>
                                         <td class="white-nowrap"> {{ number_format($programRealisasi, 0, ',', '.') }}
                                         </td>
+                                        <td class="white-nowrap"> {{ number_format($programProses, 0, ',', '.') }}
+                                        </td>
                                         <td class="white-nowrap"> {{ number_format($programSisa, 0, ',', '.') }}
                                         </td>
                                         <td class="white-nowrap">{{ number_format($programPersen, 2) }}%</td>
@@ -176,14 +179,17 @@
                                         @php
                                             $kegiatanAnggaran = 0;
                                             $kegiatanRealisasi = 0;
+                                            $kegiatanProses = 0;
 
-                                            foreach ($kegiatan->sub_kegiatans as $sub) {
-                                                foreach ($sub->aktivitass as $act) {
-                                                    foreach ($act->rekening_belanjas as $rek) {
-                                                        foreach ($rek->rkbus as $rk) {
+                                            foreach ($kegiatan->sub_kegiatans ?? collect() as $sub) {
+                                                foreach ($sub->aktivitass ?? collect() as $act) {
+                                                    foreach ($act->rekening_belanjas ?? collect() as $rek) {
+                                                        foreach ($rek->rkbus ?? collect() as $rk) {
                                                             if ($rk->id_status_validasi_rka == $statusValidasi) {
+                                                                // TOTAL ANGGARAN
                                                                 $kegiatanAnggaran += $rk->total_anggaran;
 
+                                                                // REALISASI & PROSES DARI UBD
                                                                 foreach (
                                                                     $rk->usulan_barang_details ?? collect()
                                                                     as $ubd
@@ -191,9 +197,10 @@
                                                                     $real =
                                                                         $realisasi[$ubd->id_usulan_barang_detail] ??
                                                                         null;
+
                                                                     if ($real) {
-                                                                        $kegiatanRealisasi +=
-                                                                            $real->realisasi + $real->proses;
+                                                                        $kegiatanRealisasi += $real->realisasi ?? 0;
+                                                                        $kegiatanProses += $real->proses ?? 0;
                                                                     }
                                                                 }
                                                             }
@@ -201,12 +208,14 @@
                                                     }
                                                 }
                                             }
-                                            $kegiatanSisa = $kegiatanAnggaran - $kegiatanRealisasi;
+
+                                            $kegiatanSisa = $kegiatanAnggaran - ($kegiatanRealisasi + $kegiatanProses);
                                             $kegiatanPersen =
                                                 $kegiatanAnggaran > 0
                                                     ? ($kegiatanRealisasi / $kegiatanAnggaran) * 100
                                                     : 0;
                                         @endphp
+
 
                                         <tr class="table-light kegiatan-row">
                                             <td>— {{ $kegiatan->kode_kegiatan }}</td>
@@ -215,6 +224,8 @@
                                                 {{ number_format($kegiatanAnggaran, 0, ',', '.') }}</td>
                                             <td class="white-nowrap">
                                                 {{ number_format($kegiatanRealisasi, 0, ',', '.') }}</td>
+                                            <td class="white-nowrap">
+                                                {{ number_format($kegiatanProses, 0, ',', '.') }}</td>
                                             <td class="white-nowrap">
                                                 {{ number_format($kegiatanSisa, 0, ',', '.') }}
                                             </td>
@@ -226,20 +237,27 @@
                                             @php
                                                 $subAnggaran = 0;
                                                 $subRealisasi = 0;
+                                                $subProses = 0;
 
-                                                foreach ($sub->aktivitass as $act) {
-                                                    foreach ($act->rekening_belanjas as $rek) {
-                                                        foreach ($rek->rkbus as $rk) {
+                                                foreach ($sub->aktivitass ?? collect() as $act) {
+                                                    foreach ($act->rekening_belanjas ?? collect() as $rek) {
+                                                        foreach ($rek->rkbus ?? collect() as $rk) {
                                                             if ($rk->id_status_validasi_rka == $statusValidasi) {
+                                                                // TOTAL ANGGARAN
                                                                 $subAnggaran += $rk->total_anggaran;
 
-                                                                foreach ($rk->usulan_barang_details as $ubd) {
+                                                                // REALISASI & PROSES DARI UBD
+                                                                foreach (
+                                                                    $rk->usulan_barang_details ?? collect()
+                                                                    as $ubd
+                                                                ) {
                                                                     $real =
                                                                         $realisasi[$ubd->id_usulan_barang_detail] ??
                                                                         null;
+
                                                                     if ($real) {
-                                                                        $subRealisasi +=
-                                                                            $real->realisasi + $real->proses;
+                                                                        $subRealisasi += $real->realisasi ?? 0;
+                                                                        $subProses += $real->proses ?? 0;
                                                                     }
                                                                 }
                                                             }
@@ -247,11 +265,10 @@
                                                     }
                                                 }
 
-                                                $subSisa = $subAnggaran - $subRealisasi;
+                                                $subSisa = $subAnggaran - ($subRealisasi + $subProses);
                                                 $subPersen =
                                                     $subAnggaran > 0 ? ($subRealisasi / $subAnggaran) * 100 : 0;
                                             @endphp
-
 
                                             <tr class="sub-row">
                                                 <td>—— {{ $sub->kode_sub_kegiatan }}</td>
@@ -260,6 +277,8 @@
                                                     {{ number_format($subAnggaran, 0, ',', '.') }}</td>
                                                 <td class="white-nowrap">
                                                     {{ number_format($subRealisasi, 0, ',', '.') }}</td>
+                                                <td class="white-nowrap">
+                                                    {{ number_format($subProses, 0, ',', '.') }}</td>
                                                 <td class="white-nowrap"> {{ number_format($subSisa, 0, ',', '.') }}
                                                 </td>
                                                 <td class="white-nowrap">{{ number_format($subPersen, 2) }}%</td>

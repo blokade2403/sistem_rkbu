@@ -11,6 +11,7 @@ use App\Models\MasterBackend\UserProfil\User;
 use App\Models\MasterBackend\SettingRkbu\Rkbu;
 use App\Models\MasterBackend\UserProfil\Pejabat;
 use App\Models\MasterBackend\SettingUser\LevelUser;
+use App\Models\MasterBackend\SettingUser\PpkKeuangan;
 use App\Models\MasterBackend\SettingInput\JudulHeader;
 use App\Models\MasterBackend\SettingBelanja\UsulanBarang;
 use App\Models\MasterBackend\SettingRkbu\SubKategoriRkbu;
@@ -289,6 +290,10 @@ class PdfControllerCekUsulanBarangModal extends Controller
             $nama_direktur      = '...............';
         }
 
+        $ppk_keuangan = PpkKeuangan::where('status', 'aktif')
+            ->select('nama_ppk_keuangan', 'nip_ppk_keuangan')
+            ->first();
+
 
         // Cek apakah gambar2 ada, jika tidak gunakan gambar alias
         $gambar1 = $judul_headers->gambar1 ? asset('storage/uploads/' . basename($judul_headers->gambar1)) : asset('storage/uploads/foto.png');
@@ -446,19 +451,34 @@ class PdfControllerCekUsulanBarangModal extends Controller
             <table rules="none">
                 <tr bgcolor="#ffffff">
                     <th width="50%" align="center">' . $jabatan_kabag2 . '</th>
-                    <th width="50%" align="center">' . $jabatan_dir . '</th>
+                    <th width="50%" align="center">Pejabat Penatausahaan Keuangan</th>
                 </tr>
                 <tr bgcolor="#ffffff">
                     <th width="50%" align="center" style="height: 40px;"><img src="' . $qrcodekabag . '" alt="QR Code Pengusul" width="40" height="40"></th>
-                    <th width="50%" align="center" style="height: 40px;"><img src="' . $qrcodedirektur . '" alt="QR Code Pengusul" width="40" height="40"></th>
+                    <th width="50%" align="center" style="height: 40px;"><img src="" alt="QR Code Pengusul" width="40" height="40"></th>
                 </tr>
                 <tr bgcolor="#ffffff">
                     <th width="50%" align="center">' . $nama_kabag2 . '</th>
-                    <th width="50%" align="center">' . $nama_dir . '</th>
+                    <th width="50%" align="center">' . $ppk_keuangan->nama_ppk_keuangan . '</th>
                 </tr>
                  <tr bgcolor="#ffffff">
                     <th width="50%" align="center">NIP ' . $nip_kabag2 . '</th>
-                    <th width="50%" align="center">NIP ' . $nip_dir . '</th>
+                    <th width="50%" align="center">NIP ' . $ppk_keuangan->nip_ppk_keuangan . '</th>
+                </tr>
+            </table>
+
+            <table rules="none">
+                <tr bgcolor="#ffffff">
+                    <th width="100%" align="center">' . $jabatan_dir . '</th>
+                </tr>
+                <tr bgcolor="#ffffff">
+                    <th width="100%" align="center" style="height: 40px;"><img src="' . $qrcodedirektur . '" alt="QR Code Pengusul" width="40" height="40"></th>
+                </tr>
+                <tr bgcolor="#ffffff">
+                    <th width="100%" align="center">' . $nama_dir . '</th>
+                </tr>
+                 <tr bgcolor="#ffffff">
+                    <th width="100%" align="center">NIP ' . $nip_dir . '</th>
                 </tr>
             </table>
 

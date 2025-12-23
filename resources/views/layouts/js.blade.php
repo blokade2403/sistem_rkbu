@@ -380,6 +380,54 @@
     });
 </script>
 
+<script>
+    // Fungsi ubah string berformat Rupiah jadi angka murni
+    function parseNumber(value) {
+        if (!value) return 0;
+        return parseFloat(value.toString().replace(/[^0-9.-]/g, '')) || 0;
+    }
+
+    // Fungsi ubah angka jadi format Rupiah
+    function formatRupiah(angka) {
+        return angka.toLocaleString('id-ID');
+    }
+
+    function sum_pegawai() {
+        const vol_1 = parseFloat(document.getElementById('vol_1').value) || 0;
+        const harga_raw = document.getElementById('harga_barang').value; // Fixed here
+        const harga_barang = parseNumber(harga_raw);
+
+        // Hitung jumlah usulan (vol 1 * harga barang)
+        const jumlah_usulan_barang = vol_1;
+        document.getElementById('jumlah_usulan_barang').value = jumlah_usulan_barang.toFixed(2);
+
+        // Hitung total harga + PPN
+        const subtotal = jumlah_usulan_barang * harga_barang;
+        const total_anggaran = subtotal;
+
+        // Tampilkan hasil ke input
+        document.getElementById('hasil').value = formatRupiah(total_anggaran);
+        document.getElementById('total_anggaran_number').value = total_anggaran; // untuk backend
+        document.getElementById('harga_barang_number').value = harga_barang; // untuk backend
+
+        // Format ulang harga di UI
+        document.getElementById('harga_barang').value = formatRupiah(harga_barang);
+    }
+
+    // Event agar harga satuan otomatis format Rupiah
+    document.getElementById('harga_barang').addEventListener('input', function(e) {
+        const cursorPos = e.target.selectionStart;
+        const angka = parseNumber(e.target.value);
+        e.target.value = formatRupiah(angka);
+        e.target.setSelectionRange(cursorPos, cursorPos);
+        sum_pegawai();
+    });
+
+    // Trigger the calculation when the page loads
+    window.onload = sum_pegawai;
+</script>
+
+
 {{-- Script preview --}}
 <script>
     function previewImage(inputId, imgId) {

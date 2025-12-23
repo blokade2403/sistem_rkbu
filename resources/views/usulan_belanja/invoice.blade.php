@@ -117,13 +117,27 @@
                                                 <table id="example" class="table table-striped">
                                                     <thead class="table-light border-top">
                                                         <tr>
-                                                            <th>No</th>
-                                                            <th>Nama Barang</th>
-                                                            <th>Spesifikasi</th>
-                                                            <th>Harga Satuan</th>
-                                                            <th>Vol</th>
-                                                            <th>PPN</th>
-                                                            <th>Harga</th>
+                                                            @php
+                                                                $isPegawai = $routePrefix === 'usulan_pegawai';
+                                                            @endphp
+
+                                                            @if ($isPegawai)
+                                                                <th>No</th>
+                                                                <th>Nama Pegawai</th>
+                                                                <th>Jabatan</th>
+                                                                <th>Harga Satuan</th>
+                                                                <th>Koefisien Remunerasi</th>
+                                                                <th>PPN</th>
+                                                                <th>Harga</th>
+                                                            @else
+                                                                <th>No</th>
+                                                                <th>Nama Barang</th>
+                                                                <th>Spesifikasi</th>
+                                                                <th>Harga Satuan</th>
+                                                                <th>Vol</th>
+                                                                <th>PPN</th>
+                                                                <th>Harga</th>
+                                                            @endif
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -131,12 +145,21 @@
                                                             <tr>
                                                                 <td><small class="text-info">{{ $key + 1 }}</small>
                                                                 </td>
-                                                                <td>
-                                                                    <span
-                                                                        class="text-info fs-16"><strong>{{ $item->nama_barang }}</strong></span><br />
-                                                                    <span class="fs-10">ID RKBU:
-                                                                        {{ $item->id_rkbu }}</span>
-                                                                </td>
+                                                                @if ($isPegawai)
+                                                                    <td>
+                                                                        <span
+                                                                            class="text-info fs-16"><strong>{{ $item->nama_pegawai }}</strong></span><br />
+                                                                        <span class="fs-10">ID RKBU:
+                                                                            {{ $item->id_rkbu }}</span>
+                                                                    </td>
+                                                                @else
+                                                                    <td>
+                                                                        <span
+                                                                            class="text-info fs-16"><strong>{{ $item->nama_barang }}</strong></span><br />
+                                                                        <span class="fs-10">ID RKBU:
+                                                                            {{ $item->id_rkbu }}</span>
+                                                                    </td>
+                                                                @endif
                                                                 <td class="text-wrap"
                                                                     style="white-space: normal; word-wrap: break-word;">
                                                                     <span class="fa-sm">{{ $item->spek_detail }}</span>

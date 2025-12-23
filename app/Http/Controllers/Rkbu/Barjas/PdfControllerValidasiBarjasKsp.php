@@ -287,7 +287,7 @@ class PdfControllerValidasiBarjasKsp extends Controller
                         <td width="60%" align="center">
                             <h3 style="font-size:8px; font-weight: normal;">' . $judulHeaders->header1 . '</h3>
                             <h3 style="font-weight: normal; font-size:8px; line-height:0;">' . $judulHeaders->nama_rs . '</h3>
-                            <h3 style="font-size:8px; font-weight: normal;">' . $judulHeaders->header2 . '</h3>
+                            <h3 style="font-size:8px; font-weight: normal;">' . $judulHeaders->header6 . '</h3>
                             <h3 style="font-weight: normal; font-size:8px; line-height:0;">TAHUN ANGGARAN ' . $tahunAnggaran . '</h3>
                         </td>
                         <td width="20%" align="right">
