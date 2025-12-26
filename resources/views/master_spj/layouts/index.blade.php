@@ -7,7 +7,7 @@
             <div class="card-header">
                 <div class="col-xl-12">
                     @include('partials.animate_progress_form')
-                    {{-- @include('rkbu.partials.filter_rkbu', ['routePrefix' => $routePrefix]) --}}
+                    @include('master_spj.partials.filter')
                     <div class="card-block">
                         <div class="card-body">
                             <div class="table-responsive">
@@ -258,6 +258,8 @@
                                                                 :&nbsp;{{ $key->perusahaan?->tlp_perusahaan ?? 'Data Perusahaan Belum di Input' }}</span></br>
                                                             <span class="fs-12"> Nama Direktur
                                                                 :&nbsp;{{ $key->perusahaan?->nama_direktur_perusahaan ?? 'Data Perusahaan Belum di Input' }}</span></br>
+                                                            <span class="fs-12"> Nomor Faktur
+                                                                :&nbsp;{{ $key->no_faktur ?? 'Data Belum di Input' }}</span></br>
                                                         </li>
                                                     </ul>
                                                 </td>

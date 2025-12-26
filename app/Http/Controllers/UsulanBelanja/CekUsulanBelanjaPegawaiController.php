@@ -28,12 +28,23 @@ class CekUsulanBelanjaPegawaiController extends Controller
         $gambar1 = $judul_headers->gambar1 ?? 'Website Tidak Ada';
         $gambar2 = $judul_headers->gambar2 ?? 'Website Tidak Ada';
 
+        $modals = [
+            '9cdfd329-6524-4d3f-aca5-93eade93046d',
+            '9cdfd354-e43a-4461-9747-e15fb74038ac'
+        ];
+
+        $subKategroi = [
+            '9cf7e481-2dba-4482-bd27-bd0face739ed',
+            '9d03d062-b7d6-490e-ad71-10d92c5628cb'
+        ];
+
         // Query dasar
         $usulan_barangs = UsulanBarang::join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
             ->join('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
             ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
             ->where('status_usulan_barang', 'Selesai')
-            ->where('jenis_kategori_rkbus.id_jenis_kategori_rkbu', '9cdfd329-6524-4d3f-aca5-93eade93046d')
+            ->whereIn('jenis_kategori_rkbus.id_jenis_kategori_rkbu', $modals)
+            ->whereIn('sub_kategori_rkbus.id_sub_kategori_rkbu',  $subKategroi)
             ->where('usulan_barangs.tahun_anggaran', $tahunAnggaran)
             ->orderby('usulan_barangs.id_usulan_barang', 'DESC')
             ->select('usulan_barangs.*')
@@ -67,6 +78,16 @@ class CekUsulanBelanjaPegawaiController extends Controller
         $status_validasi_rka = StatusValidasiRka::all(); // Ambil status validasi dari model terkait
         $inputIdUsulanBarang = request()->input('id_usulan_barang'); // Ambil input id_usulan_barang dari request
 
+        $modals = [
+            '9cdfd329-6524-4d3f-aca5-93eade93046d',
+            '9cdfd354-e43a-4461-9747-e15fb74038ac'
+        ];
+
+        $subKategroi = [
+            '9cf7e481-2dba-4482-bd27-bd0face739ed',
+            '9d03d062-b7d6-490e-ad71-10d92c5628cb'
+        ];
+
         $usulan_barangs = UsulanBarang::join('sub_kategori_rkbus', 'sub_kategori_rkbus.id_sub_kategori_rkbu', '=', 'usulan_barangs.id_sub_kategori_rkbu')
             ->join('rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
             ->join('users', 'rkbus.id_user', '=', 'users.id_user')
@@ -99,7 +120,8 @@ class CekUsulanBelanjaPegawaiController extends Controller
             ->join('ksps', 'users.id_ksp', '=', 'ksps.id_ksp')
             ->where('ksps.id_ksp', $id_ksp)
             ->where('rkbus.id_status_validasi_rka', '9cfb1f87-238b-4ea2-98f0-4255e578b1d1')
-            ->where('jenis_kategori_rkbus.id_jenis_kategori_rkbu', '9cdfd329-6524-4d3f-aca5-93eade93046d')
+            ->whereIn('jenis_kategori_rkbus.id_jenis_kategori_rkbu', $modals)
+            ->whereIn('sub_kategori_rkbus.id_sub_kategori_rkbu',  $subKategroi)
             ->select('sub_kategori_rkbus.*') // Pilih kolom yang diinginkan dari sub_kategori_rkbus
             ->distinct() // Menghapus duplikasi berdasarkan sub_kategori_rkbus yang sama
             ->get();

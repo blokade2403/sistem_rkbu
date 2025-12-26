@@ -17,8 +17,10 @@
                                 </h5>
                                 <div class="d-flex align-items-center">
                                     <input type="text" name="nama_barang"
-                                        value="{{ $usulan_barang_details->rkbu->nama_barang }}" class="form-control"
-                                        aria-label="Amount (to the nearest dollar)" readonly />
+                                        value="{{ !empty($usulan_barang_details->rkbu->nama_barang) && $usulan_barang_details->rkbu->nama_barang !== '-'
+                                            ? $usulan_barang_details->rkbu->nama_barang
+                                            : $usulan_barang_details->rkbu->nama_pegawai }}"
+                                        class="form-control" aria-label="Amount (to the nearest dollar)" readonly>
                                     <input type="hidden" class="form-control" name="id_rkbu"
                                         value="{{ $usulan_barang_details->id_rkbu }}">
                                     <input type="hidden" name="id_usulan_barang_detail" class="form-control"

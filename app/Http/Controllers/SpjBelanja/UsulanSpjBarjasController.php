@@ -492,17 +492,20 @@ class UsulanSpjBarjasController extends Controller
         }
     }
 
-    public function delete($id_spj_detail)
+    public function delete($id_spj)
     {
+        // dd(session()->all());
         try {
-            $deleted = SpjDetail::where('id_spj_detail', $id_spj_detail)->delete();
+            // Cari data SPJ berdasarkan ID
+            $spj = Spj::findOrFail($id_spj);
 
-            if ($deleted === 0) {
-                return redirect()->back()->with('error', 'Data SPJ tidak ditemukan atau sudah dihapus.');
-            }
+            // Hapus data SPJ
+            $spj->delete();
 
+            // Redirect dengan pesan sukses
             return redirect()->route('usulan_spj_barjass.index')->with('success', 'Data SPJ berhasil dihapus.');
         } catch (\Exception $e) {
+            // Redirect dengan pesan error
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
@@ -598,6 +601,13 @@ class UsulanSpjBarjasController extends Controller
         try {
             // Cari data spj_detail berdasarkan id_spj_detail
             $detail = SpjDetail::findOrFail($id_spj_detail);
+
+            UsulanBarangDetail::where(
+                'id_usulan_barang_detail',
+                $detail->id_usulan_barang_detail
+            )->update([
+                'status_usulan_barang_detail' => null
+            ]);
 
             // Hapus data
             $detail->delete();

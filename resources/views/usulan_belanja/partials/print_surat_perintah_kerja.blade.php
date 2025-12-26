@@ -352,7 +352,10 @@
             <tr>
                 <th width="13%"></th>
                 <th style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;"
-                    class="no-border" width="80%">belanja sebagai berikut : </th>
+                    class="no-border" width="80%">belanja dengan no invoice
+                    <strong>{{ $no_inv->no_usulan_barang }}</strong>
+                    sebagai berikut terlampir:
+                </th>
             </tr>
             <tr bgcolor="#ffffff" style="line-height: 15px;">
                 <th width="13%" align="left"
@@ -368,13 +371,29 @@
                     <table cellspacing="0.5" bgcolor="#666666" cellpadding="2" width="100%"
                         style="font-size: 8px;">
                         <thead>
+                            @php
+                                $isPegawai = Route::is(
+                                    'validasi_usulan_pegawai_pptks.*',
+                                    'validasi_usulan_pegawai_rkas.*',
+                                    'validasi_usulan_pegawai_direkturs.*',
+                                );
+                            @endphp
                             <tr bgcolor="#ffffff" style="font-size: 7px;">
-                                <th width="4%" align="center">No</th>
-                                <th width="25%" align="center">Nama / Jenis Barang</th>
-                                <th width="25%" align="center">Spesifikasi Merk/Ukuran</th>
-                                <th width="10%" align="center">Jumlah Permintaan</th>
-                                <th width="15%" align="center">Harga Satuan</th>
-                                <th width="15%" align="center">Jumlah Biaya</th>
+                                @if ($isPegawai)
+                                    <th width="4%" align="center">No</th>
+                                    <th width="25%" align="center">Nama Pegawai</th>
+                                    <th width="25%" align="center">Jabatan</th>
+                                    <th width="10%" align="center">Jumlah Permintaan</th>
+                                    <th width="15%" align="center">Remunerasi</th>
+                                    <th width="15%" align="center">Jumlah Biaya</th>
+                                @else
+                                    <th width="4%" align="center">No</th>
+                                    <th width="25%" align="center">Nama / Jenis Barang</th>
+                                    <th width="25%" align="center">Spesifikasi Merk/Ukuran</th>
+                                    <th width="10%" align="center">Jumlah Permintaan</th>
+                                    <th width="15%" align="center">Harga Satuan</th>
+                                    <th width="15%" align="center">Jumlah Biaya</th>
+                                @endif
                             </tr>
                         </thead>
 
@@ -389,7 +408,11 @@
                             @endphp
                             <tr bgcolor="#ffffff" style="font-size: 7px;">
                                 <td align="center">{{ $no++ }}</td>
-                                <td align="center">{{ $item->nama_barang }}</td>
+                                @if ($isPegawai)
+                                    <td align="center">{{ $item->nama_pegawai }}</td>
+                                @else
+                                    <td align="center">{{ $item->nama_barang }}</td>
+                                @endif
                                 <td align="center">{{ $item->spek_detail }}</td>
                                 <td align="center">{{ $item->jumlah_usulan_barang }} {{ $item->satuan_1_detail }}
                                 </td>

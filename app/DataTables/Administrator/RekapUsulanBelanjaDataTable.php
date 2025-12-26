@@ -50,11 +50,11 @@ class RekapUsulanBelanjaDataTable extends DataTable
                 <p>
                  <ul class="list-unstyled product-desc-list">
                     <li class="py-0">
-                       <span class="f-12">User: ' . ($row->nama_pengusul_barang) . '</span></br>
+                        <span class="f-12">User: ' . ($row->nama_pengusul_barang) . '</span></br>
                         <span class="f-12">Unit: ' . ($row->unit ?? ' - ') . '</span>
                     </li></br>
-                    <li> <span class="f-12">' . $row->kode_kategori_rkbu . '. ' . $row->nama_kategori_rkbu . '</span>
-                                </li>
+                    <li> <span class="f-12">' . $row->kode_kategori_rkbu . '. ' . $row->nama_kategori_rkbu . '</span></li>
+                    <li> <h6 class="mt-0 mb-1 fs-14"> ' . ($row->nama_barang === '-' ? $row->nama_pegawai : $row->nama_barang) . '</h6></li>
                     <li> <span class="f-12 text-muted">' . ($row->sub_kategori_rkbu->kode_sub_kategori_rkbu) . '
                                 ' . ($row->sub_kategori_rkbu->nama_sub_kategori_rkbu) . '</span>
                     </li>
@@ -203,6 +203,7 @@ class RekapUsulanBelanjaDataTable extends DataTable
             'sub_kegiatans.*',
             'programs.*',
             'rkbus.nama_barang',
+            'rkbus.nama_pegawai',
             'kegiatans.*',
             'aktivitas.*',
             'users.nama_lengkap as nama_pengusul_barang',

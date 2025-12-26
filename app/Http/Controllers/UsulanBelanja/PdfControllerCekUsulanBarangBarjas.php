@@ -234,8 +234,12 @@ class PdfControllerCekUsulanBarangBarjas extends Controller
 
 
         $jabatan_kabag2 = $qrcode?->validRka?->pejabat?->jabatan?->nama_jabatan ?? $qrcode?->user?->pejabat?->jabatan?->nama_jabatan;
+        $id_kabag       = $qrcode?->validRka?->pejabat?->jabatan?->id_jabatan ?? $qrcode?->user?->pejabat?->jabatan?->id_jabatan;
         $nama_kabag2    = $qrcode?->validRka?->pejabat?->nama_pejabat ?? $qrcode?->user?->pejabat?->nama_pejabat;
         $nip_kabag2     = $qrcode?->validRka?->pejabat?->nip_pejabat ?? $qrcode?->user?->pejabat?->nip_pejabat;
+
+
+        $id_ppKeu       = '9cdfc135-d1dc-452f-8953-570df9133468';
 
         $jabatan_dir    = $direktur?->nama_jabatan ?? 'Data tidak tersedia';
         $nama_dir       = $direktur?->nama_pejabat ?? 'Data tidak tersedia';
@@ -257,6 +261,8 @@ class PdfControllerCekUsulanBarangBarjas extends Controller
         // $nama_perencana = $perencana->nama_lengkap ?? '...............';
         // $nip_perencana  = $perencana->nip_user ?? '...............';
         // $nip_pptk1      = $pptk->nip_user ?? '...............';
+
+        // dd($id_kabag);
 
         $nama_pptk1          = $pptk->nama_lengkap ?? null;
         $nama_perencana      = $perencana->nama_lengkap ?? null;

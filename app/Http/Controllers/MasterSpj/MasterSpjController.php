@@ -46,7 +46,7 @@ class MasterSpjController extends Controller
         $gambar1                = $judul_headers->gambar1 ? asset('storage/uploads/' . basename($judul_headers->gambar1)) : asset('storage/uploads/foto.png');
         $gambar2                = $judul_headers->gambar2 ? asset('storage/uploads/' . basename($judul_headers->gambar2)) : asset('storage/uploads/foto.png');
 
-
+        $statusPembayaran = ['Sudah di Bayar', 'Parsial'];
         $sub_kategori_rkbus = SubKategoriRkbu::join('rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
             ->join('usulan_barangs', 'usulan_barangs.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
             ->join('spj_details', 'spj_details.id_usulan_barang', '=', 'usulan_barangs.id_usulan_barang')
@@ -56,9 +56,28 @@ class MasterSpjController extends Controller
             ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
             ->join('users', 'rkbus.id_user', '=', 'users.id_user')
             ->where('rkbus.nama_tahun_anggaran', $tahunAnggaran)
-            ->select('sub_kategori_rkbus.*', 'master_spjs.id_master_spj') // Tambahkan id_master_spj ke hasil select
-            ->distinct() // Hilangkan duplikasi
+            ->where(function ($q) use ($statusPembayaran) {
+                $q->whereIn('master_spjs.status_pembayaran', $statusPembayaran)
+                    ->orWhereNull('master_spjs.status_pembayaran');
+            })
+            ->select(
+                'sub_kategori_rkbus.id_sub_kategori_rkbu',
+                'sub_kategori_rkbus.kode_sub_kategori_rkbu',
+                'sub_kategori_rkbus.nama_sub_kategori_rkbu'
+            )
+
+            // 🔑 kunci anti duplikat
+            ->groupBy(
+                'sub_kategori_rkbus.id_sub_kategori_rkbu',
+                'sub_kategori_rkbus.kode_sub_kategori_rkbu',
+                'sub_kategori_rkbus.nama_sub_kategori_rkbu'
+            )
+
+            ->orderBy('sub_kategori_rkbus.kode_sub_kategori_rkbu')
             ->get();
+
+
+        // dd($sub_kategori_rkbus);
 
         $query_sub_kategori_rkbus = SubKategoriRkbu::join('rkbus', 'rkbus.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
             ->join('usulan_barangs', 'usulan_barangs.id_sub_kategori_rkbu', '=', 'sub_kategori_rkbus.id_sub_kategori_rkbu')
@@ -81,6 +100,7 @@ class MasterSpjController extends Controller
         // Eksekusi query
         $filteredData = $query_sub_kategori_rkbus->get();
 
+
         // Query untuk pengadaan PPK
         $invo = MasterSpj::join('spjs', 'spjs.id_spj', '=', 'master_spjs.id_spj')
             ->leftJoin('perusahaans', 'perusahaans.id_perusahaan', '=', 'master_spjs.id_perusahaan')
@@ -100,6 +120,8 @@ class MasterSpjController extends Controller
             ->distinct()
             ->select('master_spjs.*', 'usulan_barangs.*', 'sub_kategori_rkbus.*')
             ->get();
+
+
 
         // Query untuk Pendukung PPK
         $invo_pendukung_ppk = MasterSpj::join('spjs', 'spjs.id_spj', '=', 'master_spjs.id_spj')
@@ -658,6 +680,7 @@ class MasterSpjController extends Controller
                 ->select(
                     'spj_details.*',
                     'rkbus.nama_barang',
+                    'rkbus.nama_pegawai',
                     'sub_kategori_rkbus.kode_sub_kategori_rkbu',
                     'sub_kategori_rkbus.nama_sub_kategori_rkbu',
                     'usulan_barang_details.*',
@@ -1263,7 +1286,8 @@ class MasterSpjController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'tanggal_faktur'                => 'required|date',
+                'tanggal_faktur'            => 'required|date',
+                'no_faktur'                 => 'required',
                 'tgl_kwitansi'              => 'required|date',
             ]
         );
@@ -1280,6 +1304,7 @@ class MasterSpjController extends Controller
         $masterSpj = MasterSpj::findOrFail($id);
 
         $masterSpj->tanggal_faktur              = $request->input('tanggal_faktur');
+        $masterSpj->no_faktur                   = $request->input('no_faktur');
         $masterSpj->tgl_kwitansi                = $request->input('tgl_kwitansi');
         $masterSpj->status_proses_tukar_faktur  = 'Selesai';
         $masterSpj->tgl_proses_faktur           = now()->toDateString();

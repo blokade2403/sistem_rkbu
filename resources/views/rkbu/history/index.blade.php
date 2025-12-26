@@ -70,22 +70,38 @@
                                         <tr>
                                             <td>{{ $no++ }}</td>
 
-                                            {{-- DATA SEBELUM --}}
                                             <td>
-                                                <span
-                                                    class="fa-sm text-info"><strong>{{ $data_sebelum['nama_barang'] ?? 'N/A' }}</strong></span><br />
-                                                <span class="badge bg-danger"><span class="fa-sm">ID:
-                                                        {{ $history->id_rkbu }}</span></span><br />
-                                                <span class="fa-xs">Kategori:
-                                                    {{ $sub_kategori_sebelum->nama_sub_kategori_rkbu ?? 'N/A' }}</span><br />
-                                                <span class="fa-xs mt-3">Modified By:
-                                                    {{ $history->user->nama_lengkap ?? 'N/A' }}</span>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="{{ asset('assets/images/companies/img-1.png') }}"
+                                                        class="me-3 rounded-circle avatar-sm p-2 bg-light" alt="user-pic">
+                                                    <div class="flex-1">
+                                                        <h6 class="mt-0 mb-1 fs-14">
+                                                            <a href=""
+                                                                class="fs-16">{{ $data_sebelum['nama_barang'] ?? 'N/A' }}
+                                                            </a>
+                                                        </h6>
+                                                        <p class="mb-0 fs-12 text-muted">
+                                                            <span>{{ $history->id_rkbu }}</span>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <p>
+                                                <ul class="list-unstyled product-desc-list">
+                                                    <li class="py-0">
+                                                        <span class="f-12">Kategori:
+                                                            {{ $sub_kategori_sebelum->nama_sub_kategori_rkbu ?? 'N/A' }}</span></br>
+                                                        <span class="f-12">Modified By:
+                                                            {{ $history->user->nama_lengkap ?? 'N/A' }}</span>
+                                                    </li></br>
+                                                </ul>
+                                                </p>
                                             </td>
 
                                             <td style="width: 200px">
                                                 <span class="fa-xs"><strong>Sub Kategori:
                                                         {{ $sub_kategori_sebelum->nama_sub_kategori_rkbu ?? 'N/A' }}</strong></span><br />
-                                                <span class="fs-10">Spek: {{ $data_sebelum['spek'] ?? 'N/A' }}</span><br />
+                                                <span class="fs-10">Spek:
+                                                    {{ $data_sebelum['spek'] ?? 'N/A' }}</span><br />
                                                 <span class="badge bg-label-info">
                                                     <span class="fa-sm">
                                                         {{ \Carbon\Carbon::parse($data_sebelum['created_at'] ?? now())->format('Y-m-d H:i:s') }}

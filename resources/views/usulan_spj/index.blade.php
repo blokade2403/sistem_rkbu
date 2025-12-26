@@ -107,7 +107,7 @@
                                                 </td>
                                                 <td class="text-center align-middle">
                                                     @if ($key->spjDetail->isEmpty())
-                                                        <form action="{{ route($routePrefix . '.destroy', $key->id_spj) }}"
+                                                        <form action="{{ route($routePrefix . '.delete', $key->id_spj) }}"
                                                             method="POST" class="delete-form">
                                                             @csrf
                                                             @method('DELETE')

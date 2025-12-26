@@ -58,13 +58,11 @@
                                                             </a>
                                                         </h6>
                                                         <p class="mb-0 fs-12 text-muted">
-                                                            Username: <span>{{ $item->username }}</span>
+                                                            Username: <span>{{ $item->username }}</span></br>
+                                                            <small>{{ $item->id_user }}</small>
                                                         </p>
                                                     </div>
                                                 </div>
-
-
-
                                             </td>
                                             <td>{{ $item->ksp->nama_ksp ?? '-' }}</td>
                                             <td>{{ $item->pejabat->nama_pejabat ?? '-' }}</td>

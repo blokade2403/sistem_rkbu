@@ -35,6 +35,7 @@ class CekUsulanBarangController extends Controller
             ->join('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
             ->where('status_usulan_barang', 'Selesai')
             ->where('jenis_kategori_rkbus.id_jenis_kategori_rkbu', '9cdfd354-e43a-4461-9747-e15fb74038ac')
+            ->where('sub_kategori_rkbus.id_sub_kategori_rkbu', '!=', '9d03d062-b7d6-490e-ad71-10d92c5628cb')
             ->where('usulan_barangs.tahun_anggaran', $tahunAnggaran)
             ->orderby('usulan_barangs.id_usulan_barang', 'DESC')
             ->select('usulan_barangs.*')
@@ -101,6 +102,7 @@ class CekUsulanBarangController extends Controller
             ->where('ksps.id_ksp', $id_ksp)
             ->where('rkbus.id_status_validasi_rka', '9cfb1f87-238b-4ea2-98f0-4255e578b1d1')
             ->where('jenis_kategori_rkbus.id_jenis_kategori_rkbu', '9cdfd354-e43a-4461-9747-e15fb74038ac')
+            ->where('sub_kategori_rkbus.id_sub_kategori_rkbu', '!=', '9d03d062-b7d6-490e-ad71-10d92c5628cb')
             ->select('sub_kategori_rkbus.*') // Pilih kolom yang diinginkan dari sub_kategori_rkbus
             ->distinct() // Menghapus duplikasi berdasarkan sub_kategori_rkbus yang sama
             ->get();

@@ -9,6 +9,7 @@ use App\Http\Controllers\Assets\LaporanKirController;
 use App\Http\Controllers\Assets\PenempatanController;
 use App\Http\Controllers\Assets\AssetImportController;
 use App\Http\Controllers\Dashboard\DashboardController;
+use App\Http\Controllers\Import\SettingRkbu\ImportRkbu;
 use App\Http\Controllers\MasterSpj\MasterSpjController;
 use App\Http\Controllers\Rkbu\RkbuBarangJasaController;
 use App\Http\Controllers\Rkbu\RkbuModalAlkesController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\Rkbu\KertasKerja\GrafikController;
 use App\Http\Controllers\Rkbu\Barjas\PdfControllerRkbuBarjas;
 use App\Http\Controllers\SpjBelanja\UsulanSpjModalController;
 use App\Http\Controllers\SpjBelanja\UsulanSpjBarjasController;
+use App\Http\Controllers\SpjBelanja\UsulanSpjPegawaiController;
 use App\Http\Controllers\MasterBackend\UserProfil\KspController;
 use App\Http\Controllers\MasterSpj\PdfControllerSpjSuratPesanan;
 use App\Http\Controllers\RkbuHistory\RkbuHistoryModalController;
@@ -94,10 +96,12 @@ use App\Http\Controllers\Rkbu\Administrator\RkbuModalKantorAdminController;
 use App\Http\Controllers\MasterBackend\SettingInput\TahunAnggaranController;
 use App\Http\Controllers\MasterBackend\SettingUser\AdminPendukungController;
 use App\Http\Controllers\Rkbu\Administrator\PdfControllerRbaPegawaiPnsAdmin;
+use App\Http\Controllers\Rkbu\Administrator\PdfControllerRbaPersediaanAdmin;
 use App\Http\Controllers\Rkbu\KertasKerja\KertasKerjaRealisasiRbaController;
 use App\Http\Controllers\Rkbu\Pegawai\PdfControllerValidasiPegawaiNonPnsKsp;
 use App\Http\Controllers\Rkbu\Persediaan\PdfControllerValidasiPersediaanKsp;
 use App\Http\Controllers\UsulanBelanja\CekUsulanBelanjaPersediaanController;
+use App\Http\Controllers\UsulanBelanja\PdfControllerCekUsulanBelanjaPegawai;
 use App\Http\Controllers\MasterBackend\SettingInput\StatusValidasiController;
 use App\Http\Controllers\MasterBackend\SettingRkbu\SubKategoriRkbuController;
 use App\Http\Controllers\Rkbu\Administrator\PdfControllerRkbuModalAlkesAdmin;
@@ -130,15 +134,17 @@ use App\Http\Controllers\Rkbu\ValidasiRka\PdfControllerValidasiPegawaiNonPnsRka;
 use App\Http\Controllers\Rkbu\Administrator\PdfControllerPrintByFilterPersediaan;
 use App\Http\Controllers\Rkbu\ValidasiKsp\ValidasiRkbuPegawaiNonPnsKspController;
 use App\Http\Controllers\Rkbu\ValidasiRka\ValidasiRkbuPegawaiNonPnsRkaController;
-use App\Http\Controllers\UsulanBelanja\PdfControllerCekUsulanBelanjaPegawai;
 use App\Http\Controllers\ValidasiUsulanBelanja\Rka\ValidasiUsulanModalRkaController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Rka\ValidasiUsulanBarangRkaController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Pptk\ValidasiUsulanModalPptkController;
+use App\Http\Controllers\ValidasiUsulanBelanja\Rka\ValidasiUsulanPegawaiRkaController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Pptk\ValidasiUsulanBarangPptkController;
+use App\Http\Controllers\ValidasiUsulanBelanja\Pptk\ValidasiUsulanPegawaiPptkController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Rka\ValidasiUsulanPersediaanRkaController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Pptk\ValidasiUsulanPersediaanPptkController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Direktur\ValidasiUsulanModalDirekturController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Direktur\ValidasiUsulanBarangDirekturController;
+use App\Http\Controllers\ValidasiUsulanBelanja\Direktur\ValidasiUsulanPegawaiDirekturController;
 use App\Http\Controllers\ValidasiUsulanBelanja\Direktur\ValidasiUsulanPersediaanDirekturController;
 
 /*
@@ -360,6 +366,8 @@ Route::middleware('auth')->group(function () {
     Route::prefix('admin-rkbu-barjas')->group(function () {
         Route::get('/rkbu_barjas_admins/print', [PdfControllerPrintByFilter::class, 'print'])
             ->name('rkbu_barjas_admins.print');
+        Route::post('rkbu_barjas_admins/import', [ImportRkbu::class, 'import'])->name('rkbu_barjas_admins.import');
+        Route::get('rkbu_barjas_admins/downloadReport', [ImportRkbu::class, 'downloadReport'])->name('rkbu_barjas_admins.downloadReport');
         Route::resource('rkbu_barjas_admins', RkbuBarjasAdminController::class);
         Route::post('rkbu_barjas_admins/get_data_by_subkategori', [RkbuBarjasAdminController::class, 'getDataBySubKategori'])->name('rkbu_barjas_admins.get_data_by_subkategori');
         Route::get('/downloadPDF', [PdfControllerRkbuBarjasAdmin::class, 'downloadPDF'])->name('rkbu_barjas_admins.downloadPDF');
@@ -387,6 +395,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('rkbu_persediaan_admins', RkbuPersediaanAdminController::class);
         Route::post('rkbu_persediaan_admins/get_data_by_subkategori', [RkbuPersediaanAdminController::class, 'getDataBySubKategori'])->name('rkbu_persediaan_admins.get_data_by_subkategori');
         Route::get('/downloadPDF', [PdfControllerRkbuPersediaanAdmin::class, 'downloadPDF'])->name('rkbu_persediaan_admins.downloadPDF');
+        Route::get('/downloadPDFRba', [PdfControllerRbaPersediaanAdmin::class, 'downloadPDFRba'])->name('rkbu_persediaan_admins.downloadPDFRba');
     });
 
     Route::prefix('rekap_usulan_Belanja')->group(function () {
@@ -542,6 +551,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('validasi_usulan_barang_pptks.downloadPDFPerintahKerja');
     });
 
+    Route::prefix('validasi-usulan-pegawai-pptk')->group(function () {
+        Route::resource('validasi_usulan_pegawai_pptks', ValidasiUsulanPegawaiPptkController::class);
+        Route::get('/validasi-usulan-pegawai-pptks/{id_sub_kategori_rkbu?}', [ValidasiUsulanPegawaiPptkController::class, 'index'])->name('validasi_usulan_pegawai_pptks.index');
+        Route::get('/validasi_usulan_pegawai_pptks/keranjang/{id}', [ValidasiUsulanPegawaiPptkController::class, 'keranjang'])->name('validasi_usulan_pegawai_pptks.keranjang');
+        Route::put('/validasi-usulan-pegawai-pptks/{no_usulan_barang}', [ValidasiUsulanPegawaiPptkController::class, 'updateValidasi'])->name('validasi_usulan_pegawai_pptks.updateValidasi');
+        Route::get('/validasi-usulan-pegawai-pptks/show/{no_usulan_barang}', [ValidasiUsulanPegawaiPptkController::class, 'show'])->name('validasi_usulan_pegawai_pptks.show');
+        Route::delete('/validasi-usulan-pegawai-pptks/{id_usulan_barang}', [ValidasiUsulanPegawaiPptkController::class, 'doDelete'])
+            ->name('validasi_usulan_pegawai_pptks.delete');
+        Route::delete('/validasi_usulan_pegawai_pptks.delete_detail/{id_usulan_barang_detail}', [ValidasiUsulanPegawaiPptkController::class, 'doDeleteDetailKeranjang'])->name('validasi_usulan_pegawai_pptks.delete_detail');
+        Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBelanjaPegawai::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_pegawai_pptks.downloadPDF');
+        Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('validasi_usulan_pegawai_pptks.downloadPDFPerintahKerja');
+    });
+
     Route::prefix('validasi-usulan-modal-pptk')->group(function () {
         Route::resource('validasi_usulan_modal_pptks', ValidasiUsulanModalPptkController::class);
         Route::get('/validasi-usulan-modal-pptks/{id_sub_kategori_rkbu?}', [ValidasiUsulanModalPptkController::class, 'index'])->name('validasi_usulan_modal_pptks.index');
@@ -580,6 +602,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('validasi_usulan_barang_rkas.downloadPDFPerintahKerja');
     });
 
+    Route::prefix('validasi-usulan-pegawai-rka')->group(function () {
+        Route::resource('validasi_usulan_pegawai_rkas', ValidasiUsulanPegawaiRkaController::class);
+        Route::get('/validasi-usulan-pegawai-rkas/{id_sub_kategori_rkbu?}', [ValidasiUsulanPegawaiRkaController::class, 'index'])->name('validasi_usulan_pegawai_rkas.index');
+        Route::get('/validasi_usulan_pegawai_rkas/keranjang/{id}', [ValidasiUsulanPegawaiRkaController::class, 'keranjang'])->name('validasi_usulan_pegawai_rkas.keranjang');
+        Route::put('/validasi-usulan-pegawai-rkas/{no_usulan_barang}', [ValidasiUsulanPegawaiRkaController::class, 'updateValidasi'])->name('validasi_usulan_pegawai_rkas.updateValidasi');
+        Route::get('/validasi-usulan-pegawai-rkas/show/{no_usulan_barang}', [ValidasiUsulanPegawaiRkaController::class, 'show'])->name('validasi_usulan_pegawai_rkas.show');
+        Route::delete('/validasi-usulan-pegawai-rkas/{id_usulan_barang}', [ValidasiUsulanPegawaiRkaController::class, 'doDelete'])
+            ->name('validasi_usulan_pegawai_rkas.delete');
+        Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBelanjaPegawai::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_pegawai_rkas.downloadPDF');
+        Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('validasi_usulan_pegawai_rkas.downloadPDFPerintahKerja');
+    });
+
     Route::prefix('validasi-usulan-modal-rka')->group(function () {
         Route::resource('validasi_usulan_modal_rkas', ValidasiUsulanModalRkaController::class);
         Route::get('/validasi-usulan-modal-rkas/{id_sub_kategori_rkbu?}', [ValidasiUsulanModalRkaController::class, 'index'])->name('validasi_usulan_modal_rkas.index');
@@ -616,6 +650,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('validasi_usulan_barang_direkturs.downloadPDFPerintahKerja');
     });
 
+    Route::prefix('validasi-usulan-pegawai-direktur')->group(function () {
+        Route::resource('validasi_usulan_pegawai_direkturs', ValidasiUsulanPegawaiDirekturController::class);
+        Route::get('/validasi-usulan-pegawai-direkturs/{id_sub_kategori_rkbu?}', [ValidasiUsulanPegawaiDirekturController::class, 'index'])->name('validasi_usulan_pegawai_direkturs.index');
+        Route::get('/validasi_usulan_pegawai_direkturs/keranjang/{id}', [ValidasiUsulanPegawaiDirekturController::class, 'keranjang'])->name('validasi_usulan_pegawai_direkturs.keranjang');
+        Route::put('/validasi-usulan-pegawai-direkturs/{no_usulan_barang}', [ValidasiUsulanPegawaiDirekturController::class, 'updateValidasi'])->name('validasi_usulan_pegawai_direkturs.updateValidasi');
+        Route::get('/validasi-usulan-pegawai-direkturs/show/{no_usulan_barang}', [ValidasiUsulanPegawaiDirekturController::class, 'show'])->name('validasi_usulan_pegawai_direkturs.show');
+        Route::delete('/validasi-usulan-pegawai-direkturs/{id_usulan_barang}', [ValidasiUsulanPegawaiDirekturController::class, 'doDelete'])
+            ->name('validasi_usulan_pegawai_direkturs.delete');
+        Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBelanjaPegawai::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_pegawai_direkturs.downloadPDF');
+        Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('validasi_usulan_pegawai_direkturs.downloadPDFPerintahKerja');
+    });
+
     Route::prefix('validasi-usulan-modal-direktur')->group(function () {
         Route::resource('validasi_usulan_modal_direkturs', ValidasiUsulanModalDirekturController::class);
         Route::get('/validasi-usulan-modal-direkturs/{id_sub_kategori_rkbu?}', [ValidasiUsulanModalDirekturController::class, 'index'])->name('validasi_usulan_modal_direkturs.index');
@@ -640,6 +686,17 @@ Route::middleware('auth')->group(function () {
             ->name('validasi_usulan_persediaan_direkturs.delete');
         Route::get('/downloadPDF/{id_usulan_barang}', [PdfControllerCekUsulanBarangBarjas::class, 'downloadPDFCekBarjas'])->name('validasi_usulan_persediaan_direkturs.downloadPDF');
         Route::get('/downloadPDFPerintahKerja/{id_usulan_barang}', [PdfControllerSuratPerintahKpa::class, 'downloadPDFPerintahKerja'])->name('validasi_usulan_persediaan_direkturs.downloadPDFPerintahKerja');
+    });
+
+    Route::prefix('usulan-spj-pegawai')->group(function () {
+        Route::resource('usulan_spj_pegawai', UsulanSpjPegawaiController::class)->parameters(['usulan_spj_pegawai' => 'id_spj']);
+        Route::post('/usulan-spj/add', [UsulanSpjPegawaiController::class, 'add'])->name('usulan_spj_pegawai.add');
+        Route::post('/usulan-spj/store', [UsulanSpjPegawaiController::class, 'store'])->name('usulan_spj_pegawai.store');
+        Route::put('/usulan-spj-barjass/{id_spj}/update-status', [UsulanSpjPegawaiController::class, 'updateStatus'])
+            ->name('usulan_spj_pegawai.updateStatus');
+        Route::get('/usulan_spj_pegawai/show/{id_spj}', [UsulanSpjPegawaiController::class, 'show'])->name('usulan_spj_pegawai.show');
+        Route::delete('/usulan_spj_pegawai/{id_spj}', [UsulanSpjPegawaiController::class, 'destroy'])->name('usulan_spj_pegawai.destroy');
+        Route::delete('/usulan_spj_detail_barjass/{id_spj_detail}', [UsulanSpjPegawaiController::class, 'delete'])->name('usulan_spj_pegawai.delete');
     });
 
     Route::prefix('usulan-spj-barjas')->group(function () {

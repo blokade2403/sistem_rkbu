@@ -103,14 +103,29 @@
                             <table id="example" class="table table-striped">
                                 <thead class="table-light border-top">
                                     <tr>
-                                        <th>No</th>
-                                        <th>Nama Barang</th>
-                                        <th>Status</th>
-                                        <th>Harga Satuan</th>
-                                        <th>Vol</th>
-                                        <th>PPN</th>
-                                        <th>Harga</th>
-                                        <th>Action</th>
+                                        @php
+                                            $isPegawai = Route::is('usulan_spj_pegawai.*');
+                                        @endphp
+                                        @if ($isPegawai)
+                                            <th>No</th>
+                                            <th>Nama Pegawai</th>
+                                            <th>Status</th>
+                                            <th>Harga Remunerasi</th>
+                                            <th>Vol</th>
+                                            <th>PPN</th>
+                                            <th>Total Remunerasi</th>
+                                            <th>Action</th>
+                                        @else
+                                            <th>No</th>
+                                            <th>Nama Barang</th>
+                                            <th>Status</th>
+                                            <th>Harga Satuan</th>
+                                            <th>Vol</th>
+                                            <th>PPN</th>
+                                            <th>Harga</th>
+                                            <th>Action</th>
+                                        @endif
+
                                     </tr>
                                 </thead>
 
@@ -120,8 +135,13 @@
                                             <td>{{ $key + 1 }}
                                             </td>
                                             <td class="text-wrap">
-                                                <span
-                                                    class="text-primary f-16">#&nbsp;{{ $item->nama_barang }}</span><br />
+                                                @if ($isPegawai)
+                                                    <span
+                                                        class="text-primary f-16">#&nbsp;{{ $item->nama_pegawai }}</span><br />
+                                                @else
+                                                    <span
+                                                        class="text-primary f-16">#&nbsp;{{ $item->nama_barang }}</span><br />
+                                                @endif
                                                 <span class="fs-10">ID RKBU:
                                                     {{ $item->id_rkbu }}</span><br />
                                                 <span class="fs-10 text-muted">Spesifikasi:

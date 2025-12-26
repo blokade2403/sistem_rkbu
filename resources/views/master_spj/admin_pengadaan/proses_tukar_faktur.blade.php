@@ -63,6 +63,14 @@
                                                         placeholder="Type your title in Placeholder"
                                                         @if (!empty($master_spj->tgl_kwitansi)) readonly @endif>
                                                 </div>
+                                                <div class="col-sm-12">
+                                                    <label for="firstName" class="form-label">Nomor
+                                                        Faktur</label>
+                                                    <input type="text" class="form-control" name="no_faktur"
+                                                        value="{{ $master_spj->no_faktur }}"
+                                                        placeholder="Type your title in Placeholder"
+                                                        @if (!empty($master_spj->no_faktur)) readonly @endif>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="d-flex align-items-start gap-3 mt-4">

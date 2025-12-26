@@ -193,7 +193,7 @@ class PdfControllerSuratPerintahKpa extends Controller
         if ($invoice) {
             $keranjang = UsulanBarangDetail::where('usulan_barang_details.id_usulan_barang', $invoice->id_usulan_barang)
                 ->join('rkbus', 'rkbus.id_rkbu', '=', 'usulan_barang_details.id_rkbu')
-                ->select('usulan_barang_details.*', 'rkbus.nama_barang', 'rkbus.spek', 'usulan_barang_details.created_at')
+                ->select('usulan_barang_details.*', 'rkbus.nama_barang', 'rkbus.nama_pegawai', 'rkbus.spek', 'usulan_barang_details.created_at')
                 ->orderBy('usulan_barang_details.created_at', 'asc') // urutkan usulan berdasarkan waktu
                 ->get();
 

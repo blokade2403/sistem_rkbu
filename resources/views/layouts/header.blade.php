@@ -158,7 +158,8 @@
                          class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle shadow-none"
                          id="page-header-notifications-dropdown" data-bs-toggle="dropdown" aria-haspopup="true"
                          aria-expanded="false">
-                         <i class='bx bx-shopping-bag fs-22'></i>
+                         {{-- <i class='bx bx-shopping-bag fs-22'></i> --}}
+                         <i class='bx bx-bell fs-22'></i>
                          {{-- <i class='bx bx-bell fs-22'></i> --}}
                          @if ($notifications->count() > 0)
                              <span
@@ -216,14 +217,30 @@
                                                              {{ $notif->no_usulan_barang ?? 'Usulan Barang Baru' }}
                                                          </h6>
                                                      </a>
-                                                     <div class="fs-10 text-muted">
-                                                         <span class="mb-1">Terdapat Usulan barang pada Uraian Sub
-                                                             Rincian Obyek
-                                                             <strong>{{ $notif->sub_kategori_rkbu->kode_sub_kategori_rkbu }}.
-                                                                 {{ $notif->sub_kategori_rkbu->nama_sub_kategori_rkbu }}</strong>
-                                                             yang belum di validasi
-                                                         </span>
-                                                     </div>
+                                                     @php
+                                                         $pengadaan = ['Admin PPK', 'PPBJ', 'PPK'];
+                                                     @endphp
+                                                     @if (in_array(session('nama_level_user'), $pengadaan))
+                                                         <div class="fs-10 text-muted">
+                                                             <span class="mb-1">Terdapat Usulan barang pada Uraian
+                                                                 Sub
+                                                                 Rincian Obyek
+                                                                 <strong>{{ $notif->sub_kategori_rkbu->kode_sub_kategori_rkbu }}.
+                                                                     {{ $notif->sub_kategori_rkbu->nama_sub_kategori_rkbu }}</strong>
+                                                                 yang belum dibuatkan Pesanan
+                                                             </span>
+                                                         </div>
+                                                     @else
+                                                         <div class="fs-10 text-muted">
+                                                             <span class="mb-1">Terdapat Usulan barang pada Uraian
+                                                                 Sub
+                                                                 Rincian Obyek
+                                                                 <strong>{{ $notif->sub_kategori_rkbu->kode_sub_kategori_rkbu }}.
+                                                                     {{ $notif->sub_kategori_rkbu->nama_sub_kategori_rkbu }}</strong>
+                                                                 yang belum di validasi
+                                                             </span>
+                                                         </div>
+                                                     @endif
                                                      <div class="fs-10 text-muted">
                                                          <span class="mb-1 text-primary">Pengusul :
                                                              <strong>{{ $notif->nama_pengusul_barang }}</strong>

@@ -568,7 +568,7 @@
 
                   <li class="nav-item">
                       <a class="nav-link menu-link" href="{{ route('realisasi_rba.index') }}">
-                          <i class="ri-rocket-line"></i> <span data-key="t-landing">Kertas Kerja</span>
+                          <i class="ri-rocket-line"></i> <span data-key="t-landing">PP1 BLUD</span>
                           <span class="badge badge-pill bg-success" data-key="t-new">New</span>
                       </a>
                   </li>
@@ -607,6 +607,11 @@
                                       </a>
                                       <div class="collapse menu-dropdown" id="sidebarProjects">
                                           <ul class="nav nav-sm flex-column">
+                                              <li class="nav-item">
+                                                  <a href="{{ route('usulan_spj_pegawai.index') }}" class="nav-link"
+                                                      data-key="t-list">
+                                                      Pegawai </a>
+                                              </li>
                                               <li class="nav-item">
                                                   <a href="{{ route('usulan_spj_barjass.index') }}" class="nav-link"
                                                       data-key="t-list">
@@ -731,16 +736,19 @@
                       // Mapping route berdasarkan level user
                       $routes = [
                           'pptk' => [
+                              'pegawai' => 'validasi_usulan_pegawai_pptks.index',
                               'barang' => 'validasi_usulan_barang_pptks.index',
                               'modal' => 'validasi_usulan_modal_pptks.index',
                               'persediaan' => 'validasi_usulan_persediaan_pptks.index',
                           ],
                           'rka' => [
+                              'pegawai' => 'validasi_usulan_pegawai_rkas.index',
                               'barang' => 'validasi_usulan_barang_rkas.index',
                               'modal' => 'validasi_usulan_modal_rkas.index',
                               'persediaan' => 'validasi_usulan_persediaan_rkas.index',
                           ],
                           'direktur' => [
+                              'pegawai' => 'validasi_usulan_pegawai_direkturs.index',
                               'barang' => 'validasi_usulan_barang_direkturs.index',
                               'modal' => 'validasi_usulan_modal_direkturs.index',
                               'persediaan' => 'validasi_usulan_persediaan_direkturs.index',
@@ -761,6 +769,10 @@
                           </a>
                           <div class="collapse menu-dropdown" id="sidebarValidasiBelanja">
                               <ul class="nav nav-sm flex-column">
+                                  <li class="nav-item">
+                                      <a href="{{ route($routes[$role]['pegawai']) }}" class="nav-link"
+                                          data-key="t-remix">Pegawai</a>
+                                  </li>
                                   <li class="nav-item">
                                       <a href="{{ route($routes[$role]['barang']) }}" class="nav-link"
                                           data-key="t-remix">Barjas</a>

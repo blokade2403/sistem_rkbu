@@ -358,9 +358,8 @@ class RkbuModalAlkesAdminController extends Controller
         $validasiRkbuBarjasKsp->upload_file_2 = $request->hasFile('upload_file_2') ? $request->file('upload_file_2')->store('public/uploads') : $validasiRkbuBarjasKsp->upload_file_2;
         $validasiRkbuBarjasKsp->upload_file_3 = $request->hasFile('upload_file_3') ? $request->file('upload_file_3')->store('public/uploads') : $validasiRkbuBarjasKsp->upload_file_3;
         $validasiRkbuBarjasKsp->upload_file_4 = $request->hasFile('upload_file_4') ? $request->file('upload_file_4')->store('public/uploads') : $validasiRkbuBarjasKsp->upload_file_4;
-        $validasiRkbuBarjasKsp->upload_file_5 = $request->hasFile('upload_file_5') ? $request->file('upload_file_5')->store('public/uploads') : $validasiRkbuBarjasKsp->upload_file_5;
 
-        $namaFile6 = $request->hasFile('upload_file_history') ? $request->file('upload_file_history')->store('public/uploads') : null; // Tambahan untuk file 5
+        $namaFile6 = $request->hasFile('upload_file_5') ? $request->file('upload_file_5')->store('public/uploads') : null; // Tambahan untuk file 5
 
         $barang = $request->input('nama_barang') ?? $request->input('barang');
 
@@ -467,7 +466,7 @@ class RkbuModalAlkesAdminController extends Controller
                 'data_sebelum'              => json_encode($data_sebelum),
                 'data_sesudah'              => json_encode($dataSesudah), // Simpan data sesudah
                 'keterangan_status'         => $request->input('keterangan_status'),
-                'upload_file_history'       => $namaFile6 ?? null,
+                'upload_file_5'       => $namaFile6 ?? null,
             ]);
 
             // Validasi anggaran

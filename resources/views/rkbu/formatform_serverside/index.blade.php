@@ -2,6 +2,7 @@
 @section('content')
     @include('partials.add_buttons', ['routePrefix' => $routePrefix])
     @include('rkbu.partials.selisihlebihrkbu')
+    @include('rkbu.partials.modal_upload_rkbu')
     <div class="row">
         <div class="col-xl-12">
             <div class="card">

@@ -52,14 +52,20 @@
                                 <div class="col-auto">
                                     <a href="{{ route($routePrefix . '.downloadPDF') }}"
                                         class="btn btn-sm btn-soft-primary shadow-none"><i class="ri-printer-line"></i>
-                                        Print Rincian</a>
+                                        Rincian</a>
                                 </div>
                                 @if (session('nama_level_user') == 'Administrator')
+                                    <div class="col-auto">
+                                        <button type="button" class="btn btn-sm btn-soft-warning shadow-none"
+                                            data-bs-toggle="modal" data-bs-target="#firstmodal"><i
+                                                class="ri-upload-2-line"></i>
+                                            Upload</button>
+                                    </div>
                                     <div class="col-auto">
                                         <a href="{{ route($routePrefix . '.downloadPDFRba') }}"
                                             class="btn btn-sm btn-soft-danger shadow-none"><i
                                                 class="ri-printer-line"></i>
-                                            Print RBA
+                                            RBA
                                         </a>
                                     </div>
                                     @if ($routePrefix == 'rkbu_barjas_admins')
@@ -67,7 +73,7 @@
                                             <a href="{{ route($routePrefix . '.downloadPDFRbaBarjasLainnya') }}"
                                                 class="btn btn-sm btn-soft-danger shadow-none">
                                                 <i class="ri-printer-line"></i>
-                                                Print RBA Barjas Lainnya
+                                                RBA Barjas Lainnya
                                             </a>
                                         </div>
                                     @endif

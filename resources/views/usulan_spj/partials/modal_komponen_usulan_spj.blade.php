@@ -46,6 +46,9 @@
                                         style="min-width: 445px; margin:0; padding:30;">
                                         <thead class="table-light border-top">
                                             <tr>
+                                                @php
+                                                    $isPegawai = Route::is('usulan_spj_pegawai.*');
+                                                @endphp
                                                 <th>No</th>
                                                 <th>
                                                     <div class="form-check custom-checkbox ms-2">
@@ -56,7 +59,12 @@
                                                     </div>
                                                 </th>
                                                 <th>SUB Kegiatan</th>
-                                                <th>Nama Barang dan Spek</th>
+                                                @if ($isPegawai)
+                                                    <th>Nama Pegawai</th>
+                                                @else
+                                                    <th>Nama Barang dan Spek</th>
+                                                @endif
+
                                                 <th>Qty</th>
                                                 <th>Sisa Stok</th>
                                                 <th>Detail</th>
@@ -82,7 +90,12 @@
                                                     </td>
                                                     <td class="text-wrap"
                                                         style="white-space: normal; word-wrap: break-word;">
-                                                        <strong>{{ $rkbu->nama_barang }}</strong></br>
+                                                        @if ($isPegawai)
+                                                            <strong>{{ $rkbu->nama_pegawai }}</strong></br>
+                                                        @else
+                                                            <strong>{{ $rkbu->nama_barang }}</strong></br>
+                                                        @endif
+
                                                         <span class="f-12">
                                                             Spesifikasi: {{ $rkbu->spek_detail }}
                                                         </span>

@@ -248,6 +248,8 @@ if (!function_exists('terbilangUang')) {
                 '9d5b9cbe-e3f4-4cfc-bb3a-3e5b4fca35db',
             ];
 
+            $Pengadaan = ['Admin PPK', 'PPBJ', 'PPK'];
+
             $notifications = collect();
 
             if (!empty($idPptk)) {
@@ -273,6 +275,15 @@ if (!function_exists('terbilangUang')) {
                     ->get();
             } elseif ($namaLevelUser === 'Direktur') {
                 $notifications = UsulanBarang::where('status_permintaan_barang', 'Disetujui Kabag')
+                    ->where('usulan_barangs.tahun_anggaran', $tahunAnggaran)
+                    ->where('usulan_barangs.status_usulan_barang', 'Selesai')
+                    ->join('users', 'usulan_barangs.id_user', '=', 'users.id_user')
+                    ->select('usulan_barangs.*')
+                    ->distinct()
+                    ->get();
+            } elseif (in_array($namaLevelUser, $Pengadaan)) {
+                $notifications = UsulanBarang::where('status_permintaan_barang', 'Disetujui Direktur')
+                    ->whereNull('usulan_barangs.status_validasi_pengadaan') // hanya yang belum diproses pengadaan
                     ->where('usulan_barangs.tahun_anggaran', $tahunAnggaran)
                     ->where('usulan_barangs.status_usulan_barang', 'Selesai')
                     ->join('users', 'usulan_barangs.id_user', '=', 'users.id_user')

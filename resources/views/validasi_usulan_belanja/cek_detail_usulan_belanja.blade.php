@@ -103,13 +103,31 @@
                             <table id="example" class="table table-striped">
                                 <thead class="table-light border-top">
                                     <tr>
-                                        <th>No</th>
-                                        <th>Nama Barang</th>
-                                        <th>Status</th>
-                                        <th>Harga Satuan</th>
-                                        <th>Vol</th>
-                                        <th>PPN</th>
-                                        <th>Harga</th>
+                                        @php
+                                            $isPegawai = Route::is(
+                                                'validasi_usulan_pegawai_pptks.*',
+                                                'validasi_usulan_pegawai_rkas.*',
+                                                'validasi_usulan_pegawai_direkturs.*',
+                                            );
+                                        @endphp
+
+                                        @if ($isPegawai)
+                                            <th>No</th>
+                                            <th>Nama Pegawai</th>
+                                            <th>Status</th>
+                                            <th>Harga Remunerasi</th>
+                                            <th>Koefisien Bulan</th>
+                                            <th>PPN</th>
+                                            <th>Harga</th>
+                                        @else
+                                            <th>No</th>
+                                            <th>Nama Barang</th>
+                                            <th>Status</th>
+                                            <th>Harga Satuan</th>
+                                            <th>Vol</th>
+                                            <th>PPN</th>
+                                            <th>Harga</th>
+                                        @endif
                                     </tr>
                                 </thead>
 
@@ -118,18 +136,51 @@
                                         <tr>
                                             <td>{{ $key + 1 }}
                                             </td>
-                                            <td class="text-wrap">
-                                                <span
-                                                    class="text-primary f-16">#&nbsp;{{ $item->nama_barang }}</span><br />
-                                                <span class="fs-10">ID RKBU:
-                                                    {{ $item->id_rkbu }}</span><br />
-                                                <span class="fs-10 text-muted">Spesifikasi:
-                                                    {{ $item->spek_detail }}</span>
+                                            @if ($isPegawai)
+                                                <td class="text-wrap">
+                                                    <span
+                                                        class="text-primary f-16">#&nbsp;{{ $item->nama_pegawai }}</span><br />
+                                                    <span class="fs-10">ID RKBU:
+                                                        {{ $item->id_rkbu }}</span><br />
+                                                    <span class="fs-10 text-muted">Spesifikasi:
+                                                        {{ $item->spek_detail }}</span>
 
-                                            </td>
+                                                </td>
+                                            @else
+                                                <td class="text-wrap">
+                                                    <span
+                                                        class="text-primary f-16">#&nbsp;{{ $item->nama_barang }}</span><br />
+                                                    <span class="fs-10">ID RKBU:
+                                                        {{ $item->id_rkbu }}</span><br />
+                                                    <span class="fs-10 text-muted">Spesifikasi:
+                                                        {{ $item->spek_detail }}</span>
+
+                                                </td>
+                                            @endif
                                             <td class="text-wrap" style="white-space: normal; word-wrap: break-word;">
+                                                @php
+                                                    $status = $item->status_usulan_barang_detail ?? 'Menunggu Proses';
+                                                    switch ($status) {
+                                                        case 'Menunggu Proses':
+                                                            $badgeClass = 'badge-soft-warning';
+                                                            break;
+                                                        case 'Proses Pesanan':
+                                                            $badgeClass = 'badge-soft-success';
+                                                            break;
+                                                        case 'Ditolak':
+                                                            $badgeClass = 'badge-soft-danger';
+                                                            break;
+                                                        default:
+                                                            $badgeClass = 'badge-soft-secondary';
+                                                            break;
+                                                    }
+                                                @endphp
 
+                                                <span class="badge {{ $badgeClass }}">
+                                                    {{ $status }}
+                                                </span>
                                             </td>
+
                                             <td>Rp.
                                                 {{ number_format($item->harga_barang, 0, ',', '.') }}
                                             </td>
