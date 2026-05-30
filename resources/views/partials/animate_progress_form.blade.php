@@ -12,7 +12,7 @@
             Sistem Rencana Kebutuhan Barang Unit {{ session('tahun_anggaran') }}.
         </div>
         <div class="flex-shrink-0">
-            <a href="pages-pricing.html" class="text-reset text-decoration-underline"><b>Upgrade</b></a>
+            <a href="pages-pricing.html" class="text-reset text-decoration-underline"><b></b></a>
         </div>
     </div>
 </div> <!-- end card-body-->

@@ -1,133 +1,54 @@
   @extends('layouts-login.main')
   @section('container')
-      <!-- auth page content -->
-      <div class="auth-page-content">
-          <div class="container">
-              <div class="row">
-                  <div class="col-lg-12">
-                      <div class="text-center mt-sm-5 mb-4 text-white-50">
-                          <div>
-                              @foreach ($logo_login as $item)
-                                  <img src="{{ asset('storage/judul_header/' . basename($item->header7)) }}" alt=""
-                                      height="100" width="200" class="mb-3" />
-                              @endforeach
-
-                          </div>
+      <div class="d-flex flex-center flex-column flex-column-fluid p-10 pb-lg-20">
+          <a href="../../demo1/dist/index.html" class="mb-12">
+              <img alt="Logo" src="assets/media/logos/logo-1.svg" class="h-40px" />
+          </a>
+          <div class="w-lg-500px bg-body rounded shadow-sm p-10 p-lg-15 mx-auto">
+              <form class="form w-100" novalidate="novalidate" id="kt_sign_in_form" action="{{ route('login.process') }}"
+                  method="POST">
+                  @csrf
+                  <div class="text-center mb-10">
+                      <h3 class="text-dark mb-3">Halaman Login Sistem RKBU</h3>
+                      <div class="text-gray-400 fw-bold fx-4">Belum punya akun?
+                          <a href="../../demo1/dist/authentication/flows/basic/sign-up.html"
+                              class="link-primary fw-bolder">Create an Account</a>
                       </div>
                   </div>
-              </div>
-              <!-- end row -->
 
-              <div class="row justify-content-center">
-                  <div class="col-md-8 col-lg-6 col-xl-5">
-                      <div class="card mt-4">
-
-                          <div class="card-body p-4">
-                              <div class="text-center mt-2">
-                                  <h5 class="text-primary">Selamat Datang !</h5>
-                                  <p class="text-muted">Sign in to continue.</p>
-                              </div>
-                              @if (session('error'))
-                                  <div class="alert alert-danger alert-border-left alert-dismissible fade shadow show mb-xl-0"
-                                      role="alert">
-                                      <i class="ri-error-warning-line me-3 align-middle fs-16"></i><strong>Session Timeout
-                                          !!!</strong>
-                                      - {{ session('error') }}
-                                      <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                          aria-label="Close"></button>
-                                  </div>
-                              @endif
-
-                              @if ($errors->any())
-                                  <div class="alert alert-danger alert-dismissible alert-additional shadow fade show mb-xl-0"
-                                      role="alert">
-                                      <div class="alert-body">
-                                          <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                              aria-label="Close"></button>
-                                          <div class="d-flex">
-                                              <div class="flex-shrink-0 me-3">
-                                                  <i class="ri-alert-line fs-16 align-middle"></i>
-                                              </div>
-                                              <div class="flex-grow-1">
-                                                  <h5 class="alert-heading">Something is very wrong!</h5>
-                                                  <p class="mb-0">Login Anda Gagal !!!!</p>
-                                              </div>
-                                          </div>
-                                      </div>
-                                      <div class="alert-content">
-                                          @foreach ($errors->all() as $error)
-                                              <p class="mb-0">{{ $error }}</p>
-                                          @endforeach
-                                      </div>
-                                  </div>
-                              @endif
-
-
-                              <div class="p-2 mt-4">
-                                  <form class="mb-3" action="{{ route('login') }}" method="POST">
-                                      @csrf
-                                      <div class="mb-3">
-                                          <label for="username" class="form-label">Username</label>
-                                          <input type="text" class="form-control" name="username" id="username"
-                                              placeholder="Enter username">
-                                      </div>
-
-                                      <div class="mb-3">
-                                          <div class="float-end">
-                                              <a href="auth-pass-reset-basic.html" class="text-muted">Forgot
-                                                  password?</a>
-                                          </div>
-                                          <label class="form-label" for="password-input">Password</label>
-                                          <div class="position-relative auth-pass-inputgroup mb-3">
-                                              <input type="password" name="password" class="form-control pe-5"
-                                                  placeholder="Enter password" id="password-input">
-                                              <button
-                                                  class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted"
-                                                  type="button" id="password-addon"><i
-                                                      class="ri-eye-fill align-middle"></i></button>
-                                          </div>
-                                      </div>
-
-                                      <div class="mb-3">
-                                          <label for="username" class="form-label">Tahun Anggaran</label>
-                                          <select class="form-control choices-select" name="tahun_anggaran">
-                                              <option selected="" disabled="">Pilih Tahun Anggaran</option>
-                                              @foreach ($tahun_anggarans as $tahun_anggaran)
-                                                  <option value="{{ $tahun_anggaran->id }}">
-                                                      {{ $tahun_anggaran->nama_tahun_anggaran }}</option>
-                                              @endforeach
-                                          </select>
-                                      </div>
-
-                                      <div class="form-check">
-                                          <input class="form-check-input" type="checkbox" value=""
-                                              id="auth-remember-check">
-                                          <label class="form-check-label" for="auth-remember-check">Remember
-                                              me</label>
-                                      </div>
-
-                                      <div class="mt-4">
-                                          <button class="btn btn-info w-100" type="submit">Sign In</button>
-                                      </div>
-
-
-                                  </form>
-                              </div>
-                          </div>
-                          <!-- end card body -->
-                      </div>
-                      <!-- end card -->
-
-                      <div class="mt-4 text-center">
-                          <p class="mb-0">Don't have an account ? <a href="auth-signup-basic.html"
-                                  class="fw-semibold text-primary text-decoration-underline"> Signup </a> </p>
-                      </div>
-
+                  <div class="fv-row mb-10">
+                      <label class="form-label fs-6 fw-bolder text-dark">Username</label>
+                      <input class="form-control form-control-lg form-control-solid" type="text" name="username"
+                          autocomplete="off" />
                   </div>
-              </div>
-              <!-- end row -->
+                  <div class="fv-row mb-10">
+                      <div class="d-flex flex-stack mb-2">
+                          <label class="form-label fw-bolder text-dark fs-6 mb-0">Password</label>
+                      </div>
+                      <input class="form-control form-control-lg form-control-solid" type="password" name="password"
+                          autocomplete="off" />
+                  </div>
+                  <div class="fv-row mb-10">
+                      <div class="d-flex flex-stack mb-2">
+                          <label class="form-label fw-bolder text-dark fs-6 mb-0">Tahun Anggaran</label>
+                      </div>
+                      <select name="tahun_anggaran_id" aria-label="Select a Timezone" data-control="select2"
+                          data-placeholder="Pilih tahun anggaran" class="form-select form-select-solid form-select-lg">
+                          <option value="">Select a Tahun Anggaran</option>
+                          @foreach ($tahun as $tahun_anggaran)
+                              <option value="{{ $tahun_anggaran->id }}">
+                                  {{ $tahun_anggaran->nama_tahun_anggaran }}</option>
+                          @endforeach
+                      </select>
+                  </div>
+                  <div class="text-center">
+                      <button type="submit" class="btn btn-lg btn-primary w-100 mb-5">
+                          <span class="indicator-label">Sign In</span>
+                          <span class="indicator-progress">Please wait...
+                              <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                      </button>
+                  </div>
+              </form>
           </div>
-          <!-- end container -->
       </div>
-      <!-- end auth page content -->
   @endsection

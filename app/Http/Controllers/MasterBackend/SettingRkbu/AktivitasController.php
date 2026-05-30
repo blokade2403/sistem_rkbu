@@ -16,12 +16,18 @@ class AktivitasController extends Controller
      */
     public function index()
     {
+        $programs = Program::all();
+        $sub_kegiatans = SubKegiatan::all();
         $aktivitas = Aktivitas::with(['program', 'sub_kegiatan'])->get();
-        return view('master_backend.setting_rkbu.aktivitas.index', compact('aktivitas'), [
-            'title'         => 'Halaman Aktivitas',
-            'title2'        => 'Aktivitas',
-            'routePrefix'   => 'aktivitas'
-        ]);
+        return view(
+            'master_backend.setting_rkbu.aktivitas.index',
+            compact('aktivitas', 'programs', 'sub_kegiatans'),
+            [
+                'title' => 'Halaman Aktivitas',
+                'title2' => 'Aktivitas',
+                'routePrefix' => 'aktivitas',
+            ],
+        );
     }
 
     /**
@@ -29,14 +35,17 @@ class AktivitasController extends Controller
      */
     public function create()
     {
-
-        $programs       = Program::all();
-        $sub_kegiatans  = SubKegiatan::all();
-        return view('master_backend.setting_rkbu.aktivitas.create', compact('programs', 'sub_kegiatans'), [
-            'title'         => 'Halaman Aktivitas',
-            'title2'        => 'Aktivitas',
-            'routePrefix'   => 'aktivitas'
-        ]);
+        $programs = Program::all();
+        $sub_kegiatans = SubKegiatan::all();
+        return view(
+            'master_backend.setting_rkbu.aktivitas.create',
+            compact('programs', 'sub_kegiatans'),
+            [
+                'title' => 'Halaman Aktivitas',
+                'title2' => 'Aktivitas',
+                'routePrefix' => 'aktivitas',
+            ],
+        );
     }
 
     /**
@@ -48,17 +57,17 @@ class AktivitasController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'id_program'        => 'required',
-                'id_sub_kegiatan'   => 'required',
-                'nama_aktivitas'    => 'required',
-                'kode_aktivitas'    => 'required',
+                'id_program' => 'required',
+                'id_sub_kegiatan' => 'required',
+                'nama_aktivitas' => 'required',
+                'kode_aktivitas' => 'required',
             ],
             [
-                'id_program.required'       => 'Id Fungsional harus diisi.',
-                'id_sub_kegiatan.required'  => 'Id Pejabat harus diisi.',
-                'nama_aktivitas.required'   => 'Nama Aktivitas harus diisi.',
-                'kode_aktivitas.required'   => 'Kode Aktivitas harus diisi.',
-            ]
+                'id_program.required' => 'Id Fungsional harus diisi.',
+                'id_sub_kegiatan.required' => 'Id Pejabat harus diisi.',
+                'nama_aktivitas.required' => 'Nama Aktivitas harus diisi.',
+                'kode_aktivitas.required' => 'Kode Aktivitas harus diisi.',
+            ],
         );
 
         // Jika validasi gagal, kembalikan ke halaman sebelumnya dengan pesan error
@@ -69,26 +78,30 @@ class AktivitasController extends Controller
             // Menyusun pesan error menjadi string
             $errorMessages = implode(' ', $errors->all());
 
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->withInput()
-                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+                ->with(
+                    'error',
+                    'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages,
+                );
         }
-
 
         // Simpan data ke dalam database
         $aktivitas = new Aktivitas([
-            'id_program'       => $request->id_program,
-            'id_sub_kegiatan'  => $request->id_sub_kegiatan,
-            'nama_aktivitas'   => $request->nama_aktivitas,
-            'kode_aktivitas'   => $request->kode_aktivitas,
+            'id_program' => $request->id_program,
+            'id_sub_kegiatan' => $request->id_sub_kegiatan,
+            'nama_aktivitas' => $request->nama_aktivitas,
+            'kode_aktivitas' => $request->kode_aktivitas,
         ]);
 
         $aktivitas->save();
 
         // Redirect ke halaman yang diinginkan dengan pesan sukses
-        return redirect()->route('aktivitas.index')->with('success', 'Aktivitas berhasil ditambahkan.');
+        return redirect()
+            ->route('aktivitas.index')
+            ->with('success', 'Aktivitas berhasil ditambahkan.');
     }
-
 
     /**
      * Display the specified resource.
@@ -103,45 +116,53 @@ class AktivitasController extends Controller
      */
     public function edit($id)
     {
-        $aktivitas              = Aktivitas::with('sub_kegiatan')->findOrFail($id);
-        $programs               = Program::all(); // Mengambil semua data Jabatan
-        $sub_kegiatans          = SubKegiatan::with('kegiatan')->get(); // Mengambil semua data Jabatan
-        return view('master_backend.setting_rkbu.aktivitas.edit', compact('aktivitas', 'programs', 'sub_kegiatans'), [
-            'title'         => 'Halaman Aktivitas',
-            'title2'        => 'Aktivitas',
-            'routePrefix'   => 'aktivitas'
-        ]);
+        $aktivitas = Aktivitas::with('sub_kegiatans', 'programs')->findOrFail($id);
+        $programs = Program::all(); // Mengambil semua data Jabatan
+        $sub_kegiatans = SubKegiatan::with('kegiatan')->get(); // Mengambil semua data Jabatan
+        return view(
+            'master_backend.setting_rkbu.aktivitas.edit',
+            compact('aktivitas', 'programs', 'sub_kegiatans'),
+            [
+                'title' => 'Halaman Aktivitas',
+                'title2' => 'Aktivitas',
+                'routePrefix' => 'aktivitas',
+            ],
+        );
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Aktivitas $aktivitas)
+    public function update(Request $request, $id)
     {
-        // Validasi data input
+        $aktivitas = Aktivitas::findOrFail($id);
         $validator = Validator::make(
             $request->all(),
             [
-                'id_program'            => 'required',
-                'id_sub_kegiatan'       => 'required',
-                'nama_aktivitas'        => 'required',
-                'kode_aktivitas'        => 'required',
+                'id_program' => 'required',
+                'id_sub_kegiatan' => 'required',
+                'nama_aktivitas' => 'required',
+                'kode_aktivitas' => 'required',
             ],
             [
-                'id_program.required'               => 'Id Program harus diisi.',
-                'id_sub_kegiatan.required'          => 'Id Sub Kegiatan harus diisi.',
-                'nama_aktivitas.required'           => 'Nama Aktivitas harus diisi.',
-                'kode_aktivitas.required'           => 'Kode Aktivitas harus diisi.',
-            ]
+                'id_program.required' => 'Id Program harus diisi.',
+                'id_sub_kegiatan.required' => 'Id Sub Kegiatan harus diisi.',
+                'nama_aktivitas.required' => 'Nama Aktivitas harus diisi.',
+                'kode_aktivitas.required' => 'Kode Aktivitas harus diisi.',
+            ],
         );
 
         if ($validator->fails()) {
             $errors = $validator->errors();
             $errorMessages = implode(' ', $errors->all());
 
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->withInput()
-                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+                ->with(
+                    'error',
+                    'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages,
+                );
         }
 
         $aktivitas->update($request->all());
@@ -155,7 +176,6 @@ class AktivitasController extends Controller
     {
         $aktivitas->delete();
 
-        return redirect()->route('aktivitas.index')
-            ->with('success', 'KSP deleted successfully.');
+        return redirect()->route('aktivitas.index')->with('success', 'KSP deleted successfully.');
     }
 }

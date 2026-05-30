@@ -16,50 +16,47 @@ class TahunAnggaranController extends Controller
     public function index()
     {
         $tahun_anggarans = TahunAnggaran::all();
-        return view('master_backend.setting_input.tahun_anggaran.index', compact('tahun_anggarans'), [
-            'title'       => 'Halaman Tahun Anggaran',
-            'title2'      => 'Tahun Anggaran',
-            'routePrefix' => 'tahun_anggarans'
-        ]);
+        $fase = Fase::all();
+        return view(
+            'master_backend.setting_input.tahun_anggaran.index',
+            compact('tahun_anggarans', 'fase'),
+            [
+                'title' => 'Halaman Tahun Anggaran',
+                'title2' => 'Tahun Anggaran',
+                'routePrefix' => 'tahun_anggarans',
+            ],
+        );
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        $fase   = Fase::all();
+        $fase = Fase::all();
         return view('master_backend.setting_input.tahun_anggaran.create', [
-            'title'         => 'Halaman Tahun Anggaran',
-            'title2'        => 'Tahun Anggaran',
-            'routePrefix'   => 'tahun_anggarans',
-            'fase'          => $fase
+            'title' => 'Halaman Tahun Anggaran',
+            'title2' => 'Tahun Anggaran',
+            'routePrefix' => 'tahun_anggarans',
+            'fase' => $fase,
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request, TahunAnggaran $TahunAnggaran)
     {
         $request->validate([
-            'nama_tahun_anggaran'  => 'required',
-            'status'               => 'required',
-            'fase_tahun'           => 'required',
+            'nama_tahun_anggaran' => 'required',
+            'status' => 'required',
+            'fase_id' => 'required',
         ]);
 
         $TahunAnggaran = new TahunAnggaran([
-            'nama_tahun_anggaran'       => $request->nama_tahun_anggaran,
-            'status'                    => $request->status,
-            'fase_tahun'                => $request->fase_tahun,
-
+            'nama_tahun_anggaran' => $request->nama_tahun_anggaran,
+            'status' => $request->status,
+            'fase_id' => $request->fase_id,
         ]);
-
-        // dd($tahunAnggaran);
 
         $TahunAnggaran->save();
 
-        return redirect()->route('tahun_anggarans.index')
+        return redirect()
+            ->route('tahun_anggarans.index')
             ->with('success', 'Tahun Anggaran updated successfully.');
     }
 
@@ -76,12 +73,12 @@ class TahunAnggaranController extends Controller
      */
     public function edit(TahunAnggaran $TahunAnggaran)
     {
-        $fase   = Fase::all();
+        $fase = Fase::all();
         return view('master_backend.setting_input.tahun_anggaran.edit', compact('TahunAnggaran'), [
-            'title'         => 'Halaman Tahun Anggaran',
-            'title2'        => 'Tahun Anggaran',
-            'routePrefix'   => 'tahun_anggarans',
-            'fase'          => $fase,
+            'title' => 'Halaman Tahun Anggaran',
+            'title2' => 'Tahun Anggaran',
+            'routePrefix' => 'tahun_anggarans',
+            'fase' => $fase,
         ]);
     }
 
@@ -93,25 +90,34 @@ class TahunAnggaranController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'nama_tahun_anggaran'  => 'required',
-                'status'               => 'required',
-                'fase_tahun'           => 'required',
+                'nama_tahun_anggaran' => 'required',
+                'status' => 'required',
+                'fase_id' => 'required',
             ],
             [
-                'nama_tahun_anggaran'  => 'Nama Tahun Harus diisi !!',
-                'status'               => 'Status Harus dipilih !!',
-                'fase_tahun'           => 'Fase Tahun Harus dipilih !!',
-            ]
+                'nama_tahun_anggaran' => 'Nama Tahun Harus diisi !!',
+                'status' => 'Status Harus dipilih !!',
+                'fase_id' => 'Fase Tahun Harus dipilih !!',
+            ],
         );
 
         if ($validator->fails()) {
-            $errors             = $validator->error();
-            $errorMessages      = implode(' ', $errors->all());
-            return redirect()->back()->withInput()->with('error', 'Periksa Kembali Update Data Anda !!' . $errorMessages);
+            $errors = $validator->error();
+            $errorMessages = implode(' ', $errors->all());
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Periksa Kembali Update Data Anda !!' . $errorMessages);
         }
 
-        $TahunAnggaran->update($request->all());
-        return redirect()->route('tahun_anggarans.index')->with('success', 'Data Berhasil di Update');
+        $TahunAnggaran->update([
+            'nama_tahun_anggaran' => $request->nama_tahun_anggaran,
+            'status' => $request->status,
+            'fase_id' => $request->fase_id,
+        ]);
+        return redirect()
+            ->route('tahun_anggarans.index')
+            ->with('success', 'Data Berhasil di Update');
     }
 
     /**
@@ -121,7 +127,8 @@ class TahunAnggaranController extends Controller
     {
         $TahunAnggaran->delete();
 
-        return redirect()->route('tahun_anggarans.index')
+        return redirect()
+            ->route('tahun_anggarans.index')
             ->with('success', 'Tahun Anggaran deleted successfully.');
     }
 }

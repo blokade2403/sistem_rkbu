@@ -39,26 +39,61 @@
                                     </div>
                                 </div>
                                 <!--end col-->
+                                @if (session())
+                                @endif
+                                <div class="col-auto">
+                                    <button class="btn btn-soft-success shadow-none" data-bs-toggle="modal"
+                                        data-bs-target="#createModal"><i
+                                            class="ri-add-circle-line align-middle me-1"></i>
+                                        Add Product</button>
+                                </div>
                                 <div class="col-auto">
                                     <a href="{{ route($routePrefix . '.create') }}"
                                         class="btn btn-soft-success shadow-none"><i
                                             class="ri-add-circle-line align-middle me-1"></i>
                                         Tambah Data</a>
                                 </div>
-                                <!--end col-->
-                                <div class="col-auto">
-                                    <a href=""
-                                        class="btn btn-soft-info btn-icon waves-effect waves-light layout-rightside-btn shadow-none"><i
-                                            class="ri-printer-line"></i></a>
-                                </div>
-                                <!--end col-->
-                            </div>
-                            <!--end row-->
                         </form>
+
+                        <!--end col-->
+                        @if (request()->routeIs('users.*'))
+                            <div class="col-auto">
+                                <form action="{{ route('update.status', '9cff8aee-6b6d-49e8-a1d4-cb44f96377d8') }}"
+                                    method="POST" class="form-status">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="hidden" name="status_edit" value="aktif">
+
+                                    <button type="submit" class="btn btn-soft-success btn-icon" data-status="AKTIF"
+                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                        data-bs-custom-class="tooltip-primary" data-bs-original-title="Aktif Edit User">
+                                        <i class="ri-user-follow-line"></i>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div class="col-auto">
+                                <form action="{{ route('update.status', '9cff8aee-6b6d-49e8-a1d4-cb44f96377d8') }}"
+                                    method="POST" class="form-status">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="hidden" name="status_edit" value="tidak aktif">
+
+                                    <button type="submit" class="btn btn-soft-danger btn-icon" data-status="NON AKTIF"
+                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                        data-bs-custom-class="tooltip-primary"
+                                        data-bs-original-title="Non Aktif Edit User">
+                                        <i class="ri-user-unfollow-fill"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
                     </div>
-                </div><!-- end card header -->
-            </div>
-            <!--end col-->
+                    <!--end row-->
+                </div>
+            </div><!-- end card header -->
         </div>
+        <!--end col-->
     </div>
+</div>
 </div>

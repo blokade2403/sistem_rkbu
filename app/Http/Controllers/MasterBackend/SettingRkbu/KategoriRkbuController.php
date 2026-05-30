@@ -16,12 +16,18 @@ class KategoriRkbuController extends Controller
      */
     public function index()
     {
+        $jenis_kategori_rkbus = JenisKategoriRkbu::all();
+        $obyek_belanjas = ObyekBelanja::all();
         $kategori_rkbus = KategoriRkbu::with(['obyek_belanja', 'jenis_kategori_rkbu'])->get();
-        return view('master_backend.setting_rkbu.kategori_rkbu.index', compact('kategori_rkbus'), [
-            'title'         => 'Halaman Kategori RKBU',
-            'title2'        => 'Kategori RKBU',
-            'routePrefix'   => 'kategori_rkbus'
-        ]);
+        return view(
+            'master_backend.setting_rkbu.kategori_rkbu.index',
+            compact('kategori_rkbus', 'jenis_kategori_rkbus', 'obyek_belanjas'),
+            [
+                'title' => 'Halaman Kategori RKBU',
+                'title2' => 'Kategori RKBU',
+                'routePrefix' => 'kategori_rkbus',
+            ],
+        );
     }
 
     /**
@@ -31,11 +37,15 @@ class KategoriRkbuController extends Controller
     {
         $jenis_kategori_rkbus = JenisKategoriRkbu::all();
         $obyek_belanjas = ObyekBelanja::all();
-        return view('master_backend.setting_rkbu.kategori_rkbu.create', compact('jenis_kategori_rkbus', 'obyek_belanjas'), [
-            'title'         => 'Halaman Kategori RKBU',
-            'title2'        => 'Kategori RKBU',
-            'routePrefix'   => 'kategori_rkbus'
-        ]);
+        return view(
+            'master_backend.setting_rkbu.kategori_rkbu.create',
+            compact('jenis_kategori_rkbus', 'obyek_belanjas'),
+            [
+                'title' => 'Halaman Kategori RKBU',
+                'title2' => 'Kategori RKBU',
+                'routePrefix' => 'kategori_rkbus',
+            ],
+        );
     }
 
     /**
@@ -47,18 +57,17 @@ class KategoriRkbuController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'id_jenis_kategori_rkbu'    => 'required',
-                'id_obyek_belanja'          => 'required',
-                'kode_kategori_rkbu'        => 'required',
-                'nama_kategori_rkbu'        => 'required',
+                'id_jenis_kategori_rkbu' => 'required',
+                'id_obyek_belanja' => 'required',
+                'kode_kategori_rkbu' => 'required',
+                'nama_kategori_rkbu' => 'required',
             ],
             [
-                'id_jenis_kategori_rkbu.required'       => 'Id Jenis Kategori RKBU harus diisi.',
-                'id_obyek_belanja.required'             => 'Id Obyek Belanja harus diisi.',
-                'kode_kategori_rkbu.required'           => 'Nama kategori_rkbu harus diisi.',
-                'nama_kategori_rkbu.required'           => 'NIP kategori_rkbu harus diisi.',
-
-            ]
+                'id_jenis_kategori_rkbu.required' => 'Id Jenis Kategori RKBU harus diisi.',
+                'id_obyek_belanja.required' => 'Id Obyek Belanja harus diisi.',
+                'kode_kategori_rkbu.required' => 'Nama kategori_rkbu harus diisi.',
+                'nama_kategori_rkbu.required' => 'NIP kategori_rkbu harus diisi.',
+            ],
         );
 
         // if ($validator->fails()) {
@@ -74,17 +83,21 @@ class KategoriRkbuController extends Controller
             // Menyusun pesan error menjadi string
             $errorMessages = implode(' ', $errors->all());
 
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->withInput()
-                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+                ->with(
+                    'error',
+                    'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages,
+                );
         }
 
         // Simpan data ke dalam database
         $kategori_rkbu = new KategoriRkbu([
-            'id_jenis_kategori_rkbu'    => $request->id_jenis_kategori_rkbu,
-            'id_obyek_belanja'          => $request->id_obyek_belanja,
-            'kode_kategori_rkbu'        => $request->kode_kategori_rkbu,
-            'nama_kategori_rkbu'        => $request->nama_kategori_rkbu,
+            'id_jenis_kategori_rkbu' => $request->id_jenis_kategori_rkbu,
+            'id_obyek_belanja' => $request->id_obyek_belanja,
+            'kode_kategori_rkbu' => $request->kode_kategori_rkbu,
+            'nama_kategori_rkbu' => $request->nama_kategori_rkbu,
         ]);
 
         // dd($kategori_rkbu);
@@ -92,7 +105,9 @@ class KategoriRkbuController extends Controller
         $kategori_rkbu->save();
 
         // Redirect ke halaman yang diinginkan dengan pesan sukses
-        return redirect()->route('kategori_rkbus.index')->with('success', 'kategori_rkbu berhasil ditambahkan.');
+        return redirect()
+            ->route('kategori_rkbus.index')
+            ->with('success', 'kategori_rkbu berhasil ditambahkan.');
     }
 
     /**
@@ -108,14 +123,18 @@ class KategoriRkbuController extends Controller
      */
     public function edit($id)
     {
-        $kategori_rkbus             = KategoriRkbu::with('obyek_belanja')->findOrFail($id);
-        $jenis_kategori_rkbus       = JenisKategoriRkbu::all();
-        $obyek_belanjas             = ObyekBelanja::all();
-        return view('master_backend.setting_rkbu.kategori_rkbu.edit', compact('kategori_rkbus', 'jenis_kategori_rkbus', 'obyek_belanjas'), [
-            'title'         => 'Halaman Kategori RKBU',
-            'title2'        => 'Kategori RKBU',
-            'routePrefix'   => 'kategori_rkbus'
-        ]);
+        $kategori_rkbus = KategoriRkbu::with('obyek_belanja')->findOrFail($id);
+        $jenis_kategori_rkbus = JenisKategoriRkbu::all();
+        $obyek_belanjas = ObyekBelanja::all();
+        return view(
+            'master_backend.setting_rkbu.kategori_rkbu.edit',
+            compact('kategori_rkbus', 'jenis_kategori_rkbus', 'obyek_belanjas'),
+            [
+                'title' => 'Halaman Kategori RKBU',
+                'title2' => 'Kategori RKBU',
+                'routePrefix' => 'kategori_rkbus',
+            ],
+        );
     }
 
     /**
@@ -127,17 +146,17 @@ class KategoriRkbuController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'id_jenis_kategori_rkbu'    => 'required',
-                'id_obyek_belanja'          => 'required',
-                'kode_kategori_rkbu'        => 'required',
-                'nama_kategori_rkbu'        => 'required',
+                'id_jenis_kategori_rkbu' => 'required',
+                'id_obyek_belanja' => 'required',
+                'kode_kategori_rkbu' => 'required',
+                'nama_kategori_rkbu' => 'required',
             ],
             [
-                'id_jenis_kategori_rkbu.required'       => 'Id Jenis Kategori RKBU harus diisi.',
-                'id_obyek_belanja.required'             => 'Id Obyek Belanja harus diisi.',
-                'kode_kategori_rkbu.required'           => 'Nama kategori_rkbu harus diisi.',
-                'nama_kategori_rkbu.required'           => 'NIP kategori_rkbu harus diisi.',
-            ]
+                'id_jenis_kategori_rkbu.required' => 'Id Jenis Kategori RKBU harus diisi.',
+                'id_obyek_belanja.required' => 'Id Obyek Belanja harus diisi.',
+                'kode_kategori_rkbu.required' => 'Nama kategori_rkbu harus diisi.',
+                'nama_kategori_rkbu.required' => 'NIP kategori_rkbu harus diisi.',
+            ],
         );
 
         // Jika validasi gagal, kembalikan ke halaman sebelumnya dengan pesan error
@@ -148,15 +167,21 @@ class KategoriRkbuController extends Controller
             // Menyusun pesan error menjadi string
             $errorMessages = implode(' ', $errors->all());
 
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->withInput()
-                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+                ->with(
+                    'error',
+                    'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages,
+                );
         }
 
         // dd($request);
 
         $kategoriRkbu->update($request->all());
-        return redirect()->route('kategori_rkbus.index')->with('success', 'kategori_rkbu Delete Success');
+        return redirect()
+            ->route('kategori_rkbus.index')
+            ->with('success', 'kategori_rkbu Delete Success');
     }
 
     /**
@@ -166,7 +191,8 @@ class KategoriRkbuController extends Controller
     {
         $kategoriRkbu->delete();
 
-        return redirect()->route('kategori_rkbus.index')
+        return redirect()
+            ->route('kategori_rkbus.index')
             ->with('success', 'kategori_rkbu deleted successfully.');
     }
 }

@@ -11,21 +11,13 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 class TahunAnggaran extends Model
 {
     use HasFactory, HasUuids;
-
-    public function pptks()
-    {
-        return $this->hasMany(Pptk::class, 'id');
-    }
+    protected $table = 'tahun_anggarans';
+    protected $fillable = ['id', 'nama_tahun_anggaran', 'fase_id', 'status'];
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     public function fase()
     {
-        return $this->belongsTo(Fase::class, 'id_fase');
+        return $this->belongsTo(Fase::class, 'fase_id', 'id');
     }
-
-    protected $primaryKey = 'id';
-    protected $fillable = [
-        'nama_tahun_anggaran',
-        'status',
-        'fase_tahun',
-    ];
 }

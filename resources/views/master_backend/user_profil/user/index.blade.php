@@ -1,98 +1,214 @@
 @extends('layouts.main')
 @section('content')
-    @include('partials.add_buttons_backend', ['routePrefix' => $routePrefix])
-    <div class="row">
+    <div class="card mb-5 mb-xxl-12">
+        <div class="card-body pt-9 pb-0">
+            @include('components.partials.table.headermenu')
+            @include('master_backend.user_profil.user.modal_add')
+        </div>
+    </div>
+    <div class="row gy-5 g-xl-8">
         <div class="col-xl-12">
-            <div class="card">
-                @include('partials.animate_progress')
-                <div class="card-header align-items-center d-flex">
-                    <h4 class="card-title mb-0 flex-grow-1">{{ $title }}</h4>
-                </div><!-- end card header -->
-                <div class="card-block">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table id="responsive-reorder"
-                                class="table table-hover table-centered align-middle table-nowrap mb-0">
-                                <thead class="text-muted table-light">
+            <div class="card card-xl-stretch mb-5 mb-xl-8">
+                <div class="card-header border-0 pt-5">
+                    <h3 class="card-title align-items-start flex-column">
+                        <span class="card-label fw-bolder fs-3 mb-1">Members Statistics</span>
+                    </h3>
+                </div>
+                <div class="card-body">
+                    @include('components.partials.table.showentrysearch')
+                    <div class="table-responsive">
+                        <table id="kt_customers_table"
+                            class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
+                            <thead>
+                                <tr class="fw-bolder text-muted">
+                                    <th class="w-25px">
+                                        <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                            <input class="form-check-input" type="checkbox" value="1"
+                                                data-kt-check="true" data-kt-check-target=".widget-9-check" />
+                                        </div>
+                                    </th>
+                                    <th class="min-w-20px">No</th>
+                                    <th class="min-w-150px">NIP</th>
+                                    <th class="min-w-120px">Unit</th>
+                                    <th class="min-w-120px">Role</th>
+                                    <th class="min-w-100px text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php
+                                    $no = 1;
+                                @endphp
+                                @foreach ($users as $item)
                                     <tr>
-                                        <th>No</th>
-                                        <th>Nama User</th>
-                                        <th>KSP</th>
-                                        <th>Atasan</th>
-                                        <th>Fase User</th>
-                                        <th>Action</th>
-                                        <th>Status User</th>
-                                        <th>Status Edit</th>
-                                        <th>Pendukung PPK</th>
-                                        <th>Tagging PPTK</th>
-                                        <th>Create At</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php $no = 1; @endphp
-                                    @foreach ($users as $item)
-                                        <tr>
-                                            <td>{{ $no++ }}</td>
-                                            <td>
-                                                <ul class="list-unstyled product-desc-list">
-                                                    <li class="py-0">
-                                                        <h6 class="mb-0"><span
-                                                                class="fa-sm text-primary">{{ $item->unit->nama_unit }}</span></strong>
-                                                        </h6>
-                                                    </li>
-                                                    <small class="text-muted">
-                                                        <span class="text-muted">Status User :
-                                                            {!! $item->status_user === 'aktif'
-                                                                ? '<span class="badge bg-success">Aktif</span>'
-                                                                : '<span class="badge bg-danger">Non Aktif</span>' !!}</span>
-                                                    </small>
-                                                </ul>
-                                                <div class="d-flex align-items-center">
-                                                    <img src="{{ asset('assets/images/products/img-1.png') }}"
-                                                        class="me-3 rounded-circle avatar-sm p-2 bg-light" alt="user-pic">
-                                                    <div class="flex-1">
-                                                        <h6 class="mt-0 mb-1 fs-14">
-                                                            <a href="apps-ecommerce-product-details.html"
-                                                                class="text-reset">{{ $item->nama_lengkap }}
-                                                                ({{ $item->levelUser->nama_level_user }})
-                                                            </a>
-                                                        </h6>
-                                                        <p class="mb-0 fs-12 text-muted">
-                                                            Username: <span>{{ $item->username }}</span></br>
-                                                            <small>{{ $item->id_user }}</small>
-                                                        </p>
+                                        <td>
+                                            <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                                <input class="form-check-input widget-9-check" type="checkbox"
+                                                    value="1" />
+                                            </div>
+                                        </td>
+                                        <td>{{ $no++ }}</td>
+                                        <td>
+                                            <div class="card mb-2 mb-xxl-6">
+                                                <div class="card-body pb-0">
+                                                    <div class="d-flex align-items-center mb-3">
+                                                        <div class="d-flex align-items-center flex-grow-1">
+                                                            <div class="symbol symbol-45px me-5">
+                                                                <img src="{{ asset('assets/media/svg/brand-logos/tvit.svg') }}"
+                                                                    alt="" />
+                                                            </div>
+                                                            <div class="d-flex flex-column">
+                                                                <a href="#"
+                                                                    class="text-gray-900 text-hover-primary fs-6 fw-bolder">{{ $item->nama }}</a>
+                                                                <span class="text-gray-400 fw-bold">NIP:
+                                                                    {{ $item->nip }}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-1">
+                                                        <div class="text-gray-800 fs-8 mb-2">ID : {{ $item->id }} </div>
+                                                    </div>
+                                                    <div class="d-flex align-items-center mb-5">
+                                                        <a href="#"
+                                                            class="text-gray-800 fw-bolder text-hover-primary px-4 py-2 me-4">
+                                                            <span class="svg-icon svg-icon-3">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                                                    height="24" viewBox="0 0 24 24" fill="none">
+                                                                    <path opacity="0.3"
+                                                                        d="M20 3H4C2.89543 3 2 3.89543 2 5V16C2 17.1046 2.89543 18 4 18H4.5C5.05228 18 5.5 18.4477 5.5 19V21.5052C5.5 22.1441 6.21212 22.5253 6.74376 22.1708L11.4885 19.0077C12.4741 18.3506 13.6321 18 14.8167 18H20C21.1046 18 22 17.1046 22 16V5C22 3.89543 21.1046 3 20 3Z"
+                                                                        fill="black" />
+                                                                    <rect x="6" y="12" width="7" height="2"
+                                                                        rx="1" fill="black" />
+                                                                    <rect x="6" y="7" width="12" height="2"
+                                                                        rx="1" fill="black" />
+                                                                </svg>
+                                                            </span>
+                                                            <!--end::Svg Icon-->Status User: @if ($item->status_user == 'aktif')
+                                                                <span class="badge badge-light-success">Active</span>
+                                                            @else
+                                                                <span class="badge badge-light-danger">Inactive</span>
+                                                            @endif
+                                                        </a>
+                                                        <a href="#"
+                                                            class="text-gray-800 fw-bolder text-hover-primary px-4 py-2 me-4">
+                                                            <span class="svg-icon svg-icon-3">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                                                    height="24" viewBox="0 0 24 24" fill="none">
+                                                                    <path opacity="0.3"
+                                                                        d="M20 3H4C2.89543 3 2 3.89543 2 5V16C2 17.1046 2.89543 18 4 18H4.5C5.05228 18 5.5 18.4477 5.5 19V21.5052C5.5 22.1441 6.21212 22.5253 6.74376 22.1708L11.4885 19.0077C12.4741 18.3506 13.6321 18 14.8167 18H20C21.1046 18 22 17.1046 22 16V5C22 3.89543 21.1046 3 20 3Z"
+                                                                        fill="black" />
+                                                                    <rect x="6" y="12" width="7" height="2"
+                                                                        rx="1" fill="black" />
+                                                                    <rect x="6" y="7" width="12" height="2"
+                                                                        rx="1" fill="black" />
+                                                                </svg>
+                                                            </span>
+                                                            <!--end::Svg Icon-->Edit User: @if ($item->status_edit == 'aktif')
+                                                                <span class="badge badge-light-success">Active</span>
+                                                            @else
+                                                                <span class="badge badge-light-danger">Inactive</span>
+                                                            @endif
+                                                        </a>
+
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td>{{ $item->ksp->nama_ksp ?? '-' }}</td>
-                                            <td>{{ $item->pejabat->nama_pejabat ?? '-' }}</td>
-                                            <td>{{ $item->fase->nama_fase ?? '-' }}</td>
-                                            <td>
-                                                <x-partials.action-buttons :edit-url="route('users.edit', $item->id_user)" :delete-url="route('users.destroy', $item->id_user)" />
-                                            </td>
-                                            <td>
-                                                @if ($item->status_user == 'aktif')
-                                                    <span
-                                                        class="badge badge-soft-success badge-border">{{ $item->status_user }}</span>
-                                                @else
-                                                    <span
-                                                        class="badge badge-soft-danger badge-border">{{ $item->status_user }}</span>
-                                                @endif
-                                            </td>
-                                            <td>{{ $item->status_edit }}</td>
-                                            <td>{{ $item->nama_pendukung_ppk ?: 'Tidak di Tagging' }}</td>
-                                            <td>{{ $item->pptks->nama_pptk ?? 'Tidak di Tagging' }}</td>
-                                            <td>{{ $item->created_at }}</td>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex">
+                                                <div class="symbol symbol-35px me-3">
+                                                    <img src="{{ asset('assets/media/avatars/150-8.jpg') }}"
+                                                        alt="" />
+                                                </div>
+                                                <div class="d-flex flex-column">
+                                                    <span class="text-gray-800 text-hover-primary me-2">Username :
+                                                        {{ $item->username }}</span>
+                                                    <span class="text-gray-800 text-hover-primary me-2">Email :
+                                                        {{ $item->email }}</span>
+                                                    <span class="text-gray-800 fs-7 fw-normal pt-1">Jabatan:
+                                                        #&nbsp;{{ $item->position->nama_jabatan ?? 'N/A' }}
+                                                    </span>
+                                                    <span class="text-gray-800 fs-7 fw-normal pt-1">Unit:
+                                                        #&nbsp;{{ $item->unit->nama_unit ?? 'N/A' }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @foreach ($item->roles as $role)
+                                                <span class="badge bg-info">{{ $role->nama_role }}</span>
+                                            @endforeach
+                                        </td>
+                                        <td>
+                                            <div class="d-flex justify-content-end flex-shrink-0">
+                                                <a href="#"
+                                                    class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1"
+                                                    data-bs-toggle="modal" data-bs-target="#kt_modal_create_account">
+                                                    <span class="svg-icon svg-icon-3">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                                            height="24" viewBox="0 0 24 24" fill="none">
+                                                            <path
+                                                                d="M17.5 11H6.5C4 11 2 9 2 6.5C2 4 4 2 6.5 2H17.5C20 2 22 4 22 6.5C22 9 20 11 17.5 11ZM15 6.5C15 7.9 16.1 9 17.5 9C18.9 9 20 7.9 20 6.5C20 5.1 18.9 4 17.5 4C16.1 4 15 5.1 15 6.5Z"
+                                                                fill="black" />
+                                                            <path opacity="0.3"
+                                                                d="M17.5 22H6.5C4 22 2 20 2 17.5C2 15 4 13 6.5 13H17.5C20 13 22 15 22 17.5C22 20 20 22 17.5 22ZM4 17.5C4 18.9 5.1 20 6.5 20C7.9 20 9 18.9 9 17.5C9 16.1 7.9 15 6.5 15C5.1 15 4 16.1 4 17.5Z"
+                                                                fill="black" />
+                                                        </svg>
+                                                    </span>
+                                                </a>
+                                                <a href="#"
+                                                    class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#kt_modal_edit_user_{{ $item->id }}">
+                                                    <span class="svg-icon svg-icon-3">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                                            height="24" viewBox="0 0 24 24" fill="none">
+                                                            <path opacity="0.3"
+                                                                d="M21.4 8.35303L19.241 10.511L13.485 4.755L15.643 2.59595C16.0248 2.21423 16.5426 1.99988 17.0825 1.99988C17.6224 1.99988 18.1402 2.21423 18.522 2.59595L21.4 5.474C21.7817 5.85581 21.9962 6.37355 21.9962 6.91345C21.9962 7.45335 21.7817 7.97122 21.4 8.35303ZM3.68699 21.932L9.88699 19.865L4.13099 14.109L2.06399 20.309C1.98815 20.5354 1.97703 20.7787 2.03189 21.0111C2.08674 21.2436 2.2054 21.4561 2.37449 21.6248C2.54359 21.7934 2.75641 21.9115 2.989 21.9658C3.22158 22.0201 3.4647 22.0084 3.69099 21.932H3.68699Z"
+                                                                fill="black" />
+                                                            <path
+                                                                d="M5.574 21.3L3.692 21.928C3.46591 22.0032 3.22334 22.0141 2.99144 21.9594C2.75954 21.9046 2.54744 21.7864 2.3789 21.6179C2.21036 21.4495 2.09202 21.2375 2.03711 21.0056C1.9822 20.7737 1.99289 20.5312 2.06799 20.3051L2.696 18.422L5.574 21.3ZM4.13499 14.105L9.891 19.861L19.245 10.507L13.489 4.75098L4.13499 14.105Z"
+                                                                fill="black" />
+                                                        </svg>
+                                                    </span>
+                                                </a>
+                                                <form action="{{ route('users.destroy', $item->id) }}" method="POST"
+                                                    class="d-inline form-delete">
 
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                                                    @csrf
+                                                    @method('DELETE')
 
+                                                    <button type="submit"
+                                                        class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm">
+                                                        <span class="svg-icon svg-icon-3">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                                                height="24" viewBox="0 0 24 24" fill="none">
+
+                                                                <path
+                                                                    d="M5 9C5 8.44772 5.44772 8 6 8H18C18.5523 8 19 8.44772 19 9V18C19 19.6569 17.6569 21 16 21H8C6.34315 21 5 19.6569 5 18V9Z"
+                                                                    fill="black" />
+
+                                                                <path opacity="0.5"
+                                                                    d="M5 5C5 4.44772 5.44772 4 6 4H18C18.5523 4 19 4.44772 19 5V5C19 5.55228 18.5523 6 18 6H6C5.44772 6 5 5.55228 5 5V5Z"
+                                                                    fill="black" />
+
+                                                                <path opacity="0.5"
+                                                                    d="M9 4C9 3.44772 9.44772 3 10 3H14C14.5523 3 15 3.44772 15 4V4H9V4Z"
+                                                                    fill="black" />
+                                                            </svg>
+                                                        </span>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        @include('master_backend.user_profil.user.modal_edit')
                     </div>
                 </div>
-            </div> <!-- .card-->
-        </div> <!-- .col-->
-    </div> <!-- end row-->
+            </div>
+        </div>
+    </div>
+    @include('components.partials.calender')
 @endsection

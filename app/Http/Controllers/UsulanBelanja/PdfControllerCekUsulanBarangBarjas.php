@@ -240,6 +240,9 @@ class PdfControllerCekUsulanBarangBarjas extends Controller
 
 
         $id_ppKeu       = '9cdfc135-d1dc-452f-8953-570df9133468';
+        $isKabagMerangkapPPK =
+            $jabatan_kabag2 === 'Kepala Bagian Administrasi Umum dan Keuangan'
+            || $id_kabag === $id_ppKeu;
 
         $jabatan_dir    = $direktur?->nama_jabatan ?? 'Data tidak tersedia';
         $nama_dir       = $direktur?->nama_pejabat ?? 'Data tidak tersedia';
@@ -408,68 +411,51 @@ class PdfControllerCekUsulanBarangBarjas extends Controller
         // Tuliskan konten body ke PDF
         $pdf->writeHTML($htmlBody, true, false, true, false, '');
 
-        checkPageBreak($pdf, 70); // Memastikan ruang yang cukup untuk tanda tangan
-        $htmlSignatureTable = '
+        if ($isKabagMerangkapPPK) {
+            // Kabag merangkap PPK → PPK dihilangkan, Direktur naik
+            $htmlTtdPejabat = '
             <table rules="none">
                 <tr bgcolor="#ffffff">
-                    <th colspan="8" width="87.1%" align="right"><b>Sub Total</b></th>
-                    <th width="13%" align="center"><b>' . number_format($sum_total_anggaran_usulan_barang_non_ppn, 0, ',', ',') . '</b></th>
+                    <th width="50%" align="center">' . $jabatan_kabag2 . '</th>
+                    <th width="50%" align="center">' . $jabatan_dir . '</th>
                 </tr>
                 <tr bgcolor="#ffffff">
-                    <th colspan="8" width="87.1%" align="right"><b>PPN</b></th>
-                    <th width="13%" align="center"><b>' . number_format($sum_total_ppn, 0, ',', '.') . '</b></th>
+                    <th width="50%" align="center" style="height:40px;">
+                        <img src="' . $qrcodekabag . '" width="40" height="40">
+                    </th>
+                    <th width="50%" align="center" style="height:40px;">
+                        <img src="' . $qrcodedirektur . '" width="40" height="40">
+                    </th>
                 </tr>
                 <tr bgcolor="#ffffff">
-                    <th colspan="8" width="87.1%" align="right"><b>Total Anggaran</b></th>
-                    <th width="13%" align="center"><b>' . number_format($sum_total_anggaran_usulan_barang, 0, ',', ',') . '</b></th>
-                </tr>
-            </table>
-            <p>
-    
-        <!-- Footer Section -->
-        <footer>
-            <table rules="none">
-                <tr bgcolor="#ffffff">
-                    <th width="20%" align="center"></th>
-                    <th width="55%" align="center"></th>
-                    <th width="20%" align="center">Jakarta, ' . \Carbon\Carbon::parse($invo->created_at)->translatedFormat('d F Y') . '</th>
+                    <th width="50%" align="center">' . $nama_kabag2 . '</th>
+                    <th width="50%" align="center">' . $nama_dir . '</th>
                 </tr>
                 <tr bgcolor="#ffffff">
-                    <th width="20%" align="center">' . $kolom_jabatan_kiri . '</th>
-                    <th width="55%" align="center"></th>
-                    <th width="20%" align="center">KSP/Ka. Instalasi</th>
+                    <th width="50%" align="center">NIP ' . $nip_kabag2 . '</th>
+                    <th width="50%" align="center">NIP ' . $nip_dir . '</th>
                 </tr>
-                <tr>
-                    <th width="20%" align="center" style="height: 40px;"><img src="' . $qrcodepptk . '" alt="QR Code Pengusul" width="40" height="40"></th>
-                    <th width="55%" align="center"></th>
-                    <th width="20%" align="center" style="height: 40px;"><img src="' . $qrcodeksp . '" alt="QR Code Pengusul" width="40" height="40"></th>
-                </tr>
-                <tr bgcolor="#ffffff">
-                    <th width="20%" align="center">' . $kolom_nama_kiri . '</th>
-                    <th width="55%" align="center"></th>
-                    <th width="20%" align="center">' . $nama_pengusul . '</th>
-                </tr>
-                 <tr bgcolor="#ffffff">
-                    <th width="20%" align="center">' . $kolom_nip_kiri  . '</th>
-                    <th width="55%" align="center"></th>
-                    <th width="20%" align="center">NIP ' . $nip_pengusul . '</th>
-                </tr>
-            </table><p>
-            
+            </table>';
+        } else {
+
+            // Normal (Kabag + PPK + Direktur)
+            $htmlTtdPejabat = '
             <table rules="none">
                 <tr bgcolor="#ffffff">
                     <th width="50%" align="center">' . $jabatan_kabag2 . '</th>
                     <th width="50%" align="center">Pejabat Penatausahaan Keuangan</th>
                 </tr>
                 <tr bgcolor="#ffffff">
-                    <th width="50%" align="center" style="height: 40px;"><img src="' . $qrcodekabag . '" alt="QR Code Pengusul" width="40" height="40"></th>
-                    <th width="50%" align="center" style="height: 40px;"><img src="" alt="QR Code Pengusul" width="40" height="40"></th>
+                    <th width="50%" align="center" style="height:40px;">
+                        <img src="' . $qrcodekabag . '" width="40" height="40">
+                    </th>
+                    <th width="50%" align="center" style="height:40px;"></th>
                 </tr>
                 <tr bgcolor="#ffffff">
                     <th width="50%" align="center">' . $nama_kabag2 . '</th>
                     <th width="50%" align="center">' . $ppk_keuangan->nama_ppk_keuangan . '</th>
                 </tr>
-                 <tr bgcolor="#ffffff">
+                <tr bgcolor="#ffffff">
                     <th width="50%" align="center">NIP ' . $nip_kabag2 . '</th>
                     <th width="50%" align="center">NIP ' . $ppk_keuangan->nip_ppk_keuangan . '</th>
                 </tr>
@@ -480,32 +466,84 @@ class PdfControllerCekUsulanBarangBarjas extends Controller
                     <th width="100%" align="center">' . $jabatan_dir . '</th>
                 </tr>
                 <tr bgcolor="#ffffff">
-                    <th width="100%" align="center" style="height: 40px;"><img src="' . $qrcodedirektur . '" alt="QR Code Pengusul" width="40" height="40"></th>
+                    <th width="100%" align="center" style="height:40px;">
+                        <img src="' . $qrcodedirektur . '" width="40" height="40">
+                    </th>
                 </tr>
                 <tr bgcolor="#ffffff">
                     <th width="100%" align="center">' . $nama_dir . '</th>
                 </tr>
-                 <tr bgcolor="#ffffff">
+                <tr bgcolor="#ffffff">
                     <th width="100%" align="center">NIP ' . $nip_dir . '</th>
                 </tr>
-            </table>
+            </table>';
+        }
 
+        checkPageBreak($pdf, 70);
 
-            <p></p>
-            <table rules="none">
-                <tr bgcolor="#ffffff">
-                    <th width="50%" align="Left">Catatan :</th>
-                </tr>
-                <tr bgcolor="#ffffff">
-                    <th width="50%" align="Left" style="font-weight: normal; font-size:6px;">' .  $invo->keterangan_pptk . '</th>
-                </tr>
-                <tr bgcolor="#ffffff">
-                    <th width="50%" align="Left" style="font-weight: normal; font-size:6px;">' . $invo->keterangan_kabag . '</th>
-                </tr>
-                <tr bgcolor="#ffffff">
-                    <th width="50%" align="Left" style="font-weight: normal; font-size:6px;">' . $invo->keterangan_direktur  . '</th>
-                </tr>
-            </table></footer>';
+        $htmlSignatureTable = '
+        <table rules="none">
+            <tr bgcolor="#ffffff">
+                <th colspan="8" width="87.1%" align="right"><b>Sub Total</b></th>
+                <th width="13%" align="center"><b>' . number_format($sum_total_anggaran_usulan_barang_non_ppn, 0, ',', ',') . '</b></th>
+            </tr>
+            <tr bgcolor="#ffffff">
+                <th colspan="8" width="87.1%" align="right"><b>PPN</b></th>
+                <th width="13%" align="center"><b>' . number_format($sum_total_ppn, 0, ',', '.') . '</b></th>
+            </tr>
+            <tr bgcolor="#ffffff">
+                <th colspan="8" width="87.1%" align="right"><b>Total Anggaran</b></th>
+                <th width="13%" align="center"><b>' . number_format($sum_total_anggaran_usulan_barang, 0, ',', ',') . '</b></th>
+            </tr>
+             <tr bgcolor="#ffffff">
+                <th colspan="8" width="87.1%" align="right"><b></b></th>
+                <th width="13%" align="center"><b></b></th>
+            </tr>
+        </table>
+
+        <footer>
+        <table rules="none">
+            <tr bgcolor="#ffffff">
+                <th width="20%"></th>
+                <th width="55%"></th>
+                <th width="20%" align="center">Jakarta, ' . \Carbon\Carbon::parse($invo->created_at)->translatedFormat('d F Y') . '</th>
+            </tr>
+            <tr bgcolor="#ffffff">
+                <th width="20%" align="center">' . $kolom_jabatan_kiri . '</th>
+                <th width="55%"></th>
+                <th width="20%" align="center">KSP/Ka. Instalasi</th>
+            </tr>
+            <tr>
+                <th width="20%" align="center"><img src="' . $qrcodepptk . '" width="40" height="40"></th>
+                <th width="55%"></th>
+                <th width="20%" align="center"><img src="' . $qrcodeksp . '" width="40" height="40"></th>
+            </tr>
+            <tr bgcolor="#ffffff">
+                <th width="20%" align="center">' . $kolom_nama_kiri . '</th>
+                <th width="55%"></th>
+                <th width="20%" align="center">' . $nama_pengusul . '</th>
+            </tr>
+            <tr bgcolor="#ffffff">
+                <th width="20%" align="center">' . $kolom_nip_kiri . '</th>
+                <th width="55%"></th>
+                <th width="20%" align="center">NIP ' . $nip_pengusul . '</th>
+            </tr>
+        </table>
+
+        <p></p>
+
+        ' . $htmlTtdPejabat . '
+
+        <p></p>
+
+        <table rules="none">
+            <tr><th align="left">Catatan :</th></tr>
+            <tr><th align="left" style="font-size:6px;font-weight:normal;">' . $invo->keterangan_pptk . '</th></tr>
+            <tr><th align="left" style="font-size:6px;font-weight:normal;">' . $invo->keterangan_kabag . '</th></tr>
+            <tr><th align="left" style="font-size:6px;font-weight:normal;">' . $invo->keterangan_direktur . '</th></tr>
+        </table>
+        </footer>';
+
 
         $pdf->writeHTML($htmlSignatureTable, true, false, true, false, '');
 

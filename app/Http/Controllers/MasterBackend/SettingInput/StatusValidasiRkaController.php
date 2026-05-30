@@ -11,20 +11,24 @@ class StatusValidasiRkaController extends Controller
 {
     public function index()
     {
-        $status_validasi_rkas   = StatusValidasiRka::all();
-        return view('master_backend.setting_input.status_validasi_rka.index', compact('status_validasi_rkas'), [
-            'title'         => 'Halaman Status Validasi',
-            'title2'        => 'Status Validasi',
-            'routePrefix'   => 'status_validasi_rkas'
-        ]);
+        $status_validasi_rkas = StatusValidasiRka::all();
+        return view(
+            'master_backend.setting_input.status_validasi_rka.index',
+            compact('status_validasi_rkas'),
+            [
+                'title' => 'Halaman Status Validasi',
+                'title2' => 'Status Validasi',
+                'routePrefix' => 'status_validasi_rkas',
+            ],
+        );
     }
 
     public function create()
     {
         return view('master_backend.setting_input.status_validasi_rka.create', [
-            'title'         => 'Halaman Status Validasi',
-            'title2'        => 'Status Validasi',
-            'routePrefix'   => 'status_validasi_rkas'
+            'title' => 'Halaman Status Validasi',
+            'title2' => 'Status Validasi',
+            'routePrefix' => 'status_validasi_rkas',
         ]);
     }
 
@@ -33,19 +37,23 @@ class StatusValidasiRkaController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'nama_validasi_rka'  => 'required',
+                'nama_validasi_rka' => 'required',
             ],
             [
-                'nama_validasi_rka'     => 'Nama Status Validasi Tidak Boleh Kosong'
-            ]
+                'nama_validasi_rka' => 'Nama Status Validasi Tidak Boleh Kosong',
+            ],
         );
 
         if ($validator->fails()) {
             $errors = $validator->errors();
             $errorMessages = implode(' ', $errors->all());
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->withInput()
-                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+                ->with(
+                    'error',
+                    'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages,
+                );
         }
 
         $status_validasi_rkas = new StatusValidasiRka();
@@ -53,10 +61,10 @@ class StatusValidasiRkaController extends Controller
         $status_validasi_rkas->save();
 
         // Set session flash
-        return redirect()->route('status_validasi_rkas.index')
+        return redirect()
+            ->route('status_validasi_rkas.index')
             ->with('success', 'Data berhasil ditambahkan.');
     }
-
 
     public function show($id)
     {
@@ -68,9 +76,9 @@ class StatusValidasiRkaController extends Controller
     {
         return view('master_backend.setting_input.status_validasi_rka.edit', [
             'statusValidasiRka' => $statusValidasiRka,
-            'title'         => 'Halaman Status Validasi',
-            'title2'        => 'Status Validasi',
-            'routePrefix'   => 'status_validasi_rkas'
+            'title' => 'Halaman Status Validasi',
+            'title2' => 'Status Validasi',
+            'routePrefix' => 'status_validasi_rkas',
         ]);
     }
 
@@ -79,28 +87,38 @@ class StatusValidasiRkaController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'nama_validasi_rka'  => 'required',
+                'nama_validasi_rka' => 'required',
             ],
             [
-                'nama_validasi_rka'     => 'Nama Status Validasi Tidak Boleh Kosong'
-            ]
+                'nama_validasi_rka' => 'Nama Status Validasi Tidak Boleh Kosong',
+            ],
         );
 
         if ($validator->fails()) {
             $errors = $validator->errors();
             $errorMessages = implode(' ', $errors->all());
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->withInput()
-                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+                ->with(
+                    'error',
+                    'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages,
+                );
         }
 
+        // dd($request->all());
+
         $statusValidasiRka->update($request->all());
-        return redirect()->route('status_validasi_rkas.index')->with('success', 'Data berhasil diupdate.');
+        return redirect()
+            ->route('status_validasi_rkas.index')
+            ->with('success', 'Data berhasil diupdate.');
     }
 
     public function destroy(StatusValidasiRka $statusValidasiRka)
     {
         $statusValidasiRka->delete();
-        return redirect()->route('status_validasi_rkas.index')->with('success', 'Data Berhasil di Hapus');
+        return redirect()
+            ->route('status_validasi_rkas.index')
+            ->with('success', 'Data Berhasil di Hapus');
     }
 }

@@ -11,21 +11,21 @@ class UnitController extends Controller
 {
     public function index()
     {
-        $units  = Unit::all();
+        $units = Unit::all();
         return view('master_backend.setting_users.unit.index', [
-            'units'         => $units,
-            'title'         => 'Halaman Unit',
-            'title2'        => 'Unit',
-            'routePrefix'   => 'units'
+            'units' => $units,
+            'title' => 'Halaman Unit',
+            'title2' => 'Unit',
+            'routePrefix' => 'units',
         ]);
     }
 
     public function create()
     {
         return view('master_backend.setting_users.unit.create', [
-            'title'         => 'Halaman Unit',
-            'title2'        => 'Unit',
-            'routePrefix'   => 'units'
+            'title' => 'Halaman Unit',
+            'title2' => 'Unit',
+            'routePrefix' => 'units',
         ]);
     }
 
@@ -34,7 +34,7 @@ class UnitController extends Controller
         $validator = Validator::make(
             $request->all(),
             ['nama_unit' => 'required'],
-            ['nama_unit' => 'Nama Unit belum terisi']
+            ['nama_unit' => 'Nama Unit belum terisi'],
         );
 
         if ($validator->fails()) {
@@ -42,12 +42,16 @@ class UnitController extends Controller
 
             // Menyusun pesan error menjadi string
             $errorMessages = implode(' ', $errors->all());
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->withInput()
-                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+                ->with(
+                    'error',
+                    'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages,
+                );
         }
 
-        $unit = new Unit(['nama_unit'     => $request->nama_unit]);
+        $unit = new Unit(['nama_unit' => $request->nama_unit]);
 
         $unit->save();
         return redirect()->route('units.index')->with('success', 'KSP berhasil ditambahkan.');
@@ -61,10 +65,10 @@ class UnitController extends Controller
     public function edit(Unit $unit)
     {
         return view('master_backend.setting_users.unit.edit', [
-            'units'         => $unit,
-            'title'         => 'Halaman Unit',
-            'title2'        => 'Unit',
-            'routePrefix'   => 'units'
+            'units' => $unit,
+            'title' => 'Halaman Unit',
+            'title2' => 'Unit',
+            'routePrefix' => 'units',
         ]);
     }
 
@@ -73,7 +77,7 @@ class UnitController extends Controller
         $validator = Validator::make(
             $request->all(),
             ['nama_unit' => 'required'],
-            ['nama_unit' => 'Nama Unit belum terisi']
+            ['nama_unit' => 'Nama Unit belum terisi'],
         );
 
         if ($validator->fails()) {
@@ -81,9 +85,13 @@ class UnitController extends Controller
 
             // Menyusun pesan error menjadi string
             $errorMessages = implode(' ', $errors->all());
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->withInput()
-                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+                ->with(
+                    'error',
+                    'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages,
+                );
         }
 
         $unit->update($request->all());
@@ -92,9 +100,13 @@ class UnitController extends Controller
 
     public function destroy($id)
     {
-        $unit = Unit::findOrFail($id);
-        $unit->delete();
+        try {
+            $unit = Unit::findOrFail($id);
+            $unit->delete();
 
-        return redirect()->route('units.index')->with('success', 'Data Berhasil di Hapus');
+            return redirect()->route('units.index')->with('success', 'Data berhasil dihapus');
+        } catch (\Exception $e) {
+            return redirect()->route('units.index')->with('error', 'Data gagal dihapus');
+        }
     }
 }

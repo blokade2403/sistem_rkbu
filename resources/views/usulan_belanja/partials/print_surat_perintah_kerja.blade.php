@@ -346,15 +346,18 @@
             <tr>
                 <th width="20%"></th>
                 <th style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;"
-                    class="no-border" width="80%">Bersama surat ini, mohon PPK RSUD Cilincing untuk melakukan
-                    pengadaan</th>
+                    class="no-border" width="80%">Bersama surat ini, mohon PPK {{ ucwords(strtolower($nama)) }}
+                    belanja dengan
+                </th>
             </tr>
             <tr>
                 <th width="13%"></th>
                 <th style="word-wrap: break-word; white-space: normal; line-height: 1.5; font-size: 10px;"
-                    class="no-border" width="80%">belanja dengan no invoice
+                    class="no-border" width="80%"> no invoice
                     <strong>{{ $no_inv->no_usulan_barang }}</strong>
-                    sebagai berikut terlampir:
+                    untuk
+                    melakukan
+                    pengadaan sebagai berikut terlampir:
                 </th>
             </tr>
             <tr bgcolor="#ffffff" style="line-height: 15px;">

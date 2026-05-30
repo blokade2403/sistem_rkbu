@@ -12,21 +12,26 @@ class KegiatanController extends Controller
 {
     public function index()
     {
-        $kegiatans = Kegiatan::all();
-        return view('master_backend.setting_rkbu.kegiatan.index', compact('kegiatans'), [
-            'title'         => 'Halaman Kegiatan',
-            'title2'        => 'Kegiatan',
-            'routePrefix'   => 'kegiatans'
-        ]);
+        $programs = Program::all();
+        $kegiatans = Kegiatan::with('program')->get();
+        return view(
+            'master_backend.setting_rkbu.kegiatan.index',
+            compact('kegiatans', 'programs'),
+            [
+                'title' => 'Halaman Kegiatan',
+                'title2' => 'Kegiatan',
+                'routePrefix' => 'kegiatans',
+            ],
+        );
     }
 
     public function create()
     {
-        $programs  = Program::all();
+        $programs = Program::all();
         return view('master_backend.setting_rkbu.kegiatan.create', compact('programs'), [
-            'title'         => 'Halaman Kegiatan',
-            'title2'        => 'Kegiatan',
-            'routePrefix'   => 'kegiatans'
+            'title' => 'Halaman Kegiatan',
+            'title2' => 'Kegiatan',
+            'routePrefix' => 'kegiatans',
         ]);
     }
 
@@ -37,7 +42,7 @@ class KegiatanController extends Controller
         if ($kegiatan) {
             return response()->json([
                 'kode_program' => $kegiatan->program->kode_program,
-                'nama_program' => $kegiatan->program->nama_program
+                'nama_program' => $kegiatan->program->nama_program,
             ]);
         }
 
@@ -49,59 +54,61 @@ class KegiatanController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'id_program'        =>  'required',
-                'kode_kegiatan'     =>  'required',
-                'nama_kegiatan'     =>  'required',
+                'id_program' => 'required',
+                'kode_kegiatan' => 'required',
+                'nama_kegiatan' => 'required',
             ],
             [
-                'id_program.required'       => 'ID Program Harus di Pilih',
-                'kode_kegiatan.required'    =>  'Kode Kegiatan Harus Diisi',
-                'nama_kegiatan.required'    =>  'Nama Kegiatan harus diisi'
-            ]
+                'id_program.required' => 'ID Program Harus di Pilih',
+                'kode_kegiatan.required' => 'Kode Kegiatan Harus Diisi',
+                'nama_kegiatan.required' => 'Nama Kegiatan harus diisi',
+            ],
         );
 
         if ($validator->fails()) {
             $errors = $validator->error();
 
             $errorMessages = implode(' ', $errors->all());
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->withInput()
-                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+                ->with(
+                    'error',
+                    'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages,
+                );
         }
 
         $kegiatan = new Kegiatan([
-            'id_program'        =>  $request->id_program,
-            'kode_kegiatan'     =>  $request->kode_kegiatan,
-            'nama_kegiatan'     =>  $request->nama_kegiatan,
+            'id_program' => $request->id_program,
+            'kode_kegiatan' => $request->kode_kegiatan,
+            'nama_kegiatan' => $request->nama_kegiatan,
         ]);
 
         $kegiatan->save();
-        return redirect()->route('kegiatans.index')->with('success', 'Data Kegiatan Berhasil di Tambahkan');
+        return redirect()
+            ->route('kegiatans.index')
+            ->with('success', 'Data Kegiatan Berhasil di Tambahkan');
     }
 
     public function show(Kegiatan $kegiatan) {}
 
     public function edit($id)
     {
-        $kegiatans          = Kegiatan::with('program')->findOrFail($id);
-        $programs           = Program::all();
+        $kegiatans = Kegiatan::with('program')->findOrFail($id);
+        $programs = Program::all();
         return view('master_backend.setting_rkbu.kegiatan.edit', compact('kegiatans', 'programs'), [
-            'title'         => 'Halaman Kegiatan',
-            'title2'        => 'Kegiatan',
-            'routePrefix'   => 'kegiatans'
+            'title' => 'Halaman Kegiatan',
+            'title2' => 'Kegiatan',
+            'routePrefix' => 'kegiatans',
         ]);
     }
 
     public function update(Request $request, Kegiatan $kegiatan)
     {
-        $validator  = Validator::make(
-            $request->all(),
-            [
-                'kode_kegiatan'  => 'required',
-                'nama_kegiatan'  => 'required',
-            ],
-
-        );
+        $validator = Validator::make($request->all(), [
+            'kode_kegiatan' => 'required',
+            'nama_kegiatan' => 'required',
+        ]);
         // Jika validasi gagal, kembalikan ke halaman sebelumnya dengan pesan error
         if ($validator->fails()) {
             // Mengambil semua pesan error
@@ -112,9 +119,13 @@ class KegiatanController extends Controller
             // Menyusun pesan error menjadi string
             $errorMessages = implode(' ', $errors->all());
 
-            return redirect()->back()
+            return redirect()
+                ->back()
                 ->withInput()
-                ->with('error', 'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages);
+                ->with(
+                    'error',
+                    'Ada kesalahan pada input Anda, mohon periksa kembali: ' . $errorMessages,
+                );
         }
 
         // dd($request);
@@ -130,7 +141,8 @@ class KegiatanController extends Controller
     {
         $kegiatan->delete();
 
-        return redirect()->route('kegiatans.index')
+        return redirect()
+            ->route('kegiatans.index')
             ->with('success', 'Kegiatan deleted successfully.');
     }
 }
