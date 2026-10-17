@@ -1,87 +1,181 @@
 @extends('layouts.main')
 @section('content')
-    @include('partials.add_buttons_backend', ['routePrefix' => $routePrefix])
-    <div class="row">
-        <div class="col-xl-12">
-            <div class="card">
-                @include('partials.animate_progress')
-                <div class="card-header align-items-center d-flex">
-                    <h4 class="card-title mb-0 flex-grow-1">{{ $title }}</h4>
-                </div><!-- end card header -->
-                <div class="card-block">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table id="responsive-reorder" class="table align-middle table-nowrap mb-0">
-                                <thead class="text-muted table-light">
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Name Sub Kategori RKBU</th>
-                                        <th>Kode Sub Kategori RKBU</th>
-                                        <th>Kategori RKBU</th>
-                                        <th>Sub Kategori Rekening</th>
-                                        <th>Rekening Belanja</th>
-                                        <th>Admin Pendukung PPK</th>
-                                        <th>PPTK</th>
-                                        <th>Status</th>
-                                        <th>Create At</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php
-                                        $no = 1;
-                                    @endphp
-                                    @foreach ($sub_kategori_rkbus as $item)
-                                        <tr>
-                                            <td>{{ $no++ }}</td>
-                                            <td>
-                                                <ul class="list list-unstyled">
-                                                    <li>
-                                                        <span
-                                                            class="f-16">#&nbsp;{{ $item->nama_sub_kategori_rkbu }}</span>
-                                                    </li>
-                                                    <li><span class="f-12">ID:{{ $item->id_sub_kategori_rkbu }}</span>
-                                                    </li>
-                                                </ul>
-                                            </td>
-                                            <td>{{ $item->kode_sub_kategori_rkbu }}</td>
-                                            <td>{{ $item->kategori_rkbu->kode_kategori_rkbu }}
-                                                {{ $item->kategori_rkbu->nama_kategori_rkbu }}</td>
-                                            <td>{{ $item->sub_kategori_rekening->kode_sub_kategori_rekening }}
-                                                {{ $item->sub_kategori_rekening->nama_sub_kategori_rekening }}
-                                            </td>
-                                            <td>{{ $item->rekening_belanja->kode_rekening_belanjas }}
-                                                {{ $item->rekening_belanja->nama_rekening_belanjas }}
-                                            </td>
-                                            <td>{{ $item->admin_pendukung->nama_pendukung_ppk }}</td>
-                                            <td>{{ $item->pptks->nama_pptk ?? '-' }}</td>
-                                            <td>
-                                                @if ($item->status == 'aktif')
-                                                    <label class="label label-inverse-primary">{{ $item->status }}</label>
-                                                @else
-                                                    <label class="label label-inverse-danger">{{ $item->status }}</label>
-                                                @endif
-
-                                            </td>
-                                            <td>{{ $item->created_at }}</td>
-                                            <td>
-                                                <x-partials.action-buttons :edit-url="route(
-                                                    'sub_kategori_rkbus.edit',
-                                                    $item->id_sub_kategori_rkbu,
-                                                )" :delete-url="route(
-                                                    'sub_kategori_rkbus.destroy',
-                                                    $item->id_sub_kategori_rkbu,
-                                                )" />
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-
+    <div class="card mb-5">
+        <div class="card-body">
+            <h4 class="mb-3">Import Sub Kategori RKBU</h4>
+            <p class="text-muted mb-4">
+                Unggah file Excel .xls atau .xlsx. Baris pertama harus berisi header:
+                <code>id_kategori_rkbu</code>, <code>id_sub_kategori_rekening</code>,
+                <code>kode_sub_kategori_rkbu</code>, <code>nama_sub_kategori_rkbu</code>,
+                dan opsional <code>status</code>.
+                Status kosong akan diisi "aktif". Gunakan ID referensi yang terdaftar.
+            </p>
+            <form action="{{ route('sub_kategori_rkbus.import') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="row align-items-end g-3">
+                    <div class="col-md-8">
+                        <label for="sub-kategori-import-file" class="form-label">File Excel</label>
+                        <input id="sub-kategori-import-file" class="form-control" type="file" name="file"
+                            accept=".xls,.xlsx" required>
+                        @error('file')
+                            <div class="text-danger mt-2">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary" type="submit">Upload dan Import</button>
                     </div>
                 </div>
-            </div> <!-- .card-->
-        </div> <!-- .col-->
-    </div> <!-- end row-->
+            </form>
+        </div>
+    </div>
+    <div class="card mb-5 mb-xxl-12">
+        <div class="card-body pt-9 pb-0">
+            @include('components.partials.table.headermenu')
+            @include('master_backend.setting_rkbu.sub_kategori_rkbu.modal_add')
+        </div>
+    </div>
+    <div class="row gy-5 g-xl-8">
+        <div class="col-xl-12">
+            <div class="card card-xl-stretch mb-5 mb-xl-8">
+                <div class="card-header border-0 pt-5">
+                    <h3 class="card-title align-items-start flex-column">
+                        <span class="card-label fw-bolder fs-3 mb-1">Members Statistics</span>
+                    </h3>
+                </div>
+                <div class="card-body">
+                    @include('components.partials.table.showentrysearch')
+                    <div class="table-responsive">
+                        <table id="kt_customers_table"
+                            class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
+                            <thead>
+                                <tr class="fw-bolder text-muted">
+                                    <th class="w-25px">
+                                        <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                            <input class="form-check-input" type="checkbox" value="1"
+                                                data-kt-check="true" data-kt-check-target=".widget-9-check" />
+                                        </div>
+                                    </th>
+                                    <th class="min-w-20px">No</th>
+                                    <th class="min-w-150px">Sub Kategori Rkbu</th>
+                                    <th class="min-w-120px">Kategori Rkbu</th>
+                                    <th class="min-w-120px">Sub Kategori Rekening</th>
+                                    <th class="min-w-120px">Status</th>
+                                    <th class="min-w-100px text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php
+                                    $no = 1;
+                                @endphp
+                                @foreach ($sub_kategori_rkbus as $item)
+                                    <tr>
+                                        <td>
+                                            <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                                <input class="form-check-input widget-9-check" type="checkbox"
+                                                    value="1" />
+                                            </div>
+                                        </td>
+                                        <td>{{ $no++ }}</td>
+                                        <td>
+                                            <div class="card mb-2 mb-xxl-6">
+                                                <div class="card-body pb-0">
+                                                    <div class="d-flex align-items-center mb-3">
+                                                        <div class="d-flex align-items-center flex-grow-1">
+                                                            <div class="symbol symbol-45px me-5">
+                                                                <img src="{{ asset('assets/media/svg/brand-logos/tvit.svg') }}"
+                                                                    alt="" />
+                                                            </div>
+                                                            <div class="d-flex flex-column">
+                                                                <a href="#"
+                                                                    class="text-gray-900 text-hover-primary fs-6 fw-bolder">{{ $item->kode_sub_kategori_rkbu }}. {{ $item->nama_sub_kategori_rkbu }}</a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-1">
+                                                        <div class="text-gray-800 fs-8 mb-2">ID : {{ $item->id_sub_kategori_rkbu }} </div>
+                                                    </div>
+                                                    
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ $item->kategori_rkbu->kode_kategori_rkbu }}. {{ $item->kategori_rkbu->nama_kategori_rkbu }}</td>
+                                        <td>{{ $item->sub_kategori_rekening->kode_sub_kategori_rekening }}. {{ $item->sub_kategori_rekening->nama_sub_kategori_rekening }}</td>
+                                        <td>@if ( $item->status === 'aktif' )
+                                            <span class="badge badge-light-success">Aktif</span>
+                                        @else
+                                            <span class="badge badge-light-danger">Tidak Aktif</span>
+                                        @endif</td>
+                                        <td>
+                                            <div class="d-flex justify-content-end flex-shrink-0">
+                                                <a href="#"
+                                                    class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1"
+                                                    data-bs-toggle="modal" data-bs-target="#kt_modal_create_account">
+                                                    <span class="svg-icon svg-icon-3">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                                            height="24" viewBox="0 0 24 24" fill="none">
+                                                            <path
+                                                                d="M17.5 11H6.5C4 11 2 9 2 6.5C2 4 4 2 6.5 2H17.5C20 2 22 4 22 6.5C22 9 20 11 17.5 11ZM15 6.5C15 7.9 16.1 9 17.5 9C18.9 9 20 7.9 20 6.5C20 5.1 18.9 4 17.5 4C16.1 4 15 5.1 15 6.5Z"
+                                                                fill="black" />
+                                                            <path opacity="0.3"
+                                                                d="M17.5 22H6.5C4 22 2 20 2 17.5C2 15 4 13 6.5 13H17.5C20 13 22 15 22 17.5C22 20 20 22 17.5 22ZM4 17.5C4 18.9 5.1 20 6.5 20C7.9 20 9 18.9 9 17.5C9 16.1 7.9 15 6.5 15C5.1 15 4 16.1 4 17.5Z"
+                                                                fill="black" />
+                                                        </svg>
+                                                    </span>
+                                                </a>
+                                                <a href="#"
+                                                    class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#kt_modal_new_target_form{{ $item->id_sub_kategori_rkbu }}">
+                                                    <span class="svg-icon svg-icon-3">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                                            height="24" viewBox="0 0 24 24" fill="none">
+                                                            <path opacity="0.3"
+                                                                d="M21.4 8.35303L19.241 10.511L13.485 4.755L15.643 2.59595C16.0248 2.21423 16.5426 1.99988 17.0825 1.99988C17.6224 1.99988 18.1402 2.21423 18.522 2.59595L21.4 5.474C21.7817 5.85581 21.9962 6.37355 21.9962 6.91345C21.9962 7.45335 21.7817 7.97122 21.4 8.35303ZM3.68699 21.932L9.88699 19.865L4.13099 14.109L2.06399 20.309C1.98815 20.5354 1.97703 20.7787 2.03189 21.0111C2.08674 21.2436 2.2054 21.4561 2.37449 21.6248C2.54359 21.7934 2.75641 21.9115 2.989 21.9658C3.22158 22.0201 3.4647 22.0084 3.69099 21.932H3.68699Z"
+                                                                fill="black" />
+                                                            <path
+                                                                d="M5.574 21.3L3.692 21.928C3.46591 22.0032 3.22334 22.0141 2.99144 21.9594C2.75954 21.9046 2.54744 21.7864 2.3789 21.6179C2.21036 21.4495 2.09202 21.2375 2.03711 21.0056C1.9822 20.7737 1.99289 20.5312 2.06799 20.3051L2.696 18.422L5.574 21.3ZM4.13499 14.105L9.891 19.861L19.245 10.507L13.489 4.75098L4.13499 14.105Z"
+                                                                fill="black" />
+                                                        </svg>
+                                                    </span>
+                                                </a>
+                                                <form action="{{ route('sub_kategori_rkbus.destroy', $item->id_sub_kategori_rkbu) }}" method="POST"
+                                                    class="d-inline form-delete">
+
+                                                    @csrf
+                                                    @method('DELETE')
+
+                                                    <button type="submit"
+                                                        class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm">
+                                                        <span class="svg-icon svg-icon-3">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24"
+                                                                height="24" viewBox="0 0 24 24" fill="none">
+
+                                                                <path
+                                                                    d="M5 9C5 8.44772 5.44772 8 6 8H18C18.5523 8 19 8.44772 19 9V18C19 19.6569 17.6569 21 16 21H8C6.34315 21 5 19.6569 5 18V9Z"
+                                                                    fill="black" />
+
+                                                                <path opacity="0.5"
+                                                                    d="M5 5C5 4.44772 5.44772 4 6 4H18C18.5523 4 19 4.44772 19 5V5C19 5.55228 18.5523 6 18 6H6C5.44772 6 5 5.55228 5 5V5Z"
+                                                                    fill="black" />
+
+                                                                <path opacity="0.5"
+                                                                    d="M9 4C9 3.44772 9.44772 3 10 3H14C14.5523 3 15 3.44772 15 4V4H9V4Z"
+                                                                    fill="black" />
+                                                            </svg>
+                                                        </span>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        @include('master_backend.setting_rkbu.sub_kategori_rkbu.modal_edit')
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @include('components.partials.calender')
 @endsection

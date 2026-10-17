@@ -138,3 +138,22 @@
 
     });
 </script>
+
+<script>
+$(document).ready(function () {
+    $('#kt_modal_new_target').on('shown.bs.modal', function () {
+        $(this).find('select[data-control="select2"]').each(function () {
+
+            // Hancurkan jika sudah pernah diinisialisasi
+            if ($(this).hasClass("select2-hidden-accessible")) {
+                $(this).select2('destroy');
+            }
+
+            $(this).select2({
+                dropdownParent: $('#kt_modal_new_target'),
+                width: '100%'
+            });
+        });
+    });
+});
+</script>

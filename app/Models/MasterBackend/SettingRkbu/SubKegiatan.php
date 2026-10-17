@@ -2,6 +2,7 @@
 
 namespace App\Models\MasterBackend\SettingRkbu;
 
+use App\Models\Rkbu\Rkbu;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,7 +27,11 @@ class SubKegiatan extends Model
 
     public function sumber_danas()
     {
-        return $this->belongsTo(SumberDana::class, 'id_sumber_dana', 'id_sumber_dana');
+        return $this->belongsTo(
+            SumberDana::class,
+            'id_sumber_dana',
+            'id_sumber_dana'
+        );
     }
 
     public function aktivitas()

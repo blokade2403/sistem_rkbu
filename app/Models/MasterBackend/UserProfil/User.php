@@ -2,23 +2,18 @@
 
 namespace App\Models\MasterBackend\UserProfil;
 
-use Illuminate\Support\Str;
-
-use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Notifications\Notifiable;
-use App\Models\MasterBackend\SettingUser\Fase;
-use App\Models\MasterBackend\SettingUser\Pptk;
+use App\Models\MasterBackend\SettingUser\Position;
+use App\Models\MasterBackend\SettingUser\PositionAssignment;
 use App\Models\MasterBackend\SettingUser\Role;
 use App\Models\MasterBackend\SettingUser\Unit;
-use App\Models\MasterBackend\SettingUser\Position;
-use App\Models\MasterBackend\SettingUser\LevelUser;
+use App\Models\UserPptk;
+use App\Models\ValidatorRole;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use App\Models\MasterBackend\SettingInput\TahunAnggaran;
-use App\Models\MasterBackend\SettingUser\AdminPendukung;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
@@ -62,13 +57,45 @@ class User extends Authenticatable
         return $this->belongsTo(Position::class, 'position_id');
     }
 
+    public function assignments()
+    {
+        return $this->hasMany(
+            PositionAssignment::class
+        );
+    }
+
+    public function activeAssignment()
+    {
+        return $this->hasOne(
+            PositionAssignment::class
+        )->where('is_active', 1);
+    }
+
     public function roles()
     {
         return $this->belongsToMany(Role::class, 'role_user');
     }
 
+    public function hasRole(string $roleName): bool
+    {
+        return $this->roles()->where('nama_role', $roleName)->exists();
+    }
+
     public function unit()
     {
         return $this->belongsTo(Unit::class, 'unit_id');
+    }
+    public function pptks()
+    {
+        return $this->hasMany(UserPptk::class);
+    }
+    public function validatorRoles()
+    {
+        return $this->belongsToMany(
+            ValidatorRole::class,
+            'user_validator_roles',
+            'user_id',
+            'validator_role_id',
+        );
     }
 }

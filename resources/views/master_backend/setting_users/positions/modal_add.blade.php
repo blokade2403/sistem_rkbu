@@ -49,10 +49,12 @@
                      <div class="row g-9 mb-8">
                          <div class="col-md-12 fv-row fv-plugins-icon-container">
                              <label class="required fs-6 fw-bold mb-2">Unit</label>
-                             <select class="form-select" name="unit_id" data-control="select2"
+                             <select class="form-select" name="unit_id"  data-control="select2"
                                  data-placeholder="Select an option">
+                                 <option value="" >Pilih uraian 1
+                                    </option>
                                  @foreach ($units as $unit)
-                                     <option value="{{ $unit->id }}">
+                                     <option value="{{ $unit->id }}" >
                                          {{ $unit->nama_unit }}
                                      </option>
                                  @endforeach

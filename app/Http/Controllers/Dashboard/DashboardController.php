@@ -14,6 +14,7 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        // dd(session()->all());
         return view('dashboard.dashboard_index');
     }
 }

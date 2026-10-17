@@ -13,10 +13,15 @@ class KomponenController extends Controller
 {
     public function index(KomponenDataTable $dataTable)
     {
+        $komponens              = Komponen::all();
+        $jenis_kategori_rkbu    = JenisKategoriRkbu::all();
+
         return $dataTable->render('master_backend.setting_input.komponen.index', [
             'title'         => 'Halaman Komponen',
             'title2'        => 'Komponen',
             'routePrefix'   => 'komponens',
+            'komponens'     => $komponens,
+            'jenis_kategori_rkbu' => $jenis_kategori_rkbu
         ]);
     }
 

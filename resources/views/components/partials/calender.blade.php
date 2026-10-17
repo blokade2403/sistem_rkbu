@@ -8,13 +8,10 @@
                         <span class="text-muted mt-1 fw-bold fs-7">Preview monthly events</span>
                     </h3>
                 </div>
-                <!--end::Card header-->
-                <!--begin::Card body-->
-                <div class="card-body">
-                    <!--begin::Calendar-->
+               
+                {{-- <div class="card-body">
                     <div id="kt_calendar_widget_1"></div>
-                    <!--end::Calendar-->
-                </div>
+                </div> --}}
                 <!--end::Card body-->
             </div>
             <!--end::Calendar Widget 1-->

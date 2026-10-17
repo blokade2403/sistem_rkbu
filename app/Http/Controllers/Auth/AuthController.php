@@ -72,6 +72,7 @@ class AuthController extends Controller
         Session::put('position_id', $user->position_id);
         Session::put('nama_jabatan', $position?->nama_jabatan);
         Session::put('tahun_anggaran', $tahun->nama_tahun_anggaran);
+        Session::put('tahun_anggaran_id', $tahun->id);
         Session::put('fase_tahun_anggaran', $tahun->fase?->nama_fase);
         Session::put('fase_tahun_anggaran_id', $tahun->fase_id);
         Session::put('nama_unit', $unit?->nama_unit);
@@ -83,6 +84,6 @@ class AuthController extends Controller
     {
         Auth::logout();
         $request->session()->flush();
-        return redirect()->route('login');
+        return redirect()->route('login.form');
     }
 }

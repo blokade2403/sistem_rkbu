@@ -18,7 +18,7 @@ return new class extends Migration {
             // rkbu
             // usulan_belanja
             // spj
-            $table->enum('status', ['draft', 'proses', 'approved', 'rejected'])->default('draft');
+            $table->enum('status', ['draft', 'proses', 'approved', 'rejected', 'revision'])->default('draft');
             $table->timestamps();
         });
     }

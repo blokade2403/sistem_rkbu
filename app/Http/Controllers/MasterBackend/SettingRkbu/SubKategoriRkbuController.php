@@ -7,29 +7,45 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use App\Models\MasterBackend\SettingRkbu\KategoriRkbu;
 use App\Models\MasterBackend\SettingUser\AdminPendukung;
-use App\Models\MasterBackend\SettingRkbu\RekeningBelanja;
 use App\Models\MasterBackend\SettingRkbu\SubKategoriRkbu;
 use App\Models\MasterBackend\SettingRkbu\SubKategoriRekening;
 use App\Models\MasterBackend\SettingUser\Pptk;
+use App\Imports\SettingRkbu\SubKategoriRkbuImport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SubKategoriRkbuController extends Controller
 {
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xls,xlsx', 'max:10240'],
+        ]);
+
+        $import = new SubKategoriRkbuImport();
+        Excel::import($import, $request->file('file'));
+
+        return redirect()
+            ->route('sub_kategori_rkbus.index')
+            ->with('success', $import->importedCount().' data sub kategori RKBU berhasil diimpor.');
+    }
+
     public function index()
     {
         $sub_kategori_rkbus = SubKategoriRkbu::with([
             'kategori_rkbu',
-            'rekening_belanja',
-            'admin_pendukung',
             'sub_kategori_rekening',
         ])->get();
 
         $kategori_rkbus = KategoriRkbu::all();
         $sub_kategori_rekenings = SubKategoriRekening::all();
-        $rekening_belanjas = RekeningBelanja::all();
 
         return view(
             'master_backend.setting_rkbu.sub_kategori_rkbu.index',
-            compact('sub_kategori_rkbus'),
+            compact(
+                'sub_kategori_rkbus',
+                'kategori_rkbus',
+                'sub_kategori_rekenings',
+            ),
             [
                 'title' => 'Halaman Sub Kategori RKBU',
                 'title2' => 'Kategori Sub RKBU',
@@ -45,7 +61,6 @@ class SubKategoriRkbuController extends Controller
     {
         $kategori_rkbus = KategoriRkbu::all();
         $sub_kategori_rekenings = SubKategoriRekening::all();
-        $rekening_belanjas = RekeningBelanja::all();
         // dd($admin_pendukungs);
         return view(
             'master_backend.setting_rkbu.sub_kategori_rkbu.create',
@@ -54,7 +69,6 @@ class SubKategoriRkbuController extends Controller
                 'pptk',
                 'admin_pendukungs',
                 'sub_kategori_rekenings',
-                'rekening_belanjas',
             ),
             [
                 'title' => 'Halaman Sub Kategori RKBU',
@@ -74,18 +88,14 @@ class SubKategoriRkbuController extends Controller
             $request->all(),
             [
                 'id_kategori_rkbu' => 'required',
-                'id_admin_pendukung_ppk' => 'nullable',
                 'id_sub_kategori_rekening' => 'required',
-                'id_kode_rekening_belanja' => 'nullable',
                 'kode_sub_kategori_rkbu' => 'required',
                 'nama_sub_kategori_rkbu' => 'required',
                 'status' => '',
             ],
             [
                 'id_kategori_rkbu.required' => 'Id Fungsional harus diisi.',
-                'id_admin_pendukung_ppk' => 'Id Admin harus diisi.',
                 'id_sub_kategori_rekening.required' => 'Id Pejabat harus diisi.',
-                'id_kode_rekening_belanja' => 'Id Pejabat harus diisi.',
                 'kode_kategori_rkbu.required' => 'Nama kategori_rkbu harus diisi.',
                 'nama_kategori_rkbu.required' => 'NIP kategori_rkbu harus diisi.',
                 'status' => 'Status Harus diisi',
@@ -111,10 +121,7 @@ class SubKategoriRkbuController extends Controller
 
         $sub_kategori_rkbu->fill([
             'id_kategori_rkbu' => $request->input('id_kategori_rkbu'),
-            'id_pptk' => $request->input('id_pptk'),
-            'id_admin_pendukung_ppk' => $request->input('id_admin_pendukung_ppk'),
             'id_sub_kategori_rekening' => $request->input('id_sub_kategori_rekening'),
-            'id_kode_rekening_belanja' => $request->input('id_kode_rekening_belanja'),
             'kode_sub_kategori_rkbu' => $request->input('kode_sub_kategori_rkbu'),
             'nama_sub_kategori_rkbu' => $request->input('nama_sub_kategori_rkbu'),
             'status' => $request->input('status'),
@@ -146,16 +153,12 @@ class SubKategoriRkbuController extends Controller
         $sub_kategori_rkbus = SubKategoriRkbu::with('kategori_rkbu')->findOrFail($id);
         $kategori_rkbus = KategoriRkbu::all();
         $sub_kategori_rekenings = SubKategoriRekening::all();
-        $rekening_belanjas = RekeningBelanja::all();
         return view(
             'master_backend.setting_rkbu.sub_kategori_rkbu.edit',
             compact(
                 'sub_kategori_rkbus',
-                'pptk',
                 'sub_kategori_rekenings',
                 'kategori_rkbus',
-                'admin_pendukungs',
-                'rekening_belanjas',
             ),
             [
                 'title' => 'Halaman Sub Kategori RKBU',
@@ -175,23 +178,17 @@ class SubKategoriRkbuController extends Controller
             $request->all(),
             [
                 'id_kategori_rkbu' => 'required',
-                'id_admin_pendukung_ppk' => 'nullable',
                 'id_sub_kategori_rekening' => 'required',
-                'id_kode_rekening_belanja' => 'required',
                 'kode_sub_kategori_rkbu' => 'required',
                 'nama_sub_kategori_rkbu' => 'required',
                 'status' => '',
-                'id_pptk' => 'nullable',
             ],
             [
                 'id_kategori_rkbu.required' => 'Id Fungsional harus diisi.',
-                'id_admin_pendukung_ppk' => 'Id Admin harus diisi.',
                 'id_sub_kategori_rekening.required' => 'Id Sub Kategori Rekening harus diisi.',
-                'id_kode_rekening_belanja.required' => 'Id Kode Rekening Belanja harus diisi.',
                 'kode_kategori_rkbu.required' => 'Nama kategori_rkbu harus diisi.',
                 'nama_kategori_rkbu.required' => 'NIP kategori_rkbu harus diisi.',
                 'status' => 'Status Harus diisi',
-                'id_pptk' => 'PPTK Harus diisi',
             ],
         );
 
@@ -212,12 +209,9 @@ class SubKategoriRkbuController extends Controller
         // Simpan data ke dalam database
         $subKategoriRkbu->fill([
             'id_kategori_rkbu' => $request->input('id_kategori_rkbu'),
-            'id_pptk' => $request->input('id_pptk'),
             'kode_sub_kategori_rkbu' => $request->input('kode_sub_kategori_rkbu'),
             'nama_sub_kategori_rkbu' => $request->input('nama_sub_kategori_rkbu'),
-            'id_admin_pendukung_ppk' => $request->input('id_admin_pendukung_ppk'),
             'id_sub_kategori_rekening' => $request->input('id_sub_kategori_rekening'),
-            'id_kode_rekening_belanja' => $request->input('id_kode_rekening_belanja'),
             'status' => $request->input('status'),
         ]);
 

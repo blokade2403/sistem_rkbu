@@ -2,9 +2,11 @@
 
 namespace App\Models\MasterBackend\SettingRkbu;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\MasterBackend\SettingRkbu\SubKategoriRkbu;
+use App\Models\Rkbu\Rkbu;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class KategoriRkbu extends Model
 {
@@ -18,26 +20,19 @@ class KategoriRkbu extends Model
         'nama_kategori_rkbu'
     ];
 
+    public function jenis_kategori_rkbu()
+    {
+        return $this->belongsTo(
+            JenisKategoriRkbu::class,
+            'id_jenis_kategori_rkbu',
+            'id_jenis_kategori_rkbu'
+        );
+    }
+
     // Relasi ke ObyekBelanja
     public function obyek_belanja()
     {
         return $this->belongsTo(ObyekBelanja::class, 'id_obyek_belanja');
-    }
-
-    // Relasi ke SubKategoriRkbu
-    public function sub_kategori_rkbus()
-    {
-        return $this->hasMany(SubKategoriRkbu::class, 'id_kategori_rkbu');
-    }
-
-    public function jenis_kategori_rkbu()
-    {
-        return $this->belongsTo(JenisKategoriRkbu::class, 'id_jenis_kategori_rkbu');
-    }
-
-    public function sub_kategori_rkbu()
-    {
-        return $this->hasMany(SubKategoriRkbu::class, 'id_kategori_rkbu');
     }
 
     public function rkbus()

@@ -2,11 +2,13 @@
 
 namespace App\Models\RkbuHistory;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\MasterBackend\SettingRkbu\Rkbu;
+use App\Models\MasterBackend\SettingRkbu\SubKategoriRkbu;
 use App\Models\MasterBackend\UserProfil\User;
+use App\Models\WorkFlow\Approval;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\MasterBackend\SettingRkbu\SubKategoriRkbu;
+use Illuminate\Database\Eloquent\Model;
 
 class RkbuHistory extends Model
 {
@@ -16,13 +18,14 @@ class RkbuHistory extends Model
     protected   $table      = 'rkbu_historys';
 
     protected $fillable = [
-        'id_rkbu',
-        'id_jenis_kategori_rkbu',
-        'id_user',
+        'rkbu_id',
+        'approval_id',
+        'user_id',
+        'aksi',
+        'catatan',
+        'file_path',
         'data_sebelum',
         'data_sesudah',
-        'keterangan_status',
-        'upload_file_5'
     ];
 
     protected $casts = [
@@ -30,15 +33,21 @@ class RkbuHistory extends Model
         'data_sesudah' => 'array',
     ];
 
-    public function user()
+    public function rkbu()
     {
-        return $this->belongsTo(User::class, 'id_user');
+        return $this->belongsTo(Rkbu::class);
     }
 
-    public function sub_kategori_rkbu()
+    public function user()
     {
-        return $this->belongsTo(SubKategoriRkbu::class, 'id_sub_kategori_rkbu', 'id_sub_kategori_rkbu');
+        return $this->belongsTo(User::class);
     }
+
+    public function approval()
+    {
+        return $this->belongsTo(Approval::class);
+    }
+
 
     public function getNamaSubKategoriRkbuAttribute()
     {

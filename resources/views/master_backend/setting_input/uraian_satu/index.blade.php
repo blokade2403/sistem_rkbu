@@ -26,18 +26,19 @@
                 <div class="card-body">
                     @include('components.partials.table.showentrysearch')
                     <div class="table-responsive">
-                        <table id="kt_customers_table"
-                            class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
+                        <table class="table table-row-bordered table-row-gray-100 align-middle gs-0 gy-3">
+                            <!--begin::Table head-->
                             <thead>
                                 <tr class="fw-bolder text-muted">
                                     <th class="w-25px">
                                         <div class="form-check form-check-sm form-check-custom form-check-solid">
                                             <input class="form-check-input" type="checkbox" value="1"
-                                                data-kt-check="true" data-kt-check-target=".widget-9-check" />
+                                                data-kt-check="true" data-kt-check-target=".widget-13-check">
                                         </div>
                                     </th>
-                                    <th class="min-w-20px">No</th>
-                                    <th class="min-w-150px">Uraian Satu</th>
+                                    <th class="min-w-15px">No</th>
+                                    <th class="min-w-140px">Nama Uraian 1</th>
+                                    <th class="min-w-120px">Created At</th>
                                     <th class="min-w-100px text-end">Actions</th>
                                 </tr>
                             </thead>
@@ -47,34 +48,27 @@
                                 @php
                                     $no = 1;
                                 @endphp
-                                    @foreach ($uraian_satus as $item)
+                                @foreach ($uraian_satus as $item)
                                     <tr>
                                         <td>
                                             <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                                <input class="form-check-input widget-9-check" type="checkbox"
-                                                    value="1" />
+                                                <input class="form-check-input widget-13-check" type="checkbox"
+                                                    value="1">
                                             </div>
                                         </td>
-                                        <td>{{ $no++ }}</td>
                                         <td>
-                                            <div class="card mb-2 mb-xl-6">
-                                                <div class="card-body pb-0">
-                                                    <div class="d-flex align-items-center mb-3">
-                                                        <div class="d-flex align-items-center flex-grow-1">
-                                                            <div class="symbol symbol-45px me-5">
-                                                                <img src="{{ asset('assets/media/svg/brand-logos/tvit.svg') }}"
-                                                                    alt="" />
-                                                            </div>
-                                                            <div class="d-flex flex-column">
-                                                                <a href="#"
-                                                                    class="text-gray-900 text-hover-primary fs-6 fw-bolder">{{ $item->nama_uraian_1 }}</a>
-                                                                <span
-                                                                    class="text-gray-400 fw-bold">{{ $item->created_at }}</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <a href="#"
+                                                class="text-dark fw-bolder text-hover-primary fs-6">{{ $no++ }}</a>
+                                        </td>
+                                        <td>
+                                            <a href="#"
+                                                class="text-dark fw-bolder text-hover-primary fs-6">{{ $item->nama_uraian_1 }}</a>
+                                        </td>
+                                        <td>
+                                            <a href="#"
+                                                class="text-dark fw-bolder text-hover-primary d-block mb-1 fs-6">{{ $item->created_at }}</a>
+                                            <span class="text-muted fw-bold text-muted d-block fs-7">ID:
+                                                {{ $item->id_uraian_1 }}</span>
                                         </td>
                                         <td>
                                             <div class="d-flex justify-content-end flex-shrink-0">
@@ -113,8 +107,8 @@
                                                     </span>
                                                     <!--end::Svg Icon-->
                                                 </a>
-                                                <form action="{{ route('uraian_satus.destroy', $item->id_uraian_1) }}" method="POST"
-                                                    class="d-inline form-delete">
+                                                <form action="{{ route('uraian_satus.destroy', $item->id_uraian_1) }}"
+                                                    method="POST" class="d-inline form-delete">
 
                                                     @csrf
                                                     @method('DELETE')
@@ -152,6 +146,7 @@
                             </tbody>
                             <!--end::Table body-->
                         </table>
+
                         @include('master_backend.setting_input.uraian_satu.modal_edit')
                         <!--end::Table-->
                     </div>

@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('workflow_steps', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('workflow_id');
-            $table->uuid('position_id');
+            $table->uuid('position_id')->nullable();
             $table->foreignUuid('role_id')->nullable()->constrained('roles')->nullOnDelete();
             $table->integer('step_order');
             $table->boolean('is_required')->default(true);

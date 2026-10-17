@@ -73,7 +73,6 @@ class UsulanSpjPegawaiController extends Controller
                 'jenis_kategori_rkbus.id_jenis_kategori_rkbu',
                 'sub_kategori_rkbus.id_admin_pendukung_ppk',
                 'sub_kategori_rkbus.id_sub_kategori_rekening',
-                'sub_kategori_rkbus.id_kode_rekening_belanja',
                 'sub_kategori_rkbus.id_sub_kategori_rkbu'
             )
             ->get()

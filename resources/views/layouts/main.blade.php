@@ -41,7 +41,9 @@
     <!--end::Main-->
     @include('layouts.jquery')
     @include('layouts.js')
-
+    @include('layouts.js_rkbu')
+    @include('layouts.js_workflow')
+    @stack('scripts')
 
 </body>
 <!--end::Body-->
