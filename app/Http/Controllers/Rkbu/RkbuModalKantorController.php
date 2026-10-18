@@ -53,6 +53,7 @@ class RkbuModalKantorController extends Controller
             'uraian_satu'           => $uraian_satu,
             'uraian_dua'            => $uraian_dua,
             'sumber_dana'           => $sumber_dana,
+            'sub_kategori_rkbu'     => RkbuListFilters::availableSubcategories($this->subKategoriOptions(), 'detailModal'),
             'ppn'                   => $ppn,
             'approval_statuses'     => RkbuListFilters::APPROVAL_STATUSES,
         ]);
@@ -501,6 +502,6 @@ class RkbuModalKantorController extends Controller
 
     private function subKategoriOptions()
     {
-        return SubKategoriRkbu::query()->forJenisKategori('Modal');
+        return SubKategoriRkbu::query()->forJenisKategori('Modal Kantor');
     }
 }

@@ -61,6 +61,7 @@ class RkbuBarjasController extends Controller
             'uraian_satu'           => $uraian_satu,
             'uraian_dua'            => $uraian_dua,
             'sumber_dana'           => $sumber_dana,
+            'sub_kategori_rkbu'     => RkbuListFilters::availableSubcategories($this->subKategoriOptions(), 'detailBarjas'),
             'ppn'                   => $ppn,
             'approval_statuses'     => RkbuListFilters::APPROVAL_STATUSES,
         ]);

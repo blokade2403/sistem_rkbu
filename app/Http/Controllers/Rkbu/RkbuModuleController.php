@@ -12,6 +12,7 @@ use App\Models\Rkbu\Rkbu;
 use App\Models\Rkbu\RkbuDetailModal;
 use App\Models\Rkbu\RkbuDetailPegawai;
 use App\Models\Rkbu\RkbuDetailPersediaan;
+use App\Support\Rkbu\RkbuListFilters;
 use App\Services\Workflow\WorkflowApprovalService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -158,14 +159,41 @@ class RkbuModuleController extends Controller
     {
         $module = $this->module($request);
         $config = self::MODULES[$module];
+        $detailRelation = match ($config['model']) {
+            RkbuDetailPegawai::class => 'detailPegawai',
+            RkbuDetailPersediaan::class => 'detailPersediaan',
+            RkbuDetailModal::class => 'detailModal',
+            default => 'detailBarjas',
+        };
+        $filters = $request->validate([
+            'sub_kategori_rkbu_id' => ['nullable', 'uuid', 'exists:sub_kategori_rkbus,id_sub_kategori_rkbu'],
+        ]);
+        $subcategories = RkbuListFilters::availableSubcategories(
+            $this->subcategories($module),
+            $detailRelation
+        );
+        $selectedSubcategory = $filters['sub_kategori_rkbu_id'] ?? null;
+
+        abort_if(
+            $selectedSubcategory && ! $subcategories->contains('id_sub_kategori_rkbu', $selectedSubcategory),
+            404
+        );
+
         $model = $config['model'];
 
         $records = $this->visibleRecords($module)
+            ->when($selectedSubcategory, fn(Builder $query) => $query->whereHas(
+                'rkbu',
+                fn(Builder $rkbuQuery) => $rkbuQuery->where('sub_kategori_rkbu_id', $selectedSubcategory)
+            ))
             ->with('rkbu')
             ->latest()
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
-        return view('rkbu.modules.index', compact('config', 'records'), ['title' => $config['title']]);
+        return view('rkbu.modules.index', compact('config', 'records', 'subcategories', 'selectedSubcategory'), [
+            'title' => $config['title'],
+        ]);
     }
 
     public function create(Request $request)

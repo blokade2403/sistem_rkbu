@@ -50,6 +50,7 @@ class RkbuPersediaanController extends Controller
             'uraian_satu'           => $uraian_satu,
             'uraian_dua'            => $uraian_dua,
             'sumber_dana'           => $sumber_dana,
+            'sub_kategori_rkbu'     => RkbuListFilters::availableSubcategories($this->subKategoriOptions(), 'detailPersediaan'),
             'ppn'                   => $ppn,
             'approval_statuses'     => RkbuListFilters::APPROVAL_STATUSES,
         ]);
@@ -396,6 +397,6 @@ class RkbuPersediaanController extends Controller
 
     private function subKategoriOptions()
     {
-        return SubKategoriRkbu::query()->forJenisKategori('Persediaan');
+        return SubKategoriRkbu::query()->forJenisKategori('Belanja Barang Persediaan');
     }
 }

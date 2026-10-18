@@ -452,14 +452,14 @@ class WorkflowApprovalController extends Controller
             ?? $approval->workflowInstance?->currentPosition;
         $nextStep = $approval->workflowStep
             ? WorkflowStep::query()
-                ->where('workflow_id', $approval->workflowStep->workflow_id)
-                ->where('step_order', '>', $approval->workflowStep->step_order)
-                ->orderBy('step_order')
-                ->first()
+            ->where('workflow_id', $approval->workflowStep->workflow_id)
+            ->where('step_order', '>', $approval->workflowStep->step_order)
+            ->orderBy('step_order')
+            ->first()
             : null;
         $nextOfficials = collect();
-        if ($isSuperAdmin && $approval->status === 'pending' && $nextStep && $currentPosition?->parent_id) {
-            $nextOfficials = $this->activeAssignmentsForPosition($currentPosition->parent_id)
+        if ($isSuperAdmin && $approval->status === 'pending' && $nextStep && $currentPosition) {
+            $nextOfficials = $this->activeAssignmentsForWorkflowStep($nextStep, $currentPosition)
                 ->map(fn($official) => [
                     'id' => $official->id,
                     'label' => $official->user->nama . ' - ' . $official->position->nama_jabatan,
@@ -493,16 +493,57 @@ class WorkflowApprovalController extends Controller
                 ])
                 : collect(),
             'nextOfficials' => $nextOfficials,
-            'requiresNextOfficial' => $isSuperAdmin && $approval->status === 'pending' && $nextStep && $currentPosition?->parent_id,
+            'requiresNextOfficial' => $isSuperAdmin && $approval->status === 'pending' && (bool) $nextStep,
             'updateUrl' => route('workflowapproval.update-rkbu', $approval->id),
         ]);
     }
 
-    private function activeAssignmentsForPosition(string $positionId)
+    private function activeAssignmentsForWorkflowStep(WorkflowStep $step, Position $currentPosition)
+    {
+        $query = $this->activeAssignmentsQuery();
+        $validatorType = $step->validator_type
+            ?? ($step->position_id ? WorkflowStep::TYPE_POSITION : WorkflowStep::TYPE_HIERARCHY);
+
+        if ($step->position_id) {
+            return $query->where('position_id', $step->position_id)->get();
+        }
+
+        if ($validatorType === WorkflowStep::TYPE_HIERARCHY) {
+            $position = $currentPosition;
+            $hierarchyLevel = max(1, (int) $step->hierarchy_level);
+
+            for ($level = 0; $level < $hierarchyLevel; $level++) {
+                if (! $position->parent_id) {
+                    return collect();
+                }
+
+                $position = $position->parent;
+            }
+
+            return $query->where('position_id', $position->id)->get();
+        }
+
+        if ($validatorType === WorkflowStep::TYPE_ROLE && $step->role_id) {
+            return $query->whereHas(
+                'user.roles',
+                fn(Builder $roleQuery) => $roleQuery->whereKey($step->role_id)
+            )->get();
+        }
+
+        if ($validatorType === WorkflowStep::TYPE_USER && $step->validator_role_id) {
+            return $query->whereHas(
+                'user.validatorRoles',
+                fn(Builder $roleQuery) => $roleQuery->whereKey($step->validator_role_id)
+            )->get();
+        }
+
+        return collect();
+    }
+
+    private function activeAssignmentsQuery(): Builder
     {
         return PositionAssignment::query()
             ->with(['user', 'position'])
-            ->where('position_id', $positionId)
             ->where('is_active', true)
             ->whereDate('tanggal_mulai', '<=', today())
             ->where(function (Builder $query) {
@@ -511,8 +552,7 @@ class WorkflowApprovalController extends Controller
             })
             ->whereHas('user', fn(Builder $query) => $query->where('status_user', 'aktif'))
             ->orderByDesc('tanggal_mulai')
-            ->orderByDesc('created_at')
-            ->get();
+            ->orderByDesc('created_at');
     }
 
     private function editableDetailFields($detail): array
@@ -659,6 +699,7 @@ class WorkflowApprovalController extends Controller
                 'Kondisi Rusak Berat' => 'kondisi_rusak_berat',
                 'Status Komponen' => 'status_komponen',
             ],
+
             default => [
                 'Nama Barang' => 'nama_barang',
                 'Spesifikasi' => 'spesifikasi',
@@ -749,12 +790,33 @@ class WorkflowApprovalController extends Controller
 
     private function approvalsForCurrentYear(): Builder
     {
+        return $this->approvalsForCurrentYearHistory()->whereNotExists(function ($query) {
+            $query->selectRaw('1')
+                ->from('approvals as later_approval')
+                ->whereColumn('later_approval.workflow_instance_id', 'approvals.workflow_instance_id')
+                ->where(function ($query) {
+                    $query->whereColumn('later_approval.sequence', '>', 'approvals.sequence')
+                        ->orWhere(function ($sameSequenceQuery) {
+                            $sameSequenceQuery->whereColumn('later_approval.sequence', '=', 'approvals.sequence')
+                                ->where(function ($laterQuery) {
+                                    $laterQuery->whereColumn('later_approval.created_at', '>', 'approvals.created_at')
+                                        ->orWhere(function ($sameTimestampQuery) {
+                                            $sameTimestampQuery->whereColumn('later_approval.created_at', '=', 'approvals.created_at')
+                                                ->whereColumn('later_approval.id', '>', 'approvals.id');
+                                        });
+                                });
+                        });
+                });
+        });
+    }
+
+    private function approvalsForCurrentYearHistory(): Builder
+    {
         return Approval::query()->whereHas(
             'workflowInstance.rkbu',
-            fn(Builder $query) => $query->where(
-                'tahun_anggaran_id',
-                session('tahun_anggaran_id')
-            )
+            fn(Builder $query) => $query
+                ->where('tahun_anggaran_id', session('tahun_anggaran_id'))
+                ->whereColumn('rkbus.workflow_instance_id', 'workflow_instances.id')
         );
     }
 
@@ -771,7 +833,7 @@ class WorkflowApprovalController extends Controller
 
     private function approvalsForCurrentPosition(PositionAssignment $assignment): Builder
     {
-        return $this->approvalsForCurrentYear()->where(function (Builder $query) use ($assignment) {
+        return $this->approvalsForCurrentYearHistory()->where(function (Builder $query) use ($assignment) {
             $query->where('position_id', $assignment->position_id)
                 ->orWhere(function (Builder $legacyQuery) use ($assignment) {
                     $legacyQuery->whereNull('position_id')
@@ -794,8 +856,8 @@ class WorkflowApprovalController extends Controller
             'approval_id' => $approval->id,
             'workflow_instance_id' => $approval->workflow_instance_id,
             'user_id' => auth()->id(),
-            'position_id' => $assignment?->position_id,
-            'position_assignment_id' => $assignment?->id,
+            'position_id' => $assignment?->position_id ?? $approval->position_id,
+            'position_assignment_id' => $assignment?->id ?? $approval->position_assignment_id,
             'aksi' => $action,
             'catatan' => $note,
             'aksi_at' => now(),
@@ -864,7 +926,12 @@ class WorkflowApprovalController extends Controller
                 ->first();
 
             $nextAssignment = null;
-            if ($currentPosition->parent_id && $nextStep) {
+            if ($nextStep) {
+                $nextAssignments = $this->activeAssignmentsForWorkflowStep($nextStep, $currentPosition);
+                if ($nextAssignments->isEmpty()) {
+                    throw new Exception('Tidak ada pejabat aktif yang sesuai dengan workflow step berikutnya.');
+                }
+
                 if ($isSuperAdmin) {
                     $nextAssignmentId = $request->input('next_assignment_id');
                     if (! $nextAssignmentId) {
@@ -876,29 +943,17 @@ class WorkflowApprovalController extends Controller
                         ], 422);
                     }
 
-                    $nextAssignment = $this->activeAssignmentsForPosition($currentPosition->parent_id)
-                        ->firstWhere('id', $nextAssignmentId);
+                    $nextAssignment = $nextAssignments->firstWhere('id', $nextAssignmentId);
                     if (! $nextAssignment) {
                         DB::rollBack();
 
                         return response()->json([
                             'success' => false,
-                            'message' => 'Pejabat yang dipilih bukan pejabat aktif pada hirarki berikutnya.',
+                            'message' => 'Pejabat yang dipilih tidak sesuai dengan workflow step berikutnya.',
                         ], 422);
                     }
                 } else {
-                    $nextPosition = Position::find($currentPosition->parent_id);
-                    if (! $nextPosition) {
-                        throw new Exception('Parent Position tidak ditemukan.');
-                    }
-
-                    $nextAssignment = app(PositionAssignmentService::class)
-                        ->getAssignmentByPosition($nextPosition->id);
-                    if (! $nextAssignment) {
-                        throw new Exception(
-                            'Belum ada pejabat aktif pada jabatan ' . $nextPosition->nama_jabatan . '.'
-                        );
-                    }
+                    $nextAssignment = $nextAssignments->first();
                 }
             }
 
@@ -909,41 +964,15 @@ class WorkflowApprovalController extends Controller
                 'status' => 'approved',
                 'catatan' => $request->note,
                 'approved_at' => now(),
+                'closed_at' => now(),
+                'is_current' => ! $nextStep,
             ]);
             $this->logApprovalAction($approval, $assignment, 'approved', $request->note);
 
-            /**
-             * Cari parent
-             */
-            if (! $currentPosition->parent_id) {
-                /**
-                 * Sudah Direktur
-                 */
-                $approval->workflowInstance->update([
-                    'status' => 'approved',
-                ]);
-                $approval->workflowInstance
-                    ->rkbu
-                    ->update([
-                        'status' => 'approved',
-                    ]);
-                DB::commit();
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Approval selesai.',
-                ]);
-            }
-
-            /**
-             * Parent Position
-             */
-            /**
-             * Tidak ada step lagi
-             */
             if (! $nextStep) {
                 $approval->workflowInstance->update([
                     'status' => 'approved',
+                    'current_position_id' => null,
                 ]);
                 $approval->workflowInstance
                     ->rkbu
@@ -968,6 +997,8 @@ class WorkflowApprovalController extends Controller
                 'validator_user_id' => $nextAssignment->user_id,
                 'position_id' => $nextAssignment->position_id,
                 'position_assignment_id' => $nextAssignment->id,
+                'sequence' => (int) $approval->sequence + 1,
+                'is_current' => true,
                 'received_at' => now(),
                 'status' => 'pending',
             ]);
@@ -1176,206 +1207,4 @@ class WorkflowApprovalController extends Controller
             'results' => $results,
         ]);
     }
-
-    // public function getData()
-    // {
-    //     $data = Approval::with([
-    //         'workflowInstance.rkbu',
-    //         'workflowStep',
-    //         'validatorUser'
-    //     ])
-    //         ->where('status', 'pending')
-    //         ->where('validator_user_id', auth()->id());
-
-    //     return DataTables::of($data)
-
-    //         ->addIndexColumn()
-
-    //         ->addColumn('dokumen', function ($row) {
-
-    //             return strtoupper(
-    //                 $row->workflowInstance->dokumen_type
-    //             );
-    //         })
-
-    //         ->addColumn('status', function ($row) {
-
-    //             return '<span class="badge badge-warning">
-    //                     Pending
-    //                 </span>';
-    //         })
-
-    //         ->addColumn('nomor_dokumen', function ($row) {
-
-    //             return optional(
-    //                 $row->workflowInstance->rkbu
-    //             )->nomor_rkbu;
-    //         })
-
-    //         ->addColumn('action', function ($row) {
-
-    //             return '
-
-    //             <button
-    //                 class="btn btn-icon btn-bg-light btn-active-color-info btn-sm btn-detail"
-    //                 data-id="' . $row->id . '"
-    //                 data-url="' . route('workflowapproval.show', $row->id) . '">
-
-    //                 Detail
-    //             </button>
-    //             <button
-    //                 class="btn btn-success btn-approve"
-    //                 data-id="' . $row->id . '">
-    //                 Approve
-    //             </button>
-    //             <button
-    //                 class="btn btn-warning btn-revision"
-    //                 data-id="' . $row->id . '">
-    //                 Revision
-    //             </button>
-    //             <button
-    //                 class="btn btn-danger btn-reject"
-    //                 data-id="' . $row->id . '">
-    //                 Reject
-    //             </button>
-    //                         ';
-    //         })
-
-    //         ->rawColumns([
-    //             'status',
-    //             'action',
-    //             'nomor_dokumen'
-    //         ])
-
-    //         ->make(true);
-    // }
-
-    // public function show($id)
-    // {
-    //     $approval = Approval::with([
-    //         'workflowInstance.rkbu.detailBarjas',
-    //         'workflowStep',
-    //         'validatorRole'
-    //     ])->findOrFail($id);
-
-    //     $rkbu = Rkbu::with([
-    //         'unit',
-    //         'tahunAnggaran',
-    //         'detailBarjas'
-    //     ])->findOrFail(
-    //         $approval->workflowInstance->dokumen_id
-    //     );
-
-    //     return response()->json([
-    //         'approval' => $approval,
-    //         'rkbu' => $rkbu,
-    //         'details' => $rkbu->detailBarjas,
-    //         'catatan' => $approval->catatan
-    //     ]);
-    // }
-
-    // public function approve(Request $request, $id)
-    // {
-    //     DB::beginTransaction();
-
-    //     try {
-
-    //         $approval = Approval::with([
-    //             'workflowInstance.rkbu',
-    //             'workflowStep.validatorRole'
-    //         ])->findOrFail($id);
-
-    //         if ($approval->status !== 'pending') {
-    //             throw new \Exception(
-    //                 'Approval sudah diproses.'
-    //             );
-    //         }
-
-    //         $approval->update([
-    //             'status'      => 'approved',
-    //             'catatan'     => $request->note,
-    //             'approved_at' => now()
-    //         ]);
-
-    //         $nextStep = WorkflowStep::with('validatorRole')
-    //             ->where(
-    //                 'workflow_id',
-    //                 $approval->workflowStep->workflow_id
-    //             )
-    //             ->where(
-    //                 'step_order',
-    //                 '>',
-    //                 $approval->workflowStep->step_order
-    //             )
-    //             ->orderBy('step_order')
-    //             ->first();
-
-    //         /**
-    //          * Masih ada step berikutnya
-    //          */
-    //         if ($nextStep) {
-
-    //             $validator = UserValidatorRole::where(
-    //                 'validator_role_id',
-    //                 $nextStep->validator_role_id
-    //             )
-    //                 ->where('is_active', 1)
-    //                 ->first();
-
-    //             if (!$validator) {
-
-    //                 throw new \Exception(
-    //                     'Belum ada validator aktif untuk role : ' .
-    //                         optional($nextStep->validatorRole)->nama_validator
-    //                 );
-    //             }
-
-    //             Approval::create([
-    //                 'workflow_instance_id' => $approval->workflow_instance_id,
-    //                 'workflow_step_id'     => $nextStep->id,
-    //                 'validator_role_id'    => $nextStep->validator_role_id,
-    //                 'validator_user_id'    => $validator->user_id,
-    //                 'status'               => 'pending'
-    //             ]);
-
-    //             $approval->workflowInstance->update([
-    //                 'current_step_id' => $nextStep->id,
-    //                 'status'          => 'proses'
-    //             ]);
-    //         } else {
-
-    //             /**
-    //              * Step terakhir
-    //              */
-    //             $approval->workflowInstance->update([
-    //                 'status' => 'approved'
-    //             ]);
-
-    //             if ($approval->workflowInstance->rkbu) {
-
-    //                 $approval->workflowInstance
-    //                     ->rkbu
-    //                     ->update([
-    //                         'status' => 'approved'
-    //                     ]);
-    //             }
-    //         }
-
-    //         DB::commit();
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Approval berhasil.'
-    //         ]);
-    //     } catch (\Exception $e) {
-
-    //         DB::rollBack();
-
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-
 }

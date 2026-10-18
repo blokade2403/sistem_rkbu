@@ -22,7 +22,7 @@
                 </div>
                 <div class="card-body">
                     <form id="modal-filter-form" action="{{ route('rkbu.modal_kantor.print') }}" method="GET" class="row g-3 align-items-end mb-5">
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-lg-3">
                             <label for="modal-filter-sumber-dana" class="form-label">Sumber Dana</label>
                             <select id="modal-filter-sumber-dana" name="sumber_dana_id" class="form-select">
                                 <option value="">Semua Sumber Dana</option>
@@ -31,7 +31,19 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4 col-lg-4">
+                            <label for="modal-filter-subkategori" class="form-label">Subkategori RKBU</label>
+                            <select id="modal-filter-subkategori" name="sub_kategori_rkbu_id" class="form-select"
+                                data-control="select2" data-placeholder="Semua Subkategori RKBU">
+                                <option value="">Semua Subkategori RKBU</option>
+                                @foreach ($sub_kategori_rkbu as $subKategori)
+                                    <option value="{{ $subKategori->id_sub_kategori_rkbu }}">
+                                        {{ $subKategori->kode_sub_kategori_rkbu }} - {{ $subKategori->nama_sub_kategori_rkbu }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4 col-lg-2">
                             <label for="modal-filter-status" class="form-label">Status Approval</label>
                             <select id="modal-filter-status" name="approval_status" class="form-select">
                                 <option value="">Semua Status</option>
@@ -40,7 +52,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-4 d-flex gap-2">
+                        <div class="col-md-12 col-lg-3 d-flex flex-wrap gap-2">
                             <button type="button" class="btn btn-primary" id="modal-apply-filter">Terapkan Filter</button>
                             <button type="button" class="btn btn-light" id="modal-reset-filter">Reset</button>
                             <button type="submit" class="btn btn-success">
@@ -63,6 +75,7 @@
         <script>
             $('#rkbumodalkantor-table').on('preXhr.dt', function (event, settings, data) {
                 data.sumber_dana_id = $('#modal-filter-sumber-dana').val();
+                data.sub_kategori_rkbu_id = $('#modal-filter-subkategori').val();
                 data.approval_status = $('#modal-filter-status').val();
             });
 
@@ -71,7 +84,7 @@
             });
 
             $('#modal-reset-filter').on('click', function () {
-                $('#modal-filter-sumber-dana, #modal-filter-status').val('');
+                $('#modal-filter-sumber-dana, #modal-filter-subkategori, #modal-filter-status').val('').trigger('change');
                 $('#rkbumodalkantor-table').DataTable().ajax.reload();
             });
         </script>

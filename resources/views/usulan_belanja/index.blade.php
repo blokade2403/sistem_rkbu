@@ -1,154 +1,144 @@
+
 @extends('layouts.main')
+@section('title', 'Usulan Belanja')
+
 @section('content')
-    <script>
-        const routeSubKategori = "{{ $routeAjaxSubKategori }}";
-    </script>
-    @include('partials.add_buttons_usulan_belanja', ['routePrefix' => $routePrefix])
-    @include('usulan_belanja.partials.modal_sub_kategori_usulan_belanja')
-    <div class="row">
-        <div class="col-xl-12">
-            <div class="card">
-                <div class="card-header align-items-center d-flex">
-                    <h4 class="card-title mb-0 flex-grow-1">{{ $title }}</h4>
-                </div><!-- end card header -->
-                <div class="card-block">
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table id="responsive-reorder"
-                                class="table table-hover table-centered align-middle table-nowrap mb-0">
-                                <thead>
-                                    <th>No</th>
-                                    <th>Usulan Barang</th>
-                                    <th>Tambah Barang</th>
-                                    <th>Status</th>
-                                    <th witdh=100%>Detail Usulan</th>
-                                    <th>Action</th>
-                                    <th>Sub Kategori</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php
-                                        $no = 1;
-                                    @endphp
-                                    @foreach ($id_usulan as $keyIndex => $key)
-                                        <tr>
-                                            <td>{{ $no++ }}</td>
-                                            <td>
-                                                <ul class="list list-unstyled">
-                                                    <li>
-                                                        <span
-                                                            class="f-16 text-primary">#&nbsp;{{ $key->no_usulan_barang }}</span>
-                                                    </li>
-                                                    <li>
-                                                        <span class="f-14">Pengusul :
-                                                            {{ $key->nama_pengusul_barang }}</span></br>
-                                                        <span class="f-14">Tanggal :
-                                                            {{ $key->created_at }}</span>
-                                                    </li>
-                                                </ul>
-                                            </td>
-                                            <td>
-                                                <div class="br-wrapper br-theme-bars-movie">
-                                                    <span class="f-12">Status Usulan</span>
-                                                    <div class="br-widget">
-                                                        <a href="#" data-rating-value="Bad" data-rating-text="Bad"
-                                                            class="br-selected"></a>
-                                                        <a href="#" data-rating-value="Mediocre"
-                                                            data-rating-text="Mediocre" class="br-selected"></a>
-                                                        <a href="#" data-rating-value="Good" data-rating-text="Good"
-                                                            class=""></a>
-                                                        <a href="#" data-rating-value="Awesome"
-                                                            data-rating-text="Awesome" class=""></a>
-                                                        <div class="br-current-rating f-12">
-                                                            <span
-                                                                class="badge badge-soft-info">{{ $key->status_usulan_barang }}
-                                                            </span>
-                                                            @if ($key->status_validasi_direktur == 'Revisi')
-                                                                <span
-                                                                    class="badge badge-soft-danger fs-110">{{ $key->status_validasi_direktur }}
-                                                                    :
-                                                                    {{ $key->keterangan_direktur }}</span>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="text-center align-middle">
-                                                <button type="button" data-bs-toggle="modal"
-                                                    data-bs-target=".bs-example-modal-xl"
-                                                    class="btn btn-primary btn-label waves-effect waves-light"
-                                                    data-toggle="modal" data-target="#large-Modal{{ $keyIndex }}"
-                                                    data-indextable="{{ $keyIndex }}"
-                                                    data-id_usulan_barang="{{ $key->id_usulan_barang }}">
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0">
-                                                            <i
-                                                                class="ri-shield-cross-line label-icon align-middle fs-16 me-2"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            add data
-                                                        </div>
-                                                    </div>
-                                                </button>
+<div class="card">
+    <div class="card-header border-0 pt-6">
+        <div class="card-title">
+            <h3 class="fw-bold">Daftar Usulan Belanja</h3>
+        </div>
 
-                                            </td>
-                                            <td class="text-center align-middle">
-                                                <a href="{{ route($routePrefix . '.keranjang', $key->id_usulan_barang) }}"
-                                                    class="btn btn-info btn-label waves-effect waves-light">
-                                                    <div class="d-flex">
-                                                        <div class="flex-shrink-0">
-                                                            <i
-                                                                class="ri-eye-close-fill label-icon align-middle fs-16 me-2"></i>
-                                                        </div>
-                                                        <div class="flex-grow-1">
-                                                            lihat keranjang
-                                                        </div>
-                                                    </div>
-                                                </a>
-                                            </td>
-                                            <td class="text-center align-middle">
+        <div class="card-toolbar">
+            <a href="{{ route('usulan-belanja.create') }}"
+               class="btn btn-primary">
+                <i class="ki-duotone ki-plus fs-2"></i>
+                Buat Usulan
+            </a>
+        </div>
+    </div>
 
-                                                @if ($key->usulanBarangDetails->isEmpty())
-                                                    <form
-                                                        action="{{ route($routePrefix . '.delete', $key->id_usulan_barang) }}"
-                                                        method="POST" class="delete-form">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit"
-                                                            class="btn btn-danger btn-label waves-effect waves-light"><i
-                                                                class="ri-delete-bin-2-line label-icon align-middle fs-16 me-2 "></i>
-                                                            Delete</button>
-                                                    </form>
-                                                @else
-                                                    <button type="button" class="btn btn-outline-danger btn-load">
-                                                        <span class="d-flex align-items-center">
-                                                            <span class="flex-grow-1 me-2">
-                                                                Loading...
-                                                            </span>
-                                                            <span class="spinner-grow flex-shrink-0" role="status">
-                                                                <span class="visually-hidden">Loading...</span>
-                                                            </span>
-                                                        </span>
-                                                    </button>
-                                                @endif
-                                            </td>
-                                            <td class="f-16 text-wrap">
-                                                <div class="br-wrapper br-theme-bars-movie">
-                                                    {{ $key->sub_kategori_rkbu->kode_sub_kategori_rkbu }}.
-                                                    {{ $key->sub_kategori_rkbu->nama_sub_kategori_rkbu }}
-                                                </div>
+    <div class="card-body py-4">
+        @if(session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
 
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div> <!-- .card-->
-        </div> <!-- .col-->
-    </div> <!-- end row-->
-    @include('usulan_belanja.partials.modal_komponen_usulan_barang')
-    <!--  Extra Large modal example -->
+        <form method="GET"
+              action="{{ route('usulan-belanja.index') }}"
+              class="row g-3 mb-6">
+
+            <div class="col-md-4">
+                <label class="form-label">Tahun Anggaran</label>
+                <select name="tahun_anggaran_id" class="form-select">
+                    <option value="">Semua Tahun</option>
+                    @foreach($tahunAnggarans as $tahun)
+                        <option value="{{ $tahun->id }}"
+                            @selected(request('tahun_anggaran_id') === $tahun->id)>
+                            {{ $tahun->nama_tahun_anggaran }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">Semua Status</option>
+                    @foreach([
+                        'draft' => 'Draft',
+                        'proses' => 'Proses Validasi',
+                        'revision' => 'Revisi',
+                        'approved' => 'Disetujui',
+                        'rejected' => 'Ditolak',
+                    ] as $value => $label)
+                        <option value="{{ $value }}"
+                            @selected(request('status') === $value)>
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-md-4 d-flex align-items-end gap-2">
+                <button class="btn btn-primary" type="submit">
+                    Filter
+                </button>
+                <a href="{{ route('usulan-belanja.index') }}"
+                   class="btn btn-light">
+                    Reset
+                </a>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table align-middle table-row-dashed fs-6 gy-4">
+                <thead>
+                    <tr class="text-gray-500 fw-bold text-uppercase">
+                        <th>No.</th>
+                        <th>No. Usulan</th>
+                        <th>Pengusul</th>
+                        <th>No. RKBU</th>
+                        <th>Tahun Anggaran</th>
+                        <th>Status</th>
+                        <th class="text-end">Aksi</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @forelse($usulans as $usulan)
+                        <tr>
+                            <td>
+                                {{ $usulans->firstItem() + $loop->index }}
+                            </td>
+                            <td class="fw-bold">
+                                {{ $usulan->no_usulan_belanja }}
+                            </td>
+                            <td>{{ $usulan->nama_pengusul }}</td>
+                            <td>
+                                {{ $usulan->rkbu?->nomor_rkbu ?? '-' }}
+                            </td>
+                            <td>
+                                {{ $usulan->tahunAnggaran?->nama_tahun_anggaran ?? '-' }}
+                            </td>
+                            <td>
+                                @php
+                                    $badge = [
+                                        'draft' => 'secondary',
+                                        'proses' => 'warning',
+                                        'revision' => 'info',
+                                        'approved' => 'success',
+                                        'rejected' => 'danger',
+                                    ][$usulan->status_usulan] ?? 'secondary';
+                                @endphp
+
+                                <span class="badge badge-light-{{ $badge }}">
+                                    {{ strtoupper($usulan->status_usulan) }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ route(
+                                    'usulan-belanja.show',
+                                    $usulan->id
+                                ) }}" class="btn btn-sm btn-light-primary">
+                                    Detail
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7"
+                                class="text-center text-muted py-10">
+                                Belum ada Usulan Belanja.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        {{ $usulans->links() }}
+    </div>
+</div>
 @endsection

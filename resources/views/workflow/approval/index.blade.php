@@ -13,7 +13,7 @@
                             <span class="card-label fw-bolder fs-3 mb-1">Approval RKBU</span>
                         </h3>
                         <div class="card-toolbar d-flex flex-wrap align-items-center gap-2">
-                            <select id="approval-module-filter" class="form-select form-select-sm w-auto">
+                            <select id="approval-module-filter" class="form-select form-select-sm w-auto" data-control="select2">
                                 <option value="all" {{ $module === 'all' ? 'selected' : '' }}>Semua Menu</option>
                                 <option value="barjas" {{ $module === 'barjas' ? 'selected' : '' }}>RKBU Barjas</option>
                                 <option value="pegawai" {{ $module === 'pegawai' ? 'selected' : '' }}>RKBU Pegawai</option>
@@ -22,21 +22,22 @@
                                 <option value="modal-kantor" {{ $module === 'modal-kantor' ? 'selected' : '' }}>RKBU Modal Kantor</option>
                                 <option value="modal-alkes" {{ $module === 'modal-alkes' ? 'selected' : '' }}>RKBU Modal Alkes</option>
                             </select>
-                            <select id="approval-sumber-dana-filter" class="form-select form-select-sm w-auto">
+                            <select id="approval-sumber-dana-filter" class="form-select form-select-sm w-auto" data-control="select2">
                                 <option value="">Semua Sumber Dana</option>
                                 @foreach ($sumberDanas as $sumberDana)
                                     <option value="{{ $sumberDana->id_sumber_dana }}">{{ $sumberDana->nama_sumber_dana }}</option>
                                 @endforeach
                             </select>
-                            <select id="approval-subkategori-filter" class="form-select form-select-sm w-auto">
-                                <option value="">Semua Subkategori</option>
+                            <select id="approval-subkategori-filter" class="form-select form-select-sm w-auto" data-control="select2"
+                                data-placeholder="Semua Subkategori RKBU">
+                                <option value="">Semua Subkategori RKBU</option>
                                 @foreach ($subKategoris as $subKategori)
                                     <option value="{{ $subKategori->id_sub_kategori_rkbu }}">
                                         {{ $subKategori->kode_sub_kategori_rkbu }} - {{ $subKategori->nama_sub_kategori_rkbu }}
                                     </option>
                                 @endforeach
                             </select>
-                            <select id="approval-status-filter" class="form-select form-select-sm w-auto">
+                            <select id="approval-status-filter" class="form-select form-select-sm w-auto" data-control="select2">
                                 <option value="">Semua Status Approval</option>
                                 <option value="pending">Pending</option>
                                 <option value="approved">Disetujui</option>

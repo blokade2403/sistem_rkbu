@@ -36,9 +36,12 @@ use App\Http\Controllers\MasterBackend\ValidatorRole\ValidatorRoleController;
 use App\Http\Controllers\Rkbu\Approval\ApprovalRkbuController;
 use App\Http\Controllers\Rkbu\RkbuBarjasController;
 use App\Http\Controllers\Rkbu\RkbuController;
+use App\Http\Controllers\Rkbu\RkbuModalAlkesController;
 use App\Http\Controllers\Rkbu\RkbuModalKantorController;
 use App\Http\Controllers\Rkbu\RkbuModuleController;
 use App\Http\Controllers\Rkbu\RkbuPersediaanController;
+use App\Http\Controllers\UsulanBelanja\UsulanBelanjaController;
+use App\Http\Controllers\UsulanBelanja\ValidasiUsulanBelanjaController;
 use App\Http\Controllers\WorkFlow\ApprovalController;
 use App\Http\Controllers\WorkFlow\PositionSubKategoriRkbuController;
 use App\Http\Controllers\WorkFlow\PptkKategoriController;
@@ -178,6 +181,49 @@ Route::middleware('auth')->group(function () {
         Route::resource('sub_kategori_rkbus', SubKategoriRkbuController::class);
     });
 
+    Route::prefix('usulan-belanja')->name('usulan-belanja.')
+        ->group(function () {
+            Route::get('/', [
+                UsulanBelanjaController::class,
+                'index',
+            ])->name('index');
+
+            Route::get('/create', [
+                UsulanBelanjaController::class,
+                'create',
+            ])->name('create');
+
+            Route::post('/', [
+                UsulanBelanjaController::class,
+                'store',
+            ])->name('store');
+
+            Route::post('/{usulanBelanja}/items', [
+                UsulanBelanjaController::class,
+                'addItem',
+            ])->name('items.store');
+
+            Route::get('/validasi', [
+                ValidasiUsulanBelanjaController::class,
+                'index',
+            ])->name('validasi.index');
+
+            Route::get('/{usulanBelanja}', [
+                UsulanBelanjaController::class,
+                'show',
+            ])->name('show');
+
+            Route::post('/{usulanBelanja}/ajukan', [
+                UsulanBelanjaController::class,
+                'ajukan',
+            ])->name('ajukan');
+
+            Route::post('/{usulanBelanja}/validasi', [
+                ValidasiUsulanBelanjaController::class,
+                'proses',
+            ])->name('validasi.proses');
+        });
+
     Route::prefix('rkbu')
         ->name('rkbu.')
         ->group(function () {
@@ -207,6 +253,46 @@ Route::middleware('auth')->group(function () {
                 ->name('modal_kantor.submit');
             Route::post('/modal_kantor/bulk-submit', [RkbuModalKantorController::class, 'bulkSubmit'])
                 ->name('modal_kantor.bulk-submit');
+
+            Route::get('/modal_alkes/print', [RkbuModalAlkesController::class, 'print'])
+                ->name('modal_alkes.print');
+            Route::resource('modal_alkes', RkbuModalAlkesController::class);
+            Route::post('/modal_alkes/{id}/submit', [RkbuModalAlkesController::class, 'submit'])
+                ->name('modal_alkes.submit');
+            Route::post('/modal_alkes/bulk-submit', [RkbuModalAlkesController::class, 'bulkSubmit'])
+                ->name('modal_alkes.bulk-submit');
+
+            Route::post('/pegawai/{id}/submit', [RkbuModuleController::class, 'submit'])
+                ->defaults('rkbuModule', 'pegawai')
+                ->name('pegawai.submit');
+            Route::post('/pegawai/bulk-submit', [RkbuModuleController::class, 'bulkSubmit'])
+                ->defaults('rkbuModule', 'pegawai')
+                ->name('pegawai.bulk-submit');
+            Route::get('/pegawai', [RkbuModuleController::class, 'index'])
+                ->defaults('rkbuModule', 'pegawai')
+                ->name('pegawai.index');
+            Route::get('/pegawai/create', [RkbuModuleController::class, 'create'])
+                ->defaults('rkbuModule', 'pegawai')
+                ->name('pegawai.create');
+            Route::post('/pegawai', [RkbuModuleController::class, 'store'])
+                ->defaults('rkbuModule', 'pegawai')
+                ->name('pegawai.store');
+            Route::get('/pegawai/{id}/edit', [RkbuModuleController::class, 'edit'])
+                ->defaults('rkbuModule', 'pegawai')
+                ->whereUuid('id')
+                ->name('pegawai.edit');
+            Route::get('/pegawai/{id}', [RkbuModuleController::class, 'show'])
+                ->defaults('rkbuModule', 'pegawai')
+                ->whereUuid('id')
+                ->name('pegawai.show');
+            Route::put('/pegawai/{id}', [RkbuModuleController::class, 'update'])
+                ->defaults('rkbuModule', 'pegawai')
+                ->whereUuid('id')
+                ->name('pegawai.update');
+            Route::delete('/pegawai/{id}', [RkbuModuleController::class, 'destroy'])
+                ->defaults('rkbuModule', 'pegawai')
+                ->whereUuid('id')
+                ->name('pegawai.destroy');
 
             // foreach (
             //     [

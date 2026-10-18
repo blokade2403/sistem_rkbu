@@ -30,6 +30,26 @@
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
 
+            <form method="GET" action="{{ route('rkbu.' . $config['route'] . '.index') }}" class="row g-3 align-items-end mb-5">
+                <div class="col-md-5">
+                    <label for="module-subcategory-filter" class="form-label">Subkategori RKBU</label>
+                    <select id="module-subcategory-filter" name="sub_kategori_rkbu_id" class="form-select"
+                        data-control="select2" data-placeholder="Semua Subkategori RKBU">
+                        <option value="">Semua Subkategori RKBU</option>
+                        @foreach ($subcategories as $subcategory)
+                            <option value="{{ $subcategory->id_sub_kategori_rkbu }}"
+                                @selected($selectedSubcategory === $subcategory->id_sub_kategori_rkbu)>
+                                {{ $subcategory->kode_sub_kategori_rkbu }} - {{ $subcategory->nama_sub_kategori_rkbu }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-auto d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Terapkan Filter</button>
+                    <a href="{{ route('rkbu.' . $config['route'] . '.index') }}" class="btn btn-light">Reset</a>
+                </div>
+            </form>
+
             <div class="table-responsive">
                 <table class="table table-row-dashed table-row-gray-300 align-middle">
                     <thead>

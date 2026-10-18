@@ -49,6 +49,7 @@
                                  <option value="" data-select2-id="select2-data-63-6qoa">Select user...
                                  </option>
                                <option value="rkbu">RKBU</option>
+                               <option value="usulan_belanja">Usulan Belanja</option>
                                <option value="spj">SPJ</option>
                                <option value="pengadaan">Pengadaan</option>
                              </select>
