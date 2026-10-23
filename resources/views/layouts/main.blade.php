@@ -9,10 +9,6 @@
       --kt-toolbar-height-tablet-and-mobile: 55px;">
     <div class="d-flex flex-column flex-root">
         <div class="page d-flex flex-row flex-column-fluid">
-        </div>
-    </div>
-    <div class="d-flex flex-column flex-root">
-        <div class="page d-flex flex-row flex-column-fluid">
             @include('layouts.sidebar')
             <div class="wrapper d-flex flex-column flex-row-fluid" id="kt_wrapper">
                 @include('layouts.header')
@@ -21,7 +17,7 @@
                     <div class="post d-flex flex-column-fluid" id="kt_post">
                         <!--begin::Container-->
                         {{-- @include('layouts.content') --}}
-                        <div id="kt_content_container" class="container-xxl">
+                        <div id="kt_content_container" class="container-fluid">
                             @yield('content')
                         </div>
                         <!--end::Container-->

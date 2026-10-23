@@ -1,6 +1,6 @@
 @extends('layouts.main')
 @section('content')
-    <div id="kt_content_container" class="container-xxl">
+    <div class="container-fluid">
         <!--begin::Row-->
         <div class="card mb-5 mb-xxl-12">
             <div class="card-body pt-9 pb-0">
