@@ -264,6 +264,14 @@
                                                     <span class="menu-title">Tahun Anggaran</span>
                                                 </a>
                                             </div>
+                                            @if (auth()->user()?->hasRole('Administrator'))
+                                                <div class="menu-item">
+                                                    <a class="menu-link" href="{{ route('pagu_anggaran.index') }}">
+                                                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                                        <span class="menu-title">Pagu Anggaran</span>
+                                                    </a>
+                                                </div>
+                                            @endif
                                             <div class="menu-item">
                                                 <a class="menu-link"
                                                     href="{{ route('komponens.index') }}">
@@ -442,11 +450,11 @@
                                     
                                     <div class="menu-item">
                                         <a class="menu-link"
-                                            href="../../demo1/dist/authentication/general/error-500.html">
+                                            href="{{ route('judul_headers.index') }}">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
-                                            <span class="menu-title">Error 500</span>
+                                            <span class="menu-title">Judul Header</span>
                                         </a>
                                     </div>
                                 </div>
@@ -660,7 +668,7 @@
                                         </a>
                                     </div>
                                      <div class="menu-item">
-                                        <a class="menu-link" href="">
+                                        <a class="menu-link" href="{{ route('rkbu.modal_alkes.index') }}">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -669,11 +677,11 @@
                                     </div>
                                 </div>
                             </div>
-                            <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
+                           <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
                                 <span class="menu-link">
                                     <span class="menu-icon">
-                                        <!--begin::Svg Icon | path: icons/duotune/ecommerce/ecm002.svg-->
-                                        <span class="svg-icon svg-icon-2">
+                                        <!--begin::Svg Icon | path: icons/duotune/finance/fin006.svg-->
+                                       <span class="svg-icon svg-icon-2">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                                 viewBox="0 0 24 24" fill="none">
                                                 <path
@@ -689,88 +697,21 @@
                                         </span>
                                         <!--end::Svg Icon-->
                                     </span>
-                                    <span class="menu-title">Subscriptions</span>
+                                    <span class="menu-title">Usulan Belanja</span>
                                     <span class="menu-arrow"></span>
                                 </span>
                                 <div class="menu-sub menu-sub-accordion">
-                                    <div class="menu-item">
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/subscriptions/getting-started.html">
+                                      <div class="menu-item">
+                                        <a class="menu-link" href="{{ route('usulan-belanja.index') }}">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
-                                            <span class="menu-title">Getting Started</span>
-                                        </a>
-                                    </div>
-                                    <div class="menu-item">
-                                        <a class="menu-link" href="../../demo1/dist/apps/subscriptions/list.html">
-                                            <span class="menu-bullet">
-                                                <span class="bullet bullet-dot"></span>
-                                            </span>
-                                            <span class="menu-title">Subscription List</span>
+                                            <span class="menu-title">Usulan Belanja</span>
                                         </a>
                                     </div>
                                 </div>
                             </div>
-                            <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
-                                <span class="menu-link">
-                                    <span class="menu-icon">
-                                        <!--begin::Svg Icon | path: icons/duotune/finance/fin002.svg-->
-                                        <span class="svg-icon svg-icon-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                viewBox="0 0 24 24" fill="none">
-                                                <path d="M22 7H2V11H22V7Z" fill="black" />
-                                                <path opacity="0.3"
-                                                    d="M21 19H3C2.4 19 2 18.6 2 18V6C2 5.4 2.4 5 3 5H21C21.6 5 22 5.4 22 6V18C22 18.6 21.6 19 21 19ZM14 14C14 13.4 13.6 13 13 13H5C4.4 13 4 13.4 4 14C4 14.6 4.4 15 5 15H13C13.6 15 14 14.6 14 14ZM16 15.5C16 16.3 16.7 17 17.5 17H18.5C19.3 17 20 16.3 20 15.5C20 14.7 19.3 14 18.5 14H17.5C16.7 14 16 14.7 16 15.5Z"
-                                                    fill="black" />
-                                            </svg>
-                                        </span>
-                                        <!--end::Svg Icon-->
-                                    </span>
-                                    <span class="menu-title">Invoice Manager</span>
-                                    <span class="menu-arrow"></span>
-                                </span>
-                                <div class="menu-sub menu-sub-accordion">
-                                    <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
-                                        <span class="menu-link">
-                                            <span class="menu-bullet">
-                                                <span class="bullet bullet-dot"></span>
-                                            </span>
-                                            <span class="menu-title">View Invoices</span>
-                                            <span class="menu-arrow"></span>
-                                        </span>
-                                        <div class="menu-sub menu-sub-accordion menu-active-bg">
-                                            <div class="menu-item">
-                                                <a class="menu-link"
-                                                    href="../../demo1/dist/apps/invoices/view/invoice-1.html">
-                                                    <span class="menu-bullet">
-                                                        <span class="bullet bullet-dot"></span>
-                                                    </span>
-                                                    <span class="menu-title">Invoice 1</span>
-                                                </a>
-                                            </div>
-                                            <div class="menu-item">
-                                                <a class="menu-link"
-                                                    href="../../demo1/dist/apps/invoices/view/invoice-2.html">
-                                                    <span class="menu-bullet">
-                                                        <span class="bullet bullet-dot"></span>
-                                                    </span>
-                                                    <span class="menu-title">Invoice 2</span>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="menu-item">
-                                        <a class="menu-link" href="../../demo1/dist/apps/invoices/create.html">
-                                            <span class="menu-bullet">
-                                                <span class="bullet bullet-dot"></span>
-                                            </span>
-                                            <span class="menu-title">Create Invoice</span>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            
+                           
                             <div class="menu-item">
                                 <div class="menu-content pt-8 pb-0">
                                     <span class="menu-section text-muted text-uppercase fs-8 ls-1">Validasi</span>
@@ -866,41 +807,23 @@
                                         </span>
                                         <!--end::Svg Icon-->
                                     </span>
-                                    <span class="menu-title">Aside</span>
+                                    <span class="menu-title">Approval Belanja</span>
                                     <span class="menu-arrow"></span>
                                 </span>
                                 <div class="menu-sub menu-sub-accordion menu-active-bg">
-                                    <div class="menu-item">
-                                        <a class="menu-link" href="../../demo1/dist/layouts/aside/light.html">
+                                      <div class="menu-item">
+                                        <a class="menu-link" href="{{ route('usulan-belanja.validasi.index') }}">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
-                                            <span class="menu-title">Light Skin</span>
-                                        </a>
-                                    </div>
-                                    <div class="menu-item">
-                                        <a class="menu-link" href="../../demo1/dist/layouts/aside/font-icons.html">
-                                            <span class="menu-bullet">
-                                                <span class="bullet bullet-dot"></span>
-                                            </span>
-                                            <span class="menu-title">Font Icons</span>
-                                        </a>
-                                    </div>
-                                    <div class="menu-item">
-                                        <a class="menu-link" href="../../demo1/dist/layouts/aside/minimized.html">
-                                            <span class="menu-bullet">
-                                                <span class="bullet bullet-dot"></span>
-                                            </span>
-                                            <span class="menu-title">Minimized</span>
+                                            <span class="menu-title">Validasi Usulan Belanja</span>
                                         </a>
                                     </div>
                                 </div>
                             </div>
                             <div class="menu-item">
                                 <a class="menu-link"
-                                    href="https://preview.keenthemes.com/metronic8/demo1/layout-builder.html"
-                                    data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss="click"
-                                    data-bs-placement="right">
+                                    href="{{ route('usulan-belanja.rekap') }}">
                                     <span class="menu-icon">
                                         <!--begin::Svg Icon | path: icons/duotune/general/gen019.svg-->
                                         <span class="svg-icon svg-icon-2">
@@ -916,7 +839,25 @@
                                         </span>
                                         <!--end::Svg Icon-->
                                     </span>
-                                    <span class="menu-title">Layout Builder</span>
+                                    <span class="menu-title">Rekap Usulan Belanja</span>
+                                </a>
+                            </div>
+                            <div class="menu-item">
+                                <a class="menu-link" href="{{ route('usulan-belanja.spj.index') }}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">SPJ dari Usulan Belanja</span>
+                                </a>
+                            </div>
+                            <div class="menu-item">
+                                <a class="menu-link" href="{{ route('usulan-belanja.spj.providers') }}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">SPJ per Penyedia</span>
+                                </a>
+                            </div>
+                            <div class="menu-item">
+                                <a class="menu-link" href="{{ route('perusahaans.index') }}">
+                                    <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                    <span class="menu-title">Data Perusahaan Penyedia</span>
                                 </a>
                             </div>
                              <div class="menu-item">
@@ -924,72 +865,7 @@
                                     <span class="menu-section text-muted text-uppercase fs-8 ls-1">Belanja</span>
                                 </div>
                             </div>
-                            <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
-                                <span class="menu-link">
-                                    <span class="menu-icon">
-                                        <!--begin::Svg Icon | path: icons/duotune/finance/fin006.svg-->
-                                       <span class="svg-icon svg-icon-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                viewBox="0 0 24 24" fill="none">
-                                                <path
-                                                    d="M21 10H13V11C13 11.6 12.6 12 12 12C11.4 12 11 11.6 11 11V10H3C2.4 10 2 10.4 2 11V13H22V11C22 10.4 21.6 10 21 10Z"
-                                                    fill="black" />
-                                                <path opacity="0.3"
-                                                    d="M12 12C11.4 12 11 11.6 11 11V3C11 2.4 11.4 2 12 2C12.6 2 13 2.4 13 3V11C13 11.6 12.6 12 12 12Z"
-                                                    fill="black" />
-                                                <path opacity="0.3"
-                                                    d="M18.1 21H5.9C5.4 21 4.9 20.6 4.8 20.1L3 13H21L19.2 20.1C19.1 20.6 18.6 21 18.1 21ZM13 18V15C13 14.4 12.6 14 12 14C11.4 14 11 14.4 11 15V18C11 18.6 11.4 19 12 19C12.6 19 13 18.6 13 18ZM17 18V15C17 14.4 16.6 14 16 14C15.4 14 15 14.4 15 15V18C15 18.6 15.4 19 16 19C16.6 19 17 18.6 17 18ZM9 18V15C9 14.4 8.6 14 8 14C7.4 14 7 14.4 7 15V18C7 18.6 7.4 19 8 19C8.6 19 9 18.6 9 18Z"
-                                                    fill="black" />
-                                            </svg>
-                                        </span>
-                                        <!--end::Svg Icon-->
-                                    </span>
-                                    <span class="menu-title">Usulan Belanja</span>
-                                    <span class="menu-arrow"></span>
-                                </span>
-                                <div class="menu-sub menu-sub-accordion">
-                                      <div class="menu-item">
-                                        <a class="menu-link" href="{{ route('usulan-belanja.index') }}">
-                                            <span class="menu-bullet">
-                                                <span class="bullet bullet-dot"></span>
-                                            </span>
-                                            <span class="menu-title">RKBU Pegawai</span>
-                                        </a>
-                                    </div>
-                                    <div class="menu-item">
-                                        <a class="menu-link" href="{{ route('rkbu.barjas.index') }}">
-                                            <span class="menu-bullet">
-                                                <span class="bullet bullet-dot"></span>
-                                            </span>
-                                            <span class="menu-title">RKBU Barjas</span>
-                                        </a>
-                                    </div>
-                                    <div class="menu-item">
-                                        <a class="menu-link" href="{{ route('rkbu.persediaan.index') }}">
-                                            <span class="menu-bullet">
-                                                <span class="bullet bullet-dot"></span>
-                                            </span>
-                                            <span class="menu-title">RKBU Persediaan</span>
-                                        </a>
-                                    </div>
-                                     <div class="menu-item">
-                                        <a class="menu-link" href="{{ route('rkbu.modal_kantor.index') }}">
-                                            <span class="menu-bullet">
-                                                <span class="bullet bullet-dot"></span>
-                                            </span>
-                                            <span class="menu-title">RKBU Modal Kantor</span>
-                                        </a>
-                                    </div>
-                                     <div class="menu-item">
-                                        <a class="menu-link" href="">
-                                            <span class="menu-bullet">
-                                                <span class="bullet bullet-dot"></span>
-                                            </span>
-                                            <span class="menu-title">RKBU Modal Alkes</span>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
+                            
                             <div class="menu-item">
                                 <div class="menu-content">
                                     <div class="separator mx-1 my-4"></div>

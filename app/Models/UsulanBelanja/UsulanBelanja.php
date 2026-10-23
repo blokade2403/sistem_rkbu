@@ -39,13 +39,10 @@ class UsulanBelanja extends Model
         'workflow_instance_id',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'nomor_urut' => 'integer',
-            'tanggal_validasi' => 'datetime',
-        ];
-    }
+    protected $casts = [
+        'nomor_urut' => 'integer',
+        'tanggal_validasi' => 'datetime',
+    ];
 
     public function rkbu(): BelongsTo
     {
@@ -61,6 +58,15 @@ class UsulanBelanja extends Model
         return $this->belongsTo(
             \App\Models\MasterBackend\UserProfil\User::class,
             'user_id',
+            'id'
+        );
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(
+            \App\Models\MasterBackend\SettingUser\Unit::class,
+            'unit_id',
             'id'
         );
     }
@@ -95,5 +101,10 @@ class UsulanBelanja extends Model
     public function items(): HasMany
     {
         return $this->hasMany(UsulanBelanjaItem::class, 'usulan_belanja_id');
+    }
+
+    public function spjs(): HasMany
+    {
+        return $this->hasMany(Spj::class, 'usulan_belanja_id');
     }
 }

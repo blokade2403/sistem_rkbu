@@ -50,6 +50,11 @@ class WorkflowStep extends Model
         );
     }
 
+    public function systemRole()
+    {
+        return $this->belongsTo(Role::class, 'role_id', 'id');
+    }
+
     public function validatorRole()
     {
         return $this->belongsTo(
@@ -71,6 +76,18 @@ class WorkflowStep extends Model
     {
         return $this->hasMany(
             Approval::class
+        );
+    }
+
+    public function subKategoriRkbus()
+    {
+        return $this->belongsToMany(
+            \App\Models\MasterBackend\SettingRkbu\SubKategoriRkbu::class,
+            'workflow_step_sub_kategori_rkbu',
+            'workflow_step_id',
+            'sub_kategori_rkbu_id',
+            'id',
+            'id_sub_kategori_rkbu'
         );
     }
 }

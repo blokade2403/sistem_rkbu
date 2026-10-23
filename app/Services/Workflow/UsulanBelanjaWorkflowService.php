@@ -16,37 +16,81 @@ class UsulanBelanjaWorkflowService
 {
     public function getEligibleRkbus(User $user): Collection
     {
-        $this->assertFirstUsulanValidator($user);
+        $assignment = $this->assertFirstUsulanValidator($user);
 
-        return $this->availableRkbusQuery()
-            ->orderBy('rkbus.nomor_rkbu')
+        return $this->availableRkbusQuery(null, $this->subordinateUserIds($assignment))
+            ->orderBy('sub_kategori_rkbus.nama_sub_kategori_rkbu')
             ->get();
     }
 
     public function getAvailableItems(UsulanBelanja $usulan): Collection
     {
-        return $this->getDetailItems($usulan->sub_kategori_rkbu_id);
+        return $this->getDetailItems($usulan->sub_kategori_rkbu_id, null, $usulan->id);
     }
 
     public function getSelectedItems(UsulanBelanja $usulan): Collection
     {
-        $selected = DB::table('usulan_belanja_items')
+        $selectedItems = DB::table('usulan_belanja_items')
             ->where('usulan_belanja_id', $usulan->id)
             ->whereNotNull('detail_type')
-            ->get(['detail_type', 'detail_id'])
-            ->map(fn ($item) => $item->detail_type . ':' . $item->detail_id)
+            ->get([
+                'detail_type',
+                'detail_id',
+                'id',
+                'harga_satuan',
+                'volume',
+                'ppn',
+                'spesifikasi as spesifikasi_usulan',
+            ]);
+        $selected = $selectedItems
+            ->map(fn($item) => $item->detail_type . ':' . $item->detail_id)
             ->all();
 
-        return $this->getDetailItems($usulan->sub_kategori_rkbu_id, $selected);
+        $savedValues = $selectedItems->keyBy(
+            fn($item) => $item->detail_type . ':' . $item->detail_id
+        );
+
+        return $this->getDetailItems($usulan->sub_kategori_rkbu_id, $selected, $usulan->id)
+            ->map(function ($item) use ($savedValues) {
+                $saved = $savedValues->get($item->detail_type . ':' . $item->detail_id);
+                $item->link_id = $saved?->id;
+                $item->harga_satuan = $saved?->harga_satuan ?? $item->harga_satuan;
+                $item->volume = $saved?->volume ?? $item->volume;
+                $item->ppn = $saved?->ppn ?? $item->ppn;
+                if ($saved && $saved->spesifikasi_usulan !== null) {
+                    $item->spesifikasi = $saved->spesifikasi_usulan;
+                }
+                $item->total_anggaran = round(
+                    (float) $item->harga_satuan * (float) $item->volume,
+                    2
+                );
+                $item->total_ppn = round(
+                    $item->total_anggaran * (float) $item->ppn / 100,
+                    2
+                );
+                $item->anggaran_tersedia = (float) $item->sisa_anggaran_rkbu;
+                $item->volume_tersedia = (float) $item->sisa_vol_rkbu;
+                $item->sisa_anggaran_rkbu = round(
+                    $item->anggaran_tersedia - $item->total_anggaran,
+                    2
+                );
+                $item->sisa_vol_rkbu = round(
+                    $item->volume_tersedia - (float) $item->volume,
+                    3
+                );
+
+                return $item;
+            });
     }
 
-    private function getDetailItems(string $subKategoriId, ?array $selected = null): Collection
+    private function getDetailItems(string $subKategoriId, ?array $selected = null, ?string $excludeUsulanId = null): Collection
     {
         $detailTables = [
-            'barjas' => 'rkbu_detail_barjass',
-            'persediaan' => 'rkbu_detail_persediaans',
-            'modal' => 'rkbu_detail_modals',
-            'pegawai' => 'rkbu_detail_pegawais',
+            'barjas'            => 'rkbu_detail_barjass',
+            'persediaan'        => 'rkbu_detail_persediaans',
+            'modal'             => 'rkbu_detail_modals',
+            'modal_alkes'       => 'rkbu_detail_modal_alkes',
+            'pegawai'           => 'rkbu_detail_pegawais',
         ];
         $items = collect();
 
@@ -65,17 +109,10 @@ class UsulanBelanjaWorkflowService
 
             if ($selected !== null) {
                 $detailIds = collect($selected)
-                    ->filter(fn ($selection) => str_starts_with($selection, $type . ':'))
-                    ->map(fn ($selection) => substr($selection, strlen($type) + 1))
+                    ->filter(fn($selection) => str_starts_with($selection, $type . ':'))
+                    ->map(fn($selection) => substr($selection, strlen($type) + 1))
                     ->all();
                 $query->whereIn('item.id', $detailIds);
-            } else {
-                $query->whereNotExists(function ($subquery) use ($type) {
-                    $subquery->selectRaw('1')
-                        ->from('usulan_belanja_items')
-                        ->where('detail_type', $type)
-                        ->whereColumn('detail_id', 'item.id');
-                });
             }
 
             $items = $items->merge(
@@ -86,19 +123,41 @@ class UsulanBelanjaWorkflowService
                     'rkbus.nomor_rkbu',
                     DB::raw("{$name} as nama_barang"),
                     DB::raw("{$specification} as spesifikasi"),
+                    DB::raw(in_array($type, ['barjas', 'modal', 'modal_alkes'], true)
+                        ? 'COALESCE(item.volume_1, 0) as volume_1'
+                        : '0 as volume_1'),
+                    DB::raw($type === 'pegawai'
+                        ? "'Bulan' as satuan_1"
+                        : "COALESCE(item.satuan_1, '-') as satuan_1"),
+                    DB::raw(in_array($type, ['barjas', 'modal', 'modal_alkes'], true)
+                        ? 'COALESCE(item.volume_2, 0) as volume_2'
+                        : '0 as volume_2'),
+                    DB::raw(in_array($type, ['barjas', 'modal', 'modal_alkes'], true)
+                        ? "COALESCE(item.satuan_2, '-') as satuan_2"
+                        : "'-' as satuan_2"),
                     'item.total_anggaran',
-                    'item.sisa_vol_rkbu',
-                    'item.sisa_anggaran_rkbu',
+                    DB::raw($type === 'pegawai'
+                        ? 'CASE WHEN item.jumlah_volume > 0 THEN item.total_anggaran / item.jumlah_volume ELSE item.total_anggaran END as harga_satuan'
+                        : 'COALESCE(item.harga_satuan, 0) as harga_satuan'),
+                    DB::raw('COALESCE(item.jumlah_volume, 0) as volume'),
+                    DB::raw($type === 'pegawai'
+                        ? '0 as ppn'
+                        : 'COALESCE(item.ppn, 0) as ppn'),
+                    DB::raw('COALESCE(item.sisa_vol_rkbu, item.jumlah_volume, 0) as sisa_vol_rkbu'),
+                    DB::raw('COALESCE(item.sisa_anggaran_rkbu, item.total_anggaran, 0) as sisa_anggaran_rkbu'),
                 ])
                     ->orderBy('rkbus.nomor_rkbu')
                     ->get()
             );
         }
 
-        return $items->sortBy('nomor_rkbu')->values();
+        $items = $items->sortBy('nomor_rkbu')->values();
+
+        return app(UsulanBelanjaBalanceService::class)
+            ->applyToItemCollection($items, $excludeUsulanId);
     }
 
-    private function availableRkbusQuery(?string $subKategoriId = null)
+    private function availableRkbusQuery(?string $subKategoriId = null, ?array $creatorIds = null)
     {
         return DB::table('rkbus')
             ->leftJoin(
@@ -107,53 +166,45 @@ class UsulanBelanjaWorkflowService
                 '=',
                 'sub_kategori_rkbus.id_sub_kategori_rkbu'
             )
+            ->leftJoin('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
+            ->leftJoin('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
             ->where('rkbus.status', 'approved')
-            ->whereNotExists(function ($query) {
-                $query->selectRaw('1')
-                    ->from('usulan_belanjas')
-                    ->whereColumn('usulan_belanjas.rkbu_id', 'rkbus.id');
-            })
-            ->when($subKategoriId, fn ($query) => $query->where(
+            ->when($creatorIds !== null, fn($query) => $query->whereIn('rkbus.created_by', $creatorIds))
+            ->when(session('tahun_anggaran_id'), fn($query, $tahunId) => $query->where(
+                'rkbus.tahun_anggaran_id',
+                $tahunId
+            ))
+            ->when($subKategoriId, fn($query) => $query->where(
                 'rkbus.sub_kategori_rkbu_id',
                 $subKategoriId
             ))
             ->select([
-                'rkbus.id',
-                'rkbus.nomor_rkbu',
+                'rkbus.sub_kategori_rkbu_id as id',
                 'rkbus.tahun_anggaran_id',
                 'sub_kategori_rkbus.nama_sub_kategori_rkbu',
-            ]);
+                'jenis_kategori_rkbus.id_jenis_kategori_rkbu',
+                'jenis_kategori_rkbus.nama_jenis_kategori_rkbu',
+            ])
+            ->distinct();
     }
 
-    public function buatUsulan(string $rkbuId, User $user): UsulanBelanja
+    public function buatUsulan(string $subKategoriId, User $user): UsulanBelanja
     {
-        return DB::transaction(function () use ($rkbuId, $user) {
-            $this->assertFirstUsulanValidator($user);
+        return DB::transaction(function () use ($subKategoriId, $user) {
+            $assignment = $this->assertFirstUsulanValidator($user);
+            $creatorIds = $this->subordinateUserIds($assignment);
 
             $rkbu = DB::table('rkbus')
-                ->where('id', $rkbuId)
+                ->where('sub_kategori_rkbu_id', $subKategoriId)
+                ->where('status', 'approved')
+                ->whereIn('created_by', $creatorIds)
+                ->orderBy('nomor_rkbu')
                 ->lockForUpdate()
                 ->first();
 
-            if (!$rkbu) {
+            if (! $rkbu) {
                 throw ValidationException::withMessages([
-                    'rkbu_id' => 'Data RKBU tidak ditemukan.',
-                ]);
-            }
-
-            if ($rkbu->status !== 'approved') {
-                throw ValidationException::withMessages([
-                    'rkbu_id' => 'Usulan Belanja hanya dapat dibuat untuk RKBU yang sudah disetujui.',
-                ]);
-            }
-
-            $existing = UsulanBelanja::where('rkbu_id', $rkbu->id)
-                ->lockForUpdate()
-                ->first();
-
-            if ($existing) {
-                throw ValidationException::withMessages([
-                    'rkbu_id' => 'RKBU ini sudah memiliki usulan belanja.',
+                    'sub_kategori_rkbu_id' => 'Tidak ada RKBU approved pada subkategori ini.',
                 ]);
             }
 
@@ -163,9 +214,9 @@ class UsulanBelanjaWorkflowService
                 ->lockForUpdate()
                 ->first();
 
-            if (!$tahun) {
+            if (! $tahun) {
                 throw ValidationException::withMessages([
-                    'rkbu_id' => 'Tahun anggaran RKBU tidak ditemukan.',
+                    'sub_kategori_rkbu_id' => 'Tahun anggaran RKBU tidak ditemukan.',
                 ]);
             }
 
@@ -202,6 +253,34 @@ class UsulanBelanjaWorkflowService
         }, 3);
     }
 
+    /**
+     * Pengusul RKBU yang berada pada jabatan di bawah jabatan validator.
+     * Subkategori usulan dibatasi ke RKBU approved milik pengusul tersebut.
+     */
+    private function subordinateUserIds(PositionAssignment $assignment): array
+    {
+        $positions = DB::table('positions')->get(['id', 'parent_id']);
+        $descendantIds = [$assignment->position_id];
+
+        do {
+            $count = count($descendantIds);
+            $descendantIds = array_values(array_unique(array_merge(
+                $descendantIds,
+                $positions->whereIn('parent_id', $descendantIds)->pluck('id')->all()
+            )));
+        } while (count($descendantIds) > $count);
+
+        // Jabatan validator sendiri tidak termasuk bawahannya.
+        $descendantIds = array_values(array_diff($descendantIds, [$assignment->position_id]));
+
+        return DB::table('position_assignments')
+            ->whereIn('position_id', $descendantIds)
+            ->pluck('user_id')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
     public function addItems(
         UsulanBelanja $usulan,
         array $selections,
@@ -225,6 +304,7 @@ class UsulanBelanjaWorkflowService
                 'barjas' => 'rkbu_detail_barjass',
                 'persediaan' => 'rkbu_detail_persediaans',
                 'modal' => 'rkbu_detail_modals',
+                'modal_alkes' => 'rkbu_detail_modal_alkes',
                 'pegawai' => 'rkbu_detail_pegawais',
             ];
             $added = 0;
@@ -239,13 +319,31 @@ class UsulanBelanjaWorkflowService
                     ]);
                 }
 
+                $priceFields = $type === 'pegawai'
+                    ? [
+                        DB::raw('CASE WHEN item.jumlah_volume > 0 THEN item.total_anggaran / item.jumlah_volume ELSE item.total_anggaran END as harga_satuan'),
+                        DB::raw('0 as ppn'),
+                    ]
+                    : ['item.harga_satuan', 'item.ppn'];
+                $specificationField = $type === 'pegawai'
+                    ? DB::raw("CONCAT_WS(' - ', item.jabatan, item.pendidikan) as spesifikasi")
+                    : 'item.spesifikasi as spesifikasi';
+
                 $detail = DB::table($table . ' as item')
                     ->join('rkbus', 'rkbus.id', '=', 'item.rkbu_id')
                     ->where('item.id', $detailId)
                     ->where('rkbus.status', 'approved')
                     ->where('rkbus.sub_kategori_rkbu_id', $usulan->sub_kategori_rkbu_id)
                     ->lockForUpdate()
-                    ->first(['item.id', 'item.rkbu_id']);
+                    ->first(array_merge([
+                        'item.id',
+                        'item.rkbu_id',
+                        'item.jumlah_volume as volume',
+                        'item.total_anggaran',
+                        'item.sisa_vol_rkbu',
+                        'item.sisa_anggaran_rkbu',
+                        $specificationField,
+                    ], $priceFields));
 
                 if (! $detail) {
                     throw ValidationException::withMessages([
@@ -253,14 +351,25 @@ class UsulanBelanjaWorkflowService
                     ]);
                 }
 
-                $alreadySelected = UsulanBelanjaItem::query()
-                    ->where('detail_type', $type)
-                    ->where('detail_id', $detailId)
-                    ->exists();
+                $requestedAmount = round(
+                    (float) $detail->harga_satuan * (float) $detail->volume,
+                    2
+                );
+                $remaining = app(UsulanBelanjaBalanceService::class)->remainingForDetail(
+                    $type,
+                    $detailId,
+                    (float) ($detail->sisa_vol_rkbu ?? $detail->volume),
+                    (float) ($detail->sisa_anggaran_rkbu ?? $detail->total_anggaran)
+                );
+                $availableVolume = $remaining['volume'];
+                $availableBudget = $remaining['anggaran'];
 
-                if ($alreadySelected) {
+                if (
+                    (float) $detail->volume > $availableVolume
+                    || $requestedAmount > $availableBudget
+                ) {
                     throw ValidationException::withMessages([
-                        'items' => 'Salah satu item sudah digunakan pada Usulan Belanja lain.',
+                        'items' => 'Sisa volume atau anggaran RKBU tidak cukup untuk item yang dipilih.',
                     ]);
                 }
 
@@ -269,11 +378,163 @@ class UsulanBelanjaWorkflowService
                     'rkbu_id' => $detail->rkbu_id,
                     'detail_type' => $type,
                     'detail_id' => $detailId,
+                    'spesifikasi' => $detail->spesifikasi,
+                    'harga_satuan' => $detail->harga_satuan,
+                    'volume' => $detail->volume,
+                    'ppn' => $detail->ppn,
                 ]);
                 $added++;
             }
 
             return $added;
+        }, 3);
+    }
+
+    public function updateItems(
+        UsulanBelanja $usulan,
+        array $items,
+        User $user
+    ): void {
+        DB::transaction(function () use ($usulan, $items, $user) {
+            $usulan = UsulanBelanja::query()
+                ->whereKey($usulan->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            abort_unless($usulan->user_id === $user->id, 403);
+
+            $canEditDraft = $usulan->status_usulan === 'draft' && ! $usulan->workflow_instance_id;
+            $canEditRevision = $usulan->status_usulan === 'revision' && (bool) $usulan->workflow_instance_id;
+            if (! $canEditDraft && ! $canEditRevision) {
+                throw ValidationException::withMessages([
+                    'items' => 'Item hanya dapat diubah selama Usulan Belanja berstatus draft atau revisi.',
+                ]);
+            }
+
+            foreach ($items as $itemId => $values) {
+                $item = UsulanBelanjaItem::query()
+                    ->whereKey($itemId)
+                    ->where('usulan_belanja_id', $usulan->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $detailTables = [
+                    'barjas' => 'rkbu_detail_barjass',
+                    'persediaan' => 'rkbu_detail_persediaans',
+                    'modal' => 'rkbu_detail_modals',
+                    'modal_alkes' => 'rkbu_detail_modal_alkes',
+                    'pegawai' => 'rkbu_detail_pegawais',
+                ];
+                $table = $detailTables[$item->detail_type] ?? null;
+                if (! $table) {
+                    throw ValidationException::withMessages([
+                        'items' => 'Jenis item RKBU tidak valid.',
+                    ]);
+                }
+
+                $detail = DB::table($table)
+                    ->where('id', $item->detail_id)
+                    ->lockForUpdate()
+                    ->first([
+                        'jumlah_volume',
+                        'total_anggaran',
+                        'sisa_vol_rkbu',
+                        'sisa_anggaran_rkbu',
+                    ]);
+
+                if (! $detail) {
+                    throw ValidationException::withMessages([
+                        'items' => 'Detail RKBU untuk item ini tidak ditemukan.',
+                    ]);
+                }
+
+                $requestedAmount = round(
+                    (float) $values['harga_satuan'] * (float) $values['volume'],
+                    2
+                );
+                $remaining = app(UsulanBelanjaBalanceService::class)->remainingForDetail(
+                    $item->detail_type,
+                    $item->detail_id,
+                    (float) ($detail->sisa_vol_rkbu ?? $detail->jumlah_volume),
+                    (float) ($detail->sisa_anggaran_rkbu ?? $detail->total_anggaran),
+                    $usulan->id
+                );
+                $availableVolume = $remaining['volume'];
+                $availableBudget = $remaining['anggaran'];
+
+                if (
+                    (float) $values['volume'] > $availableVolume
+                    || $requestedAmount > $availableBudget
+                ) {
+                    throw ValidationException::withMessages([
+                        "items.{$itemId}.harga_satuan" => 'Sisa volume atau anggaran RKBU tidak cukup untuk nilai usulan ini.',
+                    ]);
+                }
+
+                $item->update([
+                    'harga_satuan' => $values['harga_satuan'],
+                    'volume' => $values['volume'],
+                    'ppn' => $values['ppn'],
+                    'spesifikasi' => $values['spesifikasi'] ?? '',
+                ]);
+            }
+        }, 3);
+    }
+
+    public function deleteEmptyUsulan(UsulanBelanja $usulan): void
+    {
+        DB::transaction(function () use ($usulan) {
+            $usulan = UsulanBelanja::query()
+                ->whereKey($usulan->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($usulan->status_usulan !== 'draft' || $usulan->workflow_instance_id) {
+                throw ValidationException::withMessages([
+                    'usulan' => 'Hanya Usulan Belanja draft yang belum diajukan yang dapat dihapus.',
+                ]);
+            }
+
+            $hasSelectedItems = UsulanBelanjaItem::query()
+                ->where('usulan_belanja_id', $usulan->id)
+                ->whereNotNull('detail_type')
+                ->whereNotNull('detail_id')
+                ->exists();
+
+            if ($hasSelectedItems) {
+                throw ValidationException::withMessages([
+                    'usulan' => 'Usulan Belanja yang memiliki item terpilih tidak dapat dihapus.',
+                ]);
+            }
+
+            $usulan->delete();
+        }, 3);
+    }
+
+    public function deleteItem(
+        UsulanBelanja $usulan,
+        UsulanBelanjaItem $item,
+        User $user
+    ): void {
+        DB::transaction(function () use ($usulan, $item, $user) {
+            $usulan = UsulanBelanja::query()
+                ->whereKey($usulan->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            abort_unless($usulan->user_id === $user->id, 403);
+
+            if ($usulan->status_usulan !== 'draft' || $usulan->workflow_instance_id) {
+                throw ValidationException::withMessages([
+                    'items' => 'Item hanya dapat dihapus selama Usulan Belanja berstatus draft.',
+                ]);
+            }
+
+            $item->newQuery()
+                ->whereKey($item->id)
+                ->where('usulan_belanja_id', $usulan->id)
+                ->firstOrFail()
+                ->delete();
         }, 3);
     }
 
@@ -285,8 +546,8 @@ class UsulanBelanjaWorkflowService
         $firstStep = DB::table('workflow_steps')
             ->join('workflows', 'workflow_steps.workflow_id', '=', 'workflows.id')
             ->whereRaw('LOWER(workflows.modul) = ?', ['usulan_belanja'])
-            ->where('workflow_steps.step_order', 1)
-            ->orderBy('workflow_steps.id')
+            ->where('workflow_steps.is_pptk_step', false)
+            ->orderBy('workflow_steps.step_order')
             ->select([
                 'workflow_steps.validator_type',
                 'workflow_steps.position_id',
@@ -295,7 +556,10 @@ class UsulanBelanjaWorkflowService
             ])
             ->first();
 
-        $isFirstStepValidator = $assignment && $firstStep && (
+        $isUsulanCreator = $assignment
+            && $user->roles()->where('nama_role', 'Validator')->exists();
+
+        $isFirstStepValidator = $isUsulanCreator || ($assignment && $firstStep && (
             ($firstStep->validator_type === 'position'
                 && $firstStep->position_id === $assignment->position_id)
             || ($firstStep->validator_type === 'role'
@@ -303,7 +567,7 @@ class UsulanBelanjaWorkflowService
                 && $user->roles()->whereKey($firstStep->role_id)->exists())
             || ($firstStep->validator_role_id
                 && $user->validatorRoles()->whereKey($firstStep->validator_role_id)->exists())
-        );
+        ));
 
         abort_unless(
             $isFirstStepValidator,
@@ -330,7 +594,7 @@ class UsulanBelanjaWorkflowService
                 abort(403);
             }
 
-            if (!in_array(
+            if (! in_array(
                 $usulan->status_usulan,
                 ['draft', 'revision'],
                 true
@@ -340,10 +604,24 @@ class UsulanBelanjaWorkflowService
                 ]);
             }
 
+            $existingInstance = null;
             if ($usulan->workflow_instance_id) {
-                throw ValidationException::withMessages([
-                    'status' => 'Usulan sudah memiliki instance workflow.',
-                ]);
+                $existingInstance = DB::table('workflow_instances')
+                    ->where('id', $usulan->workflow_instance_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (
+                    $usulan->status_usulan !== 'revision'
+                    || ! $existingInstance
+                    || $existingInstance->status !== 'revision'
+                    || $existingInstance->dokumen_id !== $usulan->id
+                    || $existingInstance->dokumen_type !== UsulanBelanja::class
+                ) {
+                    throw ValidationException::withMessages([
+                        'status' => 'Usulan sudah memiliki instance workflow yang tidak dapat diajukan kembali.',
+                    ]);
+                }
             }
 
             if (! DB::table('usulan_belanja_items')
@@ -355,11 +633,15 @@ class UsulanBelanjaWorkflowService
                 ]);
             }
 
-            $workflow = DB::table('workflows')
-                ->whereRaw('LOWER(modul) = ?', ['usulan_belanja'])
-                ->first();
+            app(UsulanBelanjaBalanceService::class)->assertUsulanFits($usulan);
+            app(PaguAnggaranService::class)->assertUsulanWithinPagu($usulan);
 
-            if (!$workflow) {
+            $workflowQuery = DB::table('workflows');
+            $workflow = $existingInstance
+                ? $workflowQuery->where('id', $existingInstance->workflow_id)->first()
+                : $workflowQuery->whereRaw('LOWER(modul) = ?', ['usulan_belanja'])->first();
+
+            if (! $workflow) {
                 throw new RuntimeException(
                     'Workflow Usulan Belanja belum dikonfigurasi.'
                 );
@@ -370,7 +652,11 @@ class UsulanBelanjaWorkflowService
                 ->where(function ($query) use ($usulan) {
                     $query->whereNotExists(function ($sub) {
                         $sub->selectRaw('1')
-                            ->from('workflow_step_sub_kategori_rkbu');
+                            ->from('workflow_step_sub_kategori_rkbu')
+                            ->whereColumn(
+                                'workflow_step_sub_kategori_rkbu.workflow_step_id',
+                                'workflow_steps.id'
+                            );
                     })->orWhereIn(
                         'id',
                         DB::table('workflow_step_sub_kategori_rkbu')
@@ -390,39 +676,64 @@ class UsulanBelanjaWorkflowService
                 );
             }
 
-            $instanceId = (string) Str::uuid();
+            $instanceId = $existingInstance?->id ?? (string) Str::uuid();
             $first = $steps->first();
 
-            DB::table('workflow_instances')->insert([
-                'id' => $instanceId,
-                'workflow_id' => $workflow->id,
-                'current_step_id' => $first->id,
-                'dokumen_id' => $usulan->id,
-                'dokumen_type' => UsulanBelanja::class,
-                'submitted_by' => $user->id,
-                'submitted_at' => now(),
-                'status' => 'proses',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            if ($existingInstance) {
+                // Preserve old approval rows as history and open a fresh approval cycle.
+                DB::table('approvals')
+                    ->where('workflow_instance_id', $instanceId)
+                    ->where('is_current', true)
+                    ->update(['is_current' => false, 'updated_at' => now()]);
+
+                DB::table('workflow_instances')
+                    ->where('id', $instanceId)
+                    ->update([
+                        'current_step_id' => $first->id,
+                        'submitted_by' => $user->id,
+                        'submitted_at' => now(),
+                        'finished_at' => null,
+                        'status' => 'proses',
+                        'updated_at' => now(),
+                    ]);
+            } else {
+                DB::table('workflow_instances')->insert([
+                    'id' => $instanceId,
+                    'workflow_id' => $workflow->id,
+                    'current_step_id' => $first->id,
+                    'dokumen_id' => $usulan->id,
+                    'dokumen_type' => UsulanBelanja::class,
+                    'submitted_by' => $user->id,
+                    'submitted_at' => now(),
+                    'status' => 'proses',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
             $usulan->update([
                 'workflow_instance_id' => $instanceId,
                 'status_usulan' => 'proses',
+                'catatan' => null,
             ]);
 
-            $this->buatApproval($instanceId, $first, $usulan);
+            $approvalIds = $this->buatApproval($instanceId, $first, $usulan);
 
-            DB::table('approval_logs')->insert([
-                'id' => (string) Str::uuid(),
-                'workflow_instance_id' => $instanceId,
-                'user_id' => $user->id,
-                'aksi' => 'submit',
-                'catatan' => 'Usulan Belanja diajukan.',
-                'aksi_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            foreach ($approvalIds as $approvalId) {
+                DB::table('approval_logs')->insert([
+                    'id' => (string) Str::uuid(),
+                    'approval_id' => $approvalId,
+                    'workflow_instance_id' => $instanceId,
+                    'user_id' => $user->id,
+                    'aksi' => 'submit',
+                    'catatan' => $existingInstance
+                        ? 'Usulan Belanja diajukan kembali setelah revisi.'
+                        : 'Usulan Belanja diajukan.',
+                    'aksi_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
             return $usulan->fresh();
         }, 3);
@@ -438,7 +749,7 @@ class UsulanBelanjaWorkflowService
         string $instanceId,
         object $step,
         UsulanBelanja $usulan
-    ): void {
+    ): array {
         $approvers = $this->resolveApprovers($step, $usulan);
 
         if ($approvers->isEmpty() && $step->is_required) {
@@ -448,16 +759,17 @@ class UsulanBelanjaWorkflowService
             );
         }
 
+        $approvalIds = [];
         foreach ($approvers as $approver) {
+            $approvalId = (string) Str::uuid();
             DB::table('approvals')->insert([
-                'id' => (string) Str::uuid(),
+                'id' => $approvalId,
                 'workflow_instance_id' => $instanceId,
                 'workflow_step_id' => $step->id,
                 'validator_role_id' => $step->validator_role_id,
                 'validator_user_id' => $approver->user_id,
                 'position_id' => $approver->position_id,
-                'position_assignment_id' =>
-                $approver->position_assignment_id,
+                'position_assignment_id' => $approver->position_assignment_id,
                 'status' => 'pending',
                 'received_at' => now(),
                 'sequence' => $step->step_order,
@@ -465,14 +777,17 @@ class UsulanBelanjaWorkflowService
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+            $approvalIds[] = $approvalId;
         }
+
+        return $approvalIds;
     }
 
     /**
      * Resolver dasar.
      * Lihat penjelasan setelah kode untuk batasan konfigurasi.
      */
-    private function resolveApprovers(
+    public function resolveApprovers(
         object $step,
         UsulanBelanja $usulan
     ) {
@@ -480,7 +795,7 @@ class UsulanBelanjaWorkflowService
             ->where('id', $usulan->user_id)
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             return collect();
         }
 
@@ -498,6 +813,18 @@ class UsulanBelanjaWorkflowService
                 'pa.position_id',
                 'pa.id as position_assignment_id',
             ]);
+
+        if ($step->is_pptk_step) {
+            $pptkPositionIds = DB::table('position_sub_kategori_rkbus')
+                ->where('id_sub_kategori_rkbu', $usulan->sub_kategori_rkbu_id)
+                ->pluck('position_id');
+
+            if ($pptkPositionIds->isEmpty()) {
+                return collect();
+            }
+
+            return $query->whereIn('pa.position_id', $pptkPositionIds)->get();
+        }
 
         if (
             $step->validator_type === 'user'
@@ -556,7 +883,6 @@ class UsulanBelanjaWorkflowService
         return collect();
     }
 
-
     public function prosesKeputusan(
         string $usulanId,
         string $aksi,
@@ -578,7 +904,7 @@ class UsulanBelanjaWorkflowService
                 ->lockForUpdate()
                 ->first();
 
-            if (!$instance || $instance->status !== 'proses') {
+            if (! $instance || $instance->status !== 'proses') {
                 throw ValidationException::withMessages([
                     'aksi' => 'Workflow tidak sedang berjalan.',
                 ]);
@@ -593,7 +919,7 @@ class UsulanBelanjaWorkflowService
                 ->lockForUpdate()
                 ->first();
 
-            if (!$approval) {
+            if (! $approval) {
                 abort(403, 'Anda bukan validator aktif dokumen ini.');
             }
 
@@ -622,8 +948,7 @@ class UsulanBelanjaWorkflowService
                 'workflow_instance_id' => $instance->id,
                 'user_id' => $user->id,
                 'position_id' => $approval->position_id,
-                'position_assignment_id' =>
-                $approval->position_assignment_id,
+                'position_assignment_id' => $approval->position_assignment_id,
                 'aksi' => $aksi,
                 'catatan' => $catatan,
                 'aksi_at' => now(),

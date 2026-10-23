@@ -435,7 +435,7 @@ class RkbuPersediaanDataTable extends DataTable
         return [
 
             Column::computed('checkbox')
-                ->title('<input type="checkbox" class="form-check-input" id="barjas-select-all" aria-label="Pilih semua RKBU pada halaman">')
+                ->title('<input type="checkbox" class="form-check-input" id="persediaan-select-all" aria-label="Pilih semua RKBU Persediaan pada halaman">')
                 ->width(30)
                 ->exportable(false)
                 ->printable(false)

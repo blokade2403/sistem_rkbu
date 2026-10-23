@@ -174,49 +174,6 @@
                                     Status RKBU
                                 </div>
 
-                                @php
-
-                                    $approvalNote = \App\Models\Workflow\Approval::whereHas(
-                                        'workflowInstance',
-                                        function ($q) use ($barjas) {
-                                            $q->where('dokumen_id', $barjas->rkbu->id);
-                                        },
-                                    )
-                                        ->whereIn('status', ['revision', 'rejected'])
-                                        ->latest()
-                                        ->first();
-
-                                @endphp
-
-                                @if ($approvalNote)
-
-                                    <div
-                                        class="alert
-    {{ $approvalNote->status == 'revision' ? 'alert-warning' : 'alert-danger' }}
-    mt-5">
-
-                                        <div class="fw-bold mb-2">
-
-                                            @if ($approvalNote->status == 'revision')
-                                                Catatan Revisi
-                                            @else
-                                                Alasan Penolakan
-                                            @endif
-
-                                        </div>
-
-                                        <div>
-                                            {{ $approvalNote->catatan }}
-                                        </div>
-
-                                        <div class="text-muted fs-8 mt-2">
-                                            {{ $approvalNote->approved_at }}
-                                        </div>
-
-                                    </div>
-
-                                @endif
-
                             </div>
                         </div>
                         <div
@@ -243,9 +200,7 @@
                                     </div>
                                     <div class="flex-grow-1">
                                         <div class="mb-3">
-                                            <a class="fs-6 fw-bolder text-dark text-hover-primary" href="#">
-                                                Dokumen Pendukung.pdf
-                                            </a>
+                                            <span class="fs-6 fw-bolder text-dark">Dokumen Pendukung</span>
                                         </div>
                                         <div class="row g-3">
                                             <div class="col-md-4">
@@ -289,6 +244,19 @@
                                                     @endif
                                                 </div>
                                             </div>
+                                            @foreach ([4 => 'Dokumen Pendukung 4', 5 => 'Dokumen Pendukung 5'] as $number => $label)
+                                                @if ($barjas->{'upload_file_' . $number})
+                                                    <div class="col-md-4">
+                                                        <div class="text-gray-400">
+                                                            {{ $label }}:
+                                                            <a href="{{ asset('storage/' . $barjas->{'upload_file_' . $number}) }}"
+                                                                target="_blank" rel="noopener noreferrer" class="text-hover-primary">
+                                                                Buka file
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                            @endforeach
                                         </div>
                                     </div>
                                 </div>
@@ -298,6 +266,7 @@
                     <div class="separator mb-4"></div>
                     Link Ekatalog :
                     {{ $barjas->link_ekatalog ?? '-' }}
+                    @include('rkbu.partials.workflow_history', ['workflowInstances' => $barjas->rkbu?->workflowInstances ?? collect()])
                 </div>
             </div>
         </div>

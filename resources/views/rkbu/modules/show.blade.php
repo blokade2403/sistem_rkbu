@@ -40,6 +40,8 @@
                     @endif
                 @endforeach
             </div>
+            @include('rkbu.partials.workflow_history', ['workflowInstances' => $record->rkbu?->workflowInstances ?? collect()])
+            @include('rkbu.partials.uploaded_documents', ['detail' => $record])
         </div>
     </div>
 @endsection

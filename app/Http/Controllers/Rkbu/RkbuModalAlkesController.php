@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Rkbu;
 
-use App\DataTables\Rkbu\RkbuModalKantorDataTable;
+use App\DataTables\Rkbu\RkbuModalAlkesDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\MasterBackend\SettingInput\Anggaran;
 use App\Models\MasterBackend\SettingInput\Komponen;
@@ -16,7 +16,7 @@ use App\Models\MasterBackend\SettingRkbu\SubKategoriRkbu;
 use App\Models\MasterBackend\SettingRkbu\SubKegiatan;
 use App\Models\MasterBackend\SettingRkbu\SumberDana;
 use App\Models\Rkbu\Rkbu;
-use App\Models\Rkbu\RkbuDetailModal;
+use App\Models\Rkbu\RkbuDetailModalAlkes;
 use App\Services\Workflow\WorkflowApprovalService;
 use App\Support\Rkbu\RkbuListFilters;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -36,9 +36,9 @@ class RkbuModalAlkesController extends Controller
         $this->workflowApprovalService = $workflowApprovalService;
     }
 
-    public function index(RkbuModalKantorDataTable $dataTable)
+    public function index(RkbuModalAlkesDataTable $dataTable)
     {
-        $rkbumodalkantor        = RkbuDetailModal::all();
+        $rkbumodalkantor        = RkbuDetailModalAlkes::all();
         $uraian_satu            = UraianSatu::all();
         $uraian_dua             = UraianDua::all();
         $sumber_dana            = SumberDana::all();
@@ -53,15 +53,15 @@ class RkbuModalAlkesController extends Controller
             'uraian_satu'           => $uraian_satu,
             'uraian_dua'            => $uraian_dua,
             'sumber_dana'           => $sumber_dana,
-            'sub_kategori_rkbu'     => RkbuListFilters::availableSubcategories($this->subKategoriOptions(), 'detailModal'),
+            'sub_kategori_rkbu'     => RkbuListFilters::availableSubcategories($this->subKategoriOptions(), 'detailModalAlkes'),
             'ppn'                   => $ppn,
             'approval_statuses'     => RkbuListFilters::APPROVAL_STATUSES,
         ]);
     }
 
-    public function print(RkbuModalKantorDataTable $dataTable)
+    public function print(RkbuModalAlkesDataTable $dataTable)
     {
-        $records = $dataTable->query(new RkbuDetailModal())->get();
+        $records = $dataTable->query(new RkbuDetailModalAlkes())->get();
 
         return Pdf::loadView('rkbu.rkbu_persediaan.pdf', [
             'records' => $records,
@@ -185,7 +185,7 @@ class RkbuModalAlkesController extends Controller
                     ->store('kap', 'public');
             }
 
-            RkbuDetailModal::create([
+            RkbuDetailModalAlkes::create([
                 'id' => Str::uuid()->toString(),
                 'rkbu_id' => $rkbu->id,
                 'nama_barang' => $request->nama_barang,
@@ -236,7 +236,7 @@ class RkbuModalAlkesController extends Controller
         $komponens               = Komponen::all();
         $ppn                    = Ppn::where('status', 'aktif')->first();
 
-        $barjas = RkbuDetailModal::with([
+        $barjas = RkbuDetailModalAlkes::with([
             'rkbu',
             'rkbu.subKegiatan',
             'rkbu.sumberDana'
@@ -266,7 +266,7 @@ class RkbuModalAlkesController extends Controller
 
     public function submit($id)
     {
-        return $this->workflowApprovalService->submit($id);
+        return $this->workflowApprovalService->submit($id, RkbuDetailModalAlkes::class);
     }
 
     public function bulkSubmit(Request $request)
@@ -276,7 +276,7 @@ class RkbuModalAlkesController extends Controller
             'ids.*' => 'required|string|distinct',
         ]);
 
-        $details = RkbuDetailModal::whereIn('id', $validated['ids'])
+        $details = RkbuDetailModalAlkes::whereIn('id', $validated['ids'])
             ->whereHas('rkbu', function ($query) {
                 $query->where('created_by', auth()->id())
                     ->whereIn('status', ['draft', 'revision', 'rejected']);
@@ -295,7 +295,7 @@ class RkbuModalAlkesController extends Controller
                 continue;
             }
 
-            $response = $this->workflowApprovalService->submit($id);
+            $response = $this->workflowApprovalService->submit($id, RkbuDetailModalAlkes::class);
             $payload = $response->getData(true);
             $results[] = [
                 'id' => $id,
@@ -321,7 +321,7 @@ class RkbuModalAlkesController extends Controller
 
         try {
 
-            $detail = RkbuDetailModal::with('rkbu')
+            $detail = RkbuDetailModalAlkes::with('rkbu')
                 ->findOrFail($id);
 
             $request->validate([
@@ -402,9 +402,11 @@ class RkbuModalAlkesController extends Controller
                 'volume_2'          => $volume2,
                 'satuan_2'          => $request->satuan_2,
                 'jumlah_volume'     => $jumlahVolume,
+                'sisa_vol_rkbu'     => $jumlahVolume,
                 'harga_satuan'      => $hargaSatuan,
                 'ppn'               => $ppn,
                 'total_anggaran'    => $totalAnggaran,
+                'sisa_anggaran_rkbu' => $totalAnggaran,
                 'rating'            => $request->rating,
                 'link_ekatalog'     => $request->link_ekatalog,
                 'penempatan'        => $request->penempatan,
@@ -473,12 +475,20 @@ class RkbuModalAlkesController extends Controller
 
     public function show($id)
     {
-        $barjas = RkbuDetailModal::with(
+        $barjas = RkbuDetailModalAlkes::with(
             'rkbu.subKategori',
             'rkbu.unit',
-            'rkbu.user'
+            'rkbu.user',
+            'rkbu.workflowInstances.approvals.validatorUser',
+            'rkbu.workflowInstances.approvals.position',
+            'rkbu.workflowInstances.approvals.workflowStep.position',
+            'rkbu.workflowInstances.approvals.workflowStep.validatorRole',
+            'rkbu.workflowInstances.approvals.logs.user',
+            'rkbu.workflowInstances.approvals.logs.position'
         )
             ->findOrFail($id);
+
+        app(\App\Services\Workflow\UsulanBelanjaBalanceService::class)->applyToDetail($barjas);
 
         return view('rkbu.rkbu_modal.show', compact('barjas'));
     }
@@ -505,3 +515,4 @@ class RkbuModalAlkesController extends Controller
         return SubKategoriRkbu::query()->forJenisKategori('Modal Alat Kesehatan');
     }
 }
+

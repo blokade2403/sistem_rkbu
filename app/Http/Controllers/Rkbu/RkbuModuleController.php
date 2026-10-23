@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Rkbu;
 
 use App\Http\Controllers\Controller;
+use App\DataTables\Rkbu\RkbuPegawaiDataTable;
 use App\Models\MasterBackend\SettingInput\Komponen;
 use App\Models\MasterBackend\SettingInput\Ppn;
 use App\Models\MasterBackend\SettingInput\UraianSatu;
@@ -10,6 +11,7 @@ use App\Models\MasterBackend\SettingRkbu\SubKategoriRkbu;
 use App\Models\MasterBackend\SettingRkbu\SumberDana;
 use App\Models\Rkbu\Rkbu;
 use App\Models\Rkbu\RkbuDetailModal;
+use App\Models\Rkbu\RkbuDetailModalAlkes;
 use App\Models\Rkbu\RkbuDetailPegawai;
 use App\Models\Rkbu\RkbuDetailPersediaan;
 use App\Support\Rkbu\RkbuListFilters;
@@ -118,7 +120,7 @@ class RkbuModuleController extends Controller
         'modal_alkes' => [
             'route' => 'modal-alkes',
             'title' => 'RKBU Modal Alkes',
-            'model' => RkbuDetailModal::class,
+            'model' => RkbuDetailModalAlkes::class,
             'category' => ['alkes', 'alat kesehatan'],
             'quantity' => 'volume',
             'fields' => self::MODAL_FIELDS,
@@ -155,14 +157,31 @@ class RkbuModuleController extends Controller
         ['name' => 'upload_file_5', 'label' => 'Lampiran KAP 5', 'type' => 'file'],
     ];
 
-    public function index(Request $request)
+    public function index(Request $request, RkbuPegawaiDataTable $pegawaiDataTable)
     {
         $module = $this->module($request);
         $config = self::MODULES[$module];
+        if ($module === 'pegawai') {
+            $subcategories = RkbuListFilters::availableSubcategories(
+                $this->subcategories($module),
+                'detailPegawai'
+            );
+
+            return $pegawaiDataTable->render('rkbu.rkbu_pegawai.index', [
+                'title' => $config['title'],
+                'title2' => $config['title'],
+                'routePrefix' => 'rkbu.' . $config['route'],
+                'sub_kategori_rkbu' => $subcategories,
+                'sumber_dana' => SumberDana::all(),
+                'approval_statuses' => RkbuListFilters::APPROVAL_STATUSES,
+            ]);
+        }
+
         $detailRelation = match ($config['model']) {
             RkbuDetailPegawai::class => 'detailPegawai',
             RkbuDetailPersediaan::class => 'detailPersediaan',
             RkbuDetailModal::class => 'detailModal',
+            RkbuDetailModalAlkes::class => 'detailModalAlkes',
             default => 'detailBarjas',
         };
         $filters = $request->validate([
@@ -193,6 +212,7 @@ class RkbuModuleController extends Controller
 
         return view('rkbu.modules.index', compact('config', 'records', 'subcategories', 'selectedSubcategory'), [
             'title' => $config['title'],
+            'routePrefix' => 'rkbu.' . $config['route'],
         ]);
     }
 
@@ -201,6 +221,17 @@ class RkbuModuleController extends Controller
         $module = $this->module($request);
         $config = self::MODULES[$module];
         $subcategories = $this->subcategories($module)->get();
+
+        if ($module === 'pegawai') {
+            return view('rkbu.rkbu_pegawai.form', [
+                'config' => $config,
+                'record' => null,
+                'subcategories' => $subcategories,
+                'action' => route('rkbu.' . $config['route'] . '.store'),
+                'method' => 'POST',
+                'title' => $config['title'],
+            ]);
+        }
 
         return view('rkbu.modules.form', [
             'config' => $config,
@@ -263,7 +294,17 @@ class RkbuModuleController extends Controller
     {
         $module = $this->module($request);
         $config = self::MODULES[$module];
-        $record = $this->visibleRecords($module)->with('rkbu')->findOrFail($id);
+        $record = $this->visibleRecords($module)->with([
+            'rkbu',
+            'rkbu.workflowInstances.approvals.validatorUser',
+            'rkbu.workflowInstances.approvals.position',
+            'rkbu.workflowInstances.approvals.workflowStep.position',
+            'rkbu.workflowInstances.approvals.workflowStep.validatorRole',
+            'rkbu.workflowInstances.approvals.logs.user',
+            'rkbu.workflowInstances.approvals.logs.position',
+        ])->findOrFail($id);
+
+        app(\App\Services\Workflow\UsulanBelanjaBalanceService::class)->applyToDetail($record);
 
         return view('rkbu.modules.show', compact('config', 'record'));
     }
@@ -273,6 +314,17 @@ class RkbuModuleController extends Controller
         $module = $this->module($request);
         $config = self::MODULES[$module];
         $record = $this->editableRecord($module, $id);
+
+        if ($module === 'pegawai') {
+            return view('rkbu.rkbu_pegawai.form', [
+                'config' => $config,
+                'record' => $record,
+                'subcategories' => collect(),
+                'action' => route('rkbu.' . $config['route'] . '.update', $record->id),
+                'method' => 'PUT',
+                'title' => $config['title'],
+            ]);
+        }
 
         return view('rkbu.modules.form', [
             'config' => $config,
@@ -326,6 +378,13 @@ class RkbuModuleController extends Controller
 
         foreach ($files as $file) {
             Storage::disk('public')->delete($file);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Data RKBU berhasil dihapus.',
+            ]);
         }
 
         return redirect()

@@ -249,7 +249,7 @@ class RkbuModalKantorDataTable extends DataTable
         <button type="button"
             class="btn btn-icon btn-bg-light btn-active-color-success btn-sm me-1 btn-submit"
             data-id="' . $row->id . '"
-            data-url="' . route('rkbu.barjas.submit', $row->id) . '"
+            data-url="' . route('rkbu.modal_kantor.submit', $row->id) . '"
             title="Ajukan RKBU">
 
             <i class="fas fa-paper-plane"></i>
@@ -261,7 +261,7 @@ class RkbuModalKantorDataTable extends DataTable
         <button type="button"
             class="btn btn-icon btn-bg-light btn-active-color-warning btn-sm me-1 btn-submit"
             data-id="' . $row->id . '"
-            data-url="' . route('rkbu.barjas.submit', $row->id) . '"
+            data-url="' . route('rkbu.modal_kantor.submit', $row->id) . '"
             title="Ajukan Ulang">
 
             <i class="fas fa-redo"></i>
@@ -273,7 +273,7 @@ class RkbuModalKantorDataTable extends DataTable
                 if (in_array($status, ['draft', 'revision', 'rejected'])) {
 
                     $editButton = '
-        <a href="' . route('rkbu.barjas.edit', $row->id) . '"
+        <a href="' . route('rkbu.modal_kantor.edit', $row->id) . '"
             class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1"
             title="Edit">
 
@@ -301,7 +301,7 @@ class RkbuModalKantorDataTable extends DataTable
         <button type="button"
             class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm btn-delete"
             data-id="' . $row->id . '"
-            data-url="' . route('rkbu.barjas.destroy', $row->id) . '"
+            data-url="' . route('rkbu.modal_kantor.destroy', $row->id) . '"
             title="Hapus">
 
             <span class="svg-icon svg-icon-3">
@@ -329,7 +329,7 @@ class RkbuModalKantorDataTable extends DataTable
         <button type="button"
             class="btn btn-icon btn-bg-light btn-active-color-info btn-sm me-1 btn-show"
             data-id="' . $row->id . '"
-            data-url="' . route('rkbu.barjas.show', $row->id) . '"
+            data-url="' . route('rkbu.modal_kantor.show', $row->id) . '"
             data-bs-toggle="modal"
             data-bs-target="#kt_modal_create_account"
             title="Detail">
@@ -472,3 +472,4 @@ class RkbuModalKantorDataTable extends DataTable
         return 'RkbuBarjas_' . date('YmdHis');
     }
 }
+

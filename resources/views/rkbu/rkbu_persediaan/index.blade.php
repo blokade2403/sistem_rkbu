@@ -79,19 +79,80 @@
     @include('components.partials.calender')
     @push('scripts')
         <script>
-            $('#rkbubarjas-table').on('preXhr.dt', function (event, settings, data) {
+            const persediaanTable = $('#rkbubarjas-table');
+
+            persediaanTable.on('preXhr.dt', function (event, settings, data) {
                 data.sumber_dana_id = $('#filter-sumber-dana').val();
                 data.sub_kategori_rkbu_id = $('#persediaan-filter-subkategori').val();
                 data.approval_status = $('#filter-approval-status').val();
             });
 
             $('#persediaan-apply-filter').on('click', function () {
-                $('#rkbubarjas-table').DataTable().ajax.reload();
+                persediaanTable.DataTable().ajax.reload();
             });
 
             $('#persediaan-reset-filter').on('click', function () {
                 $('#filter-sumber-dana, #persediaan-filter-subkategori, #filter-approval-status').val('').trigger('change');
-                $('#rkbubarjas-table').DataTable().ajax.reload();
+                persediaanTable.DataTable().ajax.reload();
+            });
+
+            function updatePersediaanSelection() {
+                if (!$.fn.DataTable.isDataTable(persediaanTable)) return;
+                const table = persediaanTable.DataTable();
+                const selectedCount = table.$('input[type="checkbox"]:checked:not(#persediaan-select-all)').length;
+                $('#persediaan-selected-count').text(selectedCount + ' dipilih');
+                $('#persediaan-bulk-submit').prop('disabled', selectedCount === 0);
+            }
+
+            persediaanTable.on('change', 'input[type="checkbox"]:not(#persediaan-select-all)', updatePersediaanSelection);
+            persediaanTable.on('change', '#persediaan-select-all', function() {
+                persediaanTable.DataTable().$('input[type="checkbox"]:not(:disabled):not(#persediaan-select-all)')
+                    .prop('checked', this.checked);
+                updatePersediaanSelection();
+            });
+            persediaanTable.on('draw.dt', function() {
+                $('#persediaan-select-all').prop('checked', false);
+                updatePersediaanSelection();
+            });
+
+            $('#persediaan-bulk-submit').on('click', function() {
+                const ids = persediaanTable.DataTable()
+                    .$('input[type="checkbox"]:checked:not(:disabled):not(#persediaan-select-all)')
+                    .map(function() { return this.value; })
+                    .get();
+                if (!ids.length) return;
+
+                Swal.fire({
+                    title: 'Ajukan RKBU terpilih?',
+                    text: ids.length + ' data Persediaan akan diajukan untuk proses validasi.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Ajukan',
+                    cancelButtonText: 'Batal'
+                }).then(function(result) {
+                    if (!result.isConfirmed) return;
+
+                    $.ajax({
+                        url: '{{ route('rkbu.persediaan.bulk-submit') }}',
+                        type: 'POST',
+                        data: { ids: ids },
+                        success: function(response) {
+                            persediaanTable.DataTable().ajax.reload();
+                            const failures = (response.results || []).filter(function(item) { return !item.success; });
+                            const detail = failures.map(function(item) {
+                                return $('<div>').text(item.message).html();
+                            }).join('<br>');
+                            Swal.fire({
+                                icon: failures.length ? 'warning' : 'success',
+                                title: failures.length ? 'Sebagian pengajuan gagal' : 'Berhasil',
+                                html: response.message + (detail ? '<br><br>' + detail : '')
+                            });
+                        },
+                        error: function(xhr) {
+                            toastr.error(xhr.responseJSON?.message || 'Gagal mengajukan RKBU Persediaan terpilih.');
+                        }
+                    });
+                });
             });
         </script>
         {!! $dataTable->scripts() !!}

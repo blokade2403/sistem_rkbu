@@ -25,7 +25,7 @@
                             @include('rkbu.rkbu_barjas.modal_komponen')
                             <form id="kt_modal_new_target_form"
                                 class="form fv-plugins-bootstrap5 fv-plugins-framework form-submit"
-                                action="{{ route('rkbu.modal_kantor.store') }}" method="post" enctype="multipart/form-data">
+                                action="{{ route($routePrefix . '.store') }}" method="post" enctype="multipart/form-data">
                                 @csrf
                                 <div
                                     class="notice d-flex bg-light-primary rounded border-primary border border-dashed p-6 mb-6">

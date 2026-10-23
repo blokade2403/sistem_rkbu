@@ -6,6 +6,7 @@ use App\Http\Controllers\MasterBackend\SettingInput\AnggaranController;
 use App\Http\Controllers\MasterBackend\SettingInput\JudulHeaderController;
 use App\Http\Controllers\MasterBackend\SettingInput\KomponenController;
 use App\Http\Controllers\MasterBackend\SettingInput\PpnController;
+use App\Http\Controllers\MasterBackend\SettingInput\PaguAnggaranController;
 use App\Http\Controllers\MasterBackend\SettingInput\TahunAnggaranController;
 use App\Http\Controllers\MasterBackend\SettingInput\TargetSpsController;
 use App\Http\Controllers\MasterBackend\SettingInput\UraianDuaController;
@@ -40,8 +41,11 @@ use App\Http\Controllers\Rkbu\RkbuModalAlkesController;
 use App\Http\Controllers\Rkbu\RkbuModalKantorController;
 use App\Http\Controllers\Rkbu\RkbuModuleController;
 use App\Http\Controllers\Rkbu\RkbuPersediaanController;
+use App\Http\Middleware\EnforceRkbuPhaseAccess;
 use App\Http\Controllers\UsulanBelanja\UsulanBelanjaController;
+use App\Http\Controllers\UsulanBelanja\SpjUsulanBelanjaController;
 use App\Http\Controllers\UsulanBelanja\ValidasiUsulanBelanjaController;
+use App\Http\Controllers\Pengadaan\PerusahaanController;
 use App\Http\Controllers\WorkFlow\ApprovalController;
 use App\Http\Controllers\WorkFlow\PositionSubKategoriRkbuController;
 use App\Http\Controllers\WorkFlow\PptkKategoriController;
@@ -63,6 +67,7 @@ Route::controller(AuthController::class)->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::resource('perusahaans', PerusahaanController::class);
     Route::prefix('setting-user')->group(function () {
         Route::resource('fases', FaseController::class);
         Route::resource('units', UnitController::class);
@@ -130,9 +135,18 @@ Route::middleware('auth')->group(function () {
             )->name('bulk-action');
 
             Route::get(
+                '/approval/print-all',
+                [WorkflowApprovalController::class, 'printAll']
+            )->name('print-all');
+
+            Route::get(
                 '/approval/{id}',
                 [WorkflowApprovalController::class, 'show']
             )->name('show');
+            Route::get(
+                '/approval/{id}/print',
+                [WorkflowApprovalController::class, 'print']
+            )->name('print');
             Route::post(
                 '/approval/{id}/update-rkbu',
                 [WorkflowApprovalController::class, 'updateRkbu']
@@ -160,6 +174,11 @@ Route::middleware('auth')->group(function () {
         Route::resource('ppns', PpnController::class);
         Route::resource('judul_headers', JudulHeaderController::class);
         Route::resource('anggarans', AnggaranController::class);
+        Route::get('pagu-anggaran/{paguAnggaran}/history', [PaguAnggaranController::class, 'history'])->name('pagu_anggaran.history');
+        Route::resource('pagu-anggaran', PaguAnggaranController::class)
+            ->parameters(['pagu-anggaran' => 'paguAnggaran'])
+            ->names('pagu_anggaran')
+            ->except(['show', 'destroy']);
         Route::resource('target_sps', TargetSpsController::class);
     });
 
@@ -188,6 +207,47 @@ Route::middleware('auth')->group(function () {
                 'index',
             ])->name('index');
 
+            Route::get('/data', [
+                UsulanBelanjaController::class,
+                'data',
+            ])->name('data');
+
+            Route::get('/export', [
+                UsulanBelanjaController::class,
+                'export',
+            ])->name('export');
+
+            Route::get('/rekap', [
+                UsulanBelanjaController::class,
+                'rekap',
+            ])->name('rekap');
+
+            Route::get('/rekap/{usulanBelanja}', [
+                UsulanBelanjaController::class,
+                'showRekap',
+            ])->name('rekap.show');
+
+            Route::get('/spj', [SpjUsulanBelanjaController::class, 'index'])
+                ->name('spj.index');
+            Route::get('/spj/penyedia', [SpjUsulanBelanjaController::class, 'byProvider'])
+                ->name('spj.providers');
+            Route::get('/spj/{spj}', [SpjUsulanBelanjaController::class, 'show'])
+                ->name('spj.show');
+            Route::get('/{usulanBelanja}/spj/create', [SpjUsulanBelanjaController::class, 'create'])
+                ->name('spj.create');
+            Route::post('/{usulanBelanja}/spj', [SpjUsulanBelanjaController::class, 'store'])
+                ->name('spj.store');
+
+            Route::get('/{usulanBelanja}/print', [
+                UsulanBelanjaController::class,
+                'print',
+            ])->name('print');
+
+            Route::get('/{usulanBelanja}/print-surat-perintah', [
+                UsulanBelanjaController::class,
+                'printSuratPerintah',
+            ])->name('print-surat-perintah');
+
             Route::get('/create', [
                 UsulanBelanjaController::class,
                 'create',
@@ -202,6 +262,21 @@ Route::middleware('auth')->group(function () {
                 UsulanBelanjaController::class,
                 'addItem',
             ])->name('items.store');
+
+            Route::put('/{usulanBelanja}/items', [
+                UsulanBelanjaController::class,
+                'updateItems',
+            ])->name('items.update');
+
+            Route::delete('/{usulanBelanja}/items/{item}', [
+                UsulanBelanjaController::class,
+                'deleteItem',
+            ])->name('items.destroy');
+
+            Route::delete('/{usulanBelanja}', [
+                UsulanBelanjaController::class,
+                'delete',
+            ])->name('destroy');
 
             Route::get('/validasi', [
                 ValidasiUsulanBelanjaController::class,
@@ -226,6 +301,7 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('rkbu')
         ->name('rkbu.')
+        ->middleware(EnforceRkbuPhaseAccess::class)
         ->group(function () {
 
             Route::get('/', [RkbuController::class, 'index'])

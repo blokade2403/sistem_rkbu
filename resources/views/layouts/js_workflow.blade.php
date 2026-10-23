@@ -73,6 +73,28 @@
         $('#tableApproval').DataTable().ajax.reload();
     });
 
+    $('#approval-module-filter').on('change', function() {
+        const url = new URL(window.location.href);
+        url.searchParams.set('module', this.value || 'all');
+        window.location.assign(url.toString());
+    });
+
+    $('#approval-print-all').on('click', function(event) {
+        event.preventDefault();
+        const url = new URL(this.href, window.location.origin);
+        const filters = {
+            module: $('#approval-module-filter').val() || 'all',
+            sumber_dana_id: $('#approval-sumber-dana-filter').val(),
+            sub_kategori_rkbu_id: $('#approval-subkategori-filter').val(),
+            approval_status: $('#approval-status-filter').val(),
+        };
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value) url.searchParams.set(key, value);
+            else url.searchParams.delete(key);
+        });
+        window.open(url.toString(), '_blank', 'noopener');
+    });
+
     function updateApprovalSelection() {
         const table = $('#tableApproval').DataTable();
         const selectedCount = table.$('.approval-row-checkbox:checked').length;
@@ -201,6 +223,7 @@
     $(document).on('click', '.btn-detail', function() {
 
         approvalId = $(this).data('id');
+        $('#approval-print-pdf').attr('href', '#').addClass('disabled').attr('aria-disabled', 'true');
 
        $.get($(this).data('url'), function(res) {
 
@@ -212,6 +235,8 @@
     $('#detail_nomor_rkbu').text(res.rkbu?.nomor_rkbu ?? '-');
 
     $('#detail_unit').text(res.rkbu?.unit?.nama_unit ?? '-');
+
+    $('#detail_sumber_dana').text(res.rkbu?.sumber_dana?.nama_sumber_dana ?? '-');
 
     $('#detail_tahun').text(res.rkbu?.tahun_anggaran?.nama_tahun_anggaran ?? '-');
 
@@ -226,6 +251,9 @@
     );
 
     $('#detail_tanggal').text(res.approval?.created_at ?? '-');
+    $('#approval-print-pdf').attr('href', res.printUrl || '#')
+        .toggleClass('disabled', !res.printUrl)
+        .attr('aria-disabled', res.printUrl ? 'false' : 'true');
     $('#approval_note').val('');
     $('#btnApprove, #btnRevision, #btnReject').toggle(Boolean(res.canApprove));
 
@@ -260,6 +288,12 @@
     $('#btnCancelEditRkbu, #btnSaveRkbu').hide();
     $('#btnEditRkbu').show();
     $('#rkbu-edit-form').data('url', res.updateUrl);
+    $('#rkbu-edit-header-fields').toggle(Boolean(res.canEditHeader));
+    $('#edit_sumber_dana_id, #edit_sub_kegiatan_id').prop('required', Boolean(res.canEditHeader));
+    $('#rkbu-edit-form').data('can-edit-header', Boolean(res.canEditHeader));
+    $('#rkbu-shift-fields').toggle(Number(res.phaseOrder || 1) >= 2);
+    $('#rkbu_shift_reason').val('');
+    $('#rkbu_shift_file').val('');
     $('#approval-next-official-wrapper').toggle(Boolean(res.requiresNextOfficial));
 
     const sourceSelect = $('#edit_sumber_dana_id').empty()
@@ -297,8 +331,18 @@
     ];
     (res.editableDetails || []).forEach(function(detail, index) {
         const card = $('<div class="card card-bordered rkbu-edit-detail">').attr('data-id', detail.id);
+        const originalFields = detail.fields || {};
+        const originalVolume = Number(originalFields.jumlah_volume || 0);
+        const originalBudget = Number(originalFields.total_anggaran || 0);
+        card.attr('data-reserved-volume', Math.max(0, originalVolume - Number(originalFields.sisa_vol_rkbu ?? originalVolume)));
+        card.attr('data-reserved-budget', Math.max(0, originalBudget - Number(originalFields.sisa_anggaran_rkbu ?? originalBudget)));
         const cardBody = $('<div class="card-body">').appendTo(card);
         $('<h6 class="mb-4">').text('Komponen ' + (index + 1)).appendTo(cardBody);
+        if (detail.locked) {
+            $('<div class="alert alert-warning py-2">')
+                .text('Item ini sudah masuk Usulan Belanja dan terkunci. Data item tidak dapat diubah, termasuk oleh Super Admin.')
+                .appendTo(cardBody);
+        }
         const fieldsRow = $('<div class="row g-3">').appendTo(cardBody);
         Object.keys(detail.fields || {}).forEach(function(field) {
             const value = detail.fields[field];
@@ -313,11 +357,65 @@
                     type: numericDetailFields.includes(field) ? 'number' : 'text',
                     step: numericDetailFields.includes(field) ? 'any' : undefined
                 })
+                .prop('readonly', Boolean(detail.locked))
                 .val(value === null || value === undefined ? '' : value)
                 .appendTo(fieldGroup);
         });
+        card.find('.rkbu-edit-value').filter(function() {
+            const field = $(this).data('field');
+            const isDerivedQuantity = field === 'jumlah_volume'
+                && (originalFields.volume_1 !== undefined || originalFields.koefisien_remunerasi !== undefined);
+            return isDerivedQuantity || ['total_anggaran', 'sisa_vol_rkbu', 'sisa_anggaran_rkbu', 'total_gaji_pokok', 'total_remunerasi'].includes(field);
+        }).prop('readonly', true).addClass('bg-light');
         editableDetails.append(card);
     });
+
+    function recalculateApprovalDetail(card) {
+        const values = {};
+        card.find('.rkbu-edit-value').each(function() {
+            values[$(this).data('field')] = $(this).val() === '' ? null : Number($(this).val());
+        });
+        const setValue = function(field, value) {
+            card.find('.rkbu-edit-value[data-field="' + field + '"]').val(Number.isFinite(value) ? value : 0);
+        };
+        const reservedVolume = Number(card.attr('data-reserved-volume') || 0);
+        const reservedBudget = Number(card.attr('data-reserved-budget') || 0);
+        let quantity = Number(values.jumlah_volume || 0);
+        let total = Number(values.total_anggaran || 0);
+
+        if (values.koefisien_remunerasi !== undefined) {
+            quantity = Number(values.koefisien_remunerasi || 0);
+            const totalGaji = Number(values.gaji_pokok || 0) * Number(values.koefisien_gaji || 0);
+            const totalRemunerasi = Number(values.remunerasi || 0) * Number(values.koefisien_remunerasi || 0);
+            const bpjs = Number(values.gaji_pokok || 0)
+                * (Number(values.bpjs_kesehatan || 0) + Number(values.bpjs_tk || 0) + Number(values.bpjs_jht || 0)) / 100
+                * Number(values.koefisien_gaji || 0);
+            total = totalGaji + totalRemunerasi + bpjs;
+            setValue('total_gaji_pokok', totalGaji);
+            setValue('total_remunerasi', totalRemunerasi);
+        } else {
+            if (values.volume_1 !== undefined && values.volume_2 !== undefined) {
+                quantity = Number(values.volume_1 || 0) * Number(values.volume_2 || 0);
+            }
+            if (values.harga_satuan !== undefined) {
+                total = quantity * Number(values.harga_satuan || 0)
+                    * (1 + Number(values.ppn || 0) / 100);
+            }
+        }
+
+        if (values.jumlah_volume !== undefined) setValue('jumlah_volume', quantity);
+        if (values.total_anggaran !== undefined) setValue('total_anggaran', total);
+        if (values.sisa_vol_rkbu !== undefined) setValue('sisa_vol_rkbu', Math.max(0, quantity - reservedVolume));
+        if (values.sisa_anggaran_rkbu !== undefined) setValue('sisa_anggaran_rkbu', Math.max(0, total - reservedBudget));
+    }
+
+    $('#rkbu-edit-details').find('.rkbu-edit-detail').each(function() {
+        recalculateApprovalDetail($(this));
+    });
+    $('#rkbu-edit-details').off('input.approvalCalc change.approvalCalc', '.rkbu-edit-value')
+        .on('input.approvalCalc change.approvalCalc', '.rkbu-edit-value', function() {
+            recalculateApprovalDetail($(this).closest('.rkbu-edit-detail'));
+        });
 
     const nextOfficialSelect = $('#approval_next_official').empty()
         .append($('<option>').val('').text('Pilih pejabat aktif'));
@@ -383,15 +481,30 @@
             };
         }).get();
 
-        $.ajax({
+        const formData = new FormData();
+        formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+        if ($('#rkbu-edit-form').data('can-edit-header')) {
+            formData.append('sumber_dana_id', $('#edit_sumber_dana_id').val());
+            formData.append('sub_kegiatan_id', $('#edit_sub_kegiatan_id').val());
+        }
+        details.forEach(function(detail, index) {
+            formData.append(`details[${index}][id]`, detail.id);
+            Object.entries(detail.fields).forEach(function([field, value]) {
+                formData.append(`details[${index}][fields][${field}]`, value ?? '');
+            });
+        });
+        if ($('#rkbu-shift-fields').is(':visible')) {
+            formData.append('alasan_pergeseran', $('#rkbu_shift_reason').val());
+            const proof = $('#rkbu_shift_file')[0].files[0];
+            if (proof) formData.append('lampiran_pergeseran', proof);
+        }
+
+        const save = function() { $.ajax({
             url: $('#rkbu-edit-form').data('url'),
             type: 'POST',
-            data: {
-                _token: $('meta[name="csrf-token"]').attr('content'),
-                sumber_dana_id: $('#edit_sumber_dana_id').val(),
-                sub_kegiatan_id: $('#edit_sub_kegiatan_id').val(),
-                details: details
-            },
+            data: formData,
+            processData: false,
+            contentType: false,
             success: function(response) {
                 $('#modalDetailApproval').modal('hide');
                 $('#tableApproval').DataTable().ajax.reload();
@@ -403,7 +516,18 @@
                     .join(' ');
                 toastr.error(validationMessage || xhr.responseJSON?.message || 'Gagal memperbarui data RKBU.');
             }
-        });
+        }); };
+        const confirmSave = function() {
+            Swal.fire({
+                title: 'Konfirmasi pergeseran anggaran',
+                text: 'Perubahan RKBU fase ini akan dicatat sebagai pergeseran anggaran beserta lampirannya.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, simpan perubahan',
+                cancelButtonText: 'Periksa kembali'
+            }).then(function(result) { if (result.isConfirmed) save(); });
+        };
+        if ($('#rkbu-shift-fields').is(':visible')) confirmSave(); else save();
     });
 </script>
 

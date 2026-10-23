@@ -3,22 +3,25 @@
 namespace App\Http\Controllers\Workflow;
 
 use App\Http\Controllers\Controller;
+use App\DataTables\Workflow\WorkflowApprovalDataTable;
 use App\Models\MasterBackend\SettingUser\Position;
 use App\Models\MasterBackend\SettingUser\PositionAssignment;
 use App\Models\MasterBackend\SettingRkbu\SubKategoriRkbu;
 use App\Models\MasterBackend\SettingRkbu\SubKegiatan;
 use App\Models\MasterBackend\SettingRkbu\SumberDana;
+use App\Models\MasterBackend\SettingInput\JudulHeader;
 use App\Models\Rkbu\Rkbu;
 use App\Models\WorkFlow\Approval;
 use App\Models\WorkFlow\ApprovalLog;
 use App\Models\WorkFlow\WorkflowStep;
 use App\Services\Workflow\PositionAssignmentService;
+use App\Services\Workflow\PaguAnggaranService;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
-use Yajra\DataTables\Facades\DataTables;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class WorkflowApprovalController extends Controller
 {
@@ -57,7 +60,7 @@ class WorkflowApprovalController extends Controller
         'kondisi_rusak_berat',
     ];
 
-    public function index(Request $request)
+    public function index(Request $request, PaguAnggaranService $paguService)
     {
         $this->abortAdministrator();
         $module = $request->query('module', 'all');
@@ -67,6 +70,7 @@ class WorkflowApprovalController extends Controller
             'workflow.approval.index',
             [
                 'title' => 'Approval Saya',
+                'paguAccountSummary' => $paguService->accountSummary(session('tahun_anggaran_id'), $module),
                 'module' => $module,
                 'isSuperAdmin' => $this->isSuperAdmin(),
                 'sumberDanas' => SumberDana::query()->orderBy('nama_sumber_dana')->get(),
@@ -88,7 +92,7 @@ class WorkflowApprovalController extends Controller
 
     private function isSuperAdmin(): bool
     {
-        return auth()->user()->hasRole('Super Admin');
+        return auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Administrator');
     }
 
     public function getData(Request $request)
@@ -100,291 +104,7 @@ class WorkflowApprovalController extends Controller
             ? null
             : app(PositionAssignmentService::class)->getCurrentAssignment();
 
-        if (! $assignment && ! $isSuperAdmin) {
-            return response()->json([
-                'draw' => (int) $request->input('draw', 0),
-                'recordsTotal' => 0,
-                'recordsFiltered' => 0,
-                'data' => [],
-                'notice' => 'Akun Anda tidak memiliki assignment jabatan yang aktif. Hubungi administrator untuk memperbarui penugasan pejabat.',
-            ]);
-        }
-
-        $filters = $request->validate([
-            'sumber_dana_id' => [
-                'nullable',
-                'uuid',
-                Rule::exists('sumber_danas', 'id_sumber_dana'),
-            ],
-            'sub_kategori_rkbu_id' => [
-                'nullable',
-                'uuid',
-                Rule::exists('sub_kategori_rkbus', 'id_sub_kategori_rkbu'),
-            ],
-            'approval_status' => [
-                'nullable',
-                Rule::in(['pending', 'approved', 'rejected', 'revision']),
-            ],
-        ]);
-
-        $data = ($isSuperAdmin
-            ? $this->approvalsForCurrentYear()
-            : $this->approvalsForCurrentPosition($assignment))->with([
-            'workflowInstance.rkbu.creator',
-            'workflowInstance.rkbu.unit',
-            'workflowInstance.rkbu.sumberDana',
-            'workflowInstance.rkbu.detailBarjas',
-            'workflowInstance.rkbu.detailPegawai',
-            'workflowInstance.rkbu.detailPersediaan',
-            'workflowInstance.rkbu.detailModal',
-            'workflowInstance.rkbu.subKategoriRkbu.kategori.jenis_kategori_rkbu',
-            'workflowInstance.rkbu.subKategoriRkbu',
-            'workflowInstance.approvals.position',
-            'workflowInstance.approvals.validatorUser',
-            'workflowInstance.approvals.workflowStep.validatorRole',
-            'workflowInstance.approvals.workflowStep.position',
-            'workflowStep',
-            'validatorUser',
-        ]);
-
-        if (! empty($filters['approval_status'])) {
-            $data->where('status', $filters['approval_status']);
-        } elseif (! $isSuperAdmin) {
-            $data->whereIn('status', ['pending', 'approved']);
-        }
-
-        $module = $request->query('module', 'all');
-        abort_unless(in_array($module, ['all', 'barjas', 'pegawai', 'persediaan', 'modal', 'modal-kantor', 'modal-alkes'], true), 404);
-        if ($module !== 'all' || ! empty($filters['sumber_dana_id']) || ! empty($filters['sub_kategori_rkbu_id'])) {
-            $data->whereHas('workflowInstance.rkbu', function ($rkbuQuery) use ($module, $filters) {
-                if (! empty($filters['sumber_dana_id'])) {
-                    $rkbuQuery->where('sumber_dana_id', $filters['sumber_dana_id']);
-                }
-
-                if (! empty($filters['sub_kategori_rkbu_id'])) {
-                    $rkbuQuery->where('sub_kategori_rkbu_id', $filters['sub_kategori_rkbu_id']);
-                }
-
-                if ($module !== 'all') {
-                    $this->filterByModule($rkbuQuery, $module);
-                }
-            });
-        }
-
-        return DataTables::of($data)
-            ->addIndexColumn()
-            ->filterColumn('nama_komponen', function ($query, $keyword) {
-                $query->whereHas('workflowInstance.rkbu', function ($rkbuQuery) use ($keyword) {
-                    $rkbuQuery->where('nomor_rkbu', 'like', "%{$keyword}%")
-                        ->orWhereHas('detailBarjas', function ($detailQuery) use ($keyword) {
-                            $detailQuery->where('nama_barang', 'like', "%{$keyword}%")
-                                ->orWhere('spesifikasi', 'like', "%{$keyword}%");
-                        })
-                        ->orWhereHas('detailPersediaan', function ($detailQuery) use ($keyword) {
-                            $detailQuery->where('nama_barang', 'like', "%{$keyword}%")
-                                ->orWhere('spesifikasi', 'like', "%{$keyword}%");
-                        })
-                        ->orWhereHas('detailModal', function ($detailQuery) use ($keyword) {
-                            $detailQuery->where('nama_barang', 'like', "%{$keyword}%")
-                                ->orWhere('spesifikasi', 'like', "%{$keyword}%");
-                        })
-                        ->orWhereHas('detailPegawai', function ($detailQuery) use ($keyword) {
-                            $detailQuery->where('nama_pegawai', 'like', "%{$keyword}%")
-                                ->orWhere('jabatan', 'like', "%{$keyword}%");
-                        })
-                        ->orWhereHas('creator', function ($creatorQuery) use ($keyword) {
-                            $creatorQuery->where('nama', 'like', "%{$keyword}%");
-                        })
-                        ->orWhereHas('unit', function ($unitQuery) use ($keyword) {
-                            $unitQuery->where('nama_unit', 'like', "%{$keyword}%");
-                        });
-                });
-            })
-            ->addColumn('checkbox', function ($row) {
-                return '
-                    <div class="form-check form-check-sm form-check-custom form-check-solid">
-                        <input class="form-check-input approval-row-checkbox" type="checkbox" value="' . e($row->id) . '" ' .
-                    ($row->status === 'pending' ? '' : 'disabled') . '>
-                    </div>
-                ';
-            })
-            ->addColumn('nama_komponen', function ($row) {
-                $rkbu = $row->workflowInstance?->rkbu;
-                $details = $this->detailsForRkbu($rkbu);
-                $detail = $details->first();
-                $moduleLabel = $this->moduleLabel($rkbu, $details);
-                $subcategory = $rkbu?->subKategoriRkbu;
-                $subcategoryLabel = $subcategory
-                    ? trim($subcategory->kode_sub_kategori_rkbu . ' - ' . $subcategory->nama_sub_kategori_rkbu)
-                    : '-';
-                $validationStatuses = ($row->workflowInstance?->approvals ?? collect())
-                    ->sortBy('sequence')
-                    ->map(function ($approval) {
-                        $status = strtolower($approval->status);
-                        $statusDisplay = [
-                            'pending' => ['label' => 'Pending', 'class' => 'primary'],
-                            'approved' => ['label' => 'Disetujui', 'class' => 'success'],
-                            'rejected' => ['label' => 'Ditolak', 'class' => 'danger'],
-                            'revision' => ['label' => 'Revisi', 'class' => 'warning'],
-                        ][$status] ?? ['label' => ucfirst($status), 'class' => 'secondary'];
-                        $validator = $approval->validatorUser?->nama
-                            ?? $approval->position?->nama_jabatan
-                            ?? $approval->workflowStep?->position?->nama_jabatan
-                            ?? $approval->workflowStep?->validatorRole?->nama_validator
-                            ?? 'Validator';
-
-                        return '<span class="badge badge-light-' . $statusDisplay['class'] . ' me-2 mb-1">' .
-                            e($validator . ': ' . $statusDisplay['label']) .
-                            '</span>';
-                    })
-                    ->implode('');
-                $statusIcon = $row->status === 'approved'
-                    ? '<span class="svg-icon svg-icon-1 svg-icon-success" title="Disetujui atasan">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                            <rect opacity="0.3" x="2" y="2" width="20" height="20" rx="10" fill="black"></rect>
-                            <path d="M10.4343 12.4343L8.75 10.75C8.33579 10.3358 7.66421 10.3358 7.25 10.75C6.83579 11.1642 6.83579 11.8358 7.25 12.25L10.2929 15.2929C10.6834 15.6834 11.3166 15.6834 11.7071 15.2929L17.25 9.75C17.6642 9.33579 17.6642 8.66421 17.25 8.25C16.8358 7.83579 16.1642 7.83579 15.75 8.25L11.5657 12.4343C11.2533 12.7467 10.7467 12.7467 10.4343 12.4343Z" fill="black"></path>
-                        </svg>
-                    </span>'
-                    : '';
-
-                return '
-                    <div class="d-flex flex-column">
-                        <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
-                            <span class="badge badge-light-primary">Nomor RKBU: ' . e($rkbu?->nomor_rkbu ?? '-') . '</span>
-                            <span class="badge badge-light-info">' . e($moduleLabel) . '</span>
-                            <span class="badge badge-light-secondary">Subkategori: ' . e($subcategoryLabel) . '</span>
-                            ' . $statusIcon . '
-                        </div>
-                        <div class="mb-3">
-                            <span class="text-gray-700 fw-bold fs-7 me-2">Status Validasi:</span>
-                            ' . ($validationStatuses !== '' ? $validationStatuses : '<span class="text-muted fs-7">Belum ada data approval.</span>') . '
-                        </div>
-                        <div class="card mb-2">
-                            <div class="card-body">
-                                <div class="fw-bold fs-5 text-gray-900">' . e($detail?->nama_barang ?? $detail?->nama_pegawai ?? '-') . '</div>
-                                <div class="text-gray-700 mt-2">Spesifikasi / Jabatan: ' . e($detail?->spesifikasi ?? $detail?->jabatan ?? '-') . '</div>
-                                <div class="text-gray-400 fw-bold fs-7 mt-2">Tanggal Dibuat: ' . e($detail?->created_at ?? $rkbu?->created_at ?? '-') . '</div>
-                            </div>
-                             <div class="mb-7 ps-10">
-                                    <!--begin::Reply-->
-                                    <div class="d-flex">
-                                        <!--begin::Avatar-->
-                                        <div class="symbol symbol-35px me-3">
-                                            <img src="' . asset('assets/media/avatars/150-8.jpg') . '"
-                                                alt="" />
-                                        </div>
-                                        <!--end::Avatar-->
-                                        <!--begin::Info-->
-                                        <div class="d-flex flex-column flex-row-fluid">
-                                            <!--begin::Info-->
-                                            <div class="d-flex align-items-center flex-wrap mb-1">
-                                                <a href="#"
-                                                    class="text-gray-800 text-hover-primary fw-bolder me-2">' . e($detail?->created_at ?? $rkbu?->created_at ?? '-') . '</a>
-                                                <span class="text-gray-400 fw-bold fs-7">(Unit:
-                                                    ' . e($rkbu?->unit?->nama_unit ?? '-') . ')</span>
-                                                <a href="#"
-                                                    class="ms-auto text-gray-400 text-hover-primary fw-bold fs-7">Reply</a>
-                                            </div>
-                                            <!--end::Info-->
-                                            <!--begin::Post-->
-                                            <span class="text-gray-800 fs-7 fw-normal pt-1">ID : ' . e($row->id) . '</span>
-                                            <!--end::Post-->
-                                        </div>
-                                        <!--end::Info-->
-                                    </div>
-                                    <!--end::Reply-->
-                                </div>
-                                 <div class="d-flex flex-stack position-relative mt-8 mb-8">
-                                <div class="position-absolute h-100 w-4px bg-warning rounded top-0 start-0">
-                                </div>
-                                <div class="fw-bold ms-6 w-100 text-gray-600">
-                                    <div class="text-gray-800 mb-1">
-                                        Sisa Volume : <span class="text-hover-primary">' . e($detail?->sisa_vol_rkbu ?? '-') . ' ' . e($detail?->satuan_1 ?? '') . ' x ' . e($detail?->volume_2 ?? '') . ' ' . e($detail?->satuan_2 ?? '') . '</span>
-                                    </div>
-                                    <div class="fw-bolder text-gray-800 text-hover-primary d-block">
-                                        Sisa Anggaran :
-                                        <span class="text-primary">Rp. ' . e(number_format((float) ($detail?->sisa_anggaran_rkbu ?? 0), 0, ',', '.')) . '</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ';
-            })
-            ->addColumn('satuan', function ($row) {
-                $details = $this->detailsForRkbu($row->workflowInstance?->rkbu);
-                $detail = $details->first();
-
-                if ($detail && $detail->getTable() === 'rkbu_detail_pegawais') {
-                    return '<div class="text-end text-dark fs-6">' .
-                        e($detail->jumlah_volume ?? '-') . ' bulan</div>';
-                }
-
-                if ($detail && $detail->getTable() === 'rkbu_detail_persediaans') {
-                    return '<div class="text-end text-dark fs-6">' .
-                        e($detail->jumlah_volume ?? '-') . ' ' . e($detail->satuan_1 ?? '') . '</div>';
-                }
-
-                return '<div class="text-end text-dark fs-6">' .
-                    e($detail?->volume_1 ?? $detail?->jumlah_volume ?? '-') . ' ' . e($detail?->satuan_1 ?? '') .
-                    ($detail?->volume_2 ? ' x ' . e($detail->volume_2) . ' ' . e($detail->satuan_2 ?? '') : '') .
-                    '</div>';
-            })
-            ->addColumn('harga_barang', function ($row) {
-                $detail = $this->detailsForRkbu($row->workflowInstance?->rkbu)->first();
-                $harga = $detail?->harga_satuan;
-                if ($harga === null && (float) ($detail?->jumlah_volume ?? 0) > 0) {
-                    $harga = (float) ($detail?->total_anggaran ?? 0) / (float) $detail->jumlah_volume;
-                }
-
-                return '<div class="text-end text-dark fw-bold fs-6">Rp.' .
-                    number_format((float) $harga, 0, ',', '.') . '</div>';
-            })
-            ->addColumn('total', function ($row) {
-                $total = $this->detailsForRkbu($row->workflowInstance?->rkbu)->sum('total_anggaran');
-
-                return '<div class="text-end text-dark fw-bold fs-6">Rp.' .
-                    number_format((float) $total, 0, ',', '.') . '</div>';
-            })
-            ->addColumn('action', function ($row) use ($isSuperAdmin) {
-                $actions = '
-                    <button type="button"
-                        class="btn btn-icon btn-bg-light btn-active-color-info btn-sm me-1 btn-detail"
-                        data-id="' . e($row->id) . '"
-                        data-url="' . e(route('workflowapproval.show', $row->id)) . '"
-                        title="Detail">
-                        <span class="svg-icon svg-icon-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                <path d="M17.5 11H6.5C4 11 2 9 2 6.5C2 4 4 2 6.5 2H17.5C20 2 22 4 22 6.5C22 9 20 11 17.5 11Z" fill="black"/>
-                                <path opacity="0.3" d="M17.5 22H6.5C4 22 2 20 2 17.5C2 15 4 13 6.5 13H17.5C20 13 22 15 22 17.5C22 20 20 22 17.5 22Z" fill="black"/>
-                            </svg>
-                        </span>
-                    </button>';
-
-                if ($row->status === 'pending' && ! $isSuperAdmin) {
-                    $actions .= '
-                        <button type="button" class="btn btn-icon btn-bg-light btn-active-color-success btn-sm me-1 btn-approve" data-id="' . e($row->id) . '" data-url="' . e(route('workflowapproval.approve', $row->id)) . '" title="Approve">
-                            <i class="fas fa-check"></i>
-                        </button>
-                        <button type="button" class="btn btn-icon btn-bg-light btn-active-color-warning btn-sm me-1 btn-revision" data-id="' . e($row->id) . '" data-url="' . e(route('workflowapproval.revision', $row->id)) . '" title="Revision">
-                            <i class="fas fa-redo"></i>
-                        </button>
-                        <button type="button" class="btn btn-icon btn-bg-light btn-active-color-danger btn-sm btn-reject" data-id="' . e($row->id) . '" data-url="' . e(route('workflowapproval.reject', $row->id)) . '" title="Reject">
-                            <i class="fas fa-times"></i>
-                        </button>';
-                }
-
-                return '<div class="d-flex justify-content-end flex-shrink-0">' . $actions . '</div>';
-            })
-            ->rawColumns([
-                'checkbox',
-                'nama_komponen',
-                'satuan',
-                'harga_barang',
-                'total',
-                'action',
-            ])
-            ->make(true);
+        return app(WorkflowApprovalDataTable::class)->render($request, $isSuperAdmin, $assignment);
     }
 
     public function show($id)
@@ -393,13 +113,14 @@ class WorkflowApprovalController extends Controller
 
         $isSuperAdmin = $this->isSuperAdmin();
         $approvalQuery = $isSuperAdmin
-            ? $this->approvalsForCurrentYear()
-            : $this->approvalsForCurrentPosition($this->currentValidatorAssignment());
+            ? app(WorkflowApprovalDataTable::class)->approvalsForCurrentYear()
+            : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($this->currentValidatorAssignment());
         $approval = $approvalQuery->with([
             'workflowInstance.rkbu.detailBarjas',
             'workflowInstance.rkbu.detailPegawai',
             'workflowInstance.rkbu.detailPersediaan',
             'workflowInstance.rkbu.detailModal',
+            'workflowInstance.rkbu.detailModalAlkes',
             'workflowInstance.rkbu.sumberDana',
             'workflowInstance.rkbu.subKegiatan',
             'workflowInstance.rkbu.subKategoriRkbu.kategori.jenis_kategori_rkbu',
@@ -420,17 +141,30 @@ class WorkflowApprovalController extends Controller
             'detailPegawai',
             'detailPersediaan',
             'detailModal',
+            'detailModalAlkes',
             'subKategoriRkbu.kategori.jenis_kategori_rkbu',
+            'workflowInstances.approvals.validatorUser',
+            'workflowInstances.approvals.position',
+            'workflowInstances.approvals.workflowStep.position',
+            'workflowInstances.approvals.workflowStep.validatorRole',
+            'workflowInstances.approvals.logs.user',
+            'workflowInstances.approvals.logs.position',
         ])->findOrFail(
             $approval->workflowInstance->dokumen_id
         );
-        $details = $this->detailsForRkbu($rkbu);
-        $module = $this->moduleKey($rkbu, $details);
+        $paguService = app(PaguAnggaranService::class);
+        $phaseOrder = $paguService->phaseOrder($rkbu->tahun_anggaran_id);
+        $canEditRkbu = $paguService->isAdministrator()
+            || ($phaseOrder === 1 && $approval->status === 'pending' && ! $isSuperAdmin);
+        $canEditHeader = auth()->user()->hasRole('Super Admin');
+        $details = app(WorkflowApprovalDataTable::class)->detailsForRkbu($rkbu);
+        $module = app(WorkflowApprovalDataTable::class)->moduleKey($rkbu, $details);
 
         $detailRows = $details->map(fn($detail) => $this->approvalRow($module, $detail));
-        $editableDetails = $isSuperAdmin
+        $editableDetails = $canEditRkbu
             ? $details->map(fn($detail) => [
                 'id' => $detail->getKey(),
+                'locked' => $this->isDetailLockedByUsulan($detail),
                 'fields' => $this->editableDetailFields($detail),
             ])->values()
             : collect();
@@ -470,21 +204,24 @@ class WorkflowApprovalController extends Controller
         return response()->json([
             'approval' => $approval,
             'rkbu' => $rkbu,
-            'module' => $this->moduleLabel($rkbu, $details),
+            'printUrl' => route('workflowapproval.print', $approval->id),
+            'module' => app(WorkflowApprovalDataTable::class)->moduleLabel($rkbu, $details),
             'detailColumns' => $detailRows->isNotEmpty() ? array_keys($detailRows->first()) : [],
             'details' => $detailRows->values(),
             'attachments' => $attachments,
             'catatan' => $approval->catatan,
             'canApprove' => $approval->status === 'pending',
-            'canEdit' => $isSuperAdmin,
+            'canEdit' => $canEditRkbu,
+            'canEditHeader' => $canEditRkbu && $canEditHeader,
+            'phaseOrder' => $phaseOrder,
             'editableDetails' => $editableDetails,
-            'sumberDanas' => $isSuperAdmin
+            'sumberDanas' => $canEditHeader
                 ? SumberDana::query()->orderBy('nama_sumber_dana')->get([
                     'id_sumber_dana',
                     'nama_sumber_dana',
                 ])
                 : collect(),
-            'subKegiatans' => $isSuperAdmin
+            'subKegiatans' => $canEditHeader
                 ? SubKegiatan::query()->orderBy('kode_sub_kegiatan')->get([
                     'id_sub_kegiatan',
                     'kode_sub_kegiatan',
@@ -496,6 +233,175 @@ class WorkflowApprovalController extends Controller
             'requiresNextOfficial' => $isSuperAdmin && $approval->status === 'pending' && (bool) $nextStep,
             'updateUrl' => route('workflowapproval.update-rkbu', $approval->id),
         ]);
+    }
+
+    public function print(string $id)
+    {
+        $this->abortAdministrator();
+
+        $isSuperAdmin = $this->isSuperAdmin();
+        $approvalQuery = $isSuperAdmin
+            ? app(WorkflowApprovalDataTable::class)->approvalsForCurrentYear()
+            : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($this->currentValidatorAssignment());
+        $approval = $approvalQuery->with('workflowInstance')->findOrFail($id);
+
+        $rkbu = Rkbu::with([
+            'unit',
+            'tahunAnggaran',
+            'creator',
+            'sumberDana',
+            'subKegiatan',
+            'subKategoriRkbu.kategori.jenis_kategori_rkbu',
+            'detailBarjas',
+            'detailPegawai',
+            'detailPersediaan',
+            'detailModal',
+            'detailModalAlkes',
+            'workflowInstances.approvals.validatorUser',
+            'workflowInstances.approvals.position',
+            'workflowInstances.approvals.workflowStep.position',
+            'workflowInstances.approvals.workflowStep.validatorRole',
+            'workflowInstances.approvals.logs.user',
+            'workflowInstances.approvals.logs.position',
+        ])->findOrFail($approval->workflowInstance->dokumen_id);
+
+        $details = app(WorkflowApprovalDataTable::class)->detailsForRkbu($rkbu);
+        $dataTable = app(WorkflowApprovalDataTable::class);
+        $moduleKey = $dataTable->moduleKey($rkbu, $details);
+        $module = $dataTable->moduleLabel($rkbu, $details);
+        $detailColumns = $details->isNotEmpty() ? array_keys($this->approvalRow($moduleKey, $details->first())) : [];
+        $detailRows = $details->map(fn ($detail) => $this->approvalRow($moduleKey, $detail));
+        $attachments = $details->flatMap(function ($detail) {
+            return collect(range(1, 5))->map(function ($number) use ($detail) {
+                $path = $detail->{'upload_file_' . $number} ?? null;
+
+                return $path ? [
+                    'label' => 'Lampiran ' . $number,
+                    'name' => basename($path),
+                    'url' => asset('storage/' . $path),
+                ] : null;
+            })->filter();
+        })->values();
+
+        return Pdf::loadView('workflow.approval.pdf', [
+            'approval' => $approval,
+            'rkbu' => $rkbu,
+            'module' => $module,
+            'detailColumns' => $detailColumns,
+            'detailRows' => $detailRows,
+            'attachments' => $attachments,
+            'workflowInstances' => $rkbu->workflowInstances->sortBy('created_at'),
+            'printedAt' => now(),
+        ])->setPaper('a4', 'landscape')
+            ->stream('approval-rkbu-' . $rkbu->nomor_rkbu . '.pdf');
+    }
+
+    public function printAll(Request $request)
+    {
+        $this->abortAdministrator();
+
+        $filters = $request->validate([
+            'sumber_dana_id' => ['nullable', 'uuid', Rule::exists('sumber_danas', 'id_sumber_dana')],
+            'sub_kategori_rkbu_id' => ['nullable', 'uuid', Rule::exists('sub_kategori_rkbus', 'id_sub_kategori_rkbu')],
+            'approval_status' => ['nullable', Rule::in(['pending', 'approved', 'rejected', 'revision'])],
+        ]);
+        $module = $request->query('module', 'all');
+        abort_unless(in_array($module, ['all', 'barjas', 'pegawai', 'persediaan', 'modal', 'modal-kantor', 'modal-alkes'], true), 404);
+
+        $isSuperAdmin = $this->isSuperAdmin();
+        $dataTable = app(WorkflowApprovalDataTable::class);
+        $approvalQuery = $isSuperAdmin
+            ? $dataTable->approvalsForCurrentYear()
+            : $dataTable->approvalsForCurrentPosition($this->currentValidatorAssignment());
+
+        if (! empty($filters['approval_status'])) {
+            $approvalQuery->where('status', $filters['approval_status']);
+        } elseif (! $isSuperAdmin) {
+            $approvalQuery->whereIn('status', ['pending', 'approved']);
+        }
+
+        if ($module !== 'all' || ! empty($filters['sumber_dana_id']) || ! empty($filters['sub_kategori_rkbu_id'])) {
+            $approvalQuery->whereHas('workflowInstance.rkbu', function ($rkbuQuery) use ($module, $filters, $dataTable) {
+                if (! empty($filters['sumber_dana_id'])) {
+                    $rkbuQuery->where('sumber_dana_id', $filters['sumber_dana_id']);
+                }
+                if (! empty($filters['sub_kategori_rkbu_id'])) {
+                    $rkbuQuery->where('sub_kategori_rkbu_id', $filters['sub_kategori_rkbu_id']);
+                }
+                if ($module !== 'all') {
+                    $dataTable->filterByModule($rkbuQuery, $module);
+                }
+            });
+        }
+
+        $rkbuIds = $approvalQuery->with('workflowInstance')
+            ->get()
+            ->map(fn ($approval) => $approval->workflowInstance?->dokumen_id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        $records = Rkbu::query()->with([
+            'unit',
+            'tahunAnggaran',
+            'creator',
+            'sumberDana',
+            'subKegiatan.kegiatan.program',
+            'subKegiatan.aktivitas.program',
+            'subKategoriRkbu.kategori.jenis_kategori_rkbu',
+            'subKategoriRkbu.sub_kategori_rekening.kategori_rekening',
+            'jenisBelanja',
+            'detailBarjas',
+            'detailPegawai',
+            'detailPersediaan',
+            'detailModal',
+            'detailModalAlkes',
+            'workflowInstances.approvals.validatorUser',
+            'workflowInstances.approvals.position',
+            'workflowInstances.approvals.workflowStep.position',
+            'workflowInstances.approvals.workflowStep.validatorRole',
+            'workflowInstances.approvals.logs.user',
+            'workflowInstances.approvals.logs.position',
+        ])
+            ->whereIn('id', $rkbuIds)
+            ->orderBy('nomor_rkbu')
+            ->get();
+
+        $items = $records->map(function (Rkbu $rkbu) use ($dataTable) {
+            $details = $dataTable->detailsForRkbu($rkbu);
+            $moduleKey = $dataTable->moduleKey($rkbu, $details);
+            $moduleLabel = $dataTable->moduleLabel($rkbu, $details);
+            $rows = $details->map(fn ($detail) => $this->approvalRow($moduleKey, $detail));
+            $attachments = $details->flatMap(function ($detail) {
+                return collect(range(1, 5))->map(function ($number) use ($detail) {
+                    $path = $detail->{'upload_file_' . $number} ?? null;
+
+                    return $path ? [
+                        'label' => 'Lampiran ' . $number,
+                        'name' => basename($path),
+                        'url' => asset('storage/' . $path),
+                    ] : null;
+                })->filter();
+            })->values();
+
+            return [
+                'rkbu' => $rkbu,
+                'module' => $moduleLabel,
+                'columns' => $rows->isNotEmpty() ? array_keys($rows->first()) : [],
+                'details' => $rows,
+                'workflowInstances' => $rkbu->workflowInstances->sortBy('created_at'),
+                'attachments' => $attachments,
+            ];
+        });
+
+        return Pdf::loadView('workflow.approval.print_all', [
+            'items' => $items,
+            'filters' => $filters,
+            'module' => $module,
+            'judulHeader' => JudulHeader::query()->first(),
+            'printedAt' => now(),
+        ])->setPaper('a4', 'landscape')
+            ->stream('daftar-approval-rkbu-' . now()->format('Ymd-His') . '.pdf');
     }
 
     private function activeAssignmentsForWorkflowStep(WorkflowStep $step, Position $currentPosition)
@@ -558,41 +464,107 @@ class WorkflowApprovalController extends Controller
     private function editableDetailFields($detail): array
     {
         return collect($detail->getFillable())
-            ->reject(fn($field) => in_array($field, ['id', 'rkbu_id', 'status_komponen'], true)
+            ->reject(fn($field) => in_array($field, ['id', 'rkbu_id'], true)
                 || str_starts_with($field, 'upload_file_'))
             ->mapWithKeys(fn($field) => [$field => $detail->{$field}])
             ->all();
     }
 
+    private function isDetailLockedByUsulan($detail): bool
+    {
+        $isSelectedDirectly = DB::table('usulan_belanja_items')
+            ->where('detail_id', $detail->getKey())
+            ->exists();
+
+        if ($isSelectedDirectly) {
+            return true;
+        }
+
+        return DB::table('usulan_belanja_items')
+                ->where('rkbu_id', $detail->rkbu_id)
+                ->whereNull('detail_id')
+                ->exists()
+            || DB::table('usulan_belanjas')
+                ->where('rkbu_id', $detail->rkbu_id)
+                ->exists();
+    }
+
+    private function sameDetailValue(string $field, $submitted, $current): bool
+    {
+        if (in_array($field, self::NUMERIC_DETAIL_FIELDS, true)) {
+            return (float) ($submitted === '' || $submitted === null ? 0 : $submitted)
+                === (float) ($current === '' || $current === null ? 0 : $current);
+        }
+
+        return (string) ($submitted ?? '') === (string) ($current ?? '');
+    }
+
     public function updateRkbu(Request $request, $id)
     {
-        abort_unless($this->isSuperAdmin(), 403, 'Hanya Super Admin yang dapat mengubah data RKBU dari halaman approval.');
+        $paguService = app(PaguAnggaranService::class);
+        $isAdministrator = $paguService->isAdministrator();
+        $approvalQuery = $isAdministrator
+            ? app(WorkflowApprovalDataTable::class)->approvalsForCurrentYear()
+            : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($this->currentValidatorAssignment());
+        $approval = $approvalQuery->with('workflowInstance.rkbu')->findOrFail($id);
+        $rkbu = $approval->workflowInstance?->rkbu;
+        abort_unless($rkbu, 404, 'Data RKBU tidak ditemukan.');
+        $phaseOrder = $paguService->phaseOrder($rkbu->tahun_anggaran_id);
+        $canEditHeader = auth()->user()->hasRole('Super Admin');
+        if ($phaseOrder >= 2) {
+            abort_unless($isAdministrator, 403, 'Perubahan RKBU fase ini hanya dapat dilakukan Administrator.');
+        } else {
+            abort_unless($isAdministrator || $approval->status === 'pending', 403, 'RKBU hanya dapat diubah oleh validator aktif pada fase perencanaan.');
+        }
 
-        $validated = $request->validate([
-            'sumber_dana_id' => ['required', 'uuid', Rule::exists('sumber_danas', 'id_sumber_dana')],
-            'sub_kegiatan_id' => ['required', 'uuid', Rule::exists('sub_kegiatans', 'id_sub_kegiatan')],
+        $rules = [
             'details' => ['required', 'array'],
             'details.*.id' => ['required', 'uuid', 'distinct'],
             'details.*.fields' => ['required', 'array'],
             'details.*.fields.*' => ['nullable', 'string', 'max:5000'],
-        ]);
+        ];
+        if ($phaseOrder >= 2) {
+            $rules['alasan_pergeseran'] = ['required', 'string', 'max:5000'];
+            $rules['lampiran_pergeseran'] = ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'];
+        }
+        if ($canEditHeader) {
+            $rules['sumber_dana_id'] = ['required', 'uuid', Rule::exists('sumber_danas', 'id_sumber_dana')];
+            $rules['sub_kegiatan_id'] = ['required', 'uuid', Rule::exists('sub_kegiatans', 'id_sub_kegiatan')];
+        }
+        $validated = $request->validate($rules);
 
-        $subKegiatan = SubKegiatan::query()
-            ->where('id_sub_kegiatan', $validated['sub_kegiatan_id'])
-            ->where('id_sumber_dana', $validated['sumber_dana_id'])
-            ->first();
-        abort_unless($subKegiatan, 422, 'Sub kegiatan harus menggunakan sumber dana yang sama.');
+        if ($canEditHeader) {
+            $subKegiatan = SubKegiatan::query()
+                ->where('id_sub_kegiatan', $validated['sub_kegiatan_id'])
+                ->where('id_sumber_dana', $validated['sumber_dana_id'])
+                ->first();
+            abort_unless($subKegiatan, 422, 'Sub kegiatan harus menggunakan sumber dana yang sama.');
+        }
 
-        $approval = $this->approvalsForCurrentYear()->with('workflowInstance.rkbu')->findOrFail($id);
-        $rkbu = $approval->workflowInstance?->rkbu;
-        abort_unless($rkbu, 404, 'Data RKBU tidak ditemukan.');
+        $rkbuDetails = app(WorkflowApprovalDataTable::class)->detailsForRkbu($rkbu)->keyBy(fn($detail) => (string) $detail->getKey());
+        $snapshot = fn () => $rkbuDetails->map(fn ($detail) => [
+            'id' => $detail->getKey(),
+            'nama_barang' => $detail->nama_barang ?? $detail->nama_pegawai ?? null,
+            'volume' => $detail->jumlah_volume ?? null,
+            'volume_1' => $detail->volume_1 ?? null,
+            'volume_2' => $detail->volume_2 ?? null,
+            'harga_satuan' => $detail->harga_satuan ?? null,
+            'ppn' => $detail->ppn ?? null,
+            'total_anggaran' => $detail->total_anggaran ?? null,
+        ])->values()->all();
+        $before = $snapshot();
+        $beforeTotal = (float) collect($before)->sum('total_anggaran');
+        $attachment = $request->hasFile('lampiran_pergeseran')
+            ? $request->file('lampiran_pergeseran')->store('pagu/pergeseran', 'public')
+            : null;
 
-        $rkbuDetails = $this->detailsForRkbu($rkbu)->keyBy(fn($detail) => (string) $detail->getKey());
-        DB::transaction(function () use ($validated, $rkbu, $rkbuDetails) {
-            $rkbu->update([
-                'sumber_dana_id' => $validated['sumber_dana_id'],
-                'sub_kegiatan_id' => $validated['sub_kegiatan_id'],
-            ]);
+        DB::transaction(function () use ($validated, $rkbu, $rkbuDetails, $paguService, $phaseOrder, $before, $beforeTotal, $attachment, $canEditHeader) {
+            if ($canEditHeader) {
+                $rkbu->update([
+                    'sumber_dana_id' => $validated['sumber_dana_id'],
+                    'sub_kegiatan_id' => $validated['sub_kegiatan_id'],
+                ]);
+            }
 
             foreach ($validated['details'] as $submittedDetail) {
                 $detail = $rkbuDetails->get($submittedDetail['id']);
@@ -601,6 +573,14 @@ class WorkflowApprovalController extends Controller
                 $fields = $submittedDetail['fields'];
                 $allowedFields = array_keys($this->editableDetailFields($detail));
                 abort_if(array_diff(array_keys($fields), $allowedFields), 422, 'Terdapat field detail RKBU yang tidak diizinkan.');
+                if ($this->isDetailLockedByUsulan($detail)) {
+                    $changedFields = collect($fields)->filter(function ($value, $field) use ($detail) {
+                        return ! $this->sameDetailValue($field, $value, $detail->{$field});
+                    });
+                    abort_if($changedFields->isNotEmpty(), 422, 'Item "' . ($detail->nama_barang ?? $detail->nama_pegawai ?? 'RKBU') . '" sudah masuk Usulan Belanja dan terkunci.');
+
+                    continue;
+                }
                 foreach ($fields as $field => $value) {
                     abort_if(
                         in_array($field, self::NUMERIC_DETAIL_FIELDS, true)
@@ -612,7 +592,82 @@ class WorkflowApprovalController extends Controller
                     );
                 }
 
-                $detail->fill($fields)->save();
+                $detail->fill($fields);
+
+                if ($detail->getTable() === 'rkbu_detail_pegawais') {
+                    $koefisienGaji = (float) ($detail->koefisien_gaji ?? 0);
+                    $koefisienRemunerasi = (float) ($detail->koefisien_remunerasi ?? 0);
+                    $totalGajiPokok = (float) ($detail->gaji_pokok ?? 0) * $koefisienGaji;
+                    $totalRemunerasi = (float) ($detail->remunerasi ?? 0) * $koefisienRemunerasi;
+                    $bpjsTotal = (float) ($detail->gaji_pokok ?? 0) * (
+                        (float) ($detail->bpjs_kesehatan ?? 0)
+                        + (float) ($detail->bpjs_tk ?? 0)
+                        + (float) ($detail->bpjs_jht ?? 0)
+                    ) / 100 * $koefisienGaji;
+
+                    $detail->jumlah_volume = $koefisienRemunerasi;
+                    $detail->total_gaji_pokok = $totalGajiPokok;
+                    $detail->total_remunerasi = $totalRemunerasi;
+                    $detail->total_anggaran = $totalGajiPokok + $totalRemunerasi + $bpjsTotal;
+                } else {
+                    $quantity = (float) ($detail->jumlah_volume ?? 0);
+                    if ($detail->volume_1 !== null && $detail->volume_2 !== null) {
+                        $quantity = (float) $detail->volume_1 * (float) $detail->volume_2;
+                        $detail->jumlah_volume = $quantity;
+                    }
+
+                    if ($detail->harga_satuan !== null) {
+                        $subtotal = $quantity * (float) $detail->harga_satuan;
+                        $detail->total_anggaran = $subtotal * (1 + (float) ($detail->ppn ?? 0) / 100);
+                    }
+                }
+
+                $detail->sisa_vol_rkbu = $detail->jumlah_volume;
+                $detail->sisa_anggaran_rkbu = $detail->total_anggaran;
+                $detail->save();
+            }
+
+            $rkbu->refresh();
+            $paguService->assertRkbuWithinPagu($rkbu);
+            if ($phaseOrder >= 2) {
+                $beforeById = collect($before)->keyBy('id');
+                $after = $rkbuDetails->map(function ($detail) use ($beforeById) {
+                    $total = (float) ($detail->total_anggaran ?? 0);
+                    $beforeTotalItem = (float) ($beforeById->get($detail->getKey())['total_anggaran'] ?? 0);
+
+                    return [
+                        'id' => $detail->getKey(),
+                        'nama_barang' => $detail->nama_barang ?? $detail->nama_pegawai ?? null,
+                        'volume' => $detail->jumlah_volume ?? null,
+                        'volume_1' => $detail->volume_1 ?? null,
+                        'volume_2' => $detail->volume_2 ?? null,
+                        'harga_satuan' => $detail->harga_satuan ?? null,
+                        'ppn' => $detail->ppn ?? null,
+                        'total_anggaran' => $total,
+                        'selisih_total' => $total - $beforeTotalItem,
+                    ];
+                })->values()->all();
+                $afterTotal = (float) collect($after)->sum('total_anggaran');
+                $accountId = $paguService->resolveAccountId($rkbu);
+                $pagu = \App\Models\MasterBackend\SettingInput\PaguAnggaran::query()
+                    ->where('tahun_anggaran_id', $rkbu->tahun_anggaran_id)
+                    ->where('id_kode_rekening_belanja', $accountId)->first();
+                $paguService->recordChange([
+                    'pagu_anggaran_id' => $pagu?->id,
+                    'tahun_anggaran_id' => $rkbu->tahun_anggaran_id,
+                    'id_kode_rekening_belanja' => $accountId,
+                    'user_id' => auth()->id(),
+                    'rkbu_id' => $rkbu->id,
+                    'fase_urutan' => $phaseOrder,
+                    'jenis_perubahan' => 'pergeseran_rkbu',
+                    'alasan' => $validated['alasan_pergeseran'],
+                    'lampiran' => $attachment,
+                    'nilai_sebelum' => $beforeTotal,
+                    'nilai_sesudah' => $afterTotal,
+                    'selisih' => $afterTotal - $beforeTotal,
+                    'detail_sebelum' => $before,
+                    'detail_sesudah' => $after,
+                ]);
             }
         });
 
@@ -726,100 +781,6 @@ class WorkflowApprovalController extends Controller
             ->all();
     }
 
-    private function detailsForRkbu(?Rkbu $rkbu)
-    {
-        if (! $rkbu) {
-            return collect();
-        }
-
-        return $rkbu->detailBarjas
-            ->concat($rkbu->detailPegawai)
-            ->concat($rkbu->detailPersediaan)
-            ->concat($rkbu->detailModal)
-            ->values();
-    }
-
-    private function moduleKey(?Rkbu $rkbu, $details): string
-    {
-        if ($details->first()?->getTable() === 'rkbu_detail_pegawais') {
-            return 'pegawai';
-        }
-        if ($details->first()?->getTable() === 'rkbu_detail_persediaans') {
-            return 'persediaan';
-        }
-        if ($details->first()?->getTable() === 'rkbu_detail_modals') {
-            $labels = strtolower(implode(' ', [
-                $rkbu?->subKategoriRkbu?->nama_sub_kategori_rkbu ?? '',
-                $rkbu?->subKategoriRkbu?->kategori?->nama_kategori_rkbu ?? '',
-                $rkbu?->subKategoriRkbu?->kategori?->jenis_kategori_rkbu?->nama_jenis_kategori_rkbu ?? '',
-            ]));
-
-            return str_contains($labels, 'alkes') || str_contains($labels, 'alat kesehatan')
-                ? 'modal-alkes'
-                : 'modal-kantor';
-        }
-
-        return 'barjas';
-    }
-
-    private function moduleLabel(?Rkbu $rkbu, $details): string
-    {
-        return [
-            'pegawai' => 'RKBU Pegawai',
-            'persediaan' => 'RKBU Persediaan',
-            'modal-alkes' => 'RKBU Modal Alkes',
-            'modal-kantor' => 'RKBU Modal Kantor',
-            'barjas' => 'RKBU Barjas',
-        ][$this->moduleKey($rkbu, $details)];
-    }
-
-    private function filterByModule($query, string $module): void
-    {
-        match ($module) {
-            'barjas' => $query->whereHas('detailBarjas'),
-            'pegawai' => $query->whereHas('detailPegawai'),
-            'persediaan' => $query->whereHas('detailPersediaan'),
-            'modal' => $query->whereHas('detailModal'),
-            'modal-kantor' => $query->whereHas('detailModal')
-                ->whereHas('subKategoriRkbu', fn($subcategoryQuery) => $this->filterLabel($subcategoryQuery, ['kantor', 'peralatan kantor'])),
-            'modal-alkes' => $query->whereHas('detailModal')
-                ->whereHas('subKategoriRkbu', fn($subcategoryQuery) => $this->filterLabel($subcategoryQuery, ['alkes', 'alat kesehatan'])),
-            default => null,
-        };
-    }
-
-    private function approvalsForCurrentYear(): Builder
-    {
-        return $this->approvalsForCurrentYearHistory()->whereNotExists(function ($query) {
-            $query->selectRaw('1')
-                ->from('approvals as later_approval')
-                ->whereColumn('later_approval.workflow_instance_id', 'approvals.workflow_instance_id')
-                ->where(function ($query) {
-                    $query->whereColumn('later_approval.sequence', '>', 'approvals.sequence')
-                        ->orWhere(function ($sameSequenceQuery) {
-                            $sameSequenceQuery->whereColumn('later_approval.sequence', '=', 'approvals.sequence')
-                                ->where(function ($laterQuery) {
-                                    $laterQuery->whereColumn('later_approval.created_at', '>', 'approvals.created_at')
-                                        ->orWhere(function ($sameTimestampQuery) {
-                                            $sameTimestampQuery->whereColumn('later_approval.created_at', '=', 'approvals.created_at')
-                                                ->whereColumn('later_approval.id', '>', 'approvals.id');
-                                        });
-                                });
-                        });
-                });
-        });
-    }
-
-    private function approvalsForCurrentYearHistory(): Builder
-    {
-        return Approval::query()->whereHas(
-            'workflowInstance.rkbu',
-            fn(Builder $query) => $query
-                ->where('tahun_anggaran_id', session('tahun_anggaran_id'))
-                ->whereColumn('rkbus.workflow_instance_id', 'workflow_instances.id')
-        );
-    }
-
     private function currentValidatorAssignment(): PositionAssignment
     {
         $this->abortAdministrator();
@@ -829,21 +790,6 @@ class WorkflowApprovalController extends Controller
         abort_unless($assignment, 403, 'User tidak memiliki assignment jabatan yang aktif.');
 
         return $assignment;
-    }
-
-    private function approvalsForCurrentPosition(PositionAssignment $assignment): Builder
-    {
-        return $this->approvalsForCurrentYearHistory()->where(function (Builder $query) use ($assignment) {
-            $query->where('position_id', $assignment->position_id)
-                ->orWhere(function (Builder $legacyQuery) use ($assignment) {
-                    $legacyQuery->whereNull('position_id')
-                        ->whereHas(
-                            'workflowInstance',
-                            fn(Builder $instanceQuery) => $instanceQuery
-                                ->where('current_position_id', $assignment->position_id)
-                        );
-                });
-        });
     }
 
     private function logApprovalAction(
@@ -864,22 +810,6 @@ class WorkflowApprovalController extends Controller
         ]);
     }
 
-    private function filterLabel($query, array $labels): void
-    {
-        $query->where(function ($labelQuery) use ($labels) {
-            foreach ($labels as $label) {
-                $pattern = '%' . $label . '%';
-                $labelQuery->orWhere('nama_sub_kategori_rkbu', 'like', $pattern)
-                    ->orWhereHas('kategori', function ($categoryQuery) use ($pattern) {
-                        $categoryQuery->where('nama_kategori_rkbu', 'like', $pattern)
-                            ->orWhereHas('jenis_kategori_rkbu', function ($typeQuery) use ($pattern) {
-                                $typeQuery->where('nama_jenis_kategori_rkbu', 'like', $pattern);
-                            });
-                    });
-            }
-        });
-    }
-
     public function approve(Request $request, $id)
     {
         $this->abortAdministrator();
@@ -891,8 +821,8 @@ class WorkflowApprovalController extends Controller
                 ? app(PositionAssignmentService::class)->getCurrentAssignment()
                 : $this->currentValidatorAssignment();
             $approvalQuery = $isSuperAdmin
-                ? $this->approvalsForCurrentYear()
-                : $this->approvalsForCurrentPosition($assignment);
+                ? app(WorkflowApprovalDataTable::class)->approvalsForCurrentYear()
+                : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($assignment);
             $approval = $approvalQuery->with([
                 'workflowInstance.rkbu',
                 'workflowStep',
@@ -903,6 +833,15 @@ class WorkflowApprovalController extends Controller
                 ->findOrFail($id);
             if ($approval->status != 'pending') {
                 throw new Exception('Approval sudah diproses.');
+            }
+
+            $approvalRkbu = $approval->workflowInstance?->rkbu;
+            if ($approvalRkbu) {
+                $paguService = app(PaguAnggaranService::class);
+                if ($paguService->phaseOrder($approvalRkbu->tahun_anggaran_id) >= 2) {
+                    abort_unless($paguService->isAdministrator(), 403, 'Approval RKBU pada fase perubahan hanya dapat dilakukan Administrator.');
+                    $paguService->assertRkbuWithinPagu($approvalRkbu);
+                }
             }
 
             $currentPosition = $approval->position
@@ -1040,8 +979,8 @@ class WorkflowApprovalController extends Controller
                 ? app(PositionAssignmentService::class)->getCurrentAssignment()
                 : $this->currentValidatorAssignment();
             $approvalQuery = $isSuperAdmin
-                ? $this->approvalsForCurrentYear()
-                : $this->approvalsForCurrentPosition($assignment);
+                ? app(WorkflowApprovalDataTable::class)->approvalsForCurrentYear()
+                : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($assignment);
             $approval = $approvalQuery->with('workflowInstance')
                 ->where('status', 'pending')
                 ->findOrFail($id);
@@ -1094,8 +1033,8 @@ class WorkflowApprovalController extends Controller
                 ? app(PositionAssignmentService::class)->getCurrentAssignment()
                 : $this->currentValidatorAssignment();
             $approvalQuery = $isSuperAdmin
-                ? $this->approvalsForCurrentYear()
-                : $this->approvalsForCurrentPosition($assignment);
+                ? app(WorkflowApprovalDataTable::class)->approvalsForCurrentYear()
+                : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($assignment);
             $approval = $approvalQuery->with([
                 'workflowInstance.rkbu',
             ])
@@ -1171,8 +1110,8 @@ class WorkflowApprovalController extends Controller
             : $this->currentValidatorAssignment();
         foreach ($validated['ids'] as $id) {
             $approval = ($isSuperAdmin
-                ? $this->approvalsForCurrentYear()
-                : $this->approvalsForCurrentPosition($assignment))->where('id', $id)
+                ? app(WorkflowApprovalDataTable::class)->approvalsForCurrentYear()
+                : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($assignment))->where('id', $id)
                 ->where('status', 'pending')
                 ->first();
 

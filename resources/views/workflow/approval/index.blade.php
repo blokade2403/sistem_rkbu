@@ -44,6 +44,10 @@
                                 <option value="rejected">Ditolak</option>
                                 <option value="revision">Revisi</option>
                             </select>
+                            <a id="approval-print-all" href="{{ route('workflowapproval.print-all') }}"
+                                class="btn btn-sm btn-light-primary" target="_blank" rel="noopener">
+                                <i class="fas fa-file-pdf me-1"></i> Cetak Semua RKBU
+                            </a>
                             <span id="approval-selected-count" class="text-muted">0 dipilih</span>
                             @unless ($isSuperAdmin)
                                 <button type="button" class="btn btn-sm btn-success" id="approval-bulk-approve" disabled>Approve Terpilih</button>

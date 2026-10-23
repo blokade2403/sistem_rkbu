@@ -26,6 +26,7 @@ class Rkbu extends Model
         'tahun_anggaran_id',
         'unit_id',
         'sumber_dana_id',
+        'id_kode_rekening_belanja',
         'jenis_belanja_id',
         'jenis_kategori_rkbu_id',
         'sub_kategori_rkbu_id',
@@ -73,6 +74,11 @@ class Rkbu extends Model
         return $this->hasMany(RkbuDetailModal::class, 'rkbu_id');
     }
 
+    public function detailModalAlkes()
+    {
+        return $this->hasMany(RkbuDetailModalAlkes::class, 'rkbu_id');
+    }
+
     public function sumberDana()
     {
         return $this->belongsTo(
@@ -82,12 +88,30 @@ class Rkbu extends Model
         );
     }
 
+    public function rekeningBelanja()
+    {
+        return $this->belongsTo(
+            \App\Models\MasterBackend\SettingRkbu\RekeningBelanja::class,
+            'id_kode_rekening_belanja',
+            'id_kode_rekening_belanja'
+        );
+    }
+
     public function subKategoriRkbu()
     {
         return $this->belongsTo(
             SubKategoriRkbu::class,
             'sub_kategori_rkbu_id',
             'id_sub_kategori_rkbu'
+        );
+    }
+
+    public function jenisKategoriRkbu()
+    {
+        return $this->belongsTo(
+            \App\Models\MasterBackend\SettingRkbu\JenisKategoriRkbu::class,
+            'jenis_kategori_rkbu_id',
+            'id_jenis_kategori_rkbu'
         );
     }
 
@@ -134,6 +158,12 @@ class Rkbu extends Model
             'workflow_instance_id',
             'id'
         );
+    }
+
+    public function workflowInstances()
+    {
+        return $this->hasMany(WorkflowInstance::class, 'dokumen_id', 'id')
+            ->where('dokumen_type', 'rkbu');
     }
 
     public function tahunAnggaran()

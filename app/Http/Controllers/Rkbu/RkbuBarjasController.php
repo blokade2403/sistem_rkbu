@@ -410,9 +410,11 @@ class RkbuBarjasController extends Controller
                 'volume_2'          => $volume2,
                 'satuan_2'          => $request->satuan_2,
                 'jumlah_volume'     => $jumlahVolume,
+                'sisa_vol_rkbu'     => $jumlahVolume,
                 'harga_satuan'      => $hargaSatuan,
                 'ppn'               => $ppn,
                 'total_anggaran'    => $totalAnggaran,
+                'sisa_anggaran_rkbu' => $totalAnggaran,
                 'rating'            => $request->rating,
                 'link_ekatalog'     => $request->link_ekatalog,
                 'penempatan'        => $request->penempatan,
@@ -484,9 +486,17 @@ class RkbuBarjasController extends Controller
         $barjas = RkbuDetailBarjas::with(
             'rkbu.subKategori',
             'rkbu.unit',
-            'rkbu.user'
+            'rkbu.user',
+            'rkbu.workflowInstances.approvals.validatorUser',
+            'rkbu.workflowInstances.approvals.position',
+            'rkbu.workflowInstances.approvals.workflowStep.position',
+            'rkbu.workflowInstances.approvals.workflowStep.validatorRole',
+            'rkbu.workflowInstances.approvals.logs.user',
+            'rkbu.workflowInstances.approvals.logs.position'
         )
             ->findOrFail($id);
+
+        app(\App\Services\Workflow\UsulanBelanjaBalanceService::class)->applyToDetail($barjas);
 
         return view('rkbu.rkbu_barjas.show', compact('barjas'));
     }

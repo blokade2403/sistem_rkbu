@@ -14,10 +14,10 @@ class StoreUsulanBelanjaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'rkbu_id' => [
+            'sub_kategori_rkbu_id' => [
                 'required',
                 'uuid',
-                'exists:rkbus,id',
+                'exists:sub_kategori_rkbus,id_sub_kategori_rkbu',
             ],
         ];
     }
@@ -25,8 +25,8 @@ class StoreUsulanBelanjaRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'rkbu_id.required' => 'RKBU wajib dipilih.',
-            'rkbu_id.exists' => 'Data RKBU tidak ditemukan.',
+            'sub_kategori_rkbu_id.required' => 'Subkategori RKBU wajib dipilih.',
+            'sub_kategori_rkbu_id.exists' => 'Data subkategori RKBU tidak ditemukan.',
         ];
     }
 }

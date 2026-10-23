@@ -21,7 +21,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <form id="modal-filter-form" action="{{ route('rkbu.modal_kantor.print') }}" method="GET" class="row g-3 align-items-end mb-5">
+                    <form id="modal-filter-form" action="{{ route($routePrefix . '.print') }}" method="GET" class="row g-3 align-items-end mb-5">
                         <div class="col-md-4 col-lg-3">
                             <label for="modal-filter-sumber-dana" class="form-label">Sumber Dana</label>
                             <select id="modal-filter-sumber-dana" name="sumber_dana_id" class="form-select">

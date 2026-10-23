@@ -88,7 +88,7 @@
                             </div>
                             <form id="kt_modal_new_target_form"
                                 class="form fv-plugins-bootstrap5 fv-plugins-framework form-submit"
-                                action="{{ route('rkbu.modal_kantor.update', $barjas->id) }}" method="post"
+                                action="{{ route($routePrefix . '.update', $barjas->id) }}" method="post"
                                 enctype="multipart/form-data">
                                 @csrf
                                 @method('PUT')

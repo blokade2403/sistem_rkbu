@@ -5,6 +5,10 @@
                 <h3 class="modal-title">
                     Detail Approval RKBU
                 </h3>
+                <a id="approval-print-pdf" href="#" target="_blank" rel="noopener"
+                    class="btn btn-sm btn-light-primary ms-auto me-3 disabled" aria-disabled="true">
+                    <i class="fas fa-file-pdf me-1"></i> Cetak PDF
+                </a>
                 <button type="button" class="btn btn-sm btn-icon btn-active-light-primary" data-bs-dismiss="modal">
                     <i class="ki-duotone ki-cross fs-2"></i>
                 </button>
@@ -20,6 +24,10 @@
                             <tr>
                                 <th>Unit</th>
                                 <td id="detail_unit"></td>
+                            </tr>
+                            <tr>
+                                <th>Sumber Dana</th>
+                                <td id="detail_sumber_dana"></td>
                             </tr>
                             <tr>
                                 <th>Tahun</th>
@@ -60,11 +68,10 @@
                         </tbody>
                     </table>
                 </div>
-                @if ($isSuperAdmin)
                     <div id="rkbu-edit-panel" class="border rounded p-5 mb-5" style="display: none;">
                         <h5 class="mb-4">Ubah Data RKBU</h5>
                         <form id="rkbu-edit-form">
-                            <div class="row mb-5">
+                            <div class="row mb-5" id="rkbu-edit-header-fields">
                                 <div class="col-md-6 mb-3">
                                     <label for="edit_sumber_dana_id" class="form-label required">Sumber Dana</label>
                                     <select id="edit_sumber_dana_id" class="form-select" required>
@@ -79,6 +86,17 @@
                                 </div>
                             </div>
                             <div id="rkbu-edit-details" class="d-flex flex-column gap-5"></div>
+                            <div id="rkbu-shift-fields" class="row mt-4" style="display:none;">
+                                <div class="col-12 mb-3">
+                                    <label for="rkbu_shift_reason" class="form-label required">Keterangan pergeseran anggaran</label>
+                                    <textarea id="rkbu_shift_reason" class="form-control" rows="3"></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label for="rkbu_shift_file" class="form-label required">Lampiran bukti/alasan</label>
+                                    <input id="rkbu_shift_file" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                    <div class="form-text">PDF/JPG/PNG, maksimal 5 MB.</div>
+                                </div>
+                            </div>
                         </form>
                     </div>
                     <div id="approval-next-official-wrapper" class="mb-4" style="display: none;">
@@ -89,7 +107,6 @@
                             <option value="">Pilih pejabat aktif</option>
                         </select>
                     </div>
-                @endif
                 <div id="approval_attachments" class="mb-5"></div>
                 <hr>
                 <div class="mb-5">
@@ -111,11 +128,9 @@
                 <button class="btn btn-light" data-bs-dismiss="modal">
                     Tutup
                 </button>
-                @if ($isSuperAdmin)
                     <button type="button" class="btn btn-primary" id="btnEditRkbu">Ubah Data RKBU</button>
                     <button type="button" class="btn btn-light" id="btnCancelEditRkbu" style="display: none;">Batal Ubah</button>
                     <button type="button" class="btn btn-success" id="btnSaveRkbu" style="display: none;">Simpan Perubahan</button>
-                @endif
                 <button class="btn btn-warning" id="btnRevision">
                     Revision
                 </button>

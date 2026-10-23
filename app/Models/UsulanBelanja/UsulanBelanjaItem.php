@@ -22,7 +22,20 @@ class UsulanBelanjaItem extends Model
         'rkbu_id',
         'detail_type',
         'detail_id',
+        'harga_satuan',
+        'volume',
+        'ppn',
+        'spesifikasi',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'harga_satuan' => 'decimal:2',
+            'volume' => 'decimal:3',
+            'ppn' => 'decimal:2',
+        ];
+    }
 
     public function usulanBelanja(): BelongsTo
     {

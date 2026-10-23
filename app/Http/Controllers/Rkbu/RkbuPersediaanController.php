@@ -113,7 +113,7 @@ class RkbuPersediaanController extends Controller
                 'nomor_rkbu' => $this->generateNomorRkbu(),
                 'tahun_anggaran_id' => Session::get('tahun_anggaran_id'),
                 'unit_id' => Session::get('unit_id'),
-                'sumber_dana_id' => $sumberDanaId,
+                'sumber_dana_id' => null,
                 'jenis_belanja_id' => $jenisBelanja->id_jenis_belanja,
                 'jenis_kategori_rkbu_id' => $kategori->id_jenis_kategori_rkbu,
                 'sub_kategori_rkbu_id' => $subKategori->id_sub_kategori_rkbu,
@@ -368,9 +368,17 @@ class RkbuPersediaanController extends Controller
         $persediaan = RkbuDetailPersediaan::with(
             'rkbu.subKategori',
             'rkbu.unit',
-            'rkbu.user'
+            'rkbu.user',
+            'rkbu.workflowInstances.approvals.validatorUser',
+            'rkbu.workflowInstances.approvals.position',
+            'rkbu.workflowInstances.approvals.workflowStep.position',
+            'rkbu.workflowInstances.approvals.workflowStep.validatorRole',
+            'rkbu.workflowInstances.approvals.logs.user',
+            'rkbu.workflowInstances.approvals.logs.position'
         )
             ->findOrFail($id);
+
+        app(\App\Services\Workflow\UsulanBelanjaBalanceService::class)->applyToDetail($persediaan);
 
         return view('rkbu.rkbu_persediaan.show', compact('persediaan'), [
             'title' => 'Detail RKBU Persediaan',
