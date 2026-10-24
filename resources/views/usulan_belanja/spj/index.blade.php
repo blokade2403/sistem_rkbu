@@ -12,6 +12,35 @@
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
+        <form method="GET" action="{{ route('usulan-belanja.spj.index') }}" class="row g-3 mb-6">
+            <div class="col-md-4">
+                <label for="filter-no-usulan" class="form-label">Nomor Usulan</label>
+                <input type="search" id="filter-no-usulan" name="no_usulan" class="form-control" value="{{ request('no_usulan') }}" placeholder="Cari nomor usulan">
+            </div>
+            <div class="col-md-4">
+                <label for="filter-sub-kategori" class="form-label">Subkategori</label>
+                <select id="filter-sub-kategori" name="sub_kategori_id" class="form-select" data-control="select2" data-placeholder="Semua subkategori">
+                    <option value="">Semua subkategori</option>
+                    @foreach($subKategoris as $subKategori)
+                        <option value="{{ $subKategori->id_sub_kategori_rkbu }}" @selected(request('sub_kategori_id') === $subKategori->id_sub_kategori_rkbu)>{{ $subKategori->nama_sub_kategori_rkbu }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="filter-pengusul" class="form-label">Pengusul</label>
+                <select id="filter-pengusul" name="pengusul_id" class="form-select" data-control="select2" data-placeholder="Semua pengusul">
+                    <option value="">Semua pengusul</option>
+                    @foreach($pengusuls as $pengusul)
+                        <option value="{{ $pengusul->user_id }}" @selected(request('pengusul_id') === $pengusul->user_id)>{{ $pengusul->nama_pengusul ?: $pengusul->pengusul?->nama ?? $pengusul->user_id }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-12 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="{{ route('usulan-belanja.spj.index') }}" class="btn btn-light">Reset</a>
+            </div>
+        </form>
+
         <div class="table-responsive">
             <table class="table table-row-dashed align-middle gy-4">
                 <thead>

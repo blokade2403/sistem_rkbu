@@ -233,6 +233,12 @@ Route::middleware('auth')->group(function () {
                 ->name('spj.providers');
             Route::get('/spj/{spj}', [SpjUsulanBelanjaController::class, 'show'])
                 ->name('spj.show');
+            Route::put('/spj/{spj}/item/{detail}', [SpjUsulanBelanjaController::class, 'updateItem'])
+                ->name('spj.items.update');
+            Route::post('/spj/{spj}/item', [SpjUsulanBelanjaController::class, 'addItem'])
+                ->name('spj.items.add');
+            Route::delete('/spj/{spj}/item/{detail}', [SpjUsulanBelanjaController::class, 'deleteItem'])
+                ->name('spj.items.delete');
             Route::get('/{usulanBelanja}/spj/create', [SpjUsulanBelanjaController::class, 'create'])
                 ->name('spj.create');
             Route::post('/{usulanBelanja}/spj', [SpjUsulanBelanjaController::class, 'store'])
