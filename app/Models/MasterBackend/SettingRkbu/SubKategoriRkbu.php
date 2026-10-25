@@ -61,6 +61,18 @@ class SubKategoriRkbu extends Model
         return $this->hasMany(Rkbu::class, 'id_sub_kategori_rkbu', 'id_sub_kategori_rkbu');
     }
 
+    public function pendukungPpk()
+    {
+        return $this->belongsToMany(
+            \App\Models\MasterBackend\UserProfil\User::class,
+            'sub_kategori_pendukung_ppk',
+            'sub_kategori_rkbu_id',
+            'user_id',
+            'id_sub_kategori_rkbu',
+            'id'
+        )->withTimestamps();
+    }
+
     public function usulan_barangs()
     {
         return $this->hasMany(UsulanBarang::class, 'id_sub_kategori_rkbu', 'id_sub_kategori_rkbu');

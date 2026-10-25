@@ -11,6 +11,7 @@ use App\Services\Workflow\UsulanBelanjaWorkflowService;
 use App\Services\Workflow\UsulanBelanjaBalanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -90,9 +91,31 @@ class SpjUsulanBelanjaController extends Controller
                 'spj.nomor_urut',
                 'spj.no_usulan_belanja',
                 'spj.status_spj',
+                'spj.pengadaan_step',
+                'spj.pengadaan_workflow_step_id',
+                'spj.no_surat_pesanan as pengadaan_no_surat_pesanan',
+                'spj.tgl_surat_pesanan as pengadaan_tgl_surat_pesanan',
+                'spj.foto_barang_datang as pengadaan_foto_barang_datang',
+                'spj.tgl_barang_datang as pengadaan_tgl_barang_datang',
+                'spj.status_verifikasi_pengurus_barang as pengadaan_status_pengurus_barang',
+                'spj.tgl_verif_pengurus_barang as pengadaan_tgl_verif_pengurus_barang',
+                'spj.tgl_bast as pengadaan_tgl_bast',
+                'spj.no_ba as pengadaan_no_ba',
                 'usulan.nama_pengusul',
                 'perusahaan.id_perusahaan',
                 'perusahaan.nama_perusahaan',
+                'master.id as master_spj_id',
+                'master.status_verifikasi_pengurus_barang',
+                'master.status_verifikasi_ppk',
+                'master.status_verifikasi_ppbj',
+                'master.status_verifikasi_pptk',
+                'master.status_verifikasi_verifikator',
+                'master.status_verifikasi_ppk_keuangan',
+                'master.status_verifikasi_direktur',
+                'master.status_serah_terima_bendahara',
+                'master.keterangan as status_verifikasi_bendahara',
+                'master.tanggal_pembayaran',
+                'master.pembayaran',
             ])
             ->selectSub(
                 DB::table('spj_details')->selectRaw('COUNT(*)')->whereColumn('spj_details.spj_id', 'spj.id'),
@@ -119,6 +142,60 @@ class SpjUsulanBelanjaController extends Controller
         }
 
         $spjs = $query->orderBy('perusahaan.nama_perusahaan')->orderBy('spj.nomor_urut')->paginate(20)->withQueryString();
+        $workflow = DB::table('workflows')->whereRaw('LOWER(nama_workflow) = ?', ['workflow pengadaan'])->first(['id']);
+        $workflowSteps = $workflow ? DB::table('workflow_steps as ws')
+            ->leftJoin('positions as p', 'p.id', '=', 'ws.position_id')
+            ->leftJoin('roles as r', 'r.id', '=', 'ws.role_id')
+            ->leftJoin('validator_roles as vr', 'vr.id', '=', 'ws.validator_role_id')
+            ->where('ws.workflow_id', $workflow->id)->orderBy('ws.step_order')
+            ->get(['ws.id', 'ws.step_order', 'ws.validator_type', 'ws.is_pptk_step', 'p.level_jabatan', 'r.nama_role', 'vr.nama_validator']) : collect();
+        $approvalStatuses = Schema::hasTable('pengadaan_workflow_approvals') && $workflowSteps->isNotEmpty()
+            ? DB::table('pengadaan_workflow_approvals')->whereIn('spj_id', $spjs->getCollection()->pluck('spj_id'))
+                ->get(['spj_id', 'workflow_step_id', 'status', 'acted_at'])->groupBy('spj_id')
+            : collect();
+        foreach ($spjs as $spj) {
+            $timeline = [];
+            $approvalByStep = $approvalStatuses->get($spj->spj_id, collect())->keyBy('workflow_step_id');
+            $pengurusOrder = $workflowSteps->first(fn($step) => strtolower(trim($step->level_jabatan ?: $step->nama_role ?: $step->nama_validator ?: '')) === 'pengurus barang')?->step_order;
+            foreach ($workflowSteps as $workflowStep) {
+                $nama = $workflowStep->is_pptk_step
+                    ? 'Validasi PPTK'
+                    : ($workflowStep->validator_type === 'hierarchy'
+                    ? 'Validasi Atasan (Hirarki)'
+                    : trim($workflowStep->level_jabatan ?: $workflowStep->nama_role ?: $workflowStep->nama_validator ?: 'Validasi'));
+                $key = strtolower($nama);
+                $status = null;
+                $tanggal = null;
+                if ($key === 'admin pengadaan' && $pengurusOrder !== null && $workflowStep->step_order < $pengurusOrder) {
+                    $nama = 'Input surat pesanan';
+                    $status = $spj->pengadaan_no_surat_pesanan ? 'Selesai' : null;
+                    $tanggal = $spj->pengadaan_tgl_surat_pesanan;
+                } elseif ($key === 'pendukung ppk') {
+                    $nama = 'Unggah foto barang datang';
+                    $status = $spj->pengadaan_foto_barang_datang ? 'Selesai' : null;
+                    $tanggal = $spj->pengadaan_tgl_barang_datang;
+                } elseif ($key === 'pengurus barang') {
+                    $nama = 'Validasi Pengurus Barang';
+                    $status = $spj->pengadaan_status_pengurus_barang;
+                    $tanggal = $spj->pengadaan_tgl_verif_pengurus_barang;
+                } elseif ($key === 'admin pengadaan' && $pengurusOrder !== null && $workflowStep->step_order > $pengurusOrder) {
+                    $nama = 'Input data BAST';
+                    $status = ($spj->pengadaan_tgl_bast || $spj->pengadaan_no_ba) ? 'Selesai' : null;
+                    $tanggal = $spj->pengadaan_tgl_bast;
+                } elseif ($key === 'bendahara') {
+                    $timeline[] = ['nama' => 'Serah terima ke Bendahara', 'status' => $spj->status_serah_terima_bendahara, 'tanggal' => null];
+                    $timeline[] = ['nama' => 'Verifikasi Bendahara', 'status' => $spj->status_verifikasi_bendahara, 'tanggal' => null];
+                    $timeline[] = ['nama' => 'Pembayaran', 'status' => $spj->tanggal_pembayaran ? 'Selesai' : null, 'tanggal' => $spj->tanggal_pembayaran];
+                    continue;
+                } else {
+                    $approval = $approvalByStep->get($workflowStep->id);
+                    $status = $approval?->status ? ucfirst($approval->status) : null;
+                    $tanggal = $approval?->acted_at;
+                }
+                $timeline[] = ['nama' => $nama, 'status' => $status, 'tanggal' => $tanggal];
+            }
+            $spj->workflow_timeline = $timeline;
+        }
         $statuses = DB::table('spjs')->whereNotNull('status_spj')->distinct()->orderBy('status_spj')->pluck('status_spj');
 
         return view('usulan_belanja.spj.providers', compact('spjs', 'perusahaans', 'statuses'));
@@ -294,7 +371,18 @@ class SpjUsulanBelanjaController extends Controller
             || $spj->usulanBelanja->user_id === auth()->id()
             || DB::table('approvals')->where('workflow_instance_id', $spj->usulanBelanja->workflow_instance_id)->where('validator_user_id', auth()->id())->exists();
 
-        return view('usulan_belanja.spj.show', compact('spj', 'items', 'namaPerusahaan', 'isAdmin', 'availableItems', 'canManageSpj'));
+        $hasPengadaanRole = auth()->user()->roles()->whereIn('nama_role', [
+            'Administrator', 'Super Admin', 'Admin Pengadaan', 'Pendukung PPK', 'Pengurus Barang',
+        ])->exists() || in_array(auth()->user()->position?->level_jabatan, [
+            'PPK', 'PPBJ', 'PPTK', 'Verifikator', 'PPK Keuangan', 'Direktur', 'Bendahara',
+        ], true) || app(PengadaanWorkflowController::class)->userCanAccessCurrentWorkflowStep($spj);
+        $pengadaanData = $hasPengadaanRole
+            ? app(PengadaanWorkflowController::class)->panel($spj)->getData()
+            : [];
+        return view('usulan_belanja.spj.show', array_merge(
+            compact('spj', 'items', 'namaPerusahaan', 'isAdmin', 'availableItems', 'canManageSpj'),
+            $pengadaanData
+        ));
     }
 
     public function addItem(Request $request, Spj $spj)

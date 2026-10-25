@@ -286,6 +286,32 @@ class PaguAnggaranService
         return $total;
     }
 
+    /** Resolve a pagu set on this account or on its nearest parent account. */
+    private function paguForAccount(string $tahunId, string $accountId): ?PaguAnggaran
+    {
+        $accountCode = trim((string) RekeningBelanja::query()
+            ->where('id_kode_rekening_belanja', $accountId)
+            ->value('kode_rekening_belanja'), '.');
+
+        if ($accountCode === '') {
+            return null;
+        }
+
+        return PaguAnggaran::query()
+            ->with('rekeningBelanja')
+            ->where('tahun_anggaran_id', $tahunId)
+            ->lockForUpdate()
+            ->get()
+            ->filter(function (PaguAnggaran $pagu) use ($accountId, $accountCode) {
+                $paguCode = trim((string) $pagu->rekeningBelanja?->kode_rekening_belanja, '.');
+
+                return $pagu->id_kode_rekening_belanja === $accountId
+                    || ($paguCode !== '' && str_starts_with($accountCode, $paguCode . '.'));
+            })
+            ->sortByDesc(fn (PaguAnggaran $pagu) => strlen(trim((string) $pagu->rekeningBelanja?->kode_rekening_belanja, '.')))
+            ->first();
+    }
+
     public function assertRkbuWithinPagu(Rkbu $rkbu, ?float $newTotal = null): void
     {
         if ($this->phaseOrder($rkbu->tahun_anggaran_id) < 2) {
@@ -299,11 +325,7 @@ class PaguAnggaranService
             ]);
         }
 
-        $pagu = PaguAnggaran::query()
-            ->where('tahun_anggaran_id', $rkbu->tahun_anggaran_id)
-            ->where('id_kode_rekening_belanja', $accountId)
-            ->lockForUpdate()
-            ->first();
+        $pagu = $this->paguForAccount($rkbu->tahun_anggaran_id, $accountId);
         if (! $pagu) {
             throw ValidationException::withMessages([
                 'pagu' => 'Pagu untuk Rekening Belanja ini belum ditetapkan pada tahun anggaran aktif.',
@@ -347,11 +369,7 @@ class PaguAnggaranService
         }
 
         foreach ($currentByAccount as $accountId => $currentTotal) {
-            $pagu = PaguAnggaran::query()
-                ->where('tahun_anggaran_id', $usulan->tahun_anggaran_id)
-                ->where('id_kode_rekening_belanja', $accountId)
-                ->lockForUpdate()
-                ->first();
+            $pagu = $this->paguForAccount($usulan->tahun_anggaran_id, $accountId);
             if (! $pagu) {
                 throw ValidationException::withMessages([
                     'pagu' => 'Pagu untuk salah satu Rekening Belanja usulan belum ditetapkan.',

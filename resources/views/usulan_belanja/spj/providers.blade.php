@@ -49,6 +49,7 @@
                         <th>Jumlah Item</th>
                         <th>Total Volume</th>
                         <th>Status</th>
+                        <th>Progres validasi &amp; pembayaran</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -63,10 +64,52 @@
                             <td>{{ $spj->jumlah_item }}</td>
                             <td>{{ rtrim(rtrim(number_format((float) $spj->jumlah_volume, 3, ',', '.'), '0'), ',') }}</td>
                             <td><span class="badge badge-light-primary">{{ $spj->status_spj }}</span></td>
+                            <td>
+                                @php
+                                    $tahapanTampil = [];
+                                    $menungguBerikutnya = false;
+                                    foreach ($spj->workflow_timeline ?? [] as $tahap) {
+                                        if ($menungguBerikutnya) {
+                                            break;
+                                        }
+                                        $tahapanTampil[] = $tahap;
+                                        $statusTahap = strtolower((string) ($tahap['status'] ?? ''));
+                                        $tahapTuntas = in_array($statusTahap, ['selesai', 'setuju', 'disetujui'], true);
+                                        $menungguBerikutnya = ! $tahapTuntas;
+                                    }
+                                @endphp
+                                <div class="spj-timeline">
+                                    @foreach($tahapanTampil as $tahap)
+                                        @php
+                                            $statusTahap = strtolower((string) ($tahap['status'] ?? ''));
+                                            $selesai = in_array($statusTahap, ['selesai', 'setuju', 'disetujui'], true);
+                                            $revisi = $statusTahap === 'revisi';
+                                            $menunggu = ! $selesai && ! $revisi && empty($tahap['status']);
+                                        @endphp
+                                        <div class="spj-timeline-item {{ $selesai ? 'is-done' : ($revisi ? 'is-revision' : ($menunggu ? 'is-pending' : '')) }}">
+                                            <span class="spj-timeline-dot"></span>
+                                            <div class="spj-timeline-content">
+                                                <div class="fw-semibold">{{ $tahap['nama'] }}</div>
+                                                <div class="text-muted fs-7">
+                                                    @if($menunggu)
+                                                        Menunggu tahap selanjutnya
+                                                    @else
+                                                        {{ $tahap['status'] }}
+                                                        @if($tahap['tanggal']) · {{ \Illuminate\Support\Carbon::parse($tahap['tanggal'])->format('d/m/Y') }} @endif
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                @if($spj->tanggal_pembayaran)
+                                    <div class="text-muted fs-7 mt-2">Dibayar {{ \Illuminate\Support\Carbon::parse($spj->tanggal_pembayaran)->format('d/m/Y') }} · Rp {{ number_format((float) $spj->pembayaran, 0, ',', '.') }}</div>
+                                @endif
+                            </td>
                             <td><a href="{{ route('usulan-belanja.spj.show', $spj->spj_id) }}" class="btn btn-sm btn-light-primary">Detail</a></td>
                         </tr>
                     @empty
-                        <tr><td colspan="9" class="text-center py-8">Belum ada SPJ untuk filter ini.</td></tr>
+                        <tr><td colspan="10" class="text-center py-8">Belum ada SPJ untuk filter ini.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -74,4 +117,14 @@
         {{ $spjs->links() }}
     </div>
 </div>
+<style>
+    .spj-timeline { min-width: 275px; }
+    .spj-timeline-item { position: relative; display: flex; gap: 12px; min-height: 48px; padding-bottom: 12px; }
+    .spj-timeline-item:not(:last-child)::before { content: ''; position: absolute; left: 5px; top: 12px; bottom: 0; width: 2px; background: #e4e6ef; }
+    .spj-timeline-dot { position: relative; z-index: 1; flex: 0 0 12px; width: 12px; height: 12px; margin-top: 3px; border: 3px solid #a1a5b7; border-radius: 50%; background: #fff; }
+    .spj-timeline-item.is-done .spj-timeline-dot { border-color: #50cd89; }
+    .spj-timeline-item.is-revision .spj-timeline-dot { border-color: #f1416c; }
+    .spj-timeline-item.is-pending .spj-timeline-dot { border-color: #ffc700; }
+    .spj-timeline-content { min-width: 0; }
+</style>
 @endsection

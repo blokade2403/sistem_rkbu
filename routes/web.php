@@ -44,6 +44,7 @@ use App\Http\Controllers\Rkbu\RkbuPersediaanController;
 use App\Http\Middleware\EnforceRkbuPhaseAccess;
 use App\Http\Controllers\UsulanBelanja\UsulanBelanjaController;
 use App\Http\Controllers\UsulanBelanja\SpjUsulanBelanjaController;
+use App\Http\Controllers\UsulanBelanja\PengadaanWorkflowController;
 use App\Http\Controllers\UsulanBelanja\ValidasiUsulanBelanjaController;
 use App\Http\Controllers\Pengadaan\PerusahaanController;
 use App\Http\Controllers\WorkFlow\ApprovalController;
@@ -233,6 +234,26 @@ Route::middleware('auth')->group(function () {
                 ->name('spj.providers');
             Route::get('/spj/{spj}', [SpjUsulanBelanjaController::class, 'show'])
                 ->name('spj.show');
+            Route::get('/pengadaan', [PengadaanWorkflowController::class, 'index'])
+                ->name('pengadaan.index');
+            Route::get('/pengadaan/{spj}', [PengadaanWorkflowController::class, 'show'])
+                ->name('pengadaan.show');
+            Route::get('/spj/{spj}/pengadaan', [PengadaanWorkflowController::class, 'panel'])
+                ->name('spj.pengadaan');
+            Route::post('/pengadaan/{spj}/pesanan', [PengadaanWorkflowController::class, 'storePesanan'])
+                ->name('pengadaan.pesanan');
+            Route::post('/pengadaan/{spj}/foto', [PengadaanWorkflowController::class, 'storeFoto'])
+                ->name('pengadaan.foto');
+            Route::post('/pengadaan/{spj}/validasi', [PengadaanWorkflowController::class, 'validasiBarang'])
+                ->name('pengadaan.validasi');
+            Route::post('/pengadaan/{spj}/bast', [PengadaanWorkflowController::class, 'storeBast'])
+                ->name('pengadaan.bast');
+            Route::post('/pengadaan/{spj}/lanjutan', [PengadaanWorkflowController::class, 'storeLanjutan'])
+                ->name('pengadaan.lanjutan');
+            Route::get('/pengadaan/penugasan/pendukung-ppk', [PengadaanWorkflowController::class, 'assignments'])
+                ->name('pengadaan.assignments');
+            Route::put('/pengadaan/penugasan/pendukung-ppk/{subKategori}', [PengadaanWorkflowController::class, 'updateAssignment'])
+                ->name('pengadaan.assignments.update');
             Route::put('/spj/{spj}/item/{detail}', [SpjUsulanBelanjaController::class, 'updateItem'])
                 ->name('spj.items.update');
             Route::post('/spj/{spj}/item', [SpjUsulanBelanjaController::class, 'addItem'])

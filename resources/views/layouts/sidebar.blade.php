@@ -848,6 +848,14 @@
                                     <span class="menu-title">SPJ dari Usulan Belanja</span>
                                 </a>
                             </div>
+                            @if(auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('Super Admin'))
+                                <div class="menu-item">
+                                    <a class="menu-link" href="{{ route('usulan-belanja.pengadaan.assignments') }}">
+                                        <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                        <span class="menu-title">Penugasan Pendukung PPK</span>
+                                    </a>
+                                </div>
+                            @endif
                             <div class="menu-item">
                                 <a class="menu-link" href="{{ route('usulan-belanja.spj.providers') }}">
                                     <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
