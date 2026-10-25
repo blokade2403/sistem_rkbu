@@ -24,6 +24,7 @@ class UsulanBelanjaController extends Controller
     public function index(Request $request)
     {
         $tahunAnggarans = DB::table('tahun_anggarans')
+            ->where('id', session('tahun_anggaran_id'))
             ->orderByDesc('nama_tahun_anggaran')
             ->get();
 
@@ -49,15 +50,19 @@ class UsulanBelanjaController extends Controller
 
     public function rekap(Request $request)
     {
-        $submitted = UsulanBelanja::query()->whereNotNull('workflow_instance_id');
+        $submitted = UsulanBelanja::query()
+            ->where('tahun_anggaran_id', session('tahun_anggaran_id'))
+            ->whereNotNull('workflow_instance_id');
 
         $jenisKategoriRkbus = DB::table('usulan_belanjas as usulan')
             ->join('jenis_kategori_rkbus as jenis', 'jenis.id_jenis_kategori_rkbu', '=', 'usulan.jenis_kategori_rkbu_id')
+            ->where('usulan.tahun_anggaran_id', session('tahun_anggaran_id'))
             ->whereNotNull('usulan.workflow_instance_id')
             ->select('jenis.id_jenis_kategori_rkbu', 'jenis.nama_jenis_kategori_rkbu')
             ->distinct()->orderBy('jenis.nama_jenis_kategori_rkbu')->get();
         $subKategoriRkbus = DB::table('usulan_belanjas as usulan')
             ->join('sub_kategori_rkbus as subkategori', 'subkategori.id_sub_kategori_rkbu', '=', 'usulan.sub_kategori_rkbu_id')
+            ->where('usulan.tahun_anggaran_id', session('tahun_anggaran_id'))
             ->whereNotNull('usulan.workflow_instance_id')
             ->select('subkategori.id_sub_kategori_rkbu', 'subkategori.nama_sub_kategori_rkbu', 'usulan.jenis_kategori_rkbu_id')
             ->distinct()->orderBy('subkategori.nama_sub_kategori_rkbu')->get();
@@ -115,9 +120,9 @@ class UsulanBelanjaController extends Controller
             ->exists();
         $isValidator = $usulanBelanja->workflow_instance_id
             && DB::table('approvals')
-                ->where('workflow_instance_id', $usulanBelanja->workflow_instance_id)
-                ->where('validator_user_id', $user->id)
-                ->exists();
+            ->where('workflow_instance_id', $usulanBelanja->workflow_instance_id)
+            ->where('validator_user_id', $user->id)
+            ->exists();
 
         abort_unless(
             $usulanBelanja->workflow_instance_id
@@ -153,19 +158,20 @@ class UsulanBelanjaController extends Controller
         $anggaranRkbu = (float) $items->sum('anggaran_tersedia');
         $sisaAnggaran = (float) $items->sum('sisa_anggaran_rkbu');
         $approvals = ($usulanBelanja->workflowInstance?->approvals ?? collect())
-            ->sortBy(fn ($approval) => str_pad((string) $approval->sequence, 5, '0', STR_PAD_LEFT)
+            ->sortBy(fn($approval) => str_pad((string) $approval->sequence, 5, '0', STR_PAD_LEFT)
                 . '-' . ($approval->created_at?->format('YmdHis') ?? ''))
             ->values();
         $workflowSteps = $usulanBelanja->workflowInstance?->workflow?->steps ?? collect();
-        $workflowSteps = $workflowSteps->filter(fn ($step) =>
+        $workflowSteps = $workflowSteps->filter(
+            fn($step) =>
             $step->subKategoriRkbus->isEmpty()
-            || $step->subKategoriRkbus->contains('id_sub_kategori_rkbu', $usulanBelanja->sub_kategori_rkbu_id)
+                || $step->subKategoriRkbus->contains('id_sub_kategori_rkbu', $usulanBelanja->sub_kategori_rkbu_id)
         )->values();
         $signatures = $workflowSteps->flatMap(function ($step) use ($approvals, $usulanBelanja) {
             $stepApprovals = $approvals->where('workflow_step_id', $step->id);
             if ($stepApprovals->isEmpty()) {
                 $stepApprovals = collect($this->workflow->resolveApprovers($step, $usulanBelanja))
-                    ->map(fn ($approver) => (object) [
+                    ->map(fn($approver) => (object) [
                         'id' => $step->id . '-' . $approver->user_id,
                         'validator_user_id' => $approver->user_id,
                         'validatorUser' => \App\Models\MasterBackend\UserProfil\User::find($approver->user_id),
@@ -190,33 +196,34 @@ class UsulanBelanjaController extends Controller
                 ]]);
             }
 
-            return $stepApprovals->map(fn ($approval) => collect([$approval]));
+            return $stepApprovals->map(fn($approval) => collect([$approval]));
         })->map(function ($userApprovals) {
-                $userApprovals = $userApprovals->values();
-                $lastApproval = $userApprovals->last();
-                $titles = $userApprovals->map(fn ($approval) =>
-                    $approval->position?->nama_jabatan
-                        ?? $approval->workflowStep?->position?->nama_jabatan
-                        ?? $approval->workflowStep?->systemRole?->nama_role
-                        ?? $approval->workflowStep?->validatorRole?->nama_validator
-                )->filter()->unique()->values();
-                $allApproved = $userApprovals->every(fn ($approval) => $approval->status === 'approved');
-                $hasPending = $userApprovals->contains(fn ($approval) => $approval->status === 'pending');
-                $status = $allApproved ? 'approved' : ($hasPending ? 'pending' : $lastApproval->status);
-                $approvalDate = $userApprovals
-                    ->map(fn ($approval) => $approval->approved_at ?? $approval->closed_at)
-                    ->filter()
-                    ->sort()
-                    ->last();
+            $userApprovals = $userApprovals->values();
+            $lastApproval = $userApprovals->last();
+            $titles = $userApprovals->map(
+                fn($approval) =>
+                $approval->position?->nama_jabatan
+                    ?? $approval->workflowStep?->position?->nama_jabatan
+                    ?? $approval->workflowStep?->systemRole?->nama_role
+                    ?? $approval->workflowStep?->validatorRole?->nama_validator
+            )->filter()->unique()->values();
+            $allApproved = $userApprovals->every(fn($approval) => $approval->status === 'approved');
+            $hasPending = $userApprovals->contains(fn($approval) => $approval->status === 'pending');
+            $status = $allApproved ? 'approved' : ($hasPending ? 'pending' : $lastApproval->status);
+            $approvalDate = $userApprovals
+                ->map(fn($approval) => $approval->approved_at ?? $approval->closed_at)
+                ->filter()
+                ->sort()
+                ->last();
 
-                return [
-                    'jabatan' => $titles->implode(' / ') ?: 'Validator',
-                    'nama' => $lastApproval->validatorUser?->nama ?? 'Belum ditentukan',
-                    'nip' => $lastApproval->validatorUser?->nip,
-                    'status' => $status,
-                    'tanggal' => $approvalDate,
-                ];
-            });
+            return [
+                'jabatan' => $titles->implode(' / ') ?: 'Validator',
+                'nama' => $lastApproval->validatorUser?->nama ?? 'Belum ditentukan',
+                'nip' => $lastApproval->validatorUser?->nip,
+                'status' => $status,
+                'tanggal' => $approvalDate,
+            ];
+        });
         $judulHeader = JudulHeader::query()->first();
 
         $logoData = function (?string $path) {
@@ -355,7 +362,7 @@ class UsulanBelanjaController extends Controller
         );
 
         $canPrint = $isAdmin || $usulanBelanja->user_id === $user->id || $isValidator;
-        $canCreateSpj = $isAdmin || $usulanBelanja->user_id === $user->id || $isValidator;
+        $canCreateSpj = app(SpjUsulanBelanjaController::class)->canCreateFor($usulanBelanja);
 
         $usulanBelanja->load([
             'pengusul',

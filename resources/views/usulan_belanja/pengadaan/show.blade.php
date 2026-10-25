@@ -1,7 +1,26 @@
- 
+@php
+    $step = $step ?? ($spj->pengadaan_step ?: 'input_pesanan');
+    $steps = $steps ?? [];
+    $logs = $logs ?? collect();
+    $workflowStep = $workflowStep ?? null;
+    $workflowStepName = $workflowStepName ?? null;
+    $canPesanan = $canPesanan ?? false;
+    $canFoto = $canFoto ?? false;
+    $canValidasi = $canValidasi ?? false;
+    $canBast = $canBast ?? false;
+    $canTukarFaktur = $canTukarFaktur ?? false;
+    $canPenyerahanSpjAdmin = $canPenyerahanSpjAdmin ?? false;
+    $canLanjutan = $canLanjutan ?? false;
+    $canWorkflowStep = $canWorkflowStep ?? false;
+    $masterInfo = $masterInfo ?? null;
+    $netto = $netto ?? (float) $spj->details->sum(fn ($detail) => (float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume);
+    $nilaiPpn = $nilaiPpn ?? (float) $spj->details->sum(fn ($detail) => (float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume * (float) ($detail->item?->ppn ?? 0) / 100);
+    $totalAnggaran = $totalAnggaran ?? ($netto + $nilaiPpn);
+@endphp
 
- <div class="card card-bordered">
-     <div class="card-header">
+
+ <div class="card card-bordered shadow-sm rounded-3 spj-workflow-process-card">
+     <div class="card-header bg-light-primary border-0">
          <h4 class="card-title">Alur Pengadaan — {{ $step === 'workflow' ? ($workflowStepName ?? 'Validasi Workflow Pengadaan') : ($steps[$step] ?? $step) }}</h4>
      </div>
      <div class="card-body">
@@ -70,58 +89,15 @@
              </div>
          @endif
 
-         @if ($canFoto && $step === 'upload_foto')
-             @if ($spj->status_verifikasi_pengurus_barang === 'Revisi')
-                 <div class="alert alert-warning"><strong>Catatan Pengurus Barang:</strong>
-                     {{ $spj->keterangan_verif_pengurus_barang }}</div>
-             @endif
-             <div class="card card-bordered mb-6">
-                 <div class="card-header">
-                     <h4 class="card-title">2. Unggah Foto Barang Datang</h4>
-                 </div>
-                 <div class="card-body">
-                     <form method="POST" enctype="multipart/form-data"
-                         action="{{ route('usulan-belanja.pengadaan.foto', $spj->id) }}">@csrf
-                         <div class="row">
-                             <div class="col-md-4 mb-4"><label class="form-label">Foto barang datang
-                                     (wajib)</label><input type="file" name="foto_barang_datang" class="form-control"
-                                     accept="image/jpeg,image/png" required></div>
-                             <div class="col-md-4 mb-4"><label class="form-label">Foto tambahan 2</label><input
-                                     type="file" name="foto_barang_datang_2" class="form-control"
-                                     accept="image/jpeg,image/png"></div>
-                             <div class="col-md-4 mb-4"><label class="form-label">Foto tambahan 3</label><input
-                                     type="file" name="foto_barang_datang_3" class="form-control"
-                                     accept="image/jpeg,image/png"></div>
-                             <div class="col-md-4 mb-4"><label class="form-label">Tanggal barang datang</label><input
-                                     type="date" name="tgl_barang_datang" class="form-control"
-                                     value="{{ old('tgl_barang_datang', $spj->tgl_barang_datang) }}" required></div>
-                             <div class="col-md-8 mb-4"><label class="form-label">Keterangan</label>
-                                 <textarea name="keterangan_barang_datang" class="form-control" rows="2">{{ old('keterangan_barang_datang', $spj->keterangan_barang_datang) }}</textarea>
-                             </div>
-                         </div>
-                         <button class="btn btn-primary">Kirim untuk validasi</button>
-                     </form>
-                 </div>
-             </div>
-         @elseif($spj->foto_barang_datang)
-             <div class="card card-bordered mb-6">
-                 <div class="card-header">
-                     <h4 class="card-title">Foto Barang Datang</h4>
-                 </div>
-                 <div class="card-body d-flex gap-4 flex-wrap">
-                     @foreach ([$spj->foto_barang_datang, $spj->foto_barang_datang_2, $spj->foto_barang_datang_3] as $foto)
-                         @if ($foto)
-                             <a href="{{ asset('storage/' . $foto) }}" target="_blank"><img
-                                     src="{{ asset('storage/' . $foto) }}" alt="Foto barang datang"
-                                     style="max-height:180px;max-width:240px" class="rounded border"></a>
-                         @endif
-                     @endforeach
-                     <div>
-                         <div>Tanggal datang: {{ $spj->tgl_barang_datang ?? '-' }}</div>
-                         <div>{{ $spj->keterangan_barang_datang }}</div>
-                     </div>
-                 </div>
-             </div>
+         @if (($canFoto && $step === 'upload_foto') || $spj->foto_barang_datang)
+             @include('usulan_belanja.pengadaan._foto_barang_datang', [
+                 'spj' => $spj,
+                 'canFoto' => $canFoto,
+                 'step' => $step,
+                 'logs' => $logs,
+                 'masterInfo' => $masterInfo,
+                 'totalAnggaran' => $totalAnggaran,
+             ])
          @endif
 
          @if ($canValidasi && $step === 'validasi_barang')
@@ -193,6 +169,42 @@
              </div>
          @endif
 
+         @if ($step === 'input_tukar_faktur')
+             <div class="card card-bordered mb-6">
+                 <div class="card-header bg-light-warning">
+                     <h4 class="card-title">5. Update Tukar Faktur</h4>
+                 </div>
+                 <div class="card-body">
+                     @if ($canTukarFaktur)
+                         <form method="POST" action="{{ route('usulan-belanja.pengadaan.tukar-faktur', $spj->id) }}">@csrf
+                             <div class="row">
+                                 <div class="col-md-4 mb-4">
+                                     <label class="form-label">Tanggal Tukar Faktur</label>
+                                     <input type="date" name="tanggal_faktur" class="form-control" value="{{ old('tanggal_faktur', $masterInfo->tanggal_faktur ?? '') }}" required>
+                                 </div>
+                                 <div class="col-md-4 mb-4">
+                                     <label class="form-label">Tanggal Kwitansi Faktur</label>
+                                     <input type="date" name="tgl_kwitansi" class="form-control" value="{{ old('tgl_kwitansi', $masterInfo->tgl_kwitansi ?? '') }}" required>
+                                 </div>
+                                 <div class="col-md-4 mb-4">
+                                     <label class="form-label">Nomor Faktur</label>
+                                     <input type="text" name="no_faktur" class="form-control" value="{{ old('no_faktur', $masterInfo->no_faktur ?? '') }}" maxlength="255" required>
+                                 </div>
+                             </div>
+                             <button class="btn btn-primary">Simpan Tukar Faktur dan Teruskan</button>
+                         </form>
+                     @else
+                         <div class="text-muted">Menunggu Admin Pengadaan mengisi tanggal tukar faktur, tanggal kwitansi, dan nomor faktur.</div>
+                     @endif
+                 </div>
+             </div>
+         @elseif(!empty($masterInfo?->status_proses_tukar_faktur))
+             <div class="alert alert-light-success">
+                 <strong>Tukar Faktur:</strong> {{ $masterInfo->status_proses_tukar_faktur }}
+                 <span class="d-block mt-2">Tanggal Tukar Faktur: {{ $masterInfo->tanggal_faktur ?? '-' }} | Tanggal Kwitansi Faktur: {{ $masterInfo->tgl_kwitansi ?? '-' }} | Nomor Faktur: {{ $masterInfo->no_faktur ?? '-' }}</span>
+             </div>
+         @endif
+
          @if ($step === 'workflow' && $workflowStep)
              <div class="card card-bordered mb-6">
                  <div class="card-header"><h4 class="card-title">{{ $workflowStepName }} <span class="text-muted fs-7">(Urutan {{ $workflowStep->step_order }})</span></h4></div>
@@ -212,6 +224,60 @@
                      @else
                          <div class="text-muted">Menunggu validasi dari {{ $workflowStepName }} sesuai penugasan workflow.</div>
                      @endif
+                 </div>
+             </div>
+         @endif
+
+         @if ($step === 'input_penyerahan_spj_admin')
+             <div class="card card-bordered mb-6">
+                 <div class="card-header bg-light-primary">
+                     <h4 class="card-title">Penyerahan SPJ oleh Admin Pengadaan</h4>
+                 </div>
+                 <div class="card-body">
+                     @if ($canPenyerahanSpjAdmin)
+                         <form method="POST" enctype="multipart/form-data" action="{{ route('usulan-belanja.pengadaan.penyerahan-dokumen', $spj->id) }}">@csrf
+                             <div class="row">
+                                 <div class="col-md-6 mb-4">
+                                     <label class="form-label">Tanggal Penyerahan SPJ</label>
+                                     <input type="date" name="tanggal_penyerahan_spj" class="form-control" value="{{ old('tanggal_penyerahan_spj', $masterInfo->tanggal_penyerahan_spj ?? '') }}" required>
+                                 </div>
+                                 <div class="col-md-6 mb-4">
+                                     <label class="form-label">Status SPJ</label>
+                                     <select name="status_serah_terima_bendahara" class="form-select" required>
+                                         <option value="">Pilih status</option>
+                                         <option value="Selesai" @selected(old('status_serah_terima_bendahara', $masterInfo->status_serah_terima_bendahara ?? '') === 'Selesai')>Selesai</option>
+                                         <option value="Revisi" @selected(old('status_serah_terima_bendahara', $masterInfo->status_serah_terima_bendahara ?? '') === 'Revisi')>Revisi</option>
+                                     </select>
+                                 </div>
+                                 @foreach (['upload_spj_1' => 'Dokumen SPJ 1', 'upload_spj_2' => 'Dokumen SPJ 2'] as $field => $label)
+                                     <div class="col-md-6 mb-4">
+                                         <label class="form-label">{{ $label }} (PDF, maks. 20 MB)</label>
+                                         <input type="file" name="{{ $field }}" class="form-control" accept=".pdf,application/pdf">
+                                         @if (!empty($masterInfo->{$field}))
+                                             <a class="form-text d-inline-block" href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($masterInfo->{$field}) }}" target="_blank" rel="noopener">Lihat dokumen yang sudah diunggah</a>
+                                         @endif
+                                     </div>
+                                 @endforeach
+                             </div>
+                             <div class="mb-4"><label class="form-label">Catatan</label><textarea name="catatan" class="form-control" rows="3">{{ old('catatan') }}</textarea></div>
+                             <button class="btn btn-primary">Simpan dan Proses</button>
+                         </form>
+                     @else
+                         <div class="text-muted">Menunggu Admin Pengadaan mengisi tanggal penyerahan, status, dan dokumen SPJ.</div>
+                     @endif
+                 </div>
+             </div>
+         @endif
+
+         @if (!empty($masterInfo?->upload_spj_1) || !empty($masterInfo?->upload_spj_2))
+             <div class="card card-bordered mb-6">
+                 <div class="card-header"><h4 class="card-title">Dokumen Penyerahan SPJ</h4></div>
+                 <div class="card-body d-flex flex-wrap gap-4">
+                     @foreach (['upload_spj_1' => 'Dokumen SPJ 1', 'upload_spj_2' => 'Dokumen SPJ 2'] as $field => $label)
+                         @if (!empty($masterInfo->{$field}))
+                             <a class="btn btn-light-primary" href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($masterInfo->{$field}) }}" target="_blank" rel="noopener">{{ $label }} <i class="ki-duotone ki-exit-up fs-5 ms-1"></i></a>
+                         @endif
+                     @endforeach
                  </div>
              </div>
          @endif

@@ -4,9 +4,12 @@
 @section('title', 'Detail Usulan Belanja')
 
 @section('content')
-<div class="card mb-6">
-    <div class="card-header">
-        <h3 class="card-title">Detail Usulan Belanja</h3>
+<div class="card mb-6 ub-detail-shell">
+    <div class="card-header ub-page-header">
+        <div class="card-title d-flex align-items-center gap-3 mb-0">
+            <span class="ub-heading-icon"><i class="ki-duotone ki-document fs-2x text-primary"></i></span>
+            <div><h3 class="mb-1">Detail Usulan Belanja</h3><span class="text-muted fs-7">{{ $usulanBelanja->no_usulan_belanja }}</span></div>
+        </div>
 
         <div class="card-toolbar">
             @if($canCreateSpj && $usulanBelanja->status_usulan === 'approved')
@@ -51,8 +54,8 @@
             </div>
         @endif
 
-        <div class="table-responsive">
-            <table class="table table-row-bordered gy-4">
+        <div class="table-responsive ub-summary-wrap">
+            <table class="table table-row-bordered gy-3 ub-summary-table">
                 <tr>
                     <th class="w-25">Nomor Usulan</th>
                     <td>{{ $usulanBelanja->no_usulan_belanja }}</td>
@@ -98,7 +101,7 @@
             </table>
         </div>
 
-        <div class="mt-8">
+        <div class="mt-8 ub-item-section">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4 class="mb-0">Item Usulan Belanja</h4>
                 <span class="badge badge-light-primary">
@@ -141,7 +144,7 @@
             @endif
 
             <div class="table-responsive">
-                <table class="table table-row-dashed gy-4">
+                <table class="table table-row-dashed align-middle gy-4 ub-data-table">
                     <thead>
                         <tr>
                             <th>No.</th>
@@ -338,6 +341,19 @@
         @endif
     </div>
 </div>
+<style>
+    .ub-detail-shell { overflow:hidden; border-radius:12px; }
+    .ub-page-header { flex-wrap:wrap; gap:14px; background:linear-gradient(110deg,#f2f7ff,#fff 70%); border-bottom:1px solid #e8edf5; }
+    .ub-heading-icon { display:grid; place-items:center; width:46px; height:46px; flex:0 0 46px; border-radius:12px; background:#fff; box-shadow:0 3px 12px #3699ff18; }
+    .ub-summary-wrap { padding:12px 16px; border:1px solid #edf0f5; border-radius:10px; background:#fbfcfe; }
+    .ub-summary-table { margin:0; }
+    .ub-summary-table th { width:25%; color:#7e8299; font-size:13px; }
+    .ub-summary-table td { color:#3f4254; font-weight:600; overflow-wrap:anywhere; }
+    .ub-item-section > .d-flex:first-child { padding:15px 17px; border:1px solid #e8edf5; border-radius:10px 10px 0 0; background:#f5f8ff; }
+    .ub-data-table { min-width:900px; }
+    .ub-data-table thead th { color:#7e8299; background:#f5f8fa; font-size:11px; text-transform:uppercase; white-space:nowrap; }
+    @media(max-width:767.98px) { .ub-page-header { align-items:flex-start; flex-direction:column; } .ub-page-header .card-toolbar { display:flex; flex-wrap:wrap; gap:8px; width:100%; } .ub-summary-table th { width:auto; min-width:135px; } .ub-summary-wrap { padding:8px; } }
+</style>
 
 @if($canManageItems)
     <div class="modal fade" id="usulan-item-modal" tabindex="-1" aria-hidden="true">

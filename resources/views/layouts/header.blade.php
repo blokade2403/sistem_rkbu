@@ -288,21 +288,24 @@
                                  </svg>
                              </span>
                              <!--end::Svg Icon-->
+                             @if (($approvalNotificationTotal ?? 0) > 0)
+                                 <span class="position-absolute top-0 start-100 translate-middle badge badge-circle badge-danger fs-9">{{ $approvalNotificationTotal > 99 ? '99+' : $approvalNotificationTotal }}</span>
+                             @endif
                          </div>
                          <!--begin::Menu-->
-                         <div class="menu menu-sub menu-sub-dropdown menu-column w-350px w-lg-375px"
+                         <div class="menu menu-sub menu-sub-dropdown menu-column w-350px w-lg-375px approval-notification-menu"
                              data-kt-menu="true">
                              <!--begin::Heading-->
                              <div class="d-flex flex-column bgi-no-repeat rounded-top"
                                  style="background-image: url(&quot;assets/media/misc/pattern-1.jpg&quot;);">
                                  <!--begin::Title-->
-                                 <h3 class="text-white fw-bold px-9 mt-10 mb-6">
-                                     Notifications
-                                     <span class="fs-8 opacity-75 ps-3">24 reports</span>
+                                 <h3 class="text-white fw-bold px-9 mt-7 mb-6">
+                                     Notifikasi Approval
+                                     <span class="fs-8 opacity-75 ps-3">{{ $approvalNotificationTotal ?? 0 }} tugas</span>
                                  </h3>
                                  <!--end::Title-->
                                  <!--begin::Tabs-->
-                                 <ul class="nav nav-line-tabs nav-line-tabs-2x nav-stretch fw-bold px-9">
+                                 <ul class="nav nav-line-tabs nav-line-tabs-2x nav-stretch fw-bold px-9 d-none">
                                      <li class="nav-item">
                                          <a class="nav-link text-white opacity-75 opacity-state-100 pb-4"
                                              data-bs-toggle="tab" href="#kt_topbar_notifications_1">Alerts</a>
@@ -319,8 +322,24 @@
                                  <!--end::Tabs-->
                              </div>
                              <!--end::Heading-->
+                             <div class="approval-notification-list p-5">
+                                 @forelse ($approvalNotifications ?? [] as $notification)
+                                     <a href="{{ $notification['url'] }}" class="d-flex align-items-center justify-content-between gap-3 p-4 mb-2 rounded bg-hover-light-primary text-gray-800 text-hover-primary">
+                                         <span class="d-flex align-items-center gap-3">
+                                             <span class="symbol symbol-35px"><span class="symbol-label bg-light-primary"><i class="ki-duotone {{ $notification['icon'] }} fs-3 text-primary"><span class="path1"></span><span class="path2"></span></i></span></span>
+                                             <span class="fw-semibold">{{ $notification['label'] }}</span>
+                                         </span>
+                                         <span class="badge badge-light-primary">{{ $notification['count'] }}</span>
+                                     </a>
+                                 @empty
+                                     <div class="text-center text-muted py-8">
+                                         <i class="ki-duotone ki-check-circle fs-2x text-success d-block mb-3"><span class="path1"></span><span class="path2"></span></i>
+                                         Tidak ada tugas approval yang menunggu.
+                                     </div>
+                                 @endforelse
+                             </div>
                              <!--begin::Tab content-->
-                             <div class="tab-content">
+                             <div class="tab-content d-none">
                                  <!--begin::Tab panel-->
                                  <div class="tab-pane fade" id="kt_topbar_notifications_1" role="tabpanel">
                                      <!--begin::Items-->

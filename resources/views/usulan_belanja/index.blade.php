@@ -33,9 +33,8 @@
             <div class="col-md-4">
                 <label for="usulan-year-filter" class="form-label">Tahun Anggaran</label>
                 <select id="usulan-year-filter" class="form-select" data-control="select2" data-placeholder="Semua Tahun">
-                    <option value="">Semua Tahun</option>
                     @foreach($tahunAnggarans as $tahun)
-                        <option value="{{ $tahun->id }}">{{ $tahun->nama_tahun_anggaran }}</option>
+                        <option value="{{ $tahun->id }}" selected>{{ $tahun->nama_tahun_anggaran }}</option>
                     @endforeach
                 </select>
             </div>

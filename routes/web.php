@@ -248,6 +248,10 @@ Route::middleware('auth')->group(function () {
                 ->name('pengadaan.validasi');
             Route::post('/pengadaan/{spj}/bast', [PengadaanWorkflowController::class, 'storeBast'])
                 ->name('pengadaan.bast');
+            Route::post('/pengadaan/{spj}/tukar-faktur', [PengadaanWorkflowController::class, 'storeTukarFaktur'])
+                ->name('pengadaan.tukar-faktur');
+            Route::post('/pengadaan/{spj}/penyerahan-dokumen', [PengadaanWorkflowController::class, 'storePenyerahanSpjAdmin'])
+                ->name('pengadaan.penyerahan-dokumen');
             Route::post('/pengadaan/{spj}/lanjutan', [PengadaanWorkflowController::class, 'storeLanjutan'])
                 ->name('pengadaan.lanjutan');
             Route::get('/pengadaan/penugasan/pendukung-ppk', [PengadaanWorkflowController::class, 'assignments'])

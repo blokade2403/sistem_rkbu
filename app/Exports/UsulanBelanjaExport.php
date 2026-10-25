@@ -47,9 +47,7 @@ class UsulanBelanjaExport implements FromQuery, WithHeadings, WithMapping, Shoul
             $query->where('usulan.user_id', $user->id);
         }
 
-        if ($this->request->filled('tahun_anggaran_id')) {
-            $query->where('usulan.tahun_anggaran_id', $this->request->input('tahun_anggaran_id'));
-        }
+        $query->where('usulan.tahun_anggaran_id', session('tahun_anggaran_id'));
 
         if ($this->request->filled('jenis_kategori_rkbu_id')) {
             $query->where('usulan.jenis_kategori_rkbu_id', $this->request->input('jenis_kategori_rkbu_id'));

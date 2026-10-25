@@ -3,16 +3,19 @@
 @section('title', 'SPJ dari Usulan Belanja')
 
 @section('content')
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">SPJ dari Usulan Belanja Disetujui</h3>
+<div class="card ub-spj-index-card">
+    <div class="card-header ub-page-header">
+        <div class="card-title d-flex align-items-center gap-3 mb-0">
+            <span class="ub-heading-icon"><i class="ki-duotone ki-cheque fs-2x text-primary"></i></span>
+            <div><h3 class="mb-1">SPJ dari Usulan Belanja Disetujui</h3><span class="text-muted fs-7">Kelola pembagian item usulan ke dalam SPJ</span></div>
+        </div>
     </div>
     <div class="card-body">
         @if(session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
-        <form method="GET" action="{{ route('usulan-belanja.spj.index') }}" class="row g-3 mb-6">
+        <form method="GET" action="{{ route('usulan-belanja.spj.index') }}" class="row g-3 mb-6 ub-filter-panel">
             <div class="col-md-4">
                 <label for="filter-no-usulan" class="form-label">Nomor Usulan</label>
                 <input type="search" id="filter-no-usulan" name="no_usulan" class="form-control" value="{{ request('no_usulan') }}" placeholder="Cari nomor usulan">
@@ -42,7 +45,7 @@
         </form>
 
         <div class="table-responsive">
-            <table class="table table-row-dashed align-middle gy-4">
+            <table class="table table-row-dashed align-middle gy-4 ub-data-table">
                 <thead>
                     <tr class="fw-bold text-muted">
                         <th>No.</th>
@@ -78,7 +81,7 @@
                             <td>{{ $usulan->unassigned_item_count }}</td>
                             <td>{{ rtrim(rtrim(number_format((float) $usulan->unassigned_volume, 3, ',', '.'), '0'), ',') }}</td>
                             <td>
-                                @if(($isAdmin || $usulan->user_id === auth()->id() || in_array($usulan->workflow_instance_id, $validatedWorkflowIds, true)) && (int) $usulan->unassigned_item_count > 0)
+                                @if($usulan->can_create_spj && (int) $usulan->unassigned_item_count > 0)
                                     <a href="{{ route('usulan-belanja.spj.create', $usulan->id) }}" class="btn btn-sm btn-primary">Buat / Tambah SPJ</a>
                                 @endif
                             </td>
@@ -92,4 +95,13 @@
         {{ $usulans->links() }}
     </div>
 </div>
+<style>
+    .ub-spj-index-card { overflow:hidden; border-radius:12px; }
+    .ub-page-header { background:linear-gradient(110deg,#f2f7ff,#fff 70%); border-bottom:1px solid #e8edf5; }
+    .ub-heading-icon { display:grid; place-items:center; width:46px; height:46px; flex:0 0 46px; border-radius:12px; background:#fff; box-shadow:0 3px 12px #3699ff18; }
+    .ub-filter-panel { padding:16px; margin-inline:0; border:1px solid #edf0f5; border-radius:10px; background:#f9fafc; }
+    .ub-data-table { min-width:1000px; }
+    .ub-data-table thead th { color:#7e8299; background:#f5f8fa; font-size:11px; text-transform:uppercase; white-space:nowrap; }
+    @media(max-width:767.98px) { .ub-page-header { padding:16px; } .ub-filter-panel { padding:12px; } }
+</style>
 @endsection

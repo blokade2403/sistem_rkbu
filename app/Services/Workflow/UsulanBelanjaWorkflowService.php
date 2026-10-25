@@ -105,6 +105,7 @@ class UsulanBelanjaWorkflowService
             $query = DB::table($table . ' as item')
                 ->join('rkbus', 'rkbus.id', '=', 'item.rkbu_id')
                 ->where('rkbus.status', 'approved')
+                ->where('rkbus.tahun_anggaran_id', session('tahun_anggaran_id'))
                 ->where('rkbus.sub_kategori_rkbu_id', $subKategoriId);
 
             if ($selected !== null) {
@@ -170,10 +171,7 @@ class UsulanBelanjaWorkflowService
             ->leftJoin('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
             ->where('rkbus.status', 'approved')
             ->when($creatorIds !== null, fn($query) => $query->whereIn('rkbus.created_by', $creatorIds))
-            ->when(session('tahun_anggaran_id'), fn($query, $tahunId) => $query->where(
-                'rkbus.tahun_anggaran_id',
-                $tahunId
-            ))
+            ->where('rkbus.tahun_anggaran_id', session('tahun_anggaran_id'))
             ->when($subKategoriId, fn($query) => $query->where(
                 'rkbus.sub_kategori_rkbu_id',
                 $subKategoriId
@@ -196,6 +194,7 @@ class UsulanBelanjaWorkflowService
 
             $rkbu = DB::table('rkbus')
                 ->where('sub_kategori_rkbu_id', $subKategoriId)
+                ->where('tahun_anggaran_id', session('tahun_anggaran_id'))
                 ->where('status', 'approved')
                 ->whereIn('created_by', $creatorIds)
                 ->orderBy('nomor_rkbu')
@@ -293,6 +292,7 @@ class UsulanBelanjaWorkflowService
                 ->firstOrFail();
 
             abort_unless($usulan->user_id === $user->id, 403);
+            abort_unless((string) $usulan->tahun_anggaran_id === (string) session('tahun_anggaran_id'), 403);
 
             if ($usulan->status_usulan !== 'draft' || $usulan->workflow_instance_id) {
                 throw ValidationException::withMessages([
@@ -333,6 +333,7 @@ class UsulanBelanjaWorkflowService
                     ->join('rkbus', 'rkbus.id', '=', 'item.rkbu_id')
                     ->where('item.id', $detailId)
                     ->where('rkbus.status', 'approved')
+                    ->where('rkbus.tahun_anggaran_id', session('tahun_anggaran_id'))
                     ->where('rkbus.sub_kategori_rkbu_id', $usulan->sub_kategori_rkbu_id)
                     ->lockForUpdate()
                     ->first(array_merge([

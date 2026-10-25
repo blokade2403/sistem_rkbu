@@ -3,13 +3,16 @@
 @section('title', 'Rekap Usulan Belanja')
 
 @section('content')
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Rekap Usulan Belanja</h3>
+<div class="card ub-rekap-card">
+    <div class="card-header ub-page-header">
+        <div class="card-title d-flex align-items-center gap-3 mb-0">
+            <span class="ub-heading-icon"><i class="ki-duotone ki-chart-simple-2 fs-2x text-primary"></i></span>
+            <div><h3 class="mb-1">Rekap Usulan Belanja</h3><span class="text-muted fs-7">Pantau status dan nilai usulan belanja</span></div>
+        </div>
     </div>
 
     <div class="card-body">
-        <form method="GET" action="{{ route('usulan-belanja.rekap') }}" class="row g-3 mb-6">
+        <form method="GET" action="{{ route('usulan-belanja.rekap') }}" class="row g-3 mb-6 ub-filter-panel">
             <div class="col-md-3">
                 <label for="rekap-jenis" class="form-label">Jenis Kategori RKBU</label>
                 <select id="rekap-jenis" name="jenis_kategori_rkbu_id" class="form-select" data-control="select2">
@@ -54,7 +57,7 @@
         </form>
 
         <div class="table-responsive">
-            <table class="table table-row-dashed table-row-gray-300 align-middle gy-4">
+            <table class="table table-row-dashed table-row-gray-300 align-middle gy-4 ub-data-table">
                 <thead>
                     <tr class="fw-bold text-muted">
                         <th>No.</th>
@@ -107,6 +110,15 @@
         {{ $usulans->links() }}
     </div>
 </div>
+<style>
+    .ub-rekap-card { overflow:hidden; border-radius:12px; }
+    .ub-page-header { background:linear-gradient(110deg,#f2f7ff,#fff 70%); border-bottom:1px solid #e8edf5; }
+    .ub-heading-icon { display:grid; place-items:center; width:46px; height:46px; flex:0 0 46px; border-radius:12px; background:#fff; box-shadow:0 3px 12px #3699ff18; }
+    .ub-filter-panel { padding:16px; margin-inline:0; border:1px solid #edf0f5; border-radius:10px; background:#f9fafc; }
+    .ub-data-table { min-width:1000px; }
+    .ub-data-table thead th { color:#7e8299; background:#f5f8fa; font-size:11px; text-transform:uppercase; white-space:nowrap; }
+    @media(max-width:767.98px) { .ub-page-header { padding:16px; } .ub-filter-panel { padding:12px; } }
+</style>
 @endsection
 
 @push('scripts')

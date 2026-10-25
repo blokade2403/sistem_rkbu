@@ -54,9 +54,8 @@ class UsulanBelanjaDataTable
             $query->where('status_usulan', $request->input('status'));
         }
 
-        if ($request->filled('tahun_anggaran_id')) {
-            $query->where('tahun_anggaran_id', $request->input('tahun_anggaran_id'));
-        }
+        // Tahun aktif disimpan di session dan tidak boleh dioverride oleh filter request.
+        $query->where('tahun_anggaran_id', session('tahun_anggaran_id'));
 
         if ($request->filled('jenis_kategori_rkbu_id')) {
             $query->where('jenis_kategori_rkbu_id', $request->input('jenis_kategori_rkbu_id'));
