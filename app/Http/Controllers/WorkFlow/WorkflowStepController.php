@@ -15,7 +15,14 @@ class WorkflowStepController extends Controller
 {
     public function index()
     {
-        $workflowSteps = WorkflowStep::with(['workflow', 'role'])
+        $workflowSteps = WorkflowStep::with([
+            'workflow',
+            'position',
+            'systemRole',
+            'validatorRole',
+            'subKategoriRkbus',
+        ])
+            ->orderBy('workflow_id')
             ->orderBy('step_order')
             ->get();
 
