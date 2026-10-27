@@ -297,7 +297,7 @@
     $('#btnEditRkbu').show();
     $('#rkbu-edit-form').data('url', res.updateUrl);
     $('#rkbu-edit-header-fields').toggle(Boolean(res.canEditHeader));
-    $('#edit_sumber_dana_id, #edit_sub_kegiatan_id').prop('required', Boolean(res.canEditHeader));
+    $('#edit_sumber_dana_id, #edit_sub_kegiatan_id').prop('required', false);
     $('#rkbu-edit-form').data('can-edit-header', Boolean(res.canEditHeader));
     $('#rkbu-shift-fields').toggle(Number(res.phaseOrder || 1) >= 2);
     $('#rkbu_shift_reason').val('');
@@ -305,7 +305,7 @@
     $('#approval-next-official-wrapper').toggle(Boolean(res.requiresNextOfficial));
 
     const sourceSelect = $('#edit_sumber_dana_id').empty()
-        .append($('<option>').val('').text('Pilih sumber dana'));
+        .append($('<option>').val('').text('Kosongkan sumber dana'));
     (res.sumberDanas || []).forEach(function(source) {
         sourceSelect.append($('<option>').val(source.id_sumber_dana).text(source.nama_sumber_dana));
     });
@@ -315,7 +315,7 @@
     window.populateApprovalSubActivities = function(selectedId) {
         const sourceId = sourceSelect.val();
         const subActivitySelect = $('#edit_sub_kegiatan_id').empty()
-            .append($('<option>').val('').text('Pilih sub kegiatan'));
+            .append($('<option>').val('').text('Kosongkan sub kegiatan'));
         subActivities.filter(function(item) {
             return !sourceId || item.id_sumber_dana === sourceId;
         }).forEach(function(item) {

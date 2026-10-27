@@ -40,7 +40,13 @@ class MonitoringAnggaranController extends Controller
             ->join('rekening_belanjas as rekening', 'rekening.id_kode_rekening_belanja', '=', 'pagu.id_kode_rekening_belanja')
             ->where('pagu.tahun_anggaran_id', $yearId)
             ->when($source, fn ($query) => $query->where('pagu.jenis_sumber_dana', $source))
-            ->get(['pagu.id_kode_rekening_belanja', 'pagu.jenis_sumber_dana', 'pagu.jumlah_pagu', 'rekening.kode_rekening_belanja'])
+            ->get([
+                'pagu.id_kode_rekening_belanja',
+                'pagu.jenis_sumber_dana',
+                'pagu.jumlah_pagu',
+                'rekening.kode_rekening_belanja',
+                'rekening.nama_rekening_belanja',
+            ])
             : collect();
 
         $dataByCode = [];
@@ -60,7 +66,7 @@ class MonitoringAnggaranController extends Controller
             ->when($source === 'BLUD', fn ($query) => $query->whereRaw("LOWER(TRIM(COALESCE(sumber.nama_sumber_dana, ''))) LIKE '%blud%' AND LOWER(TRIM(COALESCE(sumber.nama_sumber_dana, ''))) NOT LIKE '%non blud%'"))
             ->when($source === 'Non BLUD', fn ($query) => $query->whereRaw("LOWER(TRIM(COALESCE(sumber.nama_sumber_dana, ''))) NOT LIKE '%blud%'"))
             ->get([
-                'item.id as item_id', 'item.usulan_belanja_id', 'item.rkbu_id', 'item.harga_satuan', 'item.volume', 'item.ppn',
+                'item.id as item_id', 'item.usulan_belanja_id', 'item.rkbu_id', 'rkbus.sub_kategori_rkbu_id', 'item.harga_satuan', 'item.volume', 'item.ppn',
             ])
             : collect();
 
@@ -78,6 +84,7 @@ class MonitoringAnggaranController extends Controller
             ])->keyBy('usulan_belanja_id')
             : collect();
 
+        $subCategoryTransactions = [];
         foreach ($itemRows->groupBy('usulan_belanja_id') as $usulanId => $items) {
             $usulanTotal = $items->sum(fn ($item) => (float) $item->harga_satuan * (float) $item->volume * (1 + (float) $item->ppn / 100));
             if ($usulanTotal <= 0) continue;
@@ -100,6 +107,17 @@ class MonitoringAnggaranController extends Controller
                 } elseif (! $isCompleted) {
                     $dataByCode[$rkbuCode]['pengadaan'] += $itemAmount;
                 }
+
+                $subCategoryId = $item->sub_kategori_rkbu_id;
+                if ($subCategoryId) {
+                    $subCategoryTransactions[$subCategoryId] ??= ['pengadaan' => 0.0, 'keuangan' => 0.0, 'realisasi' => 0.0];
+                    $subCategoryTransactions[$subCategoryId]['realisasi'] += $paid * $share;
+                    if ($acceptedByFinance) {
+                        $subCategoryTransactions[$subCategoryId]['keuangan'] += $financeTotal * $share;
+                    } elseif (! $isCompleted) {
+                        $subCategoryTransactions[$subCategoryId]['pengadaan'] += $itemAmount;
+                    }
+                }
             }
         }
 
@@ -118,6 +136,136 @@ class MonitoringAnggaranController extends Controller
             $totals['level'] = max(0, substr_count($code, '.') - 1);
             return $totals;
         })->filter()->values();
+
+        if ($source === 'BLUD') {
+            $approvedRkbus = Rkbu::query()
+                ->where('tahun_anggaran_id', $yearId)
+                ->where('status', 'approved')
+                ->whereNotNull('sub_kategori_rkbu_id')
+                ->where(function ($query) {
+                    $query->whereHas('sumberDana', fn ($sourceQuery) => $sourceQuery
+                        ->whereRaw("LOWER(TRIM(nama_sumber_dana)) LIKE '%blud%'")
+                        ->whereRaw("LOWER(TRIM(nama_sumber_dana)) NOT LIKE '%non blud%'"))
+                        ->orWhereHas('subKegiatan.sumber_danas', fn ($sourceQuery) => $sourceQuery
+                            ->whereRaw("LOWER(TRIM(nama_sumber_dana)) LIKE '%blud%'")
+                            ->whereRaw("LOWER(TRIM(nama_sumber_dana)) NOT LIKE '%non blud%'"));
+                })
+                ->with('subKategoriRkbu.kategori.jenis_kategori_rkbu.jenis_belanja')
+                ->get();
+
+            $approvedRkbuIds = $approvedRkbus->pluck('id');
+            $budgetBySubCategory = [];
+            foreach ([
+                'rkbu_detail_barjass',
+                'rkbu_detail_modals',
+                'rkbu_detail_modal_alkes',
+                'rkbu_detail_persediaans',
+                'rkbu_detail_pegawais',
+            ] as $detailTable) {
+                DB::table($detailTable)
+                    ->whereIn('rkbu_id', $approvedRkbuIds)
+                    ->select('rkbu_id')
+                    ->selectRaw('SUM(total_anggaran) as total')
+                    ->groupBy('rkbu_id')
+                    ->get()
+                    ->each(function ($detailTotal) use (&$budgetBySubCategory, $approvedRkbus) {
+                        $rkbu = $approvedRkbus->firstWhere('id', $detailTotal->rkbu_id);
+                        $subcategoryId = $rkbu?->sub_kategori_rkbu_id;
+                        if ($subcategoryId) {
+                            $budgetBySubCategory[$subcategoryId] = ($budgetBySubCategory[$subcategoryId] ?? 0)
+                                + (float) $detailTotal->total;
+                        }
+                    });
+            }
+
+            $subcategoryMetadata = DB::table('sub_kategori_rkbus as sub')
+                ->join('kategori_rkbus as kategori', 'kategori.id_kategori_rkbu', '=', 'sub.id_kategori_rkbu')
+                ->join('jenis_kategori_rkbus as jenis', 'jenis.id_jenis_kategori_rkbu', '=', 'kategori.id_jenis_kategori_rkbu')
+                ->join('jenis_belanjas as belanja', 'belanja.id_jenis_belanja', '=', 'jenis.id_jenis_belanja')
+                ->whereIn('sub.id_sub_kategori_rkbu', $approvedRkbus->pluck('sub_kategori_rkbu_id')->unique())
+                ->get([
+                    'sub.id_sub_kategori_rkbu', 'sub.kode_sub_kategori_rkbu', 'sub.nama_sub_kategori_rkbu',
+                    'kategori.id_kategori_rkbu', 'kategori.kode_kategori_rkbu', 'kategori.nama_kategori_rkbu',
+                    'jenis.id_jenis_kategori_rkbu', 'jenis.kode_jenis_kategori_rkbu', 'jenis.nama_jenis_kategori_rkbu',
+                    'belanja.id_jenis_belanja', 'belanja.kode_jenis_belanja', 'belanja.nama_jenis_belanja',
+                ])->keyBy('id_sub_kategori_rkbu');
+
+            $addMonitoringRow = function (string $code, string $name, int $level, float $budget, array $activity) {
+                $activity['anggaran'] = $budget;
+                $activity['sisa'] = $budget - $activity['pengadaan'] - $activity['keuangan'] - $activity['realisasi'];
+                $activity['persentase'] = $budget > 0 ? round($activity['realisasi'] / $budget * 100, 2) : 0;
+                $activity['kode'] = $code;
+                $activity['nama'] = $name;
+                $activity['level'] = $level;
+
+                return $activity;
+            };
+            $sumActivity = function ($subcategories) use ($subCategoryTransactions) {
+                $sum = ['pengadaan' => 0.0, 'keuangan' => 0.0, 'realisasi' => 0.0];
+                foreach ($subcategories as $subcategory) {
+                    $activity = $subCategoryTransactions[$subcategory->id_sub_kategori_rkbu] ?? [];
+                    foreach ($sum as $field => $_) {
+                        $sum[$field] += (float) ($activity[$field] ?? 0);
+                    }
+                }
+
+                return $sum;
+            };
+
+            $subcategoryRows = collect();
+            $subcategoriesByType = $subcategoryMetadata->groupBy('id_jenis_belanja');
+            foreach ($paguRows as $pagu) {
+                $typeCode = trim((string) $pagu->kode_rekening_belanja, '.');
+                $type = DB::table('jenis_belanjas')->where('kode_jenis_belanja', $typeCode)->first();
+                if (! $type) {
+                    continue;
+                }
+                $subcategories = $subcategoriesByType->get($type->id_jenis_belanja, collect())->values();
+                $rootActivity = $sumActivity($subcategories);
+                $subcategoryRows->push($addMonitoringRow($typeCode, $pagu->nama_rekening_belanja, 0, (float) $pagu->jumlah_pagu, $rootActivity));
+
+                foreach ($subcategories->groupBy('id_jenis_kategori_rkbu') as $typeGroup) {
+                    $typeInfo = $typeGroup->first();
+                    $typeBudget = (float) $typeGroup->sum(fn ($subcategory) => (float) ($budgetBySubCategory[$subcategory->id_sub_kategori_rkbu] ?? 0));
+                    $subcategoryRows->push($addMonitoringRow(
+                        (string) $typeInfo->kode_jenis_kategori_rkbu,
+                        (string) $typeInfo->nama_jenis_kategori_rkbu,
+                        1,
+                        $typeBudget,
+                        $sumActivity($typeGroup)
+                    ));
+
+                    foreach ($typeGroup->groupBy('id_kategori_rkbu') as $categoryGroup) {
+                        $category = $categoryGroup->first();
+                        $categoryBudget = (float) $categoryGroup->sum(fn ($subcategory) => (float) ($budgetBySubCategory[$subcategory->id_sub_kategori_rkbu] ?? 0));
+                        $subcategoryRows->push($addMonitoringRow(
+                            (string) $category->kode_kategori_rkbu,
+                            (string) $category->nama_kategori_rkbu,
+                            2,
+                            $categoryBudget,
+                            $sumActivity($categoryGroup)
+                        ));
+
+                        foreach ($categoryGroup as $subcategory) {
+                            $subcategoryBudget = (float) ($budgetBySubCategory[$subcategory->id_sub_kategori_rkbu] ?? 0);
+                            $subcategoryActivity = $subCategoryTransactions[$subcategory->id_sub_kategori_rkbu]
+                                ?? ['pengadaan' => 0.0, 'keuangan' => 0.0, 'realisasi' => 0.0];
+                            $subcategoryRows->push($addMonitoringRow(
+                                (string) $subcategory->kode_sub_kategori_rkbu,
+                                (string) $subcategory->nama_sub_kategori_rkbu,
+                                3,
+                                $subcategoryBudget,
+                                $subcategoryActivity
+                            ));
+                        }
+                    }
+                }
+            }
+
+            if ($subcategoryRows->isNotEmpty()) {
+                $ledgerRows = $subcategoryRows;
+            }
+        }
 
         $summary = [
             'anggaran' => (float) $paguRows->sum('jumlah_pagu'),

@@ -165,7 +165,7 @@ class WorkflowApprovalController extends Controller
         $phaseOrder = $paguService->phaseOrder($rkbu->tahun_anggaran_id);
         $canEditRkbu = $paguService->isAdministrator()
             || ($phaseOrder === 1 && $approval->status === 'pending' && ! $isSuperAdmin);
-        $canEditHeader = auth()->user()->hasRole('Super Admin');
+        $canEditHeader = $canEditRkbu && $paguService->isAdministrator();
         $details = app(WorkflowApprovalDataTable::class)->detailsForRkbu($rkbu);
         $module = app(WorkflowApprovalDataTable::class)->moduleKey($rkbu, $details);
 
@@ -525,7 +525,7 @@ class WorkflowApprovalController extends Controller
         $rkbu = $approval->workflowInstance?->rkbu;
         abort_unless($rkbu, 404, 'Data RKBU tidak ditemukan.');
         $phaseOrder = $paguService->phaseOrder($rkbu->tahun_anggaran_id);
-        $canEditHeader = auth()->user()->hasRole('Super Admin');
+        $canEditHeader = $isAdministrator;
         if ($phaseOrder >= 2) {
             abort_unless($isAdministrator, 403, 'Perubahan RKBU fase ini hanya dapat dilakukan Administrator.');
         } else {
@@ -543,12 +543,12 @@ class WorkflowApprovalController extends Controller
             $rules['lampiran_pergeseran'] = ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'];
         }
         if ($canEditHeader) {
-            $rules['sumber_dana_id'] = ['required', 'uuid', Rule::exists('sumber_danas', 'id_sumber_dana')];
-            $rules['sub_kegiatan_id'] = ['required', 'uuid', Rule::exists('sub_kegiatans', 'id_sub_kegiatan')];
+            $rules['sumber_dana_id'] = ['nullable', 'uuid', Rule::exists('sumber_danas', 'id_sumber_dana')];
+            $rules['sub_kegiatan_id'] = ['nullable', 'uuid', Rule::exists('sub_kegiatans', 'id_sub_kegiatan')];
         }
         $validated = $request->validate($rules);
 
-        if ($canEditHeader) {
+        if ($canEditHeader && filled($validated['sumber_dana_id'] ?? null) && filled($validated['sub_kegiatan_id'] ?? null)) {
             $subKegiatan = SubKegiatan::query()
                 ->where('id_sub_kegiatan', $validated['sub_kegiatan_id'])
                 ->where('id_sumber_dana', $validated['sumber_dana_id'])
@@ -576,8 +576,8 @@ class WorkflowApprovalController extends Controller
         DB::transaction(function () use ($validated, $rkbu, $rkbuDetails, $paguService, $phaseOrder, $before, $beforeTotal, $attachment, $canEditHeader) {
             if ($canEditHeader) {
                 $rkbu->update([
-                    'sumber_dana_id' => $validated['sumber_dana_id'],
-                    'sub_kegiatan_id' => $validated['sub_kegiatan_id'],
+                    'sumber_dana_id' => $validated['sumber_dana_id'] ?? null,
+                    'sub_kegiatan_id' => $validated['sub_kegiatan_id'] ?? null,
                 ]);
             }
 

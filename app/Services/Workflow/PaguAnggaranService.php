@@ -190,7 +190,7 @@ class PaguAnggaranService
         $accountCodes = RekeningBelanja::query()
             ->pluck('kode_rekening_belanja', 'id_kode_rekening_belanja');
 
-        return $pagus->map(function (PaguAnggaran $pagu) use ($rkbUs, $module, $accountCodes) {
+        return $pagus->map(function (PaguAnggaran $pagu) use ($pagus, $rkbUs, $module, $accountCodes) {
             if (! $this->paguMatchesModule($pagu, $module)) {
                 return null;
             }
@@ -198,8 +198,24 @@ class PaguAnggaranService
             $approvedTotal = 0.0;
 
             foreach ($rkbUs as $rkbu) {
+                $rkbuAccountId = $this->resolveAccountId($rkbu);
+                $matchesAccount = $this->accountIsWithinPagu($rkbuAccountId, $pagu, $accountCodes);
+
+                // Some BLUD budgets use 5.1.02.99.99.9999 as a single
+                // Barang dan Jasa allocation. Utility bills keep their own
+                // 5.1.02.02.* account codes, so they need this aggregate fallback.
+                if (! $matchesAccount && $this->isBarjasAggregatePagu($pagu)) {
+                    $hasSpecificPagu = $pagus->contains(function (PaguAnggaran $candidate) use ($pagu, $rkbuAccountId, $accountCodes) {
+                        return $candidate->id !== $pagu->id
+                            && mb_strtolower((string) $candidate->jenis_sumber_dana) === mb_strtolower((string) $pagu->jenis_sumber_dana)
+                            && $this->accountIsWithinPagu($rkbuAccountId, $candidate, $accountCodes);
+                    });
+
+                    $matchesAccount = ! $hasSpecificPagu;
+                }
+
                 if (
-                    ! $this->accountIsWithinPagu($this->resolveAccountId($rkbu), $pagu, $accountCodes)
+                    ! $matchesAccount
                     || ! $this->rkbuMatchesModule($rkbu, $module)
                     || ! $this->rkbuMatchesFundingSource($rkbu, $pagu->jenis_sumber_dana)
                 ) {
@@ -284,6 +300,12 @@ class PaguAnggaranService
                 || preg_match('/\\b5\\.2(?:\\.|\\b)/', $label) === 1,
             default => false,
         };
+    }
+
+    private function isBarjasAggregatePagu(PaguAnggaran $pagu): bool
+    {
+        return trim((string) $pagu->rekeningBelanja?->kode_rekening_belanja, '.') === '5.1.02.99.99.9999'
+            && str_contains(mb_strtolower((string) $pagu->rekeningBelanja?->nama_rekening_belanja), 'barang dan jasa');
     }
 
     private function rkbuMatchesFundingSource(Rkbu $rkbu, string $paguFundingSource): bool

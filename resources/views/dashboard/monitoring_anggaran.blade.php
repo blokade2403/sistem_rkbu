@@ -48,8 +48,8 @@
         <div class="card monitoring-report-card border-0 shadow-sm">
             <div class="card-header border-0 pt-6">
                 <div class="card-title d-flex flex-column">
-                    <h2 class="fw-bold text-gray-900 mb-1">{{ $source === 'BLUD' ? 'Rincian Rekening Belanja BLUD' : 'Program, Kegiatan, dan Rekening Belanja' }}</h2>
-                    <span class="text-muted fs-7">Anggaran dari pagu rekening; proses dan realisasi berdasarkan usulan yang disetujui</span>
+                    <h2 class="fw-bold text-gray-900 mb-1">{{ $source === 'BLUD' ? 'Rincian Subkategori RKBU BLUD' : 'Program, Kegiatan, dan Rekening Belanja' }}</h2>
+                    <span class="text-muted fs-7">{{ $source === 'BLUD' ? 'Pagu pada rekening utama; rincian anggaran mengikuti RKBU disetujui per jenis, kategori, dan subkategori. Proses dan realisasi mengikuti usulan disetujui.' : 'Anggaran dari pagu rekening; proses dan realisasi berdasarkan usulan yang disetujui' }}</span>
                 </div>
                 <div class="card-toolbar"><span class="monitoring-realization-pill"><span class="monitoring-live-dot"></span>Realisasi {{ number_format($summary['persentase'], 2, ',', '.') }}%</span></div>
             </div>

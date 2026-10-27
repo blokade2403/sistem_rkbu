@@ -33,7 +33,7 @@ class LaporanRealisasiBulananController extends Controller
                 ->join('rekening_belanjas as rekening', 'rekening.id_kode_rekening_belanja', '=', 'pagu.id_kode_rekening_belanja')
                 ->where('pagu.tahun_anggaran_id', $yearId)
                 ->orderBy('rekening.kode_rekening_belanja')
-                ->get(['pagu.jumlah_pagu', 'rekening.kode_rekening_belanja', 'rekening.nama_rekening_belanja']);
+                ->get(['pagu.id_kode_rekening_belanja', 'pagu.jumlah_pagu', 'rekening.kode_rekening_belanja', 'rekening.nama_rekening_belanja']);
 
             $itemRows = DB::table('usulan_belanja_items as item')
                 ->join('usulan_belanjas as usulan', 'usulan.id', '=', 'item.usulan_belanja_id')
@@ -51,6 +51,7 @@ class LaporanRealisasiBulananController extends Controller
                 $amount = (float) $item->harga_satuan * (float) $item->volume * (1 + (float) $item->ppn / 100);
                 return [
                     'usulan_id' => $item->usulan_belanja_id,
+                    'account_id' => $accountId,
                     'code' => trim((string) $accountCodes->get($accountId), '.'),
                     'amount' => $amount,
                 ];
@@ -62,25 +63,28 @@ class LaporanRealisasiBulananController extends Controller
                 ->join('sub_kegiatans as sub_kegiatan', 'sub_kegiatan.id_sub_kegiatan', '=', 'aktivitas.id_sub_kegiatan')
                 ->join('kegiatans as kegiatan', 'kegiatan.id_kegiatan', '=', 'sub_kegiatan.id_kegiatan')
                 ->get([
-                    'rekening.kode_rekening_belanja', 'rekening.nama_rekening_belanja',
+                    'rekening.id_kode_rekening_belanja', 'rekening.kode_rekening_belanja', 'rekening.nama_rekening_belanja',
                     'program.id_program', 'program.kode_program', 'program.nama_program',
                     'aktivitas.id_aktivitas', 'aktivitas.kode_aktivitas', 'aktivitas.nama_aktivitas',
                     'sub_kegiatan.id_sub_kegiatan', 'sub_kegiatan.kode_sub_kegiatan', 'sub_kegiatan.nama_sub_kegiatan',
                     'kegiatan.id_kegiatan', 'kegiatan.kode_kegiatan', 'kegiatan.nama_kegiatan',
-                ])->keyBy('kode_rekening_belanja');
+                ])->keyBy('id_kode_rekening_belanja');
 
-            $getPath = function (string $code) use ($accountPathMap): array {
-                $account = $accountPathMap->get($code);
-                if (! $account) return [['key' => 'rekening:' . $code, 'level' => 0, 'label' => $code]];
+            $getPath = function (?string $accountId, string $code) use ($accountPathMap): array {
+                $account = $accountId ? $accountPathMap->get($accountId) : null;
+                if (! $account) return [['key' => 'rekening:' . $code, 'level' => 0, 'label' => $code, 'sort' => $code]];
+                $programSort = (string) $account->kode_program;
+                $activitySort = $programSort . '|' . $account->kode_kegiatan;
+                $subcategorySort = $activitySort . '|' . $account->kode_sub_kegiatan;
                 return [
-                    ['key' => 'program:' . $account->id_program, 'level' => 0, 'label' => $account->kode_program . ' ' . $account->nama_program],
-                    ['key' => 'kegiatan:' . $account->id_kegiatan, 'level' => 1, 'label' => $account->kode_kegiatan . ' ' . $account->nama_kegiatan],
-                    ['key' => 'sub:' . $account->id_sub_kegiatan, 'level' => 2, 'label' => $account->kode_sub_kegiatan . ' ' . $account->nama_sub_kegiatan],
-                    ['key' => 'rekening:' . $code, 'level' => 3, 'label' => $code . ' ' . $account->nama_rekening_belanja],
+                    ['key' => 'program:' . $account->id_program, 'level' => 0, 'label' => $account->kode_program . ' ' . $account->nama_program, 'sort' => $programSort],
+                    ['key' => 'kegiatan:' . $account->id_kegiatan, 'level' => 1, 'label' => $account->kode_kegiatan . ' ' . $account->nama_kegiatan, 'sort' => $activitySort],
+                    ['key' => 'sub:' . $account->id_sub_kegiatan, 'level' => 2, 'label' => $account->kode_sub_kegiatan . ' ' . $account->nama_sub_kegiatan, 'sort' => $subcategorySort],
+                    ['key' => 'rekening:' . $account->id_kode_rekening_belanja, 'level' => 3, 'label' => $code . ' ' . $account->nama_rekening_belanja, 'sort' => $subcategorySort . '|' . $code],
                 ];
             };
-            $addAmount = function (string $code, string $column, float $amount, ?int $month = null) use (&$reportRows, $getPath): void {
-                foreach ($getPath($code) as $node) {
+            $addAmount = function (?string $accountId, string $code, string $column, float $amount, ?int $month = null) use (&$reportRows, $getPath): void {
+                foreach ($getPath($accountId, $code) as $node) {
                     $reportRows[$node['key']] ??= $node + ['dpa' => 0.0, 'serapan' => array_fill(1, 12, 0.0)];
                     if ($month === null) $reportRows[$node['key']][$column] += $amount;
                     else $reportRows[$node['key']]['serapan'][$month] += $amount;
@@ -92,7 +96,7 @@ class LaporanRealisasiBulananController extends Controller
                 if ($code === '') continue;
                 $value = (float) $pagu->jumlah_pagu;
                 $totalDpa += $value;
-                $addAmount($code, 'dpa', $value);
+                $addAmount((string) $pagu->id_kode_rekening_belanja, $code, 'dpa', $value);
             }
 
             $yearLabel = (string) ($year->nama_tahun_anggaran ?? now()->year);
@@ -137,12 +141,12 @@ class LaporanRealisasiBulananController extends Controller
                 $amount = (float) $payment->amount;
                 $monthTotals[$month] += $amount;
                 foreach ($usulanItems as $item) {
-                    $addAmount($item['code'], 'serapan', $amount * ($item['amount'] / $baseTotal), $month);
+                    $addAmount($item['account_id'] ? (string) $item['account_id'] : null, $item['code'], 'serapan', $amount * ($item['amount'] / $baseTotal), $month);
                 }
             }
         }
 
-        $reportRows = collect($reportRows)->values();
+        $reportRows = collect($reportRows)->sortBy('sort')->values();
         return view('dashboard.laporan_realisasi_bulanan', compact('years', 'year', 'yearId', 'months', 'monthTotals', 'reportRows', 'totalDpa'));
     }
 }
