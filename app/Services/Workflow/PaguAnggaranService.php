@@ -55,13 +55,51 @@ class PaguAnggaranService
 
     public function resolveAccountId(Rkbu $rkbu): ?string
     {
+        $rkbu->loadMissing(['subKategoriRkbu.sub_kategori_rekening', 'subKegiatan', 'jenisBelanja']);
+        // Match the full displayed subcategory code first. The related subcategory
+        // ledger can be only a broad code (for example 5.1), shared by many accounts.
+        $subcategoryCode = trim((string) $rkbu->subKategoriRkbu?->kode_sub_kategori_rkbu, '.');
+        if ($subcategoryCode !== '') {
+            $exactAccountId = DB::table('rekening_belanjas')
+                ->join('aktivitas', 'aktivitas.id_aktivitas', '=', 'rekening_belanjas.id_aktivitas')
+                ->join('sub_kegiatans', 'sub_kegiatans.id_sub_kegiatan', '=', 'aktivitas.id_sub_kegiatan')
+                ->where('rekening_belanjas.kode_rekening_belanja', $subcategoryCode)
+                ->when($rkbu->sub_kegiatan_id, fn ($query) => $query->where('sub_kegiatans.id_sub_kegiatan', $rkbu->sub_kegiatan_id))
+                ->when($rkbu->sumber_dana_id, fn ($query) => $query->where('sub_kegiatans.id_sumber_dana', $rkbu->sumber_dana_id))
+                ->value('rekening_belanjas.id_kode_rekening_belanja');
+            if ($exactAccountId) {
+                return (string) $exactAccountId;
+            }
+        }
+
+        // Keep compatibility with legacy rows that stored a direct account ID.
         $direct = $rkbu->getAttribute('id_kode_rekening_belanja');
         if ($direct) {
             return (string) $direct;
         }
 
-        $rkbu->loadMissing(['subKategoriRkbu.sub_kategori_rekening', 'subKegiatan']);
-        $subAccountCode = $rkbu->subKategoriRkbu?->sub_kategori_rekening?->kode_sub_kategori_rekening;
+        // Barjas and other grouped RKBU records use the ledger code stored on
+        // jenis_belanja, while their subcategory may be a more detailed code.
+        $jenisBelanjaCode = trim((string) $rkbu->jenisBelanja?->kode_jenis_belanja, '.');
+        $subcategoryMajorCode = implode('.', array_slice(explode('.', $subcategoryCode), 0, 2));
+        $jenisBelanjaMajorCode = implode('.', array_slice(explode('.', $jenisBelanjaCode), 0, 2));
+        if ($jenisBelanjaCode !== '' && $jenisBelanjaMajorCode === $subcategoryMajorCode) {
+            $jenisBelanjaAccountId = DB::table('rekening_belanjas')
+                ->join('aktivitas', 'aktivitas.id_aktivitas', '=', 'rekening_belanjas.id_aktivitas')
+                ->join('sub_kegiatans', 'sub_kegiatans.id_sub_kegiatan', '=', 'aktivitas.id_sub_kegiatan')
+                ->where('rekening_belanjas.kode_rekening_belanja', $jenisBelanjaCode)
+                ->when($rkbu->sub_kegiatan_id, fn ($query) => $query->where('sub_kegiatans.id_sub_kegiatan', $rkbu->sub_kegiatan_id))
+                ->when($rkbu->sumber_dana_id, fn ($query) => $query->where('sub_kegiatans.id_sumber_dana', $rkbu->sumber_dana_id))
+                ->value('rekening_belanjas.id_kode_rekening_belanja');
+            if ($jenisBelanjaAccountId) {
+                return (string) $jenisBelanjaAccountId;
+            }
+        }
+
+        // If there is no exact ledger for the detailed subcategory, preserve the
+        // existing subactivity/source based resolution using its broader ledger.
+        $subAccountCode = $rkbu->subKategoriRkbu?->sub_kategori_rekening?->kode_sub_kategori_rekening
+            ?: ($subcategoryCode !== '' ? rtrim($subcategoryCode, 'Xx.') : null);
         if (! $subAccountCode) {
             return null;
         }
@@ -90,14 +128,20 @@ class PaguAnggaranService
     public function totalRkbuForAccount(string $tahunId, string $accountId, ?string $excludeRkbuId = null): float
     {
         $total = 0.0;
+        $pagu = $this->paguForAccount($tahunId, $accountId);
+        if (! $pagu) {
+            return $total;
+        }
+        $accountCodes = RekeningBelanja::query()->pluck('kode_rekening_belanja', 'id_kode_rekening_belanja');
         $rkbUs = Rkbu::query()
             ->where('tahun_anggaran_id', $tahunId)
             ->whereNotIn('status', ['rejected'])
             ->when($excludeRkbuId, fn ($query) => $query->where('id', '<>', $excludeRkbuId))
-            ->with(['subKategoriRkbu.sub_kategori_rekening', 'subKegiatan']);
+            ->with(['subKategoriRkbu.sub_kategori_rekening', 'subKegiatan.sumber_danas', 'sumberDana', 'rekeningBelanja.aktivitas.sub_kegiatan.sumber_danas', 'jenisBelanja']);
 
         foreach ($rkbUs->cursor() as $rkbu) {
-            if ($this->resolveAccountId($rkbu) === $accountId) {
+            if ($this->accountIsWithinPagu($this->resolveAccountId($rkbu), $pagu, $accountCodes)
+                && $this->rkbuMatchesFundingSource($rkbu, $pagu->jenis_sumber_dana)) {
                 $total += $this->detailTotal($rkbu);
             }
         }
@@ -111,7 +155,7 @@ class PaguAnggaranService
         $rkbUs = Rkbu::query()
             ->where('tahun_anggaran_id', $tahunId)
             ->where('status', 'approved')
-            ->with(['subKategoriRkbu.sub_kategori_rekening', 'subKegiatan']);
+            ->with(['subKategoriRkbu.sub_kategori_rekening', 'subKegiatan', 'jenisBelanja']);
 
         foreach ($rkbUs->cursor() as $rkbu) {
             if ($this->resolveAccountId($rkbu) === $accountId) {
@@ -140,6 +184,7 @@ class PaguAnggaranService
                 'sumberDana',
                 'subKegiatan.sumber_danas',
                 'rekeningBelanja.aktivitas.sub_kegiatan.sumber_danas',
+                'jenisBelanja',
             ])
             ->get();
         $accountCodes = RekeningBelanja::query()
@@ -210,7 +255,9 @@ class PaguAnggaranService
         $keywords = match ($module) {
             'barjas', 'persediaan' => ['barang jasa', 'barang dan jasa', 'barang persediaan', 'persediaan'],
             'pegawai' => ['pegawai'],
-            'modal' => ['modal kantor', 'modal kantor lainnya', 'modal alat kesehatan', 'modal alkes'],
+            // The combined modal approval page must include every modal class,
+            // including equipment and machinery categories without "kantor"/"alkes".
+            'modal' => ['modal'],
             'modal-kantor', 'modal-alkes' => ['modal kantor', 'modal kantor lainnya', 'modal alat kesehatan', 'modal alkes'],
             default => [],
         };
@@ -266,6 +313,11 @@ class PaguAnggaranService
 
     public function totalUsulanForAccount(string $tahunId, string $accountId, ?string $excludeUsulanId = null): float
     {
+        $pagu = $this->paguForAccount($tahunId, $accountId);
+        if (! $pagu) {
+            return 0.0;
+        }
+        $accountCodes = RekeningBelanja::query()->pluck('kode_rekening_belanja', 'id_kode_rekening_belanja');
         $total = 0.0;
         $items = DB::table('usulan_belanja_items as items')
             ->join('usulan_belanjas as usulan', 'usulan.id', '=', 'items.usulan_belanja_id')
@@ -273,11 +325,15 @@ class PaguAnggaranService
             ->where('rkbus.tahun_anggaran_id', $tahunId)
             ->whereIn('usulan.status_usulan', ['proses', 'approved'])
             ->when($excludeUsulanId, fn ($query) => $query->where('usulan.id', '<>', $excludeUsulanId))
-            ->select('items.*', 'rkbus.id as related_rkbu_id');
+            ->select('items.*', 'rkbus.id as related_rkbu_id')
+            ->get();
+        $rkbUs = Rkbu::query()->with(['subKategoriRkbu.sub_kategori_rekening', 'subKegiatan.sumber_danas', 'sumberDana', 'rekeningBelanja.aktivitas.sub_kegiatan.sumber_danas', 'jenisBelanja'])
+            ->whereIn('id', $items->pluck('related_rkbu_id')->unique())->get()->keyBy('id');
 
-        foreach ($items->get() as $item) {
-            $rkbu = Rkbu::query()->with(['subKategoriRkbu.sub_kategori_rekening', 'subKegiatan'])->find($item->related_rkbu_id);
-            if ($rkbu && $this->resolveAccountId($rkbu) === $accountId) {
+        foreach ($items as $item) {
+            $rkbu = $rkbUs->get($item->related_rkbu_id);
+            if ($rkbu && $this->accountIsWithinPagu($this->resolveAccountId($rkbu), $pagu, $accountCodes)
+                && $this->rkbuMatchesFundingSource($rkbu, $pagu->jenis_sumber_dana)) {
                 $subtotal = (float) $item->harga_satuan * (float) $item->volume;
                 $total += $subtotal + ($subtotal * (float) $item->ppn / 100);
             }

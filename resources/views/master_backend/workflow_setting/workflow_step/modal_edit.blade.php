@@ -44,13 +44,13 @@
                             </select>
                         </div>
 
-                        <div class="mb-8 js-hierarchy-area">
+                        <div class="mb-8 js-hierarchy-area" style="display: {{ $step->validator_type === 'hierarchy' ? 'block' : 'none' }}">
                             <label class="required fs-6 fw-bold mb-2">Level Hierarki</label>
                             <input type="number" min="1" class="form-control" name="hierarchy_level" value="{{ $step->hierarchy_level ?? 1 }}">
                             <small class="text-muted">1 = atasan langsung, 2 = atasan dari atasan.</small>
                         </div>
 
-                        <div class="mb-8 js-position-area">
+                        <div class="mb-8 js-position-area" style="display: {{ $step->validator_type === 'position' ? 'block' : 'none' }}">
                             <label class="required fs-6 fw-bold mb-2">Jabatan</label>
                             <select class="form-select" name="position_id" data-control="select2" data-dropdown-parent="#kt_modal_new_target_form{{ $step->id }}">
                                 <option value="">Pilih jabatan</option>
@@ -62,7 +62,7 @@
                             </select>
                         </div>
 
-                        <div class="mb-8 js-role-area">
+                        <div class="mb-8 js-role-area" style="display: {{ $step->validator_type === 'role' ? 'block' : 'none' }}">
                             <label class="required fs-6 fw-bold mb-2">Role</label>
                             <select class="form-select" name="role_id" data-control="select2" data-dropdown-parent="#kt_modal_new_target_form{{ $step->id }}">
                                 <option value="">Pilih role</option>
@@ -119,29 +119,35 @@
     </div>
 @endforeach
 
-<script>
-    document.querySelectorAll('.js-workflow-step-edit').forEach(function (form) {
-        const typeSelect = form.querySelector('.js-validator-type');
-        const areas = {
-            hierarchy: form.querySelector('.js-hierarchy-area'),
-            position: form.querySelector('.js-position-area'),
-            role: form.querySelector('.js-role-area'),
-        };
+@push('scripts')
+    <script>
+        (function ($) {
+            function updateWorkflowStepFields(form) {
+                const type = $(form).find('.js-validator-type').val();
+                const areas = {
+                    hierarchy: '.js-hierarchy-area',
+                    position: '.js-position-area',
+                    role: '.js-role-area',
+                };
 
-        function updateValidatorFields() {
-            const type = typeSelect.value;
-            Object.entries(areas).forEach(function ([key, area]) {
-                const visible = key === type;
-                area.classList.toggle('d-none', !visible);
-                area.querySelector('input, select').required = visible;
+                Object.entries(areas).forEach(function ([key, selector]) {
+                    const area = $(form).find(selector);
+                    const visible = key === type;
+                    area.toggle(visible);
+                    area.find('input, select').prop('required', visible);
+                });
+
+                $(form).find('.js-validator-role').prop('required', type === 'user');
+                $(form).find('.js-validator-role-label').toggleClass('required', type === 'user');
+            }
+
+            $(document).on('change', '.js-workflow-step-edit .js-validator-type', function () {
+                updateWorkflowStepFields($(this).closest('.js-workflow-step-edit'));
             });
 
-            const validatorRole = form.querySelector('.js-validator-role');
-            validatorRole.required = type === 'user';
-            form.querySelector('.js-validator-role-label').classList.toggle('required', type === 'user');
-        }
-
-        typeSelect.addEventListener('change', updateValidatorFields);
-        updateValidatorFields();
-    });
-</script>
+            $('.js-workflow-step-edit').each(function () {
+                updateWorkflowStepFields(this);
+            });
+        })(window.jQuery);
+    </script>
+@endpush

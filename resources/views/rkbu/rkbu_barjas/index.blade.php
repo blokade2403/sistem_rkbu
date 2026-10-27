@@ -15,7 +15,9 @@
                     </h3>
                     <div class="card-toolbar">
                         <span id="barjas-selected-count" class="text-muted me-3">0 dipilih</span>
-                        <button type="button" class="btn btn-sm btn-primary" id="barjas-bulk-submit" disabled>
+                        <button type="button" class="btn btn-sm btn-primary" id="barjas-bulk-submit"
+                            data-table="#rkbubarjas-table"
+                            data-submit-url="{{ route('rkbu.barjas.bulk-submit') }}" disabled>
                             <i class="fas fa-paper-plane me-1"></i> Ajukan Terpilih
                         </button>
                     </div>

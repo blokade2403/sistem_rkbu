@@ -157,4 +157,9 @@
         </script>
         {!! $dataTable->scripts() !!}
     @endpush
+    <style>
+        #rkbubarjas-table .persediaan-info-card,
+        #tableApproval .persediaan-info-card { min-width: 270px; max-width: 350px; white-space: normal; line-height: 1.35; }
+        #rkbubarjas-table td, #tableApproval td { vertical-align: top; }
+    </style>
 @endsection

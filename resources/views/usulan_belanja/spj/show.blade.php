@@ -51,13 +51,13 @@
                 <div class="card-header min-h-60px bg-light">
                     <h4 class="card-title fw-bold text-gray-800"><i class="ki-duotone ki-category fs-3 text-primary me-2"><span class="path1"></span><span class="path2"></span></i>Informasi Program dan RKBU</h4>
                 </div>
-                <div class="card-body py-4">
+                <div class="card-body py-2">
                     @php
                         $rkbuInfo = $spj->usulanBelanja?->rkbu;
                         $subKategoriInfo = $rkbuInfo?->subKategoriRkbu;
                         $subKegiatanInfo = $rkbuInfo?->subKegiatan;
                     @endphp
-                    <div class="row g-3">
+                    <div class="row g-0">
                         <div class="col-12"><div class="spj-detail-info-row"><span>Program</span><strong>{{ $program?->kode_program }} {{ $program?->nama_program ?? '-' }}</strong></div></div>
                         <div class="col-12"><div class="spj-detail-info-row"><span>Kegiatan</span><strong>{{ $kegiatan?->kode_kegiatan }} {{ $kegiatan?->nama_kegiatan ?? '-' }}</strong></div></div>
                         <div class="col-12"><div class="spj-detail-info-row"><span>Subkegiatan</span><strong>{{ $subKegiatanInfo?->kode_sub_kegiatan }} {{ $subKegiatanInfo?->nama_sub_kegiatan ?? '-' }}</strong></div></div>

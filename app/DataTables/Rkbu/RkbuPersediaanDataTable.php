@@ -5,6 +5,7 @@ namespace App\DataTables\Rkbu;
 use App\Models\Rkbu\RkbuDetailPersediaan;
 use App\Models\RkbuPersediaan;
 use App\Support\Rkbu\RkbuListFilters;
+use App\Support\Rkbu\PersediaanListPresenter;
 use Illuminate\Database\Eloquent\Builder as QueryBuilder;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\Html\Builder as HtmlBuilder;
@@ -125,6 +126,7 @@ class RkbuPersediaanDataTable extends DataTable
                                         Subkategori :
                                         ' . e($subcategoryLabel) . '
                                     </span>
+                                    ' . ($row->rating ? '<span class="badge badge-light-success">Prioritas ' . e($row->rating) . '</span>' : '') . '
                                 </div>
                             </Span>
                             ' . ($statusIcons !== '' ? '<div class="d-flex flex-wrap align-items-center mt-2">' . $statusIcons . '</div>' : '') . '
@@ -194,12 +196,15 @@ class RkbuPersediaanDataTable extends DataTable
                     </div>
                     ';
             })
+            ->addColumn('persediaan_info', function ($row) {
+                return PersediaanListPresenter::renderInfo($row, $row->rkbu);
+            })
             ->addColumn('satuan', function ($row) {
-
+                $remaining = $row->sisa_vol_rkbu;
                 return '
                     <div class="text-end">
                             <span class="text-dark fs-6">
-                                ' . $row->volume_1 . ' ' . $row->satuan_1 . ' x ' . $row->volume_2 . ' ' . $row->satuan_2 . '
+                                ' . e($row->jumlah_volume ?? '-') . ' ' . e($row->satuan_1 ?? '') . ' / ' . e($remaining ?? '-') . '
                             </span>
                     </div>
                 ';
@@ -209,13 +214,14 @@ class RkbuPersediaanDataTable extends DataTable
                 return '
                     <div class="text-end">
                             <span class="text-dark fw-bold fs-6">
-                                Rp.' . number_format(
+                                Rp. ' . number_format(
                     $row->harga_satuan,
                     0,
                     ',',
-                    ','
+                    '.'
                 ) . '
                             </span>
+                            <div class="text-muted fs-7">PPN: ' . e($row->ppn ?? 0) . '%</div>
                     </div>
                 ';
             })
@@ -228,7 +234,7 @@ class RkbuPersediaanDataTable extends DataTable
                     $row->total_anggaran,
                     0,
                     ',',
-                    ','
+                    '.'
                 ) . '
                             </span>
                     </div>
@@ -363,6 +369,7 @@ class RkbuPersediaanDataTable extends DataTable
             ->rawColumns([
                 'checkbox',
                 'nama_komponen',
+                'persediaan_info',
                 'satuan',
                 'harga_barang',
                 'total',
@@ -391,6 +398,8 @@ class RkbuPersediaanDataTable extends DataTable
                 'rkbu',
                 'rkbu.sumberDana',
                 'rkbu.subKategoriRkbu',
+                'rkbu.tahunAnggaran',
+                'rkbu.rekeningBelanja',
                 'rkbu.creator',
                 'rkbu.unit',
                 'rkbu.workflowInstance.approvals.validatorUser',
@@ -447,11 +456,16 @@ class RkbuPersediaanDataTable extends DataTable
                 ->searchable(true)
                 ->orderable(true),
 
+            Column::computed('persediaan_info')
+                ->title('Detail Persediaan')
+                ->searchable(false)
+                ->orderable(false),
+
             Column::computed('satuan')
-                ->title('Detail Volune'),
+                ->title('Volume / Sisa'),
 
             Column::computed('harga_barang')
-                ->title('Harga Barang'),
+                ->title('Harga / PPN'),
 
             Column::computed('total')
                 ->title('Total Anggaran'),

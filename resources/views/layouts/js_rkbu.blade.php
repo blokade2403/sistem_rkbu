@@ -181,28 +181,37 @@
         });
     });
 
+    function barjasSelectionTable() {
+        const selector = $('#barjas-bulk-submit').data('table');
+        return selector && $.fn.DataTable.isDataTable(selector) ? $(selector).DataTable() : null;
+    }
+
     function updateBarjasSelection() {
-        const table = $('#rkbubarjas-table').DataTable();
-        const selectedCount = table.$('input[type="checkbox"]:checked').length;
+        const table = barjasSelectionTable();
+        if (!table) return;
+        const selectedCount = table.$('input[type="checkbox"]:checked:not(:disabled):not(#barjas-select-all)').length;
         $('#barjas-selected-count').text(selectedCount + ' dipilih');
         $('#barjas-bulk-submit').prop('disabled', selectedCount === 0);
     }
 
-    $(document).on('change', '#rkbubarjas-table input[type="checkbox"]:not(#barjas-select-all)', updateBarjasSelection);
+    $(document).on('change', '#rkbumodalkantor-table input[type="checkbox"]:not(#barjas-select-all), #rkbubarjas-table input[type="checkbox"]:not(#barjas-select-all)', updateBarjasSelection);
     $(document).on('change', '#barjas-select-all', function() {
-        const table = $('#rkbubarjas-table').DataTable();
+        const table = barjasSelectionTable();
+        if (!table) return;
         table.$('input[type="checkbox"]:not(:disabled):not(#barjas-select-all)')
             .prop('checked', this.checked);
         updateBarjasSelection();
     });
-    $('#rkbubarjas-table').on('draw.dt', function() {
+    $('#rkbumodalkantor-table, #rkbubarjas-table').on('draw.dt', function() {
         $('#barjas-select-all').prop('checked', false);
         updateBarjasSelection();
     });
 
     $(document).on('click', '#barjas-bulk-submit', function() {
-        const ids = $('#rkbubarjas-table').DataTable()
-            .$('input[type="checkbox"]:checked')
+        const table = barjasSelectionTable();
+        if (!table) return;
+        const ids = table
+            .$('input[type="checkbox"]:checked:not(:disabled):not(#barjas-select-all)')
             .map(function() { return this.value; })
             .get();
 
@@ -223,11 +232,11 @@
             }
 
             $.ajax({
-                url: '{{ route('rkbu.barjas.bulk-submit') }}',
+                url: $('#barjas-bulk-submit').data('submit-url'),
                 type: 'POST',
                 data: { ids: ids },
                 success: function(response) {
-                    $('#rkbubarjas-table').DataTable().ajax.reload();
+                    table.ajax.reload();
                     const failures = (response.results || []).filter(function(item) {
                         return !item.success;
                     });

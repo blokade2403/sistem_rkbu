@@ -19,6 +19,7 @@ use App\Services\Workflow\PaguAnggaranService;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -65,6 +66,7 @@ class WorkflowApprovalController extends Controller
         $this->abortAdministrator();
         $module = $request->query('module', 'all');
         abort_unless(in_array($module, ['all', 'barjas', 'pegawai', 'persediaan', 'modal', 'modal-kantor', 'modal-alkes'], true), 404);
+        $subKegiatans = SubKegiatan::query()->with('sumber_danas')->orderBy('kode_sub_kegiatan')->get();
 
         return view(
             'workflow.approval.index',
@@ -74,6 +76,13 @@ class WorkflowApprovalController extends Controller
                 'module' => $module,
                 'isSuperAdmin' => $this->isSuperAdmin(),
                 'sumberDanas' => SumberDana::query()->orderBy('nama_sumber_dana')->get(),
+                'subKegiatans' => $subKegiatans,
+                'subKegiatanOptions' => \Illuminate\Support\Js::from($subKegiatans->map(fn ($item) => [
+                    'id' => $item->id_sub_kegiatan,
+                    'sourceId' => $item->id_sumber_dana,
+                    'code' => $item->kode_sub_kegiatan,
+                    'name' => $item->nama_sub_kegiatan,
+                ])->values()),
                 'subKategoris' => SubKategoriRkbu::query()
                     ->orderBy('kode_sub_kategori_rkbu')
                     ->get(),
@@ -100,11 +109,11 @@ class WorkflowApprovalController extends Controller
         $this->abortAdministrator();
 
         $isSuperAdmin = $this->isSuperAdmin();
-        $assignment = $isSuperAdmin
+        $assignments = $isSuperAdmin
             ? null
-            : app(PositionAssignmentService::class)->getCurrentAssignment();
+            : app(PositionAssignmentService::class)->getCurrentAssignments();
 
-        return app(WorkflowApprovalDataTable::class)->render($request, $isSuperAdmin, $assignment);
+        return app(WorkflowApprovalDataTable::class)->render($request, $isSuperAdmin, $assignments);
     }
 
     public function show($id)
@@ -114,7 +123,7 @@ class WorkflowApprovalController extends Controller
         $isSuperAdmin = $this->isSuperAdmin();
         $approvalQuery = $isSuperAdmin
             ? app(WorkflowApprovalDataTable::class)->approvalsForCurrentYear()
-            : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($this->currentValidatorAssignment());
+            : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($this->currentValidatorAssignments());
         $approval = $approvalQuery->with([
             'workflowInstance.rkbu.detailBarjas',
             'workflowInstance.rkbu.detailPegawai',
@@ -242,7 +251,7 @@ class WorkflowApprovalController extends Controller
         $isSuperAdmin = $this->isSuperAdmin();
         $approvalQuery = $isSuperAdmin
             ? app(WorkflowApprovalDataTable::class)->approvalsForCurrentYear()
-            : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($this->currentValidatorAssignment());
+            : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($this->currentValidatorAssignments());
         $approval = $approvalQuery->with('workflowInstance')->findOrFail($id);
 
         $rkbu = Rkbu::with([
@@ -301,7 +310,8 @@ class WorkflowApprovalController extends Controller
         $this->abortAdministrator();
 
         $filters = $request->validate([
-            'sumber_dana_id' => ['nullable', 'uuid', Rule::exists('sumber_danas', 'id_sumber_dana')],
+            'sumber_dana_id' => ['nullable', 'string', 'max:36', $this->sourceFilterRule()],
+            'sub_kegiatan_id' => ['nullable', 'uuid', Rule::exists('sub_kegiatans', 'id_sub_kegiatan')],
             'sub_kategori_rkbu_id' => ['nullable', 'uuid', Rule::exists('sub_kategori_rkbus', 'id_sub_kategori_rkbu')],
             'approval_status' => ['nullable', Rule::in(['pending', 'approved', 'rejected', 'revision'])],
         ]);
@@ -312,7 +322,7 @@ class WorkflowApprovalController extends Controller
         $dataTable = app(WorkflowApprovalDataTable::class);
         $approvalQuery = $isSuperAdmin
             ? $dataTable->approvalsForCurrentYear()
-            : $dataTable->approvalsForCurrentPosition($this->currentValidatorAssignment());
+            : $dataTable->approvalsForCurrentPosition($this->currentValidatorAssignments());
 
         if (! empty($filters['approval_status'])) {
             $approvalQuery->where('status', $filters['approval_status']);
@@ -320,10 +330,15 @@ class WorkflowApprovalController extends Controller
             $approvalQuery->whereIn('status', ['pending', 'approved']);
         }
 
-        if ($module !== 'all' || ! empty($filters['sumber_dana_id']) || ! empty($filters['sub_kategori_rkbu_id'])) {
+        if ($module !== 'all' || ! empty($filters['sumber_dana_id']) || ! empty($filters['sub_kegiatan_id']) || ! empty($filters['sub_kategori_rkbu_id'])) {
             $approvalQuery->whereHas('workflowInstance.rkbu', function ($rkbuQuery) use ($module, $filters, $dataTable) {
                 if (! empty($filters['sumber_dana_id'])) {
-                    $rkbuQuery->where('sumber_dana_id', $filters['sumber_dana_id']);
+                    $filters['sumber_dana_id'] === '__none'
+                        ? $rkbuQuery->whereNull('sumber_dana_id')
+                        : $rkbuQuery->where('sumber_dana_id', $filters['sumber_dana_id']);
+                }
+                if (! empty($filters['sub_kegiatan_id'])) {
+                    $rkbuQuery->where('sub_kegiatan_id', $filters['sub_kegiatan_id']);
                 }
                 if (! empty($filters['sub_kategori_rkbu_id'])) {
                     $rkbuQuery->where('sub_kategori_rkbu_id', $filters['sub_kategori_rkbu_id']);
@@ -505,7 +520,7 @@ class WorkflowApprovalController extends Controller
         $isAdministrator = $paguService->isAdministrator();
         $approvalQuery = $isAdministrator
             ? app(WorkflowApprovalDataTable::class)->approvalsForCurrentYear()
-            : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($this->currentValidatorAssignment());
+            : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($this->currentValidatorAssignments());
         $approval = $approvalQuery->with('workflowInstance.rkbu')->findOrFail($id);
         $rkbu = $approval->workflowInstance?->rkbu;
         abort_unless($rkbu, 404, 'Data RKBU tidak ditemukan.');
@@ -677,6 +692,121 @@ class WorkflowApprovalController extends Controller
         ]);
     }
 
+    public function previewBulkTagging(Request $request)
+    {
+        abort_unless(auth()->user()->hasRole('Super Admin'), 403);
+        $filters = $this->validatedBulkTaggingInput($request);
+        $this->assertBulkTaggingSubActivity($filters);
+
+        return response()->json([
+            'count' => $this->bulkTaggingRkbuIds($filters)->count(),
+        ]);
+    }
+
+    public function bulkTagging(Request $request)
+    {
+        abort_unless(auth()->user()->hasRole('Super Admin'), 403);
+        $filters = $this->validatedBulkTaggingInput($request);
+        $this->assertBulkTaggingSubActivity($filters);
+        $ids = $this->bulkTaggingRkbuIds($filters);
+
+        if ($ids->isEmpty()) {
+            return response()->json(['message' => 'Tidak ada RKBU yang cocok dengan filter saat ini.', 'updated' => 0], 422);
+        }
+
+        $updated = DB::transaction(fn () => Rkbu::query()
+            ->where('tahun_anggaran_id', session('tahun_anggaran_id'))
+            ->whereIn('id', $ids)
+            ->update([
+                'sumber_dana_id' => $filters['target_sumber_dana_id'],
+                'sub_kegiatan_id' => $filters['target_sub_kegiatan_id'],
+                'updated_at' => now(),
+            ]));
+
+        return response()->json([
+            'message' => $updated . ' RKBU berhasil diperbarui.',
+            'updated' => $updated,
+        ]);
+    }
+
+    private function validatedBulkTaggingInput(Request $request): array
+    {
+        $validated = $request->validate([
+            'module' => ['required', Rule::in(['all', 'barjas', 'pegawai', 'persediaan', 'modal', 'modal-kantor', 'modal-alkes'])],
+            'filter_sumber_dana_id' => ['nullable', 'string', 'max:36', $this->sourceFilterRule()],
+            'filter_sub_kegiatan_id' => ['nullable', 'uuid', Rule::exists('sub_kegiatans', 'id_sub_kegiatan')],
+            'sub_kategori_rkbu_id' => ['nullable', 'uuid', Rule::exists('sub_kategori_rkbus', 'id_sub_kategori_rkbu')],
+            'approval_status' => ['nullable', Rule::in(['pending', 'approved', 'rejected', 'revision'])],
+            'target_sumber_dana_id' => ['required', 'uuid', Rule::exists('sumber_danas', 'id_sumber_dana')],
+            'target_sub_kegiatan_id' => ['required', 'uuid', Rule::exists('sub_kegiatans', 'id_sub_kegiatan')],
+        ]);
+
+        return array_merge([
+            'module' => 'all',
+            'filter_sumber_dana_id' => null,
+            'filter_sub_kegiatan_id' => null,
+            'sub_kategori_rkbu_id' => null,
+            'approval_status' => null,
+        ], $validated);
+    }
+
+    private function sourceFilterRule(): \Closure
+    {
+        return function ($attribute, $value, $fail) {
+            if ($value !== '__none' && ! DB::table('sumber_danas')->where('id_sumber_dana', $value)->exists()) {
+                $fail('Sumber dana filter tidak valid.');
+            }
+        };
+    }
+
+    private function assertBulkTaggingSubActivity(array $filters): void
+    {
+        $matches = SubKegiatan::query()
+            ->where('id_sub_kegiatan', $filters['target_sub_kegiatan_id'])
+            ->where('id_sumber_dana', $filters['target_sumber_dana_id'])
+            ->exists();
+        abort_unless($matches, 422, 'Sub kegiatan harus menggunakan sumber dana yang dipilih.');
+    }
+
+    private function bulkTaggingRkbuIds(array $filters): Collection
+    {
+        $dataTable = app(WorkflowApprovalDataTable::class);
+        $query = $dataTable->approvalsForCurrentYear();
+        if (! empty($filters['approval_status'])) {
+            $query->where('status', $filters['approval_status']);
+        }
+        if (
+            $filters['module'] !== 'all'
+            || ! empty($filters['filter_sumber_dana_id'])
+            || ! empty($filters['filter_sub_kegiatan_id'])
+            || ! empty($filters['sub_kategori_rkbu_id'])
+        ) {
+            $query->whereHas('workflowInstance.rkbu', function ($rkbuQuery) use ($filters, $dataTable) {
+                if (! empty($filters['filter_sumber_dana_id'])) {
+                    $filters['filter_sumber_dana_id'] === '__none'
+                        ? $rkbuQuery->whereNull('sumber_dana_id')
+                        : $rkbuQuery->where('sumber_dana_id', $filters['filter_sumber_dana_id']);
+                }
+                if (! empty($filters['filter_sub_kegiatan_id'])) {
+                    $rkbuQuery->where('sub_kegiatan_id', $filters['filter_sub_kegiatan_id']);
+                }
+                if (! empty($filters['sub_kategori_rkbu_id'])) {
+                    $rkbuQuery->where('sub_kategori_rkbu_id', $filters['sub_kategori_rkbu_id']);
+                }
+                if ($filters['module'] !== 'all') {
+                    $dataTable->filterByModule($rkbuQuery, $filters['module']);
+                }
+            });
+        }
+
+        return $query->with('workflowInstance')
+            ->get()
+            ->map(fn ($approval) => $approval->workflowInstance?->dokumen_id)
+            ->filter()
+            ->unique()
+            ->values();
+    }
+
     private function approvalRow(string $module, $detail): array
     {
         $fields = match ($module) {
@@ -781,15 +911,22 @@ class WorkflowApprovalController extends Controller
             ->all();
     }
 
-    private function currentValidatorAssignment(): PositionAssignment
+    private function currentValidatorAssignments(): Collection
     {
         $this->abortAdministrator();
 
-        $assignment = app(PositionAssignmentService::class)->getCurrentAssignment();
+        $assignments = app(PositionAssignmentService::class)->getCurrentAssignments();
 
-        abort_unless($assignment, 403, 'User tidak memiliki assignment jabatan yang aktif.');
+        abort_unless($assignments->isNotEmpty(), 403, 'User tidak memiliki assignment jabatan yang aktif.');
 
-        return $assignment;
+        return $assignments;
+    }
+
+    private function assignmentForApproval(Approval $approval, Collection $assignments): ?PositionAssignment
+    {
+        return $assignments->firstWhere('id', $approval->position_assignment_id)
+            ?? $assignments->firstWhere('position_id', $approval->position_id)
+            ?? $assignments->firstWhere('position_id', $approval->workflowInstance?->current_position_id);
     }
 
     private function logApprovalAction(
@@ -817,12 +954,13 @@ class WorkflowApprovalController extends Controller
         DB::beginTransaction();
         try {
             $isSuperAdmin = $this->isSuperAdmin();
+            $assignments = $isSuperAdmin ? collect() : $this->currentValidatorAssignments();
             $assignment = $isSuperAdmin
                 ? app(PositionAssignmentService::class)->getCurrentAssignment()
-                : $this->currentValidatorAssignment();
+                : null;
             $approvalQuery = $isSuperAdmin
                 ? app(WorkflowApprovalDataTable::class)->approvalsForCurrentYear()
-                : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($assignment);
+                : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($assignments);
             $approval = $approvalQuery->with([
                 'workflowInstance.rkbu',
                 'workflowStep',
@@ -831,6 +969,10 @@ class WorkflowApprovalController extends Controller
                 'workflowInstance.currentPosition',
             ])
                 ->findOrFail($id);
+            if (! $isSuperAdmin) {
+                $assignment = $this->assignmentForApproval($approval, $assignments);
+                abort_unless($assignment, 403, 'Approval tidak terkait dengan assignment aktif Anda.');
+            }
             if ($approval->status != 'pending') {
                 throw new Exception('Approval sudah diproses.');
             }
@@ -975,15 +1117,20 @@ class WorkflowApprovalController extends Controller
 
         try {
             $isSuperAdmin = $this->isSuperAdmin();
+            $assignments = $isSuperAdmin ? collect() : $this->currentValidatorAssignments();
             $assignment = $isSuperAdmin
                 ? app(PositionAssignmentService::class)->getCurrentAssignment()
-                : $this->currentValidatorAssignment();
+                : null;
             $approvalQuery = $isSuperAdmin
                 ? app(WorkflowApprovalDataTable::class)->approvalsForCurrentYear()
-                : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($assignment);
+                : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($assignments);
             $approval = $approvalQuery->with('workflowInstance')
                 ->where('status', 'pending')
                 ->findOrFail($id);
+            if (! $isSuperAdmin) {
+                $assignment = $this->assignmentForApproval($approval, $assignments);
+                abort_unless($assignment, 403, 'Approval tidak terkait dengan assignment aktif Anda.');
+            }
 
             $approval->update([
                 'status' => 'rejected',
@@ -1029,17 +1176,23 @@ class WorkflowApprovalController extends Controller
             ]);
 
             $isSuperAdmin = $this->isSuperAdmin();
+            $assignments = $isSuperAdmin ? collect() : $this->currentValidatorAssignments();
             $assignment = $isSuperAdmin
                 ? app(PositionAssignmentService::class)->getCurrentAssignment()
-                : $this->currentValidatorAssignment();
+                : null;
             $approvalQuery = $isSuperAdmin
                 ? app(WorkflowApprovalDataTable::class)->approvalsForCurrentYear()
-                : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($assignment);
+                : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($assignments);
             $approval = $approvalQuery->with([
                 'workflowInstance.rkbu',
+                'workflowInstance.currentPosition',
             ])
                 ->where('status', 'pending')
                 ->findOrFail($id);
+            if (! $isSuperAdmin) {
+                $assignment = $this->assignmentForApproval($approval, $assignments);
+                abort_unless($assignment, 403, 'Approval tidak terkait dengan assignment aktif Anda.');
+            }
 
             $approval->update([
                 'status' => 'revision',
@@ -1105,13 +1258,11 @@ class WorkflowApprovalController extends Controller
 
         $results = [];
         $isSuperAdmin = $this->isSuperAdmin();
-        $assignment = $isSuperAdmin
-            ? app(PositionAssignmentService::class)->getCurrentAssignment()
-            : $this->currentValidatorAssignment();
+        $assignments = $isSuperAdmin ? collect() : $this->currentValidatorAssignments();
         foreach ($validated['ids'] as $id) {
             $approval = ($isSuperAdmin
                 ? app(WorkflowApprovalDataTable::class)->approvalsForCurrentYear()
-                : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($assignment))->where('id', $id)
+                : app(WorkflowApprovalDataTable::class)->approvalsForCurrentPosition($assignments))->where('id', $id)
                 ->where('status', 'pending')
                 ->first();
 

@@ -8,6 +8,7 @@ use App\Models\MasterBackend\UserProfil\User;
 use App\Models\WorkFlow\WorkflowStep;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class PositionAssignmentService
 {
@@ -45,6 +46,16 @@ class PositionAssignmentService
         return $this->activeAssignments()
             ->where('user_id', auth()->id())
             ->first();
+    }
+
+    /**
+     * Semua assignment aktif user saat ini.
+     */
+    public function getCurrentAssignments(): Collection
+    {
+        return $this->activeAssignments()
+            ->where('user_id', auth()->id())
+            ->get();
     }
 
     public function validateCurrentAssignment(): PositionAssignment

@@ -166,7 +166,8 @@
                             <tr class="usulan-item-row"
                                 data-ppn="{{ $item->ppn }}"
                                 data-anggaran-tersedia="{{ $item->anggaran_tersedia }}"
-                                data-volume-tersedia="{{ $item->volume_tersedia }}">
+                                data-volume-tersedia="{{ $item->volume_tersedia }}"
+                                data-harga-perencanaan="{{ $item->harga_perencanaan }}">
                                 <td>{{ $loop->iteration }}</td>
                                 <td>
                                     {{ $item->nama_barang }}
@@ -240,7 +241,7 @@
                                              data-value="{{ $item->total_anggaran }}">{{ number_format((float) $item->total_anggaran, 2, ',', '.') }}</span>
                                     @if($canEditItemValues)
                                         <div class="text-danger fs-7 usulan-item-warning d-none">
-                                            Sisa anggaran atau volume RKBU tidak cukup.
+                                            Total usulan melebihi sisa anggaran atau volume RKBU.
                                         </div>
                                     @endif
                                 </td>
@@ -314,6 +315,7 @@
                     </table>
                 </div>
             </div>
+            <div id="usulan-zero-budget-notice" class="alert alert-warning mt-3 d-none" role="status"></div>
         </div>
 
         @if(
@@ -374,8 +376,9 @@
                         </p>
                         @php
                             $adaItemDenganSisaCukup = $availableItems->contains(fn ($item) =>
-                                round((float) $item->harga_satuan * (float) $item->volume, 2) <= (float) $item->sisa_anggaran_rkbu
-                                && (float) $item->volume <= (float) $item->sisa_vol_rkbu
+                                (float) $item->sisa_anggaran_rkbu > 0
+                                && (float) $item->sisa_vol_rkbu > 0
+                                && (float) $item->volume > 0
                             );
                         @endphp
                         @if($availableItems->isNotEmpty() && ! $adaItemDenganSisaCukup)
@@ -409,8 +412,9 @@
                                             <td>
                                                 @php
                                                     $estimasiAnggaranItem = round((float) $item->harga_satuan * (float) $item->volume, 2);
-                                                    $itemTidakCukup = $estimasiAnggaranItem > (float) $item->sisa_anggaran_rkbu
-                                                        || (float) $item->volume > (float) $item->sisa_vol_rkbu;
+                                                    $itemTidakCukup = (float) $item->sisa_anggaran_rkbu <= 0
+                                                        || (float) $item->sisa_vol_rkbu <= 0
+                                                        || (float) $item->volume <= 0;
                                                 @endphp
                                                 <input type="checkbox"
                                                        class="form-check-input"
@@ -685,12 +689,12 @@
             function updateUsulanTotals() {
                 let totalUsulan = 0;
                 let totalPpn = 0;
-                let itemTidakCukup = false;
-
+                const itemsWithZeroBudget = [];
                 document.querySelectorAll('.usulan-item-row').forEach(function (row) {
                     const inputs = row.querySelectorAll('.usulan-item-input');
                     let subtotal;
                     let ppn;
+                    let totalDenganPpn;
                     let volume = Number(row.dataset.volumeTersedia) || 0;
 
                     if (inputs.length) {
@@ -699,16 +703,20 @@
                         const persenPpn = Number(inputs[2].value) || 0;
                         subtotal = Math.round(hargaSatuan * volume * 100) / 100;
                         ppn = Math.round(subtotal * persenPpn) / 100;
+                        totalDenganPpn = subtotal + ppn;
                     } else {
                         subtotal = Number(row.querySelector('.usulan-item-total').dataset.value) || 0;
                         ppn = subtotal * (Number(row.dataset.ppn) || 0) / 100;
+                        totalDenganPpn = subtotal + ppn;
                     }
 
                     const budgetAvailable = Number(row.dataset.anggaranTersedia) || 0;
                     const volumeAvailable = Number(row.dataset.volumeTersedia) || 0;
-                    const insufficient = subtotal > budgetAvailable || volume > volumeAvailable;
+                    const rawRemainingBudget = budgetAvailable - totalDenganPpn;
+                    const remainingBudget = Math.sign(rawRemainingBudget)
+                        * Math.round(Math.abs(rawRemainingBudget) * 10) / 10;
+                    const insufficient = remainingBudget < 0 || volume > volumeAvailable;
                     const warning = row.querySelector('.usulan-item-warning');
-                    const remainingBudget = Math.round((budgetAvailable - subtotal) * 100) / 100;
                     const remainingVolume = Math.round((volumeAvailable - volume) * 1000) / 1000;
 
                     row.querySelector('.usulan-item-total').textContent = numberFormat.format(subtotal);
@@ -720,16 +728,13 @@
                     if (warning) {
                         warning.classList.toggle('d-none', !insufficient);
                     }
-                    itemTidakCukup = itemTidakCukup || insufficient;
+                    if (!insufficient && remainingBudget === 0) {
+                        itemsWithZeroBudget.push(row.querySelector('td:nth-child(2)')?.innerText.trim() || 'Item RKBU');
+                    }
                     totalUsulan += subtotal;
                     ppn = Math.round(ppn * 100) / 100;
                     totalPpn += ppn;
                 });
-
-                const submitButton = document.getElementById('usulan-items-update-submit');
-                if (submitButton) {
-                    submitButton.disabled = itemTidakCukup;
-                }
 
                 totalUsulan = Math.round(totalUsulan * 100) / 100;
                 totalPpn = Math.round(totalPpn * 100) / 100;
@@ -737,10 +742,29 @@
                 document.getElementById('usulan-ppn').textContent = numberFormat.format(totalPpn);
                 document.getElementById('usulan-grand-total').textContent =
                     numberFormat.format(totalUsulan + totalPpn);
+
+                const zeroBudgetNotice = document.getElementById('usulan-zero-budget-notice');
+                if (zeroBudgetNotice) {
+                    zeroBudgetNotice.classList.toggle('d-none', itemsWithZeroBudget.length === 0);
+                    zeroBudgetNotice.textContent = itemsWithZeroBudget.length
+                        ? `Lakukan pergeseran Penambahan Anggaran agar Usulan Belanja bisa dilakukan kembali untuk item yang sisa anggarannya 0: ${itemsWithZeroBudget.join(', ')}.`
+                        : '';
+                }
             }
 
             document.querySelectorAll('.usulan-item-input').forEach(function (input) {
                 input.addEventListener('input', updateUsulanTotals);
+            });
+
+            document.getElementById('usulan-items-update-form')?.addEventListener('submit', function (event) {
+                const hargaDiBawahRencana = Array.from(document.querySelectorAll('.usulan-item-row')).some(function (row) {
+                    const hargaInput = row.querySelector('input[name$="[harga_satuan]"]');
+                    return hargaInput && Number(hargaInput.value) < Number(row.dataset.hargaPerencanaan);
+                });
+
+                if (hargaDiBawahRencana && !window.confirm('Harga satuan yang diusulkan lebih rendah dari harga perencanaan. Mohon periksa kembali sebelum mengajukan validasi. Lanjutkan?')) {
+                    event.preventDefault();
+                }
             });
 
             updateUsulanTotals();

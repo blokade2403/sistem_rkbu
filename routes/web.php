@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Dashboard\DashboardController;
+use App\Http\Controllers\Dashboard\MonitoringAnggaranController;
+use App\Http\Controllers\Dashboard\LaporanRealisasiBulananController;
 use App\Http\Controllers\MasterBackend\SettingInput\AnggaranController;
 use App\Http\Controllers\MasterBackend\SettingInput\JudulHeaderController;
 use App\Http\Controllers\MasterBackend\SettingInput\KomponenController;
@@ -68,6 +70,9 @@ Route::controller(AuthController::class)->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/monitoring-anggaran/blud', [MonitoringAnggaranController::class, 'blud'])->name('monitoring-anggaran.blud');
+    Route::get('/monitoring-anggaran/keseluruhan', [MonitoringAnggaranController::class, 'keseluruhan'])->name('monitoring-anggaran.keseluruhan');
+    Route::get('/monitoring-anggaran/laporan-bulanan', LaporanRealisasiBulananController::class)->name('monitoring-anggaran.laporan-bulanan');
     Route::resource('perusahaans', PerusahaanController::class);
     Route::prefix('setting-user')->group(function () {
         Route::resource('fases', FaseController::class);
@@ -134,6 +139,14 @@ Route::middleware('auth')->group(function () {
                 '/approval/bulk-action',
                 [WorkflowApprovalController::class, 'bulkAction']
             )->name('bulk-action');
+            Route::post(
+                '/approval/bulk-tagging/preview',
+                [WorkflowApprovalController::class, 'previewBulkTagging']
+            )->name('bulk-tagging.preview');
+            Route::post(
+                '/approval/bulk-tagging',
+                [WorkflowApprovalController::class, 'bulkTagging']
+            )->name('bulk-tagging');
 
             Route::get(
                 '/approval/print-all',

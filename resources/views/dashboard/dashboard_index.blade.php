@@ -34,12 +34,12 @@
                     <div class="card-body p-6">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <div class="text-muted fw-semibold mb-2">Total Anggaran RKBU</div>
-                                <div class="fs-2 fw-bold text-gray-900">{{ $rupiah($rkbuBudget) }}</div>
+                                <div class="text-muted fw-semibold mb-2">Total Anggaran Rekening Belanja</div>
+                                <div class="fs-2 fw-bold text-gray-900">{{ $rupiah($totalAnggaranRekening) }}</div>
                             </div>
                             <span class="dashboard-icon bg-light-primary text-primary"><i class="fas fa-wallet"></i></span>
                         </div>
-                        <div class="text-muted fs-7 mt-3">{{ number_format($totalRkbu) }} RKBU · selain yang ditolak</div>
+                        <div class="text-muted fs-7 mt-3">Total pagu seluruh rekening belanja</div>
                     </div>
                 </div>
             </div>
@@ -83,6 +83,58 @@
                         </div>
                         <div class="text-muted fs-7 mt-3">{{ $realisasiProgress }}% dari nilai usulan yang disetujui</div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <h2 class="fs-4 fw-bold text-gray-900 mb-1">Perbandingan Pagu dan Belanja BLUD</h2>
+            <div class="text-muted">Pagu rekening dibandingkan dengan total RKBU BLUD berstatus disetujui</div>
+        </div>
+        <div class="row g-5 mb-6">
+            @php
+                $bludCards = array_merge([['label' => 'Total Belanja BLUD', 'pagu' => $bludComparisonTotal['pagu'], 'belanja' => $bludComparisonTotal['belanja'], 'selisih' => $bludComparisonTotal['selisih']]], $bludComparisonCategories->all());
+            @endphp
+            @foreach ($bludCards as $bludCard)
+                <div class="col-sm-6 col-xxl-3">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body p-6">
+                            <div class="text-muted fw-semibold mb-2">{{ $bludCard['label'] }}</div>
+                            <div class="fs-2 fw-bold text-gray-900">Belanja: {{ $rupiah($bludCard['belanja']) }}</div>
+                            <div class="text-muted fs-7 mt-3">Pagu: {{ $rupiah($bludCard['pagu']) }}</div>
+                            <div class="fw-semibold fs-7 mt-1 {{ $bludCard['selisih'] < 0 ? 'text-danger' : 'text-success' }}">
+                                {{ $bludCard['selisih'] < 0 ? 'Melebihi pagu: ' . $rupiah(abs($bludCard['selisih'])) : 'Sisa pagu: ' . $rupiah($bludCard['selisih']) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        <div class="card border-0 shadow-sm mb-6">
+            <div class="card-header border-0 pt-6">
+                <div class="card-title d-flex flex-column"><h3 class="fw-bold text-gray-900 mb-1">Selisih Pagu per Rekening BLUD</h3><span class="text-muted fs-7">Belanja dihitung dari RKBU BLUD yang sudah disetujui</span></div>
+            </div>
+            <div class="card-body pt-2">
+                <div class="table-responsive">
+                    <table class="table table-row-bordered table-row-gray-300 align-middle gy-3">
+                        <thead><tr class="text-muted fw-bold fs-7 text-uppercase"><th>No.</th><th>Rekening Belanja</th><th class="text-end">Pagu BLUD</th><th class="text-end">Belanja Disetujui</th><th class="text-end">Selisih</th><th>Status</th></tr></thead>
+                        <tbody>
+                            @forelse ($bludAccountComparison as $index => $account)
+                                <tr>
+                                    <td class="text-muted">{{ $index + 1 }}</td>
+                                    <td><div class="fw-semibold text-gray-900">{{ $account['name'] }}</div><div class="text-muted fs-7">Kode {{ $account['code'] }}</div></td>
+                                    <td class="text-end">{{ $rupiah($account['pagu']) }}</td>
+                                    <td class="text-end">{{ $rupiah($account['belanja']) }}</td>
+                                    <td class="text-end fw-semibold {{ $account['selisih'] < 0 ? 'text-danger' : 'text-success' }}">{{ $rupiah(abs($account['selisih'])) }}</td>
+                                    <td><span class="badge badge-light-{{ $account['selisih'] < 0 ? 'danger' : 'success' }}">{{ $account['selisih'] < 0 ? 'Melebihi pagu' : 'Sisa pagu' }}</span></td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="6" class="text-center text-muted py-8">Belum ada pagu BLUD pada tahun anggaran ini.</td></tr>
+                            @endforelse
+                        </tbody>
+                        <tfoot><tr class="fw-bold bg-light-primary"><th colspan="2">TOTAL BLUD</th><th class="text-end">{{ $rupiah($bludComparisonTotal['pagu']) }}</th><th class="text-end">{{ $rupiah($bludComparisonTotal['belanja']) }}</th><th class="text-end">{{ $rupiah(abs($bludComparisonTotal['selisih'])) }}</th><th>{{ $bludComparisonTotal['selisih'] < 0 ? 'Melebihi pagu' : 'Sisa pagu' }}</th></tr></tfoot>
+                    </table>
                 </div>
             </div>
         </div>
@@ -174,6 +226,42 @@
                                 <div class="progress-bar bg-warning rounded" role="progressbar" style="width: {{ $realisasiProgress }}%" aria-valuenow="{{ $realisasiProgress }}" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row g-5 g-xl-8 mt-1">
+            <div class="col-xl-8">
+                <div class="card h-100">
+                    <div class="card-header border-0 pt-6">
+                        <div class="card-title d-flex flex-column">
+                            <h3 class="fw-bold text-gray-900 mb-1">Daftar Inputan Unit</h3>
+                            <span class="text-muted fs-7">Perbandingan total usulan dengan hasil validasi terakhir</span>
+                        </div>
+                    </div>
+                    <div class="card-body pt-2">
+                        <div class="table-responsive">
+                            <table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
+                                <thead><tr class="fw-bold text-muted"><th>No.</th><th>Nama Unit</th><th class="text-end">Total Usulan</th><th class="text-end">Perlu Validasi</th><th class="text-end">Validasi Terakhir</th><th class="text-end">Ditolak</th></tr></thead>
+                                <tbody>
+                                    @forelse ($unitInputan as $index => $unit)
+                                        <tr><td>{{ $index + 1 }}</td><td class="fw-semibold text-gray-800">{{ $unit->nama_unit }}</td><td class="text-end">{{ $rupiah($unit->total_usulan) }}</td><td class="text-end">{{ $rupiah($unit->perlu_validasi) }}</td><td class="text-end text-success fw-semibold">{{ $rupiah($unit->tervalidasi_akhir) }}</td><td class="text-end text-danger">{{ $rupiah($unit->ditolak) }}</td></tr>
+                                    @empty
+                                        <tr><td colspan="6" class="text-center text-muted py-8">Belum ada inputan unit pada tahun anggaran ini.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4">
+                <div class="card h-100">
+                    <div class="card-header border-0 pt-6"><div class="card-title d-flex flex-column"><h3 class="fw-bold text-gray-900 mb-1">Grafik Anggaran BLUD</h3><span class="text-muted fs-7">Berdasarkan jenis belanja tervalidasi</span></div></div>
+                    <div class="card-body pt-2">
+                        @foreach ($bludCategoryChart as $category)
+                            <div class="mb-6"><div class="d-flex justify-content-between align-items-center gap-3 mb-2"><span class="fw-semibold text-gray-800">{{ $category['label'] }}</span><span class="text-muted text-nowrap">{{ $rupiah($category['total']) }}</span></div><div class="progress h-8px bg-light-primary"><div class="progress-bar bg-primary rounded" role="progressbar" style="width: {{ min(100, $category['persentase']) }}%" aria-valuenow="{{ $category['persentase'] }}" aria-valuemin="0" aria-valuemax="100"></div></div><div class="text-muted fs-8 mt-1">{{ $category['persentase'] }}% dari total BLUD</div></div>
+                        @endforeach
                     </div>
                 </div>
             </div>

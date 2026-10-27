@@ -4,18 +4,21 @@ namespace App\DataTables\Workflow;
 
 use App\Models\MasterBackend\SettingUser\PositionAssignment;
 use App\Models\Rkbu\Rkbu;
+use App\Models\Rkbu\RkbuDetailPersediaan;
 use App\Models\WorkFlow\Approval;
+use App\Support\Rkbu\PersediaanListPresenter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
 
 class WorkflowApprovalDataTable
 {
-    public function render(Request $request, bool $isSuperAdmin, ?PositionAssignment $assignment)
+    public function render(Request $request, bool $isSuperAdmin, ?Collection $assignments)
     {
-        if (! $assignment && ! $isSuperAdmin) {
+        if ((! $assignments || $assignments->isEmpty()) && ! $isSuperAdmin) {
             return response()->json([
                 'draw' => (int) $request->input('draw', 0),
                 'recordsTotal' => 0,
@@ -28,14 +31,20 @@ class WorkflowApprovalDataTable
         $filters = $request->validate([
             'sumber_dana_id' => [
                 'nullable',
-                'uuid',
-                Rule::exists('sumber_danas', 'id_sumber_dana'),
+                'string',
+                'max:36',
+                function ($attribute, $value, $fail) {
+                    if ($value !== '__none' && ! DB::table('sumber_danas')->where('id_sumber_dana', $value)->exists()) {
+                        $fail('Sumber dana filter tidak valid.');
+                    }
+                },
             ],
             'sub_kategori_rkbu_id' => [
                 'nullable',
                 'uuid',
                 Rule::exists('sub_kategori_rkbus', 'id_sub_kategori_rkbu'),
             ],
+            'sub_kegiatan_id' => ['nullable', 'uuid', Rule::exists('sub_kegiatans', 'id_sub_kegiatan')],
             'approval_status' => [
                 'nullable',
                 Rule::in(['pending', 'approved', 'rejected', 'revision']),
@@ -44,7 +53,7 @@ class WorkflowApprovalDataTable
 
         $data = ($isSuperAdmin
             ? $this->approvalsForCurrentYear()
-            : $this->approvalsForCurrentPosition($assignment))->with([
+            : $this->approvalsForCurrentPosition($assignments))->with([
             'workflowInstance.rkbu.creator',
             'workflowInstance.rkbu.unit',
             'workflowInstance.rkbu.sumberDana',
@@ -55,6 +64,8 @@ class WorkflowApprovalDataTable
             'workflowInstance.rkbu.detailModalAlkes',
             'workflowInstance.rkbu.subKategoriRkbu.kategori.jenis_kategori_rkbu',
             'workflowInstance.rkbu.subKategoriRkbu',
+            'workflowInstance.rkbu.tahunAnggaran',
+            'workflowInstance.rkbu.rekeningBelanja',
             'workflowInstance.approvals.position',
             'workflowInstance.approvals.validatorUser',
             'workflowInstance.approvals.workflowStep.validatorRole',
@@ -71,14 +82,19 @@ class WorkflowApprovalDataTable
 
         $module = $request->query('module', 'all');
         abort_unless(in_array($module, ['all', 'barjas', 'pegawai', 'persediaan', 'modal', 'modal-kantor', 'modal-alkes'], true), 404);
-        if ($module !== 'all' || ! empty($filters['sumber_dana_id']) || ! empty($filters['sub_kategori_rkbu_id'])) {
+        if ($module !== 'all' || ! empty($filters['sumber_dana_id']) || ! empty($filters['sub_kategori_rkbu_id']) || ! empty($filters['sub_kegiatan_id'])) {
             $data->whereHas('workflowInstance.rkbu', function ($rkbuQuery) use ($module, $filters) {
                 if (! empty($filters['sumber_dana_id'])) {
-                    $rkbuQuery->where('sumber_dana_id', $filters['sumber_dana_id']);
+                    $filters['sumber_dana_id'] === '__none'
+                        ? $rkbuQuery->whereNull('sumber_dana_id')
+                        : $rkbuQuery->where('sumber_dana_id', $filters['sumber_dana_id']);
                 }
 
                 if (! empty($filters['sub_kategori_rkbu_id'])) {
                     $rkbuQuery->where('sub_kategori_rkbu_id', $filters['sub_kategori_rkbu_id']);
+                }
+                if (! empty($filters['sub_kegiatan_id'])) {
+                    $rkbuQuery->where('sub_kegiatan_id', $filters['sub_kegiatan_id']);
                 }
 
                 if ($module !== 'all') {
@@ -167,6 +183,9 @@ class WorkflowApprovalDataTable
                         <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
                             <span class="badge badge-light-primary">Nomor RKBU: ' . e($rkbu?->nomor_rkbu ?? '-') . '</span>
                             <span class="badge badge-light-info">' . e($moduleLabel) . '</span>
+                            ' . ($detail instanceof RkbuDetailPersediaan && $detail->rating
+                                ? '<span class="badge badge-light-success">Prioritas ' . e($detail->rating) . '</span>'
+                                : '') . '
                             <span class="badge badge-light-secondary">Subkategori: ' . e($subcategoryLabel) . '</span>
                             <span class="badge badge-light-warning">Sumber Dana: ' . e($rkbu?->sumberDana?->nama_sumber_dana ?? '-') . '</span>
                         </div>
@@ -225,6 +244,18 @@ class WorkflowApprovalDataTable
                     </div>
                 ';
                     })
+                    ->addColumn('persediaan_info', function ($row) use ($module) {
+                        if ($module !== 'persediaan') {
+                            return '';
+                        }
+
+                        $rkbu = $row->workflowInstance?->rkbu;
+                        $detail = $this->detailsForRkbu($rkbu)->first();
+
+                        return $detail instanceof RkbuDetailPersediaan
+                            ? PersediaanListPresenter::renderInfo($detail, $rkbu)
+                            : '';
+                    })
                     ->addColumn('satuan', function ($row) {
                         $details = $this->detailsForRkbu($row->workflowInstance?->rkbu);
                         $detail = $details->first();
@@ -236,7 +267,8 @@ class WorkflowApprovalDataTable
 
                         if ($detail && $detail->getTable() === 'rkbu_detail_persediaans') {
                             return '<div class="text-end text-dark fs-6">' .
-                                e($detail->jumlah_volume ?? '-') . ' ' . e($detail->satuan_1 ?? '') . '</div>';
+                                e($detail->jumlah_volume ?? '-') . ' ' . e($detail->satuan_1 ?? '') .
+                                ' / ' . e($detail->sisa_vol_rkbu ?? '-') . '</div>';
                         }
 
                         return '<div class="text-end text-dark fs-6">' .
@@ -251,8 +283,13 @@ class WorkflowApprovalDataTable
                             $harga = (float) ($detail?->total_anggaran ?? 0) / (float) $detail->jumlah_volume;
                         }
 
-                        return '<div class="text-end text-dark fw-bold fs-6">Rp.' .
+                        $priceHtml = '<div class="text-end text-dark fw-bold fs-6">Rp. ' .
                             number_format((float) $harga, 0, ',', '.') . '</div>';
+                        if ($detail instanceof RkbuDetailPersediaan) {
+                            $priceHtml .= '<div class="text-end text-muted fs-7">PPN: ' . e($detail->ppn ?? 0) . '%</div>';
+                        }
+
+                        return $priceHtml;
                     })
                     ->addColumn('total', function ($row) {
                         $total = $this->detailsForRkbu($row->workflowInstance?->rkbu)->sum('total_anggaran');
@@ -290,7 +327,7 @@ class WorkflowApprovalDataTable
 
                         return '<div class="d-flex justify-content-end flex-shrink-0">' . $actions . '</div>';
                     })
-            ->rawColumns(['checkbox', 'nama_komponen', 'satuan', 'harga_barang', 'total', 'action'])
+            ->rawColumns(['checkbox', 'nama_komponen', 'persediaan_info', 'satuan', 'harga_barang', 'total', 'action'])
             ->make(true);
     }
 
@@ -396,16 +433,20 @@ class WorkflowApprovalDataTable
         );
     }
 
-    public function approvalsForCurrentPosition(PositionAssignment $assignment): Builder
+    public function approvalsForCurrentPosition(PositionAssignment|Collection $assignments): Builder
     {
-        return $this->approvalsForCurrentYearHistory()->where(function (Builder $query) use ($assignment) {
-            $query->where('position_id', $assignment->position_id)
-                ->orWhere(function (Builder $legacyQuery) use ($assignment) {
+        $positionIds = $assignments instanceof PositionAssignment
+            ? [$assignments->position_id]
+            : $assignments->pluck('position_id')->filter()->unique()->values()->all();
+
+        return $this->approvalsForCurrentYearHistory()->where(function (Builder $query) use ($positionIds) {
+            $query->whereIn('position_id', $positionIds)
+                ->orWhere(function (Builder $legacyQuery) use ($positionIds) {
                     $legacyQuery->whereNull('position_id')
                         ->whereHas(
                             'workflowInstance',
                             fn(Builder $instanceQuery) => $instanceQuery
-                                ->where('current_position_id', $assignment->position_id)
+                                ->whereIn('current_position_id', $positionIds)
                         );
                 });
         });

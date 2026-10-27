@@ -24,8 +24,18 @@
                             </select>
                             <select id="approval-sumber-dana-filter" class="form-select form-select-sm w-auto" data-control="select2">
                                 <option value="">Semua Sumber Dana</option>
+                                <option value="__none">Sumber Dana Belum Ditentukan</option>
                                 @foreach ($sumberDanas as $sumberDana)
                                     <option value="{{ $sumberDana->id_sumber_dana }}">{{ $sumberDana->nama_sumber_dana }}</option>
+                                @endforeach
+                            </select>
+                            <select id="approval-sub-kegiatan-filter" class="form-select form-select-sm w-auto" data-control="select2"
+                                data-placeholder="Semua Sub Kegiatan">
+                                <option value="">Semua Sub Kegiatan Saat Ini</option>
+                                @foreach ($subKegiatans as $subKegiatan)
+                                    <option value="{{ $subKegiatan->id_sub_kegiatan }}">
+                                        {{ $subKegiatan->kode_sub_kegiatan }} - {{ $subKegiatan->nama_sub_kegiatan }}
+                                    </option>
                                 @endforeach
                             </select>
                             <select id="approval-subkategori-filter" class="form-select form-select-sm w-auto" data-control="select2"
@@ -44,6 +54,11 @@
                                 <option value="rejected">Ditolak</option>
                                 <option value="revision">Revisi</option>
                             </select>
+                            @if (auth()->user()->hasRole('Super Admin'))
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#bulkTaggingModal">
+                                    <i class="fas fa-tags me-1"></i> Tagging Massal
+                                </button>
+                            @endif
                             <a id="approval-print-all" href="{{ route('workflowapproval.print-all') }}"
                                 class="btn btn-sm btn-light-primary" target="_blank" rel="noopener">
                                 <i class="fas fa-file-pdf me-1"></i> Cetak Semua RKBU
@@ -66,8 +81,9 @@
                                         <th><input type="checkbox" class="form-check-input" id="approval-select-all" aria-label="Pilih semua approval pada halaman"></th>
                                         <th>No</th>
                                         <th>Detail Komponen</th>
-                                        <th>Detail Volume</th>
-                                        <th>Harga Barang</th>
+                                        <th>Detail Persediaan</th>
+                                        <th>Volume / Sisa</th>
+                                        <th>Harga / PPN</th>
                                         <th>Total Anggaran</th>
                                         <th>Aksi</th>
                                     </tr>
@@ -81,4 +97,11 @@
         </div>
         @include('components.partials.calender')
         @include('workflow.approval.model_detail')
+        @if (auth()->user()->hasRole('Super Admin'))
+            @include('workflow.approval.bulk_tagging')
+        @endif
+        <style>
+            #tableApproval .persediaan-info-card { min-width: 270px; max-width: 350px; white-space: normal; line-height: 1.35; }
+            #tableApproval td { vertical-align: top; }
+        </style>
     @endsection

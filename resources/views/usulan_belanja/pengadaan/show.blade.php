@@ -314,10 +314,41 @@
                              </div>
                          @elseif ($step === 'pembayaran')
                              <div class="row">
-                                 <div class="col-md-6 mb-4"><label class="form-label">Jumlah pembayaran (Rp)</label><input type="number" min="0" step="1" name="pembayaran" class="form-control" required></div>
-                                 <div class="col-md-6 mb-4"><label class="form-label">Tanggal pembayaran</label><input type="date" name="tanggal_pembayaran" class="form-control" value="{{ now()->toDateString() }}" required></div>
-                                 <div class="col-md-6 mb-4"><label class="form-label">Bukti bayar (PDF/JPG/PNG)</label><input type="file" name="bukti_bayar" class="form-control" accept=".pdf,.jpg,.jpeg,.png"></div>
+                                 @php
+                                     $nilaiDasar = (float) ($masterInfo->harga_bersih ?? $masterInfo->harga_dasar ?? $masterInfo->bruto ?? 0);
+                                     $sisaTersimpan = max(0, $nilaiDasar - (float) ($masterInfo->pembayaran ?? 0));
+                                     $bulanPilihan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                                 @endphp
+                                 <div class="col-md-6 mb-4"><label class="form-label">Harga dasar (Rp)</label><input type="text" class="form-control" value="{{ number_format((float) ($masterInfo->harga_dasar ?? $masterInfo->bruto ?? 0), 0, ',', '.') }}" readonly></div>
+                                 <div class="col-md-6 mb-4"><label class="form-label">PPN (%)</label><input type="number" min="0" max="100" step="0.01" name="ppn" class="form-control" value="{{ old('ppn', $masterInfo->ppn ?? 0) }}"></div>
+                                 <div class="col-md-3 mb-4"><label class="form-label">PPh21 (%)</label><input type="number" min="0" max="100" step="0.01" name="pph21" class="form-control" value="{{ old('pph21', $masterInfo->pph21 ?? 0) }}"></div>
+                                 <div class="col-md-3 mb-4"><label class="form-label">PPh23 (%)</label><input type="number" min="0" max="100" step="0.01" name="pph23" class="form-control" value="{{ old('pph23', $masterInfo->pph23 ?? 0) }}"></div>
+                                 <div class="col-md-3 mb-4"><label class="form-label">PPh22 (%)</label><input type="number" min="0" max="100" step="0.01" name="pph22" class="form-control" value="{{ old('pph22', $masterInfo->pph22 ?? 0) }}"></div>
+                                 <div class="col-md-3 mb-4"><label class="form-label">PP 0,5 (%)</label><input type="number" min="0" max="100" step="0.01" name="pp05" class="form-control" value="{{ old('pp05', $masterInfo->pp05 ?? 0) }}"></div>
+                                 <div class="col-md-6 mb-4"><label class="form-label">Bulan pembayaran</label><select name="bulan_pembayaran" class="form-select" required>@foreach ($bulanPilihan as $bulan)<option value="{{ $bulan }}" @selected(old('bulan_pembayaran', $masterInfo->bulan_pembayaran ?? now()->translatedFormat('F')) === $bulan)>{{ $bulan }}</option>@endforeach</select></div>
+                                 <div class="col-md-6 mb-4"><label class="form-label">Tanggal pembayaran</label><input type="date" name="tanggal_pembayaran" class="form-control" value="{{ old('tanggal_pembayaran', now()->toDateString()) }}" required></div>
+                                 <div class="col-md-6 mb-4"><label class="form-label">Jumlah yang dibayarkan (Rp)</label><input type="number" min="1" step="1" name="pembayaran" id="jumlah-pembayaran" class="form-control" value="{{ old('pembayaran') }}" required></div>
+                                 <div class="col-md-6 mb-4"><label class="form-label">Sisa pembayaran (Rp)</label><input type="text" id="sisa-pembayaran" class="form-control" value="{{ number_format(max(0, $sisaTersimpan), 0, ',', '.') }}" readonly data-due="{{ max(0, $sisaTersimpan) }}"></div>
+                                 <div class="col-md-6 mb-4"><label class="form-label">Validasi pembayaran</label><input type="text" class="form-control" value="{{ $sisaTersimpan > 0 ? 'Menunggu pembayaran' : ($masterInfo->status_pembayaran ?? 'Belum dibayar') }}" readonly></div>
+                                 <div class="col-md-6 mb-4"><label class="form-label">Kode Billing PPN</label><input type="text" name="kode_billingppn" class="form-control" value="{{ old('kode_billingppn', $masterInfo->kode_billingppn ?? '') }}"></div>
+                                 <div class="col-md-6 mb-4"><label class="form-label">Kode Billing PPh22</label><input type="text" name="kode_billingpph22" class="form-control" value="{{ old('kode_billingpph22', $masterInfo->kode_billingpph22 ?? '') }}"></div>
+                                 <div class="col-md-6 mb-4"><label class="form-label">Bukti bayar (PDF/JPG/PNG, maks. 5 MB)</label><input type="file" name="bukti_bayar" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required></div>
+                                 @if (!empty($masterInfo->bukti_bayar))
+                                     <div class="col-12 mb-4"><a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($masterInfo->bukti_bayar) }}" target="_blank" rel="noopener">Lihat bukti pembayaran terakhir</a></div>
+                                 @endif
                              </div>
+                             <script>
+                                 (() => {
+                                     const amount = document.getElementById('jumlah-pembayaran');
+                                     const remaining = document.getElementById('sisa-pembayaran');
+                                     if (!amount || !remaining) return;
+                                     const due = Number(remaining.dataset.due || 0);
+                                     amount.addEventListener('input', () => {
+                                         const paid = Number(amount.value || 0);
+                                         remaining.value = Math.max(0, due - paid).toLocaleString('id-ID');
+                                     });
+                                 })();
+                             </script>
                          @endif
                          <div class="mb-4"><label class="form-label">Catatan</label><textarea name="catatan" class="form-control" rows="3">{{ old('catatan') }}</textarea></div>
                          <button class="btn btn-primary">{{ $step === 'pembayaran' ? 'Simpan pembayaran dan selesaikan SPJ' : 'Simpan dan teruskan' }}</button>

@@ -67,6 +67,24 @@
                                 </a>
                             </div>
                             <div class="menu-item">
+                                <a class="menu-link" href="{{ route('monitoring-anggaran.blud') }}">
+                                    <span class="menu-icon"><i class="fas fa-chart-line fs-4"></i></span>
+                                    <span class="menu-title">Monitoring Realisasi BLUD</span>
+                                </a>
+                            </div>
+                            <div class="menu-item">
+                                <a class="menu-link" href="{{ route('monitoring-anggaran.keseluruhan') }}">
+                                    <span class="menu-icon"><i class="fas fa-chart-pie fs-4"></i></span>
+                                    <span class="menu-title">Monitoring Keseluruhan Anggaran</span>
+                                </a>
+                            </div>
+                            <div class="menu-item">
+                                <a class="menu-link" href="{{ route('monitoring-anggaran.laporan-bulanan') }}">
+                                    <span class="menu-icon"><i class="fas fa-calendar-alt fs-4"></i></span>
+                                    <span class="menu-title">Laporan Realisasi Bulanan</span>
+                                </a>
+                            </div>
+                            <div class="menu-item">
                                 <a class="menu-link" href="{{ route('dashboard') }}">
                                     <span class="menu-icon">
                                         <!--begin::Svg Icon | path: icons/duotune/art/art002.svg-->

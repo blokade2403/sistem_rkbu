@@ -10,6 +10,7 @@
             data: function(data) {
                 data.module = $('#approval-module-filter').val() || 'all';
                 data.sumber_dana_id = $('#approval-sumber-dana-filter').val();
+                data.sub_kegiatan_id = $('#approval-sub-kegiatan-filter').val();
                 data.sub_kategori_rkbu_id = $('#approval-subkategori-filter').val();
                 data.approval_status = $('#approval-status-filter').val();
             },
@@ -36,6 +37,12 @@
                 data: 'nama_komponen',
                 orderable: false,
                 searchable: true
+            },
+            {
+                data: 'persediaan_info',
+                orderable: false,
+                searchable: false,
+                visible: $('#approval-module-filter').val() === 'persediaan'
             },
             {
                 data: 'satuan',
@@ -69,7 +76,7 @@
         toastr.error(errorMessage);
     });
 
-    $('#approval-module-filter, #approval-sumber-dana-filter, #approval-subkategori-filter, #approval-status-filter').on('change', function() {
+    $('#approval-module-filter, #approval-sumber-dana-filter, #approval-sub-kegiatan-filter, #approval-subkategori-filter, #approval-status-filter').on('change', function() {
         $('#tableApproval').DataTable().ajax.reload();
     });
 
@@ -85,6 +92,7 @@
         const filters = {
             module: $('#approval-module-filter').val() || 'all',
             sumber_dana_id: $('#approval-sumber-dana-filter').val(),
+            sub_kegiatan_id: $('#approval-sub-kegiatan-filter').val(),
             sub_kategori_rkbu_id: $('#approval-subkategori-filter').val(),
             approval_status: $('#approval-status-filter').val(),
         };

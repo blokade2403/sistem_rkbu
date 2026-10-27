@@ -188,11 +188,14 @@ class SpjUsulanBelanjaController extends Controller
             $approvalByStep = $approvalStatuses->get($spj->spj_id, collect())->keyBy('workflow_step_id');
             $pengurusOrder = $workflowSteps->first(fn($step) => strtolower(trim($step->level_jabatan ?: $step->nama_role ?: $step->nama_validator ?: '')) === 'pengurus barang')?->step_order;
             foreach ($workflowSteps as $workflowStep) {
+                $identity = strtolower(trim($workflowStep->level_jabatan ?: $workflowStep->nama_role ?: $workflowStep->nama_validator ?: ''));
                 $nama = $workflowStep->is_pptk_step
                     ? 'Validasi PPTK'
-                    : ($workflowStep->validator_type === 'hierarchy'
+                    : ($identity === 'direktur'
+                        ? 'Direktur'
+                        : ($workflowStep->validator_type === 'hierarchy'
                         ? 'Validasi Atasan (Hirarki)'
-                        : trim($workflowStep->level_jabatan ?: $workflowStep->nama_role ?: $workflowStep->nama_validator ?: 'Validasi'));
+                        : trim($workflowStep->level_jabatan ?: $workflowStep->nama_role ?: $workflowStep->nama_validator ?: 'Validasi')));
                 $key = strtolower($nama);
                 $status = null;
                 $tanggal = null;
@@ -232,7 +235,7 @@ class SpjUsulanBelanjaController extends Controller
                     $tanggal = $approval?->acted_at;
                 }
                 $timeline[] = ['nama' => $nama, 'status' => $status, 'tanggal' => $tanggal];
-                if ($key === 'ppk keuangan') {
+                if ($identity === 'direktur') {
                     $timeline[] = [
                         'nama' => 'Penyerahan Dokumen SPJ oleh Admin Pengadaan',
                         'status' => $spj->status_serah_terima_bendahara,

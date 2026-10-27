@@ -1,9 +1,12 @@
 @extends('layouts.main')
 
 @section('content')
-    <div class="card mb-5">
-        <div class="card-header">
-            <h3 class="card-title">Tambah Penugasan Pejabat</h3>
+    <div class="card mb-6 border-0 shadow-sm">
+        <div class="card-header border-0 pt-6 pb-0">
+            <div class="card-title d-flex flex-column">
+                <h3 class="fw-bold text-gray-900 mb-1">Penugasan Pejabat</h3>
+                <span class="text-muted fs-7">Atur pejabat yang menjabat pada setiap posisi dan periode tugas.</span>
+            </div>
         </div>
         <div class="card-body">
             <form action="{{ route('position_assignments.store') }}" method="POST">
@@ -66,24 +69,41 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Riwayat Penugasan Pejabat</h3>
+    <div class="card border-0 shadow-sm">
+        <div class="card-header border-0 pt-6 flex-wrap gap-4">
+            <div class="card-title d-flex flex-column">
+                <h3 class="fw-bold text-gray-900 mb-1">Riwayat Penugasan</h3>
+                <span class="text-muted fs-7">{{ $assignments->count() }} data penugasan</span>
+            </div>
+            <div class="card-toolbar d-flex flex-wrap align-items-center gap-3">
+                <label for="assignmentPageLength" class="text-muted fw-semibold mb-0">Tampilkan</label>
+                <select id="assignmentPageLength" class="form-select form-select-sm w-100px" aria-label="Jumlah data per halaman">
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <div class="position-relative">
+                    <i class="fas fa-search position-absolute top-50 translate-middle-y ms-4 text-muted"></i>
+                    <input id="assignmentSearch" type="search" class="form-control form-control-sm ps-10 w-250px"
+                        placeholder="Cari jabatan atau pejabat..." aria-label="Cari penugasan">
+                </div>
+            </div>
         </div>
-        <div class="card-body">
+        <div class="card-body pt-3">
             <div class="table-responsive">
-                <table class="table table-row-dashed align-middle">
+                <table id="positionAssignmentsTable" class="table table-row-dashed table-row-gray-300 align-middle gy-4 gs-2">
                     <thead>
-                        <tr>
-                            <th>Jabatan</th>
-                            <th>Pejabat</th>
-                            <th>Periode</th>
-                            <th>Status Assignment</th>
-                            <th class="text-end">Aksi</th>
+                        <tr class="text-muted fw-bold text-uppercase fs-7">
+                            <th class="min-w-175px">Jabatan</th>
+                            <th class="min-w-200px">Pejabat</th>
+                            <th class="min-w-190px">Periode</th>
+                            <th class="min-w-150px">Status</th>
+                            <th class="text-end min-w-180px">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($assignments as $assignment)
+                        @foreach ($assignments as $assignment)
                             @php
                                 $effective = $assignment->is_active
                                     && $assignment->tanggal_mulai->lte(today())
@@ -91,17 +111,19 @@
                                     && $assignment->user?->status_user === 'aktif';
                             @endphp
                             <tr>
-                                <td>{{ $assignment->position?->nama_jabatan ?? 'Jabatan tidak ditemukan' }}</td>
                                 <td>
-                                    {{ $assignment->user?->nama ?? 'User tidak ditemukan' }}
+                                    <span class="fw-bold text-gray-800">{{ $assignment->position?->nama_jabatan ?? 'Jabatan tidak ditemukan' }}</span>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold text-gray-800">{{ $assignment->user?->nama ?? 'User tidak ditemukan' }}</span>
                                     @if ($assignment->user?->nip)
                                         <div class="text-muted fs-7">{{ $assignment->user->nip }}</div>
                                     @endif
                                 </td>
                                 <td>
-                                    {{ $assignment->tanggal_mulai->format('d-m-Y') }}
-                                    &ndash;
-                                    {{ $assignment->tanggal_selesai?->format('d-m-Y') ?? 'Tidak ditentukan' }}
+                                    <span class="text-gray-800">{{ $assignment->tanggal_mulai->format('d-m-Y') }}</span>
+                                    <span class="text-muted mx-1">&ndash;</span>
+                                    <span class="text-gray-600">{{ $assignment->tanggal_selesai?->format('d-m-Y') ?? 'Tidak ditentukan' }}</span>
                                 </td>
                                 <td>
                                     @if ($effective)
@@ -113,27 +135,25 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
-                                    <button type="button" class="btn btn-sm btn-light-primary"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#edit-assignment-{{ $assignment->id }}">
-                                        Edit
-                                    </button>
-                                    @if ($assignment->is_active)
-                                        <form class="d-inline" action="{{ route('position_assignments.destroy', $assignment->id) }}"
-                                            method="POST"
-                                            onsubmit="return confirm('Nonaktifkan assignment pejabat ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-light-danger">Nonaktifkan</button>
-                                        </form>
-                                    @endif
+                                    <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                                        <button type="button" class="btn btn-sm btn-light-primary"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#edit-assignment-{{ $assignment->id }}">
+                                            Edit
+                                        </button>
+                                        @if ($assignment->is_active)
+                                            <form class="d-inline" action="{{ route('position_assignments.destroy', $assignment->id) }}"
+                                                method="POST"
+                                                onsubmit="return confirm('Nonaktifkan assignment pejabat ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-light-danger">Nonaktifkan</button>
+                                            </form>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="text-center text-muted">Belum ada penugasan pejabat.</td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -207,4 +227,39 @@
             </div>
         </div>
     @endforeach
+
+    @push('scripts')
+        <script>
+            $(function () {
+                const table = $('#positionAssignmentsTable').DataTable({
+                    pageLength: 10,
+                    lengthChange: false,
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    autoWidth: false,
+                    responsive: true,
+                    dom: 'rtip',
+                    order: [],
+                    columnDefs: [{ targets: 4, orderable: false, searchable: false }],
+                    language: {
+                        emptyTable: 'Belum ada penugasan pejabat.',
+                        zeroRecords: 'Data penugasan tidak ditemukan.',
+                        info: 'Menampilkan _START_–_END_ dari _TOTAL_ data',
+                        infoEmpty: 'Tidak ada data untuk ditampilkan',
+                        infoFiltered: '(disaring dari _MAX_ data)',
+                        paginate: { previous: 'Sebelumnya', next: 'Berikutnya' }
+                    }
+                });
+
+                $('#assignmentSearch').on('input', function () {
+                    table.search(this.value).draw();
+                });
+
+                $('#assignmentPageLength').on('change', function () {
+                    table.page.len(Number(this.value)).draw();
+                });
+            });
+        </script>
+    @endpush
 @endsection

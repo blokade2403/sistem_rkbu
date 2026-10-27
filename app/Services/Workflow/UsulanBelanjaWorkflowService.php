@@ -25,7 +25,7 @@ class UsulanBelanjaWorkflowService
 
     public function getAvailableItems(UsulanBelanja $usulan): Collection
     {
-        return $this->getDetailItems($usulan->sub_kategori_rkbu_id, null, $usulan->id);
+        return $this->getDetailItems($usulan->sub_kategori_rkbu_id, null, $usulan->id, $usulan->id);
     }
 
     public function getSelectedItems(UsulanBelanja $usulan): Collection
@@ -54,6 +54,7 @@ class UsulanBelanjaWorkflowService
             ->map(function ($item) use ($savedValues) {
                 $saved = $savedValues->get($item->detail_type . ':' . $item->detail_id);
                 $item->link_id = $saved?->id;
+                $item->harga_perencanaan = (float) $item->harga_satuan;
                 $item->harga_satuan = $saved?->harga_satuan ?? $item->harga_satuan;
                 $item->volume = $saved?->volume ?? $item->volume;
                 $item->ppn = $saved?->ppn ?? $item->ppn;
@@ -83,7 +84,12 @@ class UsulanBelanjaWorkflowService
             });
     }
 
-    private function getDetailItems(string $subKategoriId, ?array $selected = null, ?string $excludeUsulanId = null): Collection
+    private function getDetailItems(
+        string $subKategoriId,
+        ?array $selected = null,
+        ?string $excludeUsulanId = null,
+        ?string $includeUsulanId = null
+    ): Collection
     {
         $detailTables = [
             'barjas'            => 'rkbu_detail_barjass',
@@ -155,7 +161,7 @@ class UsulanBelanjaWorkflowService
         $items = $items->sortBy('nomor_rkbu')->values();
 
         return app(UsulanBelanjaBalanceService::class)
-            ->applyToItemCollection($items, $excludeUsulanId);
+            ->applyToItemCollection($items, $excludeUsulanId, $includeUsulanId);
     }
 
     private function availableRkbusQuery(?string $subKategoriId = null, ?array $creatorIds = null)
@@ -352,25 +358,20 @@ class UsulanBelanjaWorkflowService
                     ]);
                 }
 
-                $requestedAmount = round(
-                    (float) $detail->harga_satuan * (float) $detail->volume,
-                    2
-                );
                 $remaining = app(UsulanBelanjaBalanceService::class)->remainingForDetail(
                     $type,
                     $detailId,
                     (float) ($detail->sisa_vol_rkbu ?? $detail->volume),
-                    (float) ($detail->sisa_anggaran_rkbu ?? $detail->total_anggaran)
+                    (float) ($detail->sisa_anggaran_rkbu ?? $detail->total_anggaran),
+                    null,
+                    $usulan->id
                 );
                 $availableVolume = $remaining['volume'];
-                $availableBudget = $remaining['anggaran'];
+                $initialVolume = min((float) $detail->volume, $availableVolume);
 
-                if (
-                    (float) $detail->volume > $availableVolume
-                    || $requestedAmount > $availableBudget
-                ) {
+                if ($initialVolume <= 0) {
                     throw ValidationException::withMessages([
-                        'items' => 'Sisa volume atau anggaran RKBU tidak cukup untuk item yang dipilih.',
+                        'items' => 'Sisa volume RKBU tidak cukup untuk item yang dipilih.',
                     ]);
                 }
 
@@ -381,7 +382,7 @@ class UsulanBelanjaWorkflowService
                     'detail_id' => $detailId,
                     'spesifikasi' => $detail->spesifikasi,
                     'harga_satuan' => $detail->harga_satuan,
-                    'volume' => $detail->volume,
+                    'volume' => $initialVolume,
                     'ppn' => $detail->ppn,
                 ]);
                 $added++;
@@ -449,8 +450,12 @@ class UsulanBelanjaWorkflowService
                     ]);
                 }
 
-                $requestedAmount = round(
+                $requestedSubtotal = round(
                     (float) $values['harga_satuan'] * (float) $values['volume'],
+                    2
+                );
+                $requestedAmount = round(
+                    $requestedSubtotal + round($requestedSubtotal * (float) $values['ppn'] / 100, 2),
                     2
                 );
                 $remaining = app(UsulanBelanjaBalanceService::class)->remainingForDetail(
@@ -463,12 +468,16 @@ class UsulanBelanjaWorkflowService
                 $availableVolume = $remaining['volume'];
                 $availableBudget = $remaining['anggaran'];
 
-                if (
-                    (float) $values['volume'] > $availableVolume
-                    || $requestedAmount > $availableBudget
-                ) {
+                $remainingBudgetAfterUsulan = round($availableBudget - $requestedAmount, 1);
+
+                if ($remainingBudgetAfterUsulan < 0) {
                     throw ValidationException::withMessages([
-                        "items.{$itemId}.harga_satuan" => 'Sisa volume atau anggaran RKBU tidak cukup untuk nilai usulan ini.',
+                        "items.{$itemId}.harga_satuan" => 'Lakukan pergeseran Penambahan Anggaran agar Usulan Belanja bisa dilanjutkan.',
+                    ]);
+                }
+                if ((float) $values['volume'] > $availableVolume) {
+                    throw ValidationException::withMessages([
+                        "items.{$itemId}.volume" => 'Volume usulan melebihi sisa volume RKBU.',
                     ]);
                 }
 

@@ -65,7 +65,11 @@ class UsulanBelanjaBalanceService
         return $details;
     }
 
-    public function applyToItemCollection(Collection $items, ?string $excludeUsulanId = null): Collection
+    public function applyToItemCollection(
+        Collection $items,
+        ?string $excludeUsulanId = null,
+        ?string $includeUsulanId = null
+    ): Collection
     {
         foreach (self::DETAIL_TYPES as $type => $table) {
             $typedItems = $items->where('detail_type', $type);
@@ -74,24 +78,66 @@ class UsulanBelanjaBalanceService
             }
 
             $reserved = $this->reservedBalances($type, $typedItems->pluck('detail_id')->all(), $excludeUsulanId);
+            $currentUsulan = $includeUsulanId
+                ? $this->usulanItemBalances($includeUsulanId, $type, $typedItems->pluck('detail_id')->all())
+                : collect();
             foreach ($typedItems as $item) {
                 $balance = $reserved->get($item->detail_id);
-                $item->sisa_vol_rkbu = max(0, (float) $item->sisa_vol_rkbu - (float) ($balance->volume ?? 0));
-                $item->sisa_anggaran_rkbu = max(0, (float) $item->sisa_anggaran_rkbu - (float) ($balance->anggaran ?? 0));
+                $current = $currentUsulan->get($item->detail_id);
+                $item->sisa_vol_rkbu = max(
+                    0,
+                    (float) $item->sisa_vol_rkbu
+                        - (float) ($balance->volume ?? 0)
+                        - (float) ($current->volume ?? 0)
+                );
+                $item->sisa_anggaran_rkbu = max(
+                    0,
+                    (float) $item->sisa_anggaran_rkbu
+                        - (float) ($balance->anggaran ?? 0)
+                        - (float) ($current->anggaran ?? 0)
+                );
             }
         }
 
         return $items;
     }
 
-    public function remainingForDetail(string $type, string $detailId, float $baseVolume, float $baseBudget, ?string $excludeUsulanId = null): array
+    public function remainingForDetail(
+        string $type,
+        string $detailId,
+        float $baseVolume,
+        float $baseBudget,
+        ?string $excludeUsulanId = null,
+        ?string $includeUsulanId = null
+    ): array
     {
         $balance = $this->reservedBalances($type, [$detailId], $excludeUsulanId)->get($detailId);
+        $current = $includeUsulanId
+            ? $this->usulanItemBalances($includeUsulanId, $type, [$detailId])->get($detailId)
+            : null;
 
         return [
-            'volume' => max(0, $baseVolume - (float) ($balance->volume ?? 0)),
-            'anggaran' => max(0, $baseBudget - (float) ($balance->anggaran ?? 0)),
+            'volume' => max(0, $baseVolume - (float) ($balance->volume ?? 0) - (float) ($current->volume ?? 0)),
+            'anggaran' => max(0, $baseBudget - (float) ($balance->anggaran ?? 0) - (float) ($current->anggaran ?? 0)),
         ];
+    }
+
+    private function usulanItemBalances(string $usulanId, string $type, array $detailIds): Collection
+    {
+        if ($detailIds === []) {
+            return collect();
+        }
+
+        return DB::table('usulan_belanja_items')
+            ->where('usulan_belanja_id', $usulanId)
+            ->where('detail_type', $type)
+            ->whereIn('detail_id', $detailIds)
+            ->groupBy('detail_id')
+            ->select('detail_id')
+            ->selectRaw('SUM(volume) as volume')
+            ->selectRaw('SUM(ROUND(harga_satuan * volume, 2) + ROUND(ROUND(harga_satuan * volume, 2) * COALESCE(ppn, 0) / 100, 2)) as anggaran')
+            ->get()
+            ->keyBy('detail_id');
     }
 
     public function assertUsulanFits(\App\Models\UsulanBelanja\UsulanBelanja $usulan): void
@@ -103,7 +149,7 @@ class UsulanBelanjaBalanceService
             ->groupBy('detail_type', 'detail_id')
             ->select('detail_type', 'detail_id')
             ->selectRaw('SUM(volume) as volume')
-            ->selectRaw('SUM(harga_satuan * volume * (1 + COALESCE(ppn, 0) / 100)) as anggaran')
+            ->selectRaw('SUM(ROUND(harga_satuan * volume, 2) + ROUND(ROUND(harga_satuan * volume, 2) * COALESCE(ppn, 0) / 100, 2)) as anggaran')
             ->get();
 
         foreach ($requestedItems as $requested) {
@@ -133,9 +179,19 @@ class UsulanBelanjaBalanceService
                 $usulan->id
             );
 
-            if ((float) $requested->volume > $remaining['volume'] || (float) $requested->anggaran > $remaining['anggaran']) {
+            $remainingBudgetAfterUsulan = round(
+                $remaining['anggaran'] - (float) $requested->anggaran,
+                1
+            );
+
+            if ($remainingBudgetAfterUsulan < 0) {
                 throw ValidationException::withMessages([
-                    'items' => 'Sisa volume atau anggaran RKBU tidak cukup. Periksa kembali jumlah usulan dan ketersediaan item.',
+                    'items' => 'Lakukan pergeseran Penambahan Anggaran agar Usulan Belanja bisa dilanjutkan.',
+                ]);
+            }
+            if ((float) $requested->volume > $remaining['volume']) {
+                throw ValidationException::withMessages([
+                    'items' => 'Volume usulan melebihi sisa volume RKBU. Kurangi volume sebelum mengajukan validasi.',
                 ]);
             }
         }
@@ -155,7 +211,7 @@ class UsulanBelanjaBalanceService
             ->when($excludeUsulanId, fn ($query) => $query->where('usulan.id', '<>', $excludeUsulanId))
             ->groupBy('items.detail_id')
             ->selectRaw('items.detail_id, SUM(items.volume) as volume')
-            ->selectRaw('SUM(items.harga_satuan * items.volume * (1 + COALESCE(items.ppn, 0) / 100)) as anggaran')
+            ->selectRaw('SUM(ROUND(items.harga_satuan * items.volume, 2) + ROUND(ROUND(items.harga_satuan * items.volume, 2) * COALESCE(items.ppn, 0) / 100, 2)) as anggaran')
             ->get()
             ->keyBy('detail_id');
     }
