@@ -57,6 +57,7 @@ class WorkflowApprovalDataTable
             'workflowInstance.rkbu.creator',
             'workflowInstance.rkbu.unit',
             'workflowInstance.rkbu.sumberDana',
+            'workflowInstance.rkbu.subKegiatan',
             'workflowInstance.rkbu.detailBarjas',
             'workflowInstance.rkbu.detailPegawai',
             'workflowInstance.rkbu.detailPersediaan',
@@ -178,6 +179,32 @@ class WorkflowApprovalDataTable
                                     '</span>';
                             })
                             ->implode('');
+                        $pegawaiInfo = '';
+                        if ($detail?->getTable() === 'rkbu_detail_pegawais') {
+                            $bulan = (float) ($detail->bulan ?? $detail->jumlah_volume ?? 0);
+                            $pegawaiInfo = '<div class="text-gray-700 mt-3">'
+                                . '<div class="fw-bold mb-1">Profil Pegawai</div>'
+                                . '<div>NIP: ' . e($detail->nip ?? '-') . '</div>'
+                                . '<div>' . e($detail->tempat_lahir ?? '-') . ', ' . e($detail->tanggal_lahir ?? '-') . '</div>'
+                                . '<div>Jabatan: ' . e($detail->jabatan ?? '-') . '</div>'
+                                . '<div>Pendidikan: ' . e($detail->pendidikan ?? '-') . '</div>'
+                                . '<div>Nomor Kontrak: ' . e($detail->nomor_kontrak ?? '-') . '</div>'
+                                . '<div>TMT Pegawai: ' . e(collect([$detail->tmt_pegawai, $detail->bulan_tmt, $detail->tahun_tmt])->filter()->implode(' ' ) ?: '-') . '</div>'
+                                . '</div><div class="text-gray-700 mt-3">'
+                                . '<div class="fw-bold mb-1">Detail Anggaran</div>'
+                                . '<div>Gaji Pokok: Rp ' . number_format((float) ($detail->gaji_pokok ?? 0), 0, ',', '.')
+                                . ' × ' . e($detail->koefisien_gaji ?? 0) . ' × ' . e($bulan) . ' bulan</div>'
+                                . '<div>Total Gaji Pokok: Rp ' . number_format((float) ($detail->total_gaji_pokok ?? 0), 0, ',', '.') . '</div>'
+                                . '<div>Remunerasi: Rp ' . number_format((float) ($detail->remunerasi ?? 0), 0, ',', '.')
+                                . ' × ' . e($detail->koefisien_remunerasi ?? 0) . ' × ' . e($bulan) . ' bulan</div>'
+                                . '<div>Total Remunerasi: Rp ' . number_format((float) ($detail->total_remunerasi ?? 0), 0, ',', '.') . '</div>'
+                                . '<div>BPJS Kesehatan: ' . e($detail->bpjs_kesehatan ?? 0) . '% · BPJS Ketenagakerjaan: '
+                                . e($detail->bpjs_tk ?? 0) . '% · BPJS JHT: ' . e($detail->bpjs_jht ?? 0) . '%</div>'
+                                . '</div>';
+                        }
+                        $activityInfo = $rkbu?->subKegiatan
+                            ? '<div class="text-gray-700 mt-3">Detail Kegiatan: ' . e(trim(($rkbu->subKegiatan->kode_sub_kegiatan ?? '') . ' - ' . ($rkbu->subKegiatan->nama_sub_kegiatan ?? ''), ' -')) . '</div>'
+                            : '';
                         return '
                     <div class="d-flex flex-column">
                         <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
@@ -197,6 +224,7 @@ class WorkflowApprovalDataTable
                             <div class="card-body">
                                 <div class="fw-bold fs-5 text-gray-900">' . e($detail?->nama_barang ?? $detail?->nama_pegawai ?? '-') . '</div>
                                 <div class="text-gray-700 mt-2">Spesifikasi / Jabatan: ' . e($detail?->spesifikasi ?? $detail?->jabatan ?? '-') . '</div>
+                                ' . $pegawaiInfo . $activityInfo . '
                                 <div class="text-gray-400 fw-bold fs-7 mt-2">Tanggal Dibuat: ' . e($detail?->created_at ?? $rkbu?->created_at ?? '-') . '</div>
                             </div>
                              <div class="mb-3 ps-10">

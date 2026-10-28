@@ -115,6 +115,18 @@
                                 <label for="edit_sub_kegiatan_id" class="form-label required">Sub Kegiatan</label>
                                 <select id="edit_sub_kegiatan_id" class="form-select" required><option value="">Pilih sub kegiatan</option></select>
                             </div>
+                            <div class="col-md-6">
+                                <label for="edit_sub_kategori_rkbu_id" class="form-label required">Sub Kategori RKBU</label>
+                                <select id="edit_sub_kategori_rkbu_id" class="form-select" required><option value="">Pilih sub kategori</option></select>
+                                <div class="form-text">Pilihan mengikuti jenis kategori RKBU.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit_created_by" class="form-label required">Nama Pengusul (Hirarki Unit)</label>
+                                <select id="edit_created_by" class="form-select" required><option value="">Pilih pengusul aktif</option></select>
+                            </div>
+                        </div>
+                        <div id="rkbu-header-locked-notice" class="alert alert-warning py-2 mb-4" style="display: none;">
+                            Data header dan nama barang/pegawai tidak dapat diubah karena item sudah masuk Usulan Belanja.
                         </div>
                         <div id="rkbu-edit-details" class="d-flex flex-column gap-3"></div>
                         <div id="rkbu-shift-fields" class="row g-3 mt-2" style="display:none;">
@@ -130,6 +142,11 @@
                         </div>
                     </form>
                 </div>
+
+                <section class="approval-note-card mb-5">
+                    <h5 class="approval-section-title"><i class="fas fa-clock-rotate-left"></i>Riwayat Perubahan RKBU</h5>
+                    <div id="rkbu-edit-history-list"></div>
+                </section>
 
                 <div id="approval-next-official-wrapper" class="mb-4" style="display: none;">
                     <label for="approval_next_official" class="form-label required">Pejabat Approval Berikutnya (sesuai hirarki)</label>

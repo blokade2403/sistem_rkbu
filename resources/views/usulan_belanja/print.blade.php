@@ -76,12 +76,16 @@
             <td class="right-label">Pengusul</td><td class="right-colon">:</td><td>{{ $usulan->nama_pengusul ?? $usulan->pengusul?->nama ?? '-' }}</td>
         </tr>
         <tr>
-            <td class="label">Program</td><td class="colon">:</td><td>{{ $program?->kode_program ?? '-' }} {{ $program?->nama_program ?? '' }}</td>
+            <td class="label">Program</td><td class="colon">:</td><td>{{ $programLabel ?? (($program?->kode_program ?? '-') . ' ' . ($program?->nama_program ?? '')) }}</td>
             <td class="right-label">Unit</td><td class="right-colon">:</td><td>{{ $usulan->unit?->nama_unit ?? '-' }}</td>
         </tr>
         <tr>
-            <td class="label">Kegiatan</td><td class="colon">:</td><td>{{ $kegiatan?->kode_kegiatan ?? '-' }} {{ $kegiatan?->nama_kegiatan ?? '' }}</td>
-            <td class="right-label">Sumber Dana</td><td class="right-colon">:</td><td>{{ $rkbu?->sumberDana?->nama_sumber_dana ?? '-' }}</td>
+            <td class="label">Kegiatan</td><td class="colon">:</td><td>{{ $kegiatanLabel ?? (($kegiatan?->kode_kegiatan ?? '-') . ' ' . ($kegiatan?->nama_kegiatan ?? '')) }}</td>
+            <td class="right-label">Sumber Dana</td><td class="right-colon">:</td><td>{{ $usulan->sumberDana?->nama_sumber_dana ?? $rkbu?->sumberDana?->nama_sumber_dana ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label">Sub Kegiatan</td><td class="colon">:</td><td>{{ $subKegiatanLabel ?? (($subKegiatan?->kode_sub_kegiatan ?? '-') . ' ' . ($subKegiatan?->nama_sub_kegiatan ?? '')) }}</td>
+            <td class="right-label">Aktivitas</td><td class="right-colon">:</td><td>{{ $aktivitasLabel ?? (($subKegiatan?->aktivitas?->kode_aktivitas ?? '-') . ' ' . ($subKegiatan?->aktivitas?->nama_aktivitas ?? '')) }}</td>
         </tr>
         <tr>
             <td class="label">Rekening Belanja</td><td class="colon">:</td><td colspan="4">{{ $rekeningKategori?->kode_kategori_rekening }} {{ $rekeningKategori?->nama_kategori_rekening }}</td>

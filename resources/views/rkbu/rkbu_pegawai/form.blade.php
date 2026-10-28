@@ -57,7 +57,7 @@
                             </div>
                             <div class="card-body">
                                 @foreach ($config['fields'] as $field)
-                                    @continue(in_array($field['name'], ['gaji_pokok', 'remunerasi', 'koefisien_remunerasi', 'koefisien_gaji', 'bpjs_kesehatan', 'bpjs_tk', 'bpjs_jht'], true))
+                                    @continue(in_array($field['name'], ['bulan', 'gaji_pokok', 'remunerasi', 'koefisien_remunerasi', 'koefisien_gaji', 'bpjs_kesehatan', 'bpjs_tk', 'bpjs_jht'], true))
                                     @php
                                         $name = $field['name'];
                                         $required = !empty($field['required']);
@@ -72,7 +72,7 @@
                                         <div class="col-xl-9">
                                             <input type="{{ $field['type'] }}" name="{{ $name }}" id="{{ $name }}"
                                                 class="form-control form-control-solid" value="{{ $value }}"
-                                                @if ($field['type'] === 'number') step="any" min="{{ $field['min'] ?? 0 }}" @endif
+                                                @if ($field['type'] === 'number') step="any" min="{{ $field['min'] ?? 0 }}" max="{{ $field['max'] ?? '' }}" @endif
                                                 @required($required)>
                                         </div>
                                     </div>
@@ -86,7 +86,7 @@
                             </div>
                             <div class="card-body">
                                 @foreach ($config['fields'] as $field)
-                                    @continue(!in_array($field['name'], ['gaji_pokok', 'remunerasi', 'koefisien_remunerasi', 'koefisien_gaji', 'bpjs_kesehatan', 'bpjs_tk', 'bpjs_jht'], true))
+                                    @continue(!in_array($field['name'], ['bulan', 'gaji_pokok', 'remunerasi', 'koefisien_remunerasi', 'koefisien_gaji', 'bpjs_kesehatan', 'bpjs_tk', 'bpjs_jht'], true))
                                     @php
                                         $name = $field['name'];
                                         $required = !empty($field['required']);
@@ -134,17 +134,18 @@
             const updatePreview = () => {
                 const gajiPokok = number('gaji_pokok');
                 const remunerasi = number('remunerasi');
+                const bulan = number('bulan');
                 const koefisienGaji = number('koefisien_gaji');
                 const koefisienRemunerasi = number('koefisien_remunerasi');
-                const totalGaji = gajiPokok * koefisienGaji;
-                const totalRemunerasi = remunerasi * koefisienRemunerasi;
-                const bpjs = gajiPokok * (number('bpjs_kesehatan') + number('bpjs_tk') + number('bpjs_jht')) / 100 * koefisienGaji;
-                document.getElementById('pegawai-preview-bulan').textContent = koefisienRemunerasi;
+                const bpjs = gajiPokok * bulan * koefisienGaji * (number('bpjs_kesehatan') + number('bpjs_tk') + number('bpjs_jht')) / 100;
+                const totalGaji = gajiPokok * bulan * koefisienGaji + bpjs;
+                const totalRemunerasi = remunerasi * bulan * koefisienRemunerasi;
+                document.getElementById('pegawai-preview-bulan').textContent = bulan;
                 document.getElementById('pegawai-preview-gaji').textContent = rupiah(totalGaji);
                 document.getElementById('pegawai-preview-remunerasi').textContent = rupiah(totalRemunerasi);
-                document.getElementById('pegawai-preview-total').textContent = rupiah(totalGaji + totalRemunerasi + bpjs);
+                document.getElementById('pegawai-preview-total').textContent = rupiah(totalGaji + totalRemunerasi);
             };
-            document.querySelectorAll('.pegawai-calc-input').forEach((input) => input.addEventListener('input', updatePreview));
+            document.querySelectorAll('.pegawai-calc-input, #bulan').forEach((input) => input.addEventListener('input', updatePreview));
             updatePreview();
         })();
     </script>

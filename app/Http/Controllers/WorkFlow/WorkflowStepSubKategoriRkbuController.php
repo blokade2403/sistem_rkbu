@@ -7,6 +7,7 @@ use App\Models\MasterBackend\SettingRkbu\SubKategoriRkbu;
 use App\Models\WorkFlow\WorkflowStep;
 use App\Models\WorkFlow\WorkflowStepSubKategoriRkbu;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class WorkflowStepSubKategoriRkbuController extends Controller
 {
@@ -17,12 +18,23 @@ class WorkflowStepSubKategoriRkbuController extends Controller
     {
         $data = WorkflowStepSubKategoriRkbu::with([
             'workflowStep.workflow',
+            'workflowStep.position',
+            'workflowStep.systemRole',
+            'workflowStep.validatorRole',
             'subKategoriRkbu',
-        ])->get();
+        ])->get()
+            ->sortBy(fn ($mapping) => strtolower((string) $mapping->subKategoriRkbu?->nama_sub_kategori_rkbu)
+                . '|' . strtolower((string) $mapping->workflowStep?->workflow?->nama_workflow)
+                . '|' . str_pad((string) ($mapping->workflowStep?->step_order ?? 0), 4, '0', STR_PAD_LEFT))
+            ->values();
 
-        $workflowSteps = WorkflowStep::with('workflow')->get();
+        $workflowSteps = WorkflowStep::with(['workflow', 'position', 'systemRole', 'validatorRole'])
+            ->get()
+            ->sortBy(fn ($step) => strtolower((string) $step->workflow?->nama_workflow)
+                . '|' . str_pad((string) $step->step_order, 4, '0', STR_PAD_LEFT))
+            ->values();
 
-        $subKategoriRkbus = SubKategoriRkbu::all();
+        $subKategoriRkbus = SubKategoriRkbu::query()->orderBy('nama_sub_kategori_rkbu')->get();
 
         return view(
             'master_backend.workflow_setting.workflow_step_sub_kategori_rkbu.index',
@@ -38,15 +50,12 @@ class WorkflowStepSubKategoriRkbuController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'workflow_step_id' => 'required',
-            'sub_kategori_rkbu_id' => 'required',
+        $data = $request->validate([
+            'workflow_step_id' => ['required', 'uuid', Rule::exists('workflow_steps', 'id')],
+            'sub_kategori_rkbu_id' => ['required', 'uuid', Rule::exists('sub_kategori_rkbus', 'id_sub_kategori_rkbu')],
         ]);
 
-        WorkflowStepSubKategoriRkbu::create([
-            'workflow_step_id' => $request->workflow_step_id,
-            'sub_kategori_rkbu_id' => $request->sub_kategori_rkbu_id,
-        ]);
+        WorkflowStepSubKategoriRkbu::create($data);
 
         return redirect()->back()->with('success', 'Mapping berhasil ditambahkan');
     }
@@ -74,15 +83,12 @@ class WorkflowStepSubKategoriRkbuController extends Controller
         Request $request,
         WorkflowStepSubKategoriRkbu $workflowStepSubKategoriRkbu,
     ) {
-        $request->validate([
-            'workflow_step_id' => 'required',
-            'sub_kategori_rkbu_id' => 'required',
+        $data = $request->validate([
+            'workflow_step_id' => ['required', 'uuid', Rule::exists('workflow_steps', 'id')],
+            'sub_kategori_rkbu_id' => ['required', 'uuid', Rule::exists('sub_kategori_rkbus', 'id_sub_kategori_rkbu')],
         ]);
 
-        $workflowStepSubKategoriRkbu->update([
-            'workflow_step_id' => $request->workflow_step_id,
-            'sub_kategori_rkbu_id' => $request->sub_kategori_rkbu_id,
-        ]);
+        $workflowStepSubKategoriRkbu->update($data);
 
         return redirect()->back()->with('success', 'Mapping berhasil diupdate');
     }

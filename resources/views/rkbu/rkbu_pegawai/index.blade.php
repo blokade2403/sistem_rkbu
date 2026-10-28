@@ -79,15 +79,20 @@
                 const tableSelector = '#rkbupegawai-table';
                 const table = $(tableSelector);
                 const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
-                const checkboxes = () => Array.from(document.querySelectorAll('.pegawai-row-checkbox:not(:disabled)'));
+                const selectedIds = new Set();
+                const checkboxes = () => table.length && $.fn.DataTable.isDataTable(tableSelector)
+                    ? Array.from(table.DataTable().$('.pegawai-row-checkbox:not(:disabled)'))
+                    : [];
                 const refreshSelection = () => {
-                    const selected = checkboxes().filter((checkbox) => checkbox.checked);
-                    document.getElementById('pegawai-selected-count').textContent = `${selected.length} dipilih`;
-                    document.getElementById('pegawai-bulk-submit').disabled = selected.length === 0;
+                    const available = checkboxes();
+                    available.forEach((checkbox) => { checkbox.checked = selectedIds.has(checkbox.value); });
+                    const selectedOnPage = available.filter((checkbox) => checkbox.checked);
+                    document.getElementById('pegawai-selected-count').textContent = `${selectedIds.size} dipilih`;
+                    document.getElementById('pegawai-bulk-submit').disabled = selectedIds.size === 0;
                     const selectAll = document.getElementById('pegawai-select-all');
                     if (selectAll) {
-                        selectAll.checked = checkboxes().length > 0 && selected.length === checkboxes().length;
-                        selectAll.indeterminate = selected.length > 0 && selected.length < checkboxes().length;
+                        selectAll.checked = available.length > 0 && selectedOnPage.length === available.length;
+                        selectAll.indeterminate = selectedOnPage.length > 0 && selectedOnPage.length < available.length;
                     }
                 };
 
@@ -107,36 +112,61 @@
 
                 document.addEventListener('change', (event) => {
                     if (event.target.id === 'pegawai-select-all') {
-                        checkboxes().forEach((checkbox) => { checkbox.checked = event.target.checked; });
+                        checkboxes().forEach((checkbox) => {
+                            checkbox.checked = event.target.checked;
+                            if (event.target.checked) selectedIds.add(checkbox.value);
+                            else selectedIds.delete(checkbox.value);
+                        });
                         refreshSelection();
                     } else if (event.target.classList.contains('pegawai-row-checkbox')) {
+                        if (event.target.checked) selectedIds.add(event.target.value);
+                        else selectedIds.delete(event.target.value);
                         refreshSelection();
                     }
                 });
 
                 document.getElementById('pegawai-bulk-submit').addEventListener('click', async () => {
-                    const ids = checkboxes().filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value);
-                    if (!ids.length || !window.confirm(`Ajukan ${ids.length} RKBU Pegawai terpilih?`)) return;
-                    const response = await fetch(@json(route('rkbu.pegawai.bulk-submit')), {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
-                        body: JSON.stringify({ ids }),
-                    });
-                    const result = await response.json();
-                    window.alert(result.message || 'Pengajuan selesai.');
-                    table.DataTable().ajax.reload(null, false);
+                    const ids = Array.from(selectedIds);
+                    if (!ids.length) return;
+                    if (ids.length > 100) {
+                        window.alert('Maksimal 100 RKBU dapat diajukan sekaligus.');
+                        return;
+                    }
+                    if (!window.confirm(`Ajukan ${ids.length} RKBU Pegawai terpilih?`)) return;
+                    try {
+                        const response = await fetch(@json(route('rkbu.pegawai.bulk-submit')), {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+                            body: JSON.stringify({ ids }),
+                        });
+                        const result = await response.json();
+                        if (!response.ok) throw new Error(result.message || 'Gagal mengajukan RKBU terpilih.');
+                        const failures = (result.results || []).filter((item) => !item.success);
+                        const detail = failures.map((item) => item.message).filter(Boolean).join('\n');
+                        window.alert([result.message || 'Pengajuan selesai.', detail].filter(Boolean).join('\n\n'));
+                        if (!failures.length) selectedIds.clear();
+                        else failures.forEach((item) => selectedIds.add(item.id));
+                        table.DataTable().ajax.reload(null, false);
+                    } catch (error) {
+                        window.alert(error.message || 'Gagal mengajukan RKBU Pegawai terpilih.');
+                    }
                 });
 
                 document.addEventListener('click', async (event) => {
                     const submit = event.target.closest('.pegawai-submit');
                     const remove = event.target.closest('.pegawai-delete');
                     if (submit) {
-                        const response = await fetch(submit.dataset.url, {
-                            method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
-                        });
-                        const result = await response.json();
-                        window.alert(result.message || 'Pengajuan selesai.');
-                        table.DataTable().ajax.reload(null, false);
+                        try {
+                            const response = await fetch(submit.dataset.url, {
+                                method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+                            });
+                            const result = await response.json();
+                            if (!response.ok) throw new Error(result.message || 'Gagal mengajukan RKBU Pegawai.');
+                            window.alert(result.message || 'Pengajuan selesai.');
+                            table.DataTable().ajax.reload(null, false);
+                        } catch (error) {
+                            window.alert(error.message || 'Gagal mengajukan RKBU Pegawai.');
+                        }
                     }
                     if (remove && window.confirm('Hapus data RKBU Pegawai ini?')) {
                         const response = await fetch(remove.dataset.url, {

@@ -42,6 +42,8 @@ class RkbuModuleController extends Controller
             'quantity' => 'koefisien_remunerasi',
             'fields' => [
                 ['name' => 'nama_pegawai', 'label' => 'Nama Pegawai', 'type' => 'text'],
+                ['name' => 'nip', 'label' => 'NIP', 'type' => 'text'],
+                ['name' => 'bulan', 'label' => 'Bulan', 'type' => 'number', 'required' => true, 'min' => 1],
                 ['name' => 'tempat_lahir', 'label' => 'Tempat Lahir', 'type' => 'text'],
                 ['name' => 'tanggal_lahir', 'label' => 'Tanggal Lahir', 'type' => 'date'],
                 ['name' => 'pendidikan', 'label' => 'Pendidikan', 'type' => 'text'],
@@ -569,6 +571,7 @@ class RkbuModuleController extends Controller
                         'required',
                         'numeric',
                         'min:' . ($field['min'] ?? 0),
+                        isset($field['max']) ? 'max:' . $field['max'] : null,
                         $name === 'ppn' || str_starts_with($name, 'bpjs_') ? 'max:100' : null,
                     ]))
                     : ['required', 'string', 'max:255'];
@@ -577,6 +580,7 @@ class RkbuModuleController extends Controller
                     'nullable',
                     'numeric',
                     'min:' . ($field['min'] ?? 0),
+                    isset($field['max']) ? 'max:' . $field['max'] : null,
                     $name === 'ppn' || str_starts_with($name, 'bpjs_') ? 'max:100' : null,
                 ]));
             } elseif ($field['type'] === 'url') {
@@ -630,7 +634,7 @@ class RkbuModuleController extends Controller
             $values['volume_1'] = $volume1;
             $values['volume_2'] = $volume2;
         } elseif ($config['model'] === RkbuDetailPegawai::class) {
-            $quantity = (int) ($request->input('koefisien_remunerasi') ?: 1);
+            $quantity = (int) ($request->input('bulan') ?: 1);
         } else {
             $quantity = (int) ($request->input($config['quantity']) ?: 1);
         }
@@ -642,18 +646,19 @@ class RkbuModuleController extends Controller
             $remunerasi = (float) $request->input('remunerasi', 0);
             $koefisienGaji = (float) $request->input('koefisien_gaji', 0);
             $koefisienRemunerasi = (float) $request->input('koefisien_remunerasi', 0);
-            $totalGajiPokok = $gajiPokok * $koefisienGaji;
-            $totalRemunerasi = $remunerasi * $koefisienRemunerasi;
-            $bpjsTotal = $gajiPokok * (
+            $bulan = (int) ($request->input('bulan') ?: 1);
+            $totalRemunerasi = $remunerasi * $bulan * $koefisienRemunerasi;
+            $bpjsTotal = $gajiPokok * $bulan * $koefisienGaji * (
                 (float) $request->input('bpjs_kesehatan', 0)
                 + (float) $request->input('bpjs_tk', 0)
                 + (float) $request->input('bpjs_jht', 0)
-            ) / 100 * $koefisienGaji;
+            ) / 100;
+            $totalGajiPokok = $gajiPokok * $bulan * $koefisienGaji + $bpjsTotal;
 
-            $values['jumlah_volume'] = $koefisienRemunerasi;
+            $values['jumlah_volume'] = $bulan;
             $values['total_gaji_pokok'] = $totalGajiPokok;
             $values['total_remunerasi'] = $totalRemunerasi;
-            $values['total_anggaran'] = $totalGajiPokok + $totalRemunerasi + $bpjsTotal;
+            $values['total_anggaran'] = $totalGajiPokok + $totalRemunerasi;
         } else {
             $values['ppn'] = in_array('ppn', $fieldNames, true)
                 ? (float) Ppn::query()->where('status', 'aktif')->firstOrFail()->ppn

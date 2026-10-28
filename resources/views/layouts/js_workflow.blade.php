@@ -296,10 +296,12 @@
     $('#btnCancelEditRkbu, #btnSaveRkbu').hide();
     $('#btnEditRkbu').show();
     $('#rkbu-edit-form').data('url', res.updateUrl);
-    $('#rkbu-edit-header-fields').toggle(Boolean(res.canEditHeader));
+    $('#rkbu-edit-header-fields').toggle(Boolean(res.canManageHeader));
+    $('#rkbu-header-locked-notice').toggle(Boolean(res.headerLocked));
+    $('#rkbu-edit-header-fields select').prop('disabled', !res.canEditHeader || Boolean(res.headerLocked));
     $('#edit_sumber_dana_id, #edit_sub_kegiatan_id').prop('required', false);
-    $('#rkbu-edit-form').data('can-edit-header', Boolean(res.canEditHeader));
-    $('#rkbu-shift-fields').toggle(Number(res.phaseOrder || 1) >= 2);
+    $('#rkbu-edit-form').data('can-edit-header', Boolean(res.canEditHeader) && !Boolean(res.headerLocked));
+    $('#rkbu-shift-fields').toggle(Number(res.phaseOrder || 1) !== 1);
     $('#rkbu_shift_reason').val('');
     $('#rkbu_shift_file').val('');
     $('#approval-next-official-wrapper').toggle(Boolean(res.requiresNextOfficial));
@@ -310,6 +312,25 @@
         sourceSelect.append($('<option>').val(source.id_sumber_dana).text(source.nama_sumber_dana));
     });
     sourceSelect.val(res.rkbu?.sumber_dana_id || '');
+
+    const subCategorySelect = $('#edit_sub_kategori_rkbu_id').empty()
+        .append($('<option>').val('').text('Pilih sub kategori'));
+    (res.subKategoris || []).forEach(function(item) {
+        const label = [item.kode_sub_kategori_rkbu, item.nama_sub_kategori_rkbu].filter(Boolean).join(' - ');
+        subCategorySelect.append($('<option>').val(item.id_sub_kategori_rkbu).text(label));
+    });
+    subCategorySelect.val(res.rkbu?.sub_kategori_rkbu_id || '');
+
+    const proposerSelect = $('#edit_created_by').empty()
+        .append($('<option>').val('').text('Pilih pengusul aktif'));
+    (res.pengusuls || []).forEach(function(user) {
+        const positions = (user.assignments || []).map(function(assignment) {
+            return assignment.position?.nama_jabatan;
+        }).filter(Boolean);
+        const label = user.nama + (positions.length ? ' - ' + [...new Set(positions)].join(', ') : '');
+        proposerSelect.append($('<option>').val(user.id).text(label));
+    });
+    proposerSelect.val(res.rkbu?.created_by || '');
 
     const subActivities = res.subKegiatans || [];
     window.populateApprovalSubActivities = function(selectedId) {
@@ -328,7 +349,7 @@
 
     const editableDetails = $('#rkbu-edit-details').empty();
     const numericDetailFields = [
-        'jumlah_volume', 'bulan_tmt', 'tahun_tmt', 'volume_1', 'volume_2',
+        'jumlah_volume', 'bulan', 'bulan_tmt', 'tahun_tmt', 'volume_1', 'volume_2',
         'harga_satuan', 'ppn', 'total_anggaran', 'rating', 'sisa_vol_rkbu',
         'sisa_anggaran_rkbu', 'stok', 'rata_rata_pemakaian', 'kebutuhan_per_bulan',
         'buffer', 'pengadaan_sebelumnya', 'proyeksi_sisa_stok', 'kebutuhan_plus_buffer',
@@ -348,12 +369,14 @@
         $('<h6 class="mb-4">').text('Komponen ' + (index + 1)).appendTo(cardBody);
         if (detail.locked) {
             $('<div class="alert alert-warning py-2">')
-                .text('Item ini sudah masuk Usulan Belanja dan terkunci. Data item tidak dapat diubah, termasuk oleh Super Admin.')
+                .text('Item ini sudah masuk Usulan Belanja. Nama barang/pegawai terkunci; volume, satuan, dan harga satuan masih dapat diubah.')
                 .appendTo(cardBody);
         }
         const fieldsRow = $('<div class="row g-3">').appendTo(cardBody);
         Object.keys(detail.fields || {}).forEach(function(field) {
             const value = detail.fields[field];
+            const fieldLocked = Boolean(detail.locked)
+                && !['volume_1', 'volume_2', 'satuan_1', 'satuan_2', 'harga_satuan'].includes(field);
             const fieldGroup = $('<div class="col-md-6">').appendTo(fieldsRow);
             const label = field.replace(/_/g, ' ').replace(/\b\w/g, function(letter) {
                 return letter.toUpperCase();
@@ -365,7 +388,8 @@
                     type: numericDetailFields.includes(field) ? 'number' : 'text',
                     step: numericDetailFields.includes(field) ? 'any' : undefined
                 })
-                .prop('readonly', Boolean(detail.locked))
+                .prop('readonly', fieldLocked)
+                .prop('disabled', fieldLocked)
                 .val(value === null || value === undefined ? '' : value)
                 .appendTo(fieldGroup);
         });
@@ -376,6 +400,31 @@
             return isDerivedQuantity || ['total_anggaran', 'sisa_vol_rkbu', 'sisa_anggaran_rkbu', 'total_gaji_pokok', 'total_remunerasi'].includes(field);
         }).prop('readonly', true).addClass('bg-light');
         editableDetails.append(card);
+    });
+
+    const editHistoryList = $('#rkbu-edit-history-list').empty();
+    if (!(res.editHistory || []).length) {
+        $('<div class="text-muted">').text('Belum ada riwayat perubahan RKBU.').appendTo(editHistoryList);
+    }
+    (res.editHistory || []).forEach(function(entry) {
+        const historyCard = $('<div class="border rounded p-3 mb-3">');
+        $('<div class="d-flex justify-content-between flex-wrap gap-2">')
+            .append($('<strong>').text((entry.createdAt || '-') + ' · ' + (entry.user || '-')))
+            .append($('<span class="text-muted">').text('Fase ' + (entry.phaseOrder || '-')))
+            .appendTo(historyCard);
+        $('<div class="mt-2">').text(entry.reason || 'Perubahan RKBU').appendTo(historyCard);
+        if (entry.attachmentUrl) {
+            $('<a class="d-inline-block mt-2" target="_blank" rel="noopener">')
+                .attr('href', entry.attachmentUrl)
+                .text('Buka lampiran perubahan')
+                .appendTo(historyCard);
+        }
+        const details = $('<details class="mt-2">').appendTo(historyCard);
+        $('<summary>').text('Lihat rincian sebelum dan sesudah').appendTo(details);
+        $('<pre class="mt-2 mb-0">')
+            .text(JSON.stringify({ sebelum: entry.before, sesudah: entry.after }, null, 2))
+            .appendTo(details);
+        editHistoryList.append(historyCard);
     });
 
     function recalculateApprovalDetail(card) {
@@ -392,13 +441,12 @@
         let total = Number(values.total_anggaran || 0);
 
         if (values.koefisien_remunerasi !== undefined) {
-            quantity = Number(values.koefisien_remunerasi || 0);
-            const totalGaji = Number(values.gaji_pokok || 0) * Number(values.koefisien_gaji || 0);
-            const totalRemunerasi = Number(values.remunerasi || 0) * Number(values.koefisien_remunerasi || 0);
-            const bpjs = Number(values.gaji_pokok || 0)
-                * (Number(values.bpjs_kesehatan || 0) + Number(values.bpjs_tk || 0) + Number(values.bpjs_jht || 0)) / 100
-                * Number(values.koefisien_gaji || 0);
-            total = totalGaji + totalRemunerasi + bpjs;
+            quantity = Number(values.bulan || 0);
+            const bpjs = Number(values.gaji_pokok || 0) * quantity * Number(values.koefisien_gaji || 0)
+                * (Number(values.bpjs_kesehatan || 0) + Number(values.bpjs_tk || 0) + Number(values.bpjs_jht || 0)) / 100;
+            const totalGaji = Number(values.gaji_pokok || 0) * quantity * Number(values.koefisien_gaji || 0) + bpjs;
+            const totalRemunerasi = Number(values.remunerasi || 0) * quantity * Number(values.koefisien_remunerasi || 0);
+            total = totalGaji + totalRemunerasi;
             setValue('total_gaji_pokok', totalGaji);
             setValue('total_remunerasi', totalRemunerasi);
         } else {
@@ -494,6 +542,8 @@
         if ($('#rkbu-edit-form').data('can-edit-header')) {
             formData.append('sumber_dana_id', $('#edit_sumber_dana_id').val());
             formData.append('sub_kegiatan_id', $('#edit_sub_kegiatan_id').val());
+            formData.append('sub_kategori_rkbu_id', $('#edit_sub_kategori_rkbu_id').val());
+            formData.append('created_by', $('#edit_created_by').val());
         }
         details.forEach(function(detail, index) {
             formData.append(`details[${index}][id]`, detail.id);
@@ -522,7 +572,13 @@
                 const validationMessage = Object.values(xhr.responseJSON?.errors || {})
                     .flat()
                     .join(' ');
-                toastr.error(validationMessage || xhr.responseJSON?.message || 'Gagal memperbarui data RKBU.');
+                const errorMessage = validationMessage || xhr.responseJSON?.message || 'Gagal memperbarui data RKBU.';
+                Swal.fire({
+                    title: 'Perubahan tidak dapat disimpan',
+                    text: errorMessage,
+                    icon: 'error',
+                    confirmButtonText: 'Mengerti'
+                });
             }
         }); };
         const confirmSave = function() {

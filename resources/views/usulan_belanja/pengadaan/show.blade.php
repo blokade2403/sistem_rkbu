@@ -13,6 +13,10 @@
     $canLanjutan = $canLanjutan ?? false;
     $canWorkflowStep = $canWorkflowStep ?? false;
     $masterInfo = $masterInfo ?? null;
+    $latestPaymentInfo = $latestPaymentInfo ?? null;
+    $statusPembayaranText = strtolower(trim((string) ($masterInfo?->status_pembayaran ?? '')));
+    $pembayaranSelesai = in_array($statusPembayaranText, ['selesai', 'sudah di bayar', 'sudah dibayar'], true)
+        || ($step === 'selesai' && filled($masterInfo?->tanggal_pembayaran) && (float) ($masterInfo?->sisa_pembayaran ?? 0) <= 0);
     $netto = $netto ?? (float) $spj->details->sum(fn ($detail) => (float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume);
     $nilaiPpn = $nilaiPpn ?? (float) $spj->details->sum(fn ($detail) => (float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume * (float) ($detail->item?->ppn ?? 0) / 100);
     $totalAnggaran = $totalAnggaran ?? ($netto + $nilaiPpn);
@@ -282,14 +286,48 @@
              </div>
          @endif
 
-         @if ($canLanjutan)
+         @if ($pembayaranSelesai)
+             @php
+                 $tanggalLunas = $latestPaymentInfo?->tanggal_pembayaran ?? $masterInfo?->tanggal_pembayaran;
+                 $bulanLunas = $latestPaymentInfo?->bulan_pembayaran
+                     ?? ($tanggalLunas ? \Illuminate\Support\Carbon::parse($tanggalLunas)->translatedFormat('F') : '-');
+                 $buktiLunas = $latestPaymentInfo?->bukti_bayar ?? $masterInfo?->bukti_bayar;
+                 $namaBendahara = $latestPaymentInfo?->nama_bendahara ?? $masterInfo?->nama_validasi_keuangan ?? '-';
+             @endphp
+             <div class="card card-bordered mb-6">
+                 <div class="card-header"><h4 class="card-title">Pembayaran Bendahara</h4></div>
+                 <div class="card-body row g-4">
+                     <div class="col-lg-5">
+                         <div class="alert alert-success mb-0">
+                             <div class="fw-semibold">Status Pembayaran: Selesai</div>
+                             <div class="fs-2 fw-bold">Rp {{ number_format((float) ($masterInfo?->pembayaran ?? 0), 0, ',', '.') }}</div>
+                             <div>Tanggal pembayaran: {{ $tanggalLunas ? \Illuminate\Support\Carbon::parse($tanggalLunas)->translatedFormat('d F Y') : '-' }}</div>
+                         </div>
+                     </div>
+                     <div class="col-lg-7">
+                         <div class="border rounded p-4 h-100">
+                             <div class="fw-semibold mb-2">Bukti Pembayaran</div>
+                             @if ($buktiLunas)
+                                 <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($buktiLunas) }}" target="_blank" rel="noopener">Lihat bukti pembayaran</a>
+                             @else
+                                 <span class="text-muted">Tidak ada bukti pembayaran.</span>
+                             @endif
+                             <div class="mt-3">Bendahara: {{ $namaBendahara }}</div>
+                             <div class="text-muted">Bulan pembayaran: {{ $bulanLunas }}</div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+         @endif
+
+         @if ($canLanjutan && ! $pembayaranSelesai)
              @php
                  $formLabels = [
                      'validasi_ppk' => 'Validasi PPK', 'validasi_ppbj' => 'Validasi PPBJ',
                      'validasi_pptk' => 'Validasi PPTK', 'validasi_verifikator' => 'Validasi Verifikator',
                      'validasi_ppk_keuangan' => 'Validasi PPK Keuangan', 'validasi_direktur' => 'Validasi Direktur',
                      'serah_terima_bendahara' => 'Serah Terima SPJ ke Bendahara',
-                     'verifikasi_bendahara' => 'Verifikasi Bendahara', 'pembayaran' => 'Pembayaran Bendahara',
+                     'verifikasi_bendahara' => 'Konfirmasi Terima SPJ', 'pembayaran' => 'Pembayaran Bendahara',
                  ];
              @endphp
              <div class="card card-bordered mb-6">
@@ -315,24 +353,26 @@
                          @elseif ($step === 'pembayaran')
                              <div class="row">
                                  @php
-                                     $nilaiDasar = (float) ($masterInfo->harga_bersih ?? $masterInfo->harga_dasar ?? $masterInfo->bruto ?? 0);
-                                     $sisaTersimpan = max(0, $nilaiDasar - (float) ($masterInfo->pembayaran ?? 0));
-                                     $bulanPilihan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+                                     $hargaDasarUsulan = (float) ($netto ?? 0);
+                                     $totalPpnUsulan = (float) ($nilaiPpn ?? 0);
+                                     $totalTagihanUsulan = $hargaDasarUsulan + $totalPpnUsulan;
+                                     $sisaTersimpan = max(0, $totalTagihanUsulan - (float) ($masterInfo->pembayaran ?? 0));
                                  @endphp
-                                 <div class="col-md-6 mb-4"><label class="form-label">Harga dasar (Rp)</label><input type="text" class="form-control" value="{{ number_format((float) ($masterInfo->harga_dasar ?? $masterInfo->bruto ?? 0), 0, ',', '.') }}" readonly></div>
-                                 <div class="col-md-6 mb-4"><label class="form-label">PPN (%)</label><input type="number" min="0" max="100" step="0.01" name="ppn" class="form-control" value="{{ old('ppn', $masterInfo->ppn ?? 0) }}"></div>
-                                 <div class="col-md-3 mb-4"><label class="form-label">PPh21 (%)</label><input type="number" min="0" max="100" step="0.01" name="pph21" class="form-control" value="{{ old('pph21', $masterInfo->pph21 ?? 0) }}"></div>
-                                 <div class="col-md-3 mb-4"><label class="form-label">PPh23 (%)</label><input type="number" min="0" max="100" step="0.01" name="pph23" class="form-control" value="{{ old('pph23', $masterInfo->pph23 ?? 0) }}"></div>
-                                 <div class="col-md-3 mb-4"><label class="form-label">PPh22 (%)</label><input type="number" min="0" max="100" step="0.01" name="pph22" class="form-control" value="{{ old('pph22', $masterInfo->pph22 ?? 0) }}"></div>
-                                 <div class="col-md-3 mb-4"><label class="form-label">PP 0,5 (%)</label><input type="number" min="0" max="100" step="0.01" name="pp05" class="form-control" value="{{ old('pp05', $masterInfo->pp05 ?? 0) }}"></div>
-                                 <div class="col-md-6 mb-4"><label class="form-label">Bulan pembayaran</label><select name="bulan_pembayaran" class="form-select" required>@foreach ($bulanPilihan as $bulan)<option value="{{ $bulan }}" @selected(old('bulan_pembayaran', $masterInfo->bulan_pembayaran ?? now()->translatedFormat('F')) === $bulan)>{{ $bulan }}</option>@endforeach</select></div>
+                                 <div class="col-md-6 mb-4"><label class="form-label">Harga dasar (Total usulan non-PPN)</label><input type="text" class="form-control" value="{{ number_format($hargaDasarUsulan, 0, ',', '.') }}" readonly></div>
+                                 <div class="col-md-6 mb-4"><label class="form-label">Total usulan + PPN (Rp)</label><input type="text" class="form-control" value="{{ number_format($totalTagihanUsulan, 0, ',', '.') }}" readonly></div>
+                                 <div class="col-md-6 mb-4"><label class="form-label">PPN (%)</label><input type="number" min="0" max="100" step="0.01" name="ppn" class="form-control tax-rate" value="{{ old('ppn', $masterInfo->ppn ?? 0) }}"></div>
+                                 <div class="col-md-3 mb-4"><label class="form-label">PPh21 (%)</label><input type="number" min="0" max="100" step="0.01" name="pph21" class="form-control tax-rate" value="{{ old('pph21', $masterInfo->pph21 ?? 0) }}"></div>
+                                 <div class="col-md-3 mb-4"><label class="form-label">PPh23 (%)</label><input type="number" min="0" max="100" step="0.01" name="pph23" class="form-control tax-rate" value="{{ old('pph23', $masterInfo->pph23 ?? 0) }}"></div>
+                                 <div class="col-md-3 mb-4"><label class="form-label">PPh22 (%)</label><input type="number" min="0" max="100" step="0.01" name="pph22" class="form-control tax-rate" value="{{ old('pph22', $masterInfo->pph22 ?? 0) }}"></div>
+                                 <div class="col-md-3 mb-4"><label class="form-label">PP 0,5 (%)</label><input type="number" min="0" max="100" step="0.01" name="pp05" class="form-control tax-rate" value="{{ old('pp05', $masterInfo->pp05 ?? 0) }}"></div>
+                                 <div class="col-md-6 mb-4"><label class="form-label">Total pajak (Rp)</label><input type="text" id="total-pajak" class="form-control" value="{{ number_format((float) ($masterInfo->jumlah_pajak ?? 0), 0, ',', '.') }}" readonly></div>
                                  <div class="col-md-6 mb-4"><label class="form-label">Tanggal pembayaran</label><input type="date" name="tanggal_pembayaran" class="form-control" value="{{ old('tanggal_pembayaran', now()->toDateString()) }}" required></div>
-                                 <div class="col-md-6 mb-4"><label class="form-label">Jumlah yang dibayarkan (Rp)</label><input type="number" min="1" step="1" name="pembayaran" id="jumlah-pembayaran" class="form-control" value="{{ old('pembayaran') }}" required></div>
+                                 <div class="col-md-6 mb-4"><label class="form-label">Jumlah yang dibayarkan (Harga dasar + total pajak)</label><input type="number" min="0" step="1" name="pembayaran" id="jumlah-pembayaran" class="form-control" value="{{ old('pembayaran') }}" readonly></div>
                                  <div class="col-md-6 mb-4"><label class="form-label">Sisa pembayaran (Rp)</label><input type="text" id="sisa-pembayaran" class="form-control" value="{{ number_format(max(0, $sisaTersimpan), 0, ',', '.') }}" readonly data-due="{{ max(0, $sisaTersimpan) }}"></div>
-                                 <div class="col-md-6 mb-4"><label class="form-label">Validasi pembayaran</label><input type="text" class="form-control" value="{{ $sisaTersimpan > 0 ? 'Menunggu pembayaran' : ($masterInfo->status_pembayaran ?? 'Belum dibayar') }}" readonly></div>
+                                 <div class="col-md-6 mb-4"><label class="form-label">Validasi pembayaran</label><select name="status_pembayaran" id="status-pembayaran" class="form-select" required><option value="">Pilih status</option><option value="Selesai" @selected(old('status_pembayaran', $masterInfo->status_pembayaran ?? '') === 'Selesai')>Selesai</option><option value="Revisi" @selected(old('status_pembayaran', $masterInfo->status_pembayaran ?? '') === 'Revisi')>Revisi</option></select></div>
                                  <div class="col-md-6 mb-4"><label class="form-label">Kode Billing PPN</label><input type="text" name="kode_billingppn" class="form-control" value="{{ old('kode_billingppn', $masterInfo->kode_billingppn ?? '') }}"></div>
                                  <div class="col-md-6 mb-4"><label class="form-label">Kode Billing PPh22</label><input type="text" name="kode_billingpph22" class="form-control" value="{{ old('kode_billingpph22', $masterInfo->kode_billingpph22 ?? '') }}"></div>
-                                 <div class="col-md-6 mb-4"><label class="form-label">Bukti bayar (PDF/JPG/PNG, maks. 5 MB)</label><input type="file" name="bukti_bayar" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required></div>
+                                 <div class="col-md-6 mb-4"><label class="form-label">Bukti bayar (PDF/JPG/PNG, maks. 5 MB; wajib jika status Selesai)</label><input type="file" name="bukti_bayar" class="form-control" accept=".pdf,.jpg,.jpeg,.png"></div>
                                  @if (!empty($masterInfo->bukti_bayar))
                                      <div class="col-12 mb-4"><a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($masterInfo->bukti_bayar) }}" target="_blank" rel="noopener">Lihat bukti pembayaran terakhir</a></div>
                                  @endif
@@ -341,12 +381,32 @@
                                  (() => {
                                      const amount = document.getElementById('jumlah-pembayaran');
                                      const remaining = document.getElementById('sisa-pembayaran');
+                                     const taxTotal = document.getElementById('total-pajak');
+                                     const taxRates = Array.from(document.querySelectorAll('.tax-rate'));
+                                     const status = document.getElementById('status-pembayaran');
+                                     const proof = document.querySelector('[name="bukti_bayar"]');
+                                     const base = {{ $hargaDasarUsulan }};
                                      if (!amount || !remaining) return;
                                      const due = Number(remaining.dataset.due || 0);
-                                     amount.addEventListener('input', () => {
-                                         const paid = Number(amount.value || 0);
-                                         remaining.value = Math.max(0, due - paid).toLocaleString('id-ID');
-                                     });
+                                     const updateTax = () => {
+                                         const totalRate = taxRates.reduce((sum, input) => sum + Number(input.value || 0), 0);
+                                         const taxAmount = Math.round(base * totalRate / 100);
+                                         if (taxTotal) taxTotal.value = taxAmount.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+                                         amount.value = String(Math.round(base + taxAmount));
+                                         remaining.value = Math.max(0, due - Number(amount.value || 0)).toLocaleString('id-ID');
+                                     };
+                                     const updateStatusFields = () => {
+                                         const completing = !status || status.value === 'Selesai';
+                                         amount.required = completing;
+                                         amount.disabled = !completing;
+                                         if (!completing) amount.value = '';
+                                         if (proof) proof.required = completing;
+                                         if (completing) updateTax();
+                                     };
+                                     taxRates.forEach(input => input.addEventListener('input', updateTax));
+                                     status?.addEventListener('change', updateStatusFields);
+                                     updateTax();
+                                     updateStatusFields();
                                  })();
                              </script>
                          @endif

@@ -11,6 +11,7 @@ use App\Models\UsulanBelanja\UsulanBelanja;
 use App\Services\Workflow\UsulanBelanjaWorkflowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -134,6 +135,7 @@ class UsulanBelanjaController extends Controller
             'pengusul',
             'unit',
             'tahunAnggaran',
+            'sumberDana',
             'rkbu.unit',
             'rkbu.sumberDana',
             'rkbu.subKategoriRkbu.kategori.jenis_kategori_rkbu',
@@ -152,6 +154,27 @@ class UsulanBelanjaController extends Controller
         ]);
 
         $items = $this->workflow->getSelectedItems($usulanBelanja);
+        $rkbuRecords = \App\Models\Rkbu\Rkbu::query()
+            ->with([
+                'subKategoriRkbu.kategori.jenis_kategori_rkbu',
+                'subKategoriRkbu.sub_kategori_rekening.kategori_rekening',
+                'subKegiatan.kegiatan.program',
+                'subKegiatan.aktivitas.program',
+            ])
+            ->whereIn('id', $items->pluck('rkbu_id')->filter()->unique())
+            ->get();
+        $metadataRkbus = $rkbuRecords->isNotEmpty()
+            ? $rkbuRecords
+            : collect([$usulanBelanja->rkbu])->filter();
+        $metadataLabel = fn ($values) => $values->filter()->unique()->implode(' / ') ?: '-';
+        $programLabel = $metadataLabel($metadataRkbus->map(fn ($rkbu) => $rkbu->subKegiatan?->aktivitas?->program ?? $rkbu->subKegiatan?->kegiatan?->program)
+            ->map(fn ($program) => $program ? trim(($program->kode_program ?? '') . ' ' . ($program->nama_program ?? ''), ' ') : null));
+        $kegiatanLabel = $metadataLabel($metadataRkbus->map(fn ($rkbu) => $rkbu->subKegiatan?->kegiatan)
+            ->map(fn ($kegiatan) => $kegiatan ? trim(($kegiatan->kode_kegiatan ?? '') . ' ' . ($kegiatan->nama_kegiatan ?? ''), ' ') : null));
+        $subKegiatanLabel = $metadataLabel($metadataRkbus->map(fn ($rkbu) => $rkbu->subKegiatan)
+            ->map(fn ($subKegiatan) => $subKegiatan ? trim(($subKegiatan->kode_sub_kegiatan ?? '') . ' ' . ($subKegiatan->nama_sub_kegiatan ?? ''), ' ') : null));
+        $aktivitasLabel = $metadataLabel($metadataRkbus->map(fn ($rkbu) => $rkbu->subKegiatan?->aktivitas)
+            ->map(fn ($aktivitas) => $aktivitas ? trim(($aktivitas->kode_aktivitas ?? '') . ' ' . ($aktivitas->nama_aktivitas ?? ''), ' ') : null));
         $subtotal = (float) $items->sum('total_anggaran');
         $totalPpn = (float) $items->sum('total_ppn');
         $totalAnggaran = $subtotal + $totalPpn;
@@ -244,7 +267,11 @@ class UsulanBelanjaController extends Controller
 
         return Pdf::loadView('usulan_belanja.print', [
             'usulan' => $usulanBelanja,
-            'rkbu' => $usulanBelanja->rkbu,
+            'rkbu' => $metadataRkbus->first() ?? $usulanBelanja->rkbu,
+            'programLabel' => $programLabel,
+            'kegiatanLabel' => $kegiatanLabel,
+            'subKegiatanLabel' => $subKegiatanLabel,
+            'aktivitasLabel' => $aktivitasLabel,
             'items' => $items,
             'approvals' => $approvals,
             'signatures' => $signatures,
@@ -312,13 +339,24 @@ class UsulanBelanjaController extends Controller
     public function create()
     {
         $rkbus = $this->workflow->getEligibleRkbus(auth()->user());
+        $sources = $rkbus->unique('sumber_dana_id')->map(fn ($rkbu) => [
+            'id' => $rkbu->sumber_dana_id,
+            'name' => $rkbu->nama_sumber_dana,
+        ])->values();
+        $jenisKategoris = $rkbus->groupBy('id_jenis_kategori_rkbu')->map(fn ($options, $id) => [
+            'id' => $id,
+            'name' => $options->first()->nama_jenis_kategori_rkbu,
+            'source_ids' => $options->pluck('sumber_dana_id')->unique()->values(),
+        ])->values();
 
-        return view('usulan_belanja.create', compact('rkbus'));
+        return view('usulan_belanja.create', compact('rkbus', 'sources', 'jenisKategoris'));
     }
 
     public function store(StoreUsulanBelanjaRequest $request)
     {
         $usulan = $this->workflow->buatUsulan(
+            $request->validated('sumber_dana_id'),
+            $request->validated('jenis_kategori_rkbu_id'),
             $request->validated('sub_kategori_rkbu_id'),
             $request->user()
         );
@@ -516,10 +554,14 @@ class UsulanBelanjaController extends Controller
 
     public function ajukan(UsulanBelanja $usulanBelanja)
     {
-        $this->workflow->ajukan(
-            $usulanBelanja,
-            auth()->user()
-        );
+        try {
+            $this->workflow->ajukan(
+                $usulanBelanja,
+                auth()->user()
+            );
+        } catch (RuntimeException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
 
         return back()->with(
             'success',

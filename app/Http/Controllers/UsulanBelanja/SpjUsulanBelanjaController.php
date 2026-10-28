@@ -113,6 +113,7 @@ class SpjUsulanBelanjaController extends Controller
                 'spj.tgl_bast as pengadaan_tgl_bast',
                 'spj.no_ba as pengadaan_no_ba',
                 'usulan.nama_pengusul',
+                'usulan.sub_kategori_rkbu_id',
                 'perusahaan.id_perusahaan',
                 'perusahaan.nama_perusahaan',
                 'master.id as master_spj_id',
@@ -134,6 +135,8 @@ class SpjUsulanBelanjaController extends Controller
                 'master.keterangan as status_verifikasi_bendahara',
                 'master.tanggal_pembayaran',
                 'master.pembayaran',
+                'master.status_pembayaran',
+                'master.sisa_pembayaran',
             ])
             ->selectSub(
                 DB::table('spj_details')->selectRaw('COUNT(*)')->whereColumn('spj_details.spj_id', 'spj.id'),
@@ -179,15 +182,38 @@ class SpjUsulanBelanjaController extends Controller
             ->leftJoin('validator_roles as vr', 'vr.id', '=', 'ws.validator_role_id')
             ->where('ws.workflow_id', $workflow->id)->orderBy('ws.step_order')
             ->get(['ws.id', 'ws.step_order', 'ws.validator_type', 'ws.is_pptk_step', 'p.level_jabatan', 'r.nama_role', 'vr.nama_validator']) : collect();
+        $workflowStepSubcategories = Schema::hasTable('workflow_step_sub_kategori_rkbu')
+            ? DB::table('workflow_step_sub_kategori_rkbu')->get(['workflow_step_id', 'sub_kategori_rkbu_id'])
+                ->groupBy(fn ($row) => (string) $row->workflow_step_id)
+                ->map(fn ($rows) => $rows->pluck('sub_kategori_rkbu_id')->map(fn ($id) => (string) $id)->all())
+            : collect();
         $approvalStatuses = Schema::hasTable('pengadaan_workflow_approvals') && $workflowSteps->isNotEmpty()
             ? DB::table('pengadaan_workflow_approvals')->whereIn('spj_id', $spjs->pluck('spj_id'))
             ->get(['spj_id', 'workflow_step_id', 'status', 'acted_at'])->groupBy('spj_id')
             : collect();
         foreach ($spjs as $spj) {
             $timeline = [];
+            $subcategoryId = (string) $spj->sub_kategori_rkbu_id;
+            $hasCustomWorkflow = $workflowSteps->contains(function ($workflowStep) use ($workflowStepSubcategories, $subcategoryId) {
+                return in_array($subcategoryId, $workflowStepSubcategories->get((string) $workflowStep->id, []), true);
+            });
+            $stepsForSubcategory = $workflowSteps->filter(function ($workflowStep) use ($workflowStepSubcategories, $spj, $hasCustomWorkflow) {
+                $mappedSubcategories = $workflowStepSubcategories->get((string) $workflowStep->id, []);
+                return $hasCustomWorkflow
+                    ? in_array((string) $spj->sub_kategori_rkbu_id, $mappedSubcategories, true)
+                    : true;
+            });
+            $paymentStatus = strtolower(trim((string) ($spj->status_pembayaran ?? '')));
+            $isPaid = in_array($paymentStatus, ['selesai', 'sudah di bayar', 'sudah dibayar'], true)
+                || ($spj->tanggal_pembayaran
+                    && (float) $spj->pembayaran > 0
+                    && (float) $spj->pembayaran >= (float) $spj->total - 0.01);
+            if ($isPaid) {
+                $spj->status_spj = 'Sudah di Bayar';
+            }
             $approvalByStep = $approvalStatuses->get($spj->spj_id, collect())->keyBy('workflow_step_id');
             $pengurusOrder = $workflowSteps->first(fn($step) => strtolower(trim($step->level_jabatan ?: $step->nama_role ?: $step->nama_validator ?: '')) === 'pengurus barang')?->step_order;
-            foreach ($workflowSteps as $workflowStep) {
+            foreach ($stepsForSubcategory as $workflowStep) {
                 $identity = strtolower(trim($workflowStep->level_jabatan ?: $workflowStep->nama_role ?: $workflowStep->nama_validator ?: ''));
                 $nama = $workflowStep->is_pptk_step
                     ? 'Validasi PPTK'
@@ -226,8 +252,16 @@ class SpjUsulanBelanjaController extends Controller
                     continue;
                 } elseif ($key === 'bendahara') {
                     $timeline[] = ['nama' => 'Serah terima ke Bendahara', 'status' => $spj->status_serah_terima_bendahara, 'tanggal' => null];
-                    $timeline[] = ['nama' => 'Verifikasi Bendahara', 'status' => $spj->status_verifikasi_bendahara, 'tanggal' => null];
-                    $timeline[] = ['nama' => 'Pembayaran', 'status' => $spj->tanggal_pembayaran ? 'Selesai' : null, 'tanggal' => $spj->tanggal_pembayaran];
+                    $timeline[] = [
+                        'nama' => 'Verifikasi Bendahara',
+                        'status' => $isPaid ? 'Selesai' : $spj->status_verifikasi_bendahara,
+                        'tanggal' => $isPaid ? $spj->tanggal_pembayaran : null,
+                    ];
+                    $timeline[] = [
+                        'nama' => 'Pembayaran',
+                        'status' => $isPaid ? 'Selesai' : null,
+                        'tanggal' => $isPaid ? $spj->tanggal_pembayaran : null,
+                    ];
                     continue;
                 } else {
                     $approval = $approvalByStep->get($workflowStep->id);
@@ -330,6 +364,7 @@ class SpjUsulanBelanjaController extends Controller
             $lastGroupNumber = (int) DB::table('spjs')
                 ->where('usulan_belanja_id', $lockedUsulan->id)
                 ->max('nomor_urut');
+            $firstMappedWorkflowStepId = $this->firstMappedPengadaanWorkflowStepId($lockedUsulan->sub_kategori_rkbu_id);
             $createdSpjIds = [];
 
             foreach ($groups as $index => $group) {
@@ -345,6 +380,8 @@ class SpjUsulanBelanjaController extends Controller
                     'no_usulan_belanja' => $lockedUsulan->no_usulan_belanja,
                     'nomor_urut' => $groupNumber,
                     'status_spj' => 'Proses SPJ',
+                    'pengadaan_step' => $firstMappedWorkflowStepId ? 'workflow' : 'input_pesanan',
+                    'pengadaan_workflow_step_id' => $firstMappedWorkflowStepId,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ]);
@@ -634,11 +671,11 @@ class SpjUsulanBelanjaController extends Controller
             return true;
         }
 
-        $step = $this->firstPengadaanWorkflowStep();
+        $step = $this->firstPengadaanWorkflowStep($usulanBelanja);
         return $step && $this->userMatchesFirstPengadaanStep($user, $step, $usulanBelanja);
     }
 
-    private function firstPengadaanWorkflowStep(): ?object
+    private function firstPengadaanWorkflowStep(?UsulanBelanja $usulanBelanja = null): ?object
     {
         $workflowId = DB::table('workflows')
             ->whereRaw('LOWER(nama_workflow) = ?', ['workflow pengadaan'])
@@ -655,6 +692,19 @@ class SpjUsulanBelanjaController extends Controller
             return null;
         }
 
+        if ($usulanBelanja?->sub_kategori_rkbu_id && Schema::hasTable('workflow_step_sub_kategori_rkbu')) {
+            $mappedStep = DB::table('workflow_steps as ws')
+                ->join('workflow_step_sub_kategori_rkbu as mapping', 'mapping.workflow_step_id', '=', 'ws.id')
+                ->where('ws.workflow_id', $workflowId)
+                ->where('mapping.sub_kategori_rkbu_id', $usulanBelanja->sub_kategori_rkbu_id)
+                ->orderBy('ws.step_order')
+                ->select('ws.*')
+                ->first();
+            if ($mappedStep) {
+                return $mappedStep;
+            }
+        }
+
         return DB::table('workflow_steps as ws')
             ->leftJoin('roles as r', 'r.id', '=', 'ws.role_id')
             ->leftJoin('validator_roles as vr', 'vr.id', '=', 'ws.validator_role_id')
@@ -662,6 +712,33 @@ class SpjUsulanBelanjaController extends Controller
             ->orderBy('ws.step_order')
             ->select('ws.*', 'r.nama_role as system_role_name', 'vr.nama_validator')
             ->first();
+    }
+
+    private function firstMappedPengadaanWorkflowStepId(?string $subcategoryId): ?string
+    {
+        if (! $subcategoryId || ! Schema::hasTable('workflow_step_sub_kategori_rkbu')) {
+            return null;
+        }
+
+        $workflowId = DB::table('workflows')
+            ->whereRaw('LOWER(nama_workflow) = ?', ['workflow pengadaan'])
+            ->value('id');
+        if (! $workflowId) {
+            $workflowId = DB::table('workflows')
+                ->whereRaw('LOWER(modul) = ?', ['pengadaan'])
+                ->orderByDesc('updated_at')
+                ->value('id');
+        }
+        if (! $workflowId) {
+            return null;
+        }
+
+        return DB::table('workflow_steps as ws')
+            ->join('workflow_step_sub_kategori_rkbu as mapping', 'mapping.workflow_step_id', '=', 'ws.id')
+            ->where('ws.workflow_id', $workflowId)
+            ->where('mapping.sub_kategori_rkbu_id', $subcategoryId)
+            ->orderBy('ws.step_order')
+            ->value('ws.id');
     }
 
     private function userMatchesFirstPengadaanStep($user, object $step, UsulanBelanja $usulan): bool

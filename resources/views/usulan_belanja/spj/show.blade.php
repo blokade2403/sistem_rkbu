@@ -154,7 +154,8 @@
                                 <td class="text-end">Rp
                                     {{ number_format((float) $item->total_anggaran + (float) $item->total_ppn, 0, ',', '.') }}
                                 </td>
-                                <td>
+                                <td class="spj-item-action-cell">
+                                    <div class="spj-item-actions">
                                     <details>
                                         <summary class="btn btn-sm btn-light-primary">Edit</summary>
                                         <form method="POST"
@@ -182,12 +183,13 @@
                                     @if ($isAdmin)
                                         <form method="POST"
                                             action="{{ route('usulan-belanja.spj.items.delete', [$spj->id, $item->spj_detail_id]) }}"
-                                            class="mt-2" onsubmit="return confirm('Hapus item ini dari SPJ?');">
+                                            class="m-0" onsubmit="return confirm('Hapus item ini dari SPJ?');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-light-danger">Hapus</button>
                                         </form>
                                     @endif
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -249,7 +251,14 @@
     .spj-add-items summary { list-style: none; cursor: pointer; width: fit-content; }
     .spj-add-items summary::-webkit-details-marker { display: none; }
     .spj-items-table { min-width: 900px; }
+    .spj-items-table tbody td { font-size: 13px; line-height: 1.45; }
     .spj-items-table thead th { color: #7e8299; background: #f5f8fa; font-size: 11px; text-transform: uppercase; white-space: nowrap; }
+    .spj-item-action-cell { width: 132px; min-width: 132px; white-space: nowrap; }
+    .spj-item-actions { display: flex; align-items: center; gap: 6px; }
+    .spj-item-actions details { margin: 0; }
+    .spj-item-actions summary { list-style: none; cursor: pointer; }
+    .spj-item-actions summary::-webkit-details-marker { display: none; }
+    .spj-item-actions .btn { padding: 7px 10px; font-size: 12px; }
     .spj-workflow-heading { display: flex; align-items: center; gap: 15px; margin-bottom: 14px; padding: 18px 20px; border: 1px solid #e7efff; border-radius: 10px; background: linear-gradient(110deg, #f2f7ff, #fff 68%); }
     .spj-workflow-content { padding: 0 2px; }
     .spj-workflow-content > .mt-8 { margin-top: 0 !important; }

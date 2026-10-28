@@ -25,37 +25,39 @@
             @csrf
 
             <div class="mb-6">
-                <label for="jenis-kategori-rkbu" class="form-label required">Jenis Kategori RKBU</label>
-                <select id="jenis-kategori-rkbu" class="form-select" data-control="select2" data-placeholder="Pilih Jenis Kategori RKBU" required>
-                    <option value="">Pilih Jenis Kategori RKBU</option>
-                    @foreach($rkbus->pluck('id_jenis_kategori_rkbu')->filter()->unique() as $jenisId)
-                        <option value="{{ $jenisId }}">{{ $rkbus->firstWhere('id_jenis_kategori_rkbu', $jenisId)->nama_jenis_kategori_rkbu }}</option>
+                <label for="sumber-dana" class="form-label required">Sumber Dana</label>
+                <select id="sumber-dana" name="sumber_dana_id" class="form-select" data-control="select2" required>
+                    <option value="">Pilih Sumber Dana</option>
+                    @foreach($sources as $source)
+                        <option value="{{ $source['id'] }}" @selected(old('sumber_dana_id') === $source['id'])>{{ $source['name'] }}</option>
                     @endforeach
                 </select>
             </div>
 
             <div class="mb-6">
-                <label class="form-label required">
-                    Pilih Subkategori RKBU
-                </label>
+                <label for="jenis-kategori-rkbu" class="form-label required">Jenis Kategori RKBU</label>
+                <select id="jenis-kategori-rkbu" name="jenis_kategori_rkbu_id" class="form-select" data-control="select2" required>
+                    <option value="">Pilih Sumber Dana terlebih dahulu</option>
+                    @foreach($jenisKategoris as $jenis)
+                        <option value="{{ $jenis['id'] }}" data-sources="{{ $jenis['source_ids']->implode(',') }}"
+                            @selected(old('jenis_kategori_rkbu_id') === $jenis['id'])>{{ $jenis['name'] }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-                <select id="sub-kategori-rkbu" name="sub_kategori_rkbu_id"
-                        class="form-select"
-                        data-control="select2"
-                        data-placeholder="Pilih Jenis Kategori terlebih dahulu"
-                        required>
+            <div class="mb-6">
+                <label for="sub-kategori-rkbu" class="form-label required">Pilih Subkategori RKBU</label>
+                <select id="sub-kategori-rkbu" name="sub_kategori_rkbu_id" class="form-select" data-control="select2" required>
                     <option value="">Pilih Jenis Kategori terlebih dahulu</option>
-
                     @foreach($rkbus as $rkbu)
-                        <option value="{{ $rkbu->id }}" data-jenis="{{ $rkbu->id_jenis_kategori_rkbu }}"
+                        <option value="{{ $rkbu->id }}" data-sumber="{{ $rkbu->sumber_dana_id }}" data-jenis="{{ $rkbu->id_jenis_kategori_rkbu }}"
                             @selected(old('sub_kategori_rkbu_id') === $rkbu->id)>
                             {{ $rkbu->nama_sub_kategori_rkbu ?? '-' }}
                         </option>
                     @endforeach
                 </select>
-
                 <div class="form-text">
-                    Pilih subkategori dari RKBU berstatus approved. Satu usulan dapat memuat item dari beberapa nomor RKBU dalam subkategori tersebut.
+                    Subkategori menyesuaikan sumber dana dan jenis kategori. Item yang dapat dimasukkan berasal dari RKBU approved pada sumber dana dan subkategori tersebut.
                     Form ini hanya dapat digunakan oleh validator urutan pertama workflow Usulan Belanja.
                 </div>
             </div>
@@ -82,38 +84,59 @@
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const sumber = document.getElementById('sumber-dana');
     const jenis = document.getElementById('jenis-kategori-rkbu');
     const subKategori = document.getElementById('sub-kategori-rkbu');
+    const oldSumber = @json(old('sumber_dana_id'));
+    const oldJenis = @json(old('jenis_kategori_rkbu_id'));
     const oldValue = @json(old('sub_kategori_rkbu_id'));
 
+    function filterJenis() {
+        const sumberId = sumber.value;
+        Array.from(jenis.options).forEach(function (option, index) {
+            if (index === 0) return;
+            const allowedSources = (option.dataset.sources || '').split(',');
+            option.hidden = !sumberId || !allowedSources.includes(sumberId);
+            option.disabled = option.hidden;
+        });
+        if (!jenis.selectedOptions[0] || jenis.selectedOptions[0].disabled) jenis.value = '';
+        jenis.options[0].text = sumberId ? 'Pilih Jenis Kategori RKBU' : 'Pilih Sumber Dana terlebih dahulu';
+        filterSubkategori();
+        if (window.jQuery && jQuery.fn.select2) jQuery(jenis).trigger('change.select2');
+    }
+
     function filterSubkategori() {
+        const sumberId = sumber.value;
         const jenisId = jenis.value;
         Array.from(subKategori.options).forEach(function (option, index) {
             if (index === 0) return;
-            option.hidden = !jenisId || option.dataset.jenis !== jenisId;
+            option.hidden = !sumberId || !jenisId || option.dataset.sumber !== sumberId || option.dataset.jenis !== jenisId;
             option.disabled = option.hidden;
         });
         if (!subKategori.selectedOptions[0] || subKategori.selectedOptions[0].disabled) {
             subKategori.value = '';
         }
-        subKategori.options[0].text = jenisId ? 'Pilih Subkategori RKBU' : 'Pilih Jenis Kategori terlebih dahulu';
+        subKategori.options[0].text = jenisId ? 'Pilih Subkategori RKBU' : (sumberId ? 'Pilih Jenis Kategori terlebih dahulu' : 'Pilih Sumber Dana terlebih dahulu');
         if (window.jQuery && jQuery.fn.select2) jQuery(subKategori).trigger('change.select2');
     }
 
+    function onSumberChange() {
+        jenis.value = '';
+        subKategori.value = '';
+        filterJenis();
+    }
     if (window.jQuery && jQuery.fn.select2) {
+        jQuery(sumber).on('change', onSumberChange);
         jQuery(jenis).on('change', filterSubkategori);
     } else {
+        sumber.addEventListener('change', onSumberChange);
         jenis.addEventListener('change', filterSubkategori);
     }
-    if (oldValue) {
-        const oldOption = Array.from(subKategori.options).find(option => option.value === oldValue);
-        if (oldOption) {
-            jenis.value = oldOption.dataset.jenis;
-            filterSubkategori();
-            subKategori.value = oldValue;
-        }
-    }
-    filterSubkategori();
+    sumber.value = oldSumber || '';
+    jenis.value = oldJenis || '';
+    filterJenis();
+    if (oldValue) subKategori.value = oldValue;
+    if (window.jQuery && jQuery.fn.select2) jQuery(subKategori).trigger('change.select2');
 });
 </script>
 @endsection

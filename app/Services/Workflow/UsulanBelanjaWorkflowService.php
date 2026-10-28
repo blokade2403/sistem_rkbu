@@ -25,7 +25,7 @@ class UsulanBelanjaWorkflowService
 
     public function getAvailableItems(UsulanBelanja $usulan): Collection
     {
-        return $this->getDetailItems($usulan->sub_kategori_rkbu_id, null, $usulan->id, $usulan->id);
+        return $this->getDetailItems($usulan->sub_kategori_rkbu_id, null, $usulan->id, $usulan->id, $usulan->sumber_dana_id);
     }
 
     public function getSelectedItems(UsulanBelanja $usulan): Collection
@@ -50,7 +50,7 @@ class UsulanBelanjaWorkflowService
             fn($item) => $item->detail_type . ':' . $item->detail_id
         );
 
-        return $this->getDetailItems($usulan->sub_kategori_rkbu_id, $selected, $usulan->id)
+        return $this->getDetailItems($usulan->sub_kategori_rkbu_id, $selected, $usulan->id, null, $usulan->sumber_dana_id)
             ->map(function ($item) use ($savedValues) {
                 $saved = $savedValues->get($item->detail_type . ':' . $item->detail_id);
                 $item->link_id = $saved?->id;
@@ -88,7 +88,8 @@ class UsulanBelanjaWorkflowService
         string $subKategoriId,
         ?array $selected = null,
         ?string $excludeUsulanId = null,
-        ?string $includeUsulanId = null
+        ?string $includeUsulanId = null,
+        ?string $sumberDanaId = null
     ): Collection
     {
         $detailTables = [
@@ -112,7 +113,8 @@ class UsulanBelanjaWorkflowService
                 ->join('rkbus', 'rkbus.id', '=', 'item.rkbu_id')
                 ->where('rkbus.status', 'approved')
                 ->where('rkbus.tahun_anggaran_id', session('tahun_anggaran_id'))
-                ->where('rkbus.sub_kategori_rkbu_id', $subKategoriId);
+                ->where('rkbus.sub_kategori_rkbu_id', $subKategoriId)
+                ->when($sumberDanaId, fn ($query) => $query->where('rkbus.sumber_dana_id', $sumberDanaId));
 
             if ($selected !== null) {
                 $detailIds = collect($selected)
@@ -175,6 +177,7 @@ class UsulanBelanjaWorkflowService
             )
             ->leftJoin('kategori_rkbus', 'sub_kategori_rkbus.id_kategori_rkbu', '=', 'kategori_rkbus.id_kategori_rkbu')
             ->leftJoin('jenis_kategori_rkbus', 'kategori_rkbus.id_jenis_kategori_rkbu', '=', 'jenis_kategori_rkbus.id_jenis_kategori_rkbu')
+            ->join('sumber_danas', 'rkbus.sumber_dana_id', '=', 'sumber_danas.id_sumber_dana')
             ->where('rkbus.status', 'approved')
             ->when($creatorIds !== null, fn($query) => $query->whereIn('rkbus.created_by', $creatorIds))
             ->where('rkbus.tahun_anggaran_id', session('tahun_anggaran_id'))
@@ -185,6 +188,8 @@ class UsulanBelanjaWorkflowService
             ->select([
                 'rkbus.sub_kategori_rkbu_id as id',
                 'rkbus.tahun_anggaran_id',
+                'rkbus.sumber_dana_id',
+                'sumber_danas.nama_sumber_dana',
                 'sub_kategori_rkbus.nama_sub_kategori_rkbu',
                 'jenis_kategori_rkbus.id_jenis_kategori_rkbu',
                 'jenis_kategori_rkbus.nama_jenis_kategori_rkbu',
@@ -192,14 +197,16 @@ class UsulanBelanjaWorkflowService
             ->distinct();
     }
 
-    public function buatUsulan(string $subKategoriId, User $user): UsulanBelanja
+    public function buatUsulan(string $sumberDanaId, string $jenisKategoriId, string $subKategoriId, User $user): UsulanBelanja
     {
-        return DB::transaction(function () use ($subKategoriId, $user) {
+        return DB::transaction(function () use ($sumberDanaId, $jenisKategoriId, $subKategoriId, $user) {
             $assignment = $this->assertFirstUsulanValidator($user);
             $creatorIds = $this->subordinateUserIds($assignment);
 
             $rkbu = DB::table('rkbus')
                 ->where('sub_kategori_rkbu_id', $subKategoriId)
+                ->where('sumber_dana_id', $sumberDanaId)
+                ->where('jenis_kategori_rkbu_id', $jenisKategoriId)
                 ->where('tahun_anggaran_id', session('tahun_anggaran_id'))
                 ->where('status', 'approved')
                 ->whereIn('created_by', $creatorIds)
@@ -250,6 +257,7 @@ class UsulanBelanjaWorkflowService
                 'unit_id' => $rkbu->unit_id,
                 'sub_kategori_rkbu_id' => $rkbu->sub_kategori_rkbu_id,
                 'jenis_kategori_rkbu_id' => $rkbu->jenis_kategori_rkbu_id,
+                'sumber_dana_id' => $rkbu->sumber_dana_id,
                 'tahun_anggaran_id' => $rkbu->tahun_anggaran_id,
                 'status_usulan' => 'draft',
             ]);
@@ -341,6 +349,7 @@ class UsulanBelanjaWorkflowService
                     ->where('rkbus.status', 'approved')
                     ->where('rkbus.tahun_anggaran_id', session('tahun_anggaran_id'))
                     ->where('rkbus.sub_kategori_rkbu_id', $usulan->sub_kategori_rkbu_id)
+                    ->when($usulan->sumber_dana_id, fn ($query) => $query->where('rkbus.sumber_dana_id', $usulan->sumber_dana_id))
                     ->lockForUpdate()
                     ->first(array_merge([
                         'item.id',
@@ -570,7 +579,7 @@ class UsulanBelanjaWorkflowService
             && $user->roles()->where('nama_role', 'Validator')->exists();
 
         $isFirstStepValidator = $isUsulanCreator || ($assignment && $firstStep && (
-            ($firstStep->validator_type === 'position'
+            ($firstStep->position_id
                 && $firstStep->position_id === $assignment->position_id)
             || ($firstStep->validator_type === 'role'
                 && $firstStep->role_id
@@ -836,6 +845,12 @@ class UsulanBelanjaWorkflowService
             return $query->whereIn('pa.position_id', $pptkPositionIds)->get();
         }
 
+        // Tahap yang sudah menunjuk jabatan validator harus memakai jabatan itu
+        // secara langsung, termasuk data workflow lama yang masih bertipe hierarchy.
+        if ($step->position_id) {
+            return $query->where('pa.position_id', $step->position_id)->get();
+        }
+
         if (
             $step->validator_type === 'user'
             || ($step->validator_type === 'hierarchy' && $step->validator_role_id)
@@ -866,19 +881,33 @@ class UsulanBelanjaWorkflowService
         }
 
         if ($step->validator_type === 'hierarchy') {
-            $positionId = $user->position_id;
             $level = (int) ($step->hierarchy_level ?? 1);
             $parentIds = [];
+            $submitterPositionIds = DB::table('position_assignments')
+                ->where('user_id', $usulan->user_id)
+                ->where('is_active', true)
+                ->whereDate('tanggal_mulai', '<=', now())
+                ->where(function ($assignmentQuery) {
+                    $assignmentQuery->whereNull('tanggal_selesai')
+                        ->orWhereDate('tanggal_selesai', '>=', now());
+                })
+                ->pluck('position_id');
 
-            for ($i = 0; $i < $level && $positionId; $i++) {
-                $position = DB::table('positions')
-                    ->where('id', $positionId)
-                    ->first();
+            if ($submitterPositionIds->isEmpty() && $user->position_id) {
+                $submitterPositionIds->push($user->position_id);
+            }
 
-                $positionId = $position?->parent_id;
+            foreach ($submitterPositionIds->unique() as $positionId) {
+                for ($i = 0; $i < $level && $positionId; $i++) {
+                    $position = DB::table('positions')
+                        ->where('id', $positionId)
+                        ->first();
 
-                if ($positionId) {
-                    $parentIds[] = $positionId;
+                    $positionId = $position?->parent_id;
+
+                    if ($positionId) {
+                        $parentIds[] = $positionId;
+                    }
                 }
             }
 

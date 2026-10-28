@@ -18,7 +18,9 @@ class RkbuPegawaiDataTable extends DataTable
             ->addIndexColumn()
             ->addColumn('checkbox', function (RkbuDetailPegawai $row) {
                 $status = $row->rkbu?->status;
-                $disabled = in_array($status, ['draft', 'revision', 'rejected'], true) ? '' : 'disabled';
+                $canSubmit = (string) $row->rkbu?->created_by === (string) auth()->id()
+                    && in_array($status, ['draft', 'revision', 'rejected'], true);
+                $disabled = $canSubmit ? '' : 'disabled';
 
                 return '<div class="form-check form-check-sm form-check-custom form-check-solid">'
                     . '<input class="form-check-input pegawai-row-checkbox" type="checkbox" value="' . e($row->id) . '" ' . $disabled . '></div>';
@@ -70,7 +72,9 @@ class RkbuPegawaiDataTable extends DataTable
                 $actions = '<div class="d-flex justify-content-end flex-shrink-0">'
                     . '<a class="btn btn-icon btn-bg-light btn-active-color-info btn-sm me-1" href="'
                     . e(route('rkbu.pegawai.show', $row->id)) . '" title="Detail"><i class="fas fa-eye"></i></a>';
-                if (in_array($row->rkbu?->status, ['draft', 'revision', 'rejected'], true)) {
+                $canSubmit = (string) $row->rkbu?->created_by === (string) auth()->id()
+                    && in_array($row->rkbu?->status, ['draft', 'revision', 'rejected'], true);
+                if ($canSubmit) {
                     $actions .= '<a class="btn btn-icon btn-bg-light btn-active-color-primary btn-sm me-1" href="'
                         . e(route('rkbu.pegawai.edit', $row->id)) . '" title="Edit"><i class="fas fa-edit"></i></a>'
                         . '<button class="btn btn-icon btn-bg-light btn-active-color-success btn-sm me-1 pegawai-submit" type="button" data-url="'

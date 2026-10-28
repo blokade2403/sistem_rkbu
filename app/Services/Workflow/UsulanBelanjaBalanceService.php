@@ -122,6 +122,41 @@ class UsulanBelanjaBalanceService
         ];
     }
 
+    public function assertDetailCoversReservations($detail, float $proposedVolume, float $proposedBudget): void
+    {
+        $type = array_search($detail->getTable(), self::DETAIL_TYPES, true);
+        if (! $type) {
+            return;
+        }
+
+        $reserved = DB::table('usulan_belanja_items as items')
+            ->join('usulan_belanjas as usulan', 'usulan.id', '=', 'items.usulan_belanja_id')
+            ->where('items.detail_type', $type)
+            ->where('items.detail_id', $detail->getKey())
+            ->whereIn('usulan.status_usulan', ['proses', 'approved'])
+            ->selectRaw('COALESCE(SUM(items.volume), 0) as volume')
+            ->selectRaw('COALESCE(SUM(ROUND(items.harga_satuan * items.volume, 2) + ROUND(ROUND(items.harga_satuan * items.volume, 2) * COALESCE(items.ppn, 0) / 100, 2)), 0) as anggaran')
+            ->first();
+
+        $reservedVolume = (float) ($reserved->volume ?? 0);
+        $reservedBudget = (float) ($reserved->anggaran ?? 0);
+        $remainingVolume = $proposedVolume - $reservedVolume;
+        $remainingBudget = $proposedBudget - $reservedBudget;
+
+        if ($remainingVolume < -0.00001 || $remainingBudget < -0.01) {
+            throw ValidationException::withMessages([
+                'details' => sprintf(
+                    'Perubahan item "%s" ditolak karena anggaran atau volume tersisa menjadi minus. Sudah terpakai %s dari %s dan Rp %s dari Rp %s. Sesuaikan volume/harga atau lakukan pergeseran penambahan anggaran terlebih dahulu.',
+                    $detail->nama_barang ?? $detail->nama_pegawai ?? 'RKBU',
+                    number_format($reservedVolume, 2, ',', '.'),
+                    number_format($proposedVolume, 2, ',', '.'),
+                    number_format($reservedBudget, 2, ',', '.'),
+                    number_format($proposedBudget, 2, ',', '.')
+                ),
+            ]);
+        }
+    }
+
     private function usulanItemBalances(string $usulanId, string $type, array $detailIds): Collection
     {
         if ($detailIds === []) {

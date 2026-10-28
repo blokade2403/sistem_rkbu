@@ -17,6 +17,8 @@ class RkbuDetailPegawai extends Model
         'jumlah_volume',
         'total_anggaran',
         'nama_pegawai',
+        'nip',
+        'bulan',
         'tempat_lahir',
         'tanggal_lahir',
         'pendidikan',

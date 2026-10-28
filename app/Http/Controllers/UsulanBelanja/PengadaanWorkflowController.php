@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
 class PengadaanWorkflowController extends Controller
@@ -30,7 +31,7 @@ class PengadaanWorkflowController extends Controller
         'validasi_ppk_keuangan' => 'Validasi PPK Keuangan',
         'validasi_direktur' => 'Validasi Direktur',
         'serah_terima_bendahara' => 'Serah terima ke Bendahara',
-        'verifikasi_bendahara' => 'Verifikasi Bendahara',
+        'verifikasi_bendahara' => 'Konfirmasi Terima SPJ',
         'pembayaran' => 'Pembayaran Bendahara',
         'selesai' => 'Selesai',
     ];
@@ -102,12 +103,21 @@ class PengadaanWorkflowController extends Controller
         ]);
         $this->authorizeView($spj);
         $step = $spj->pengadaan_step ?: 'input_pesanan';
-        $workflowStep = $step === 'validasi_barang' ? null : $this->currentWorkflowStep($spj);
-        if (! $workflowStep && $step === 'input_bast') $workflowStep = $this->workflowStepAfterIdentity('pengurus barang');
-        if (! $workflowStep && str_starts_with($step, 'validasi_') && $step !== 'validasi_barang') $workflowStep = $this->legacyWorkflowStep($step);
+        $workflowStep = $step === 'validasi_barang' && ! $this->hasCustomWorkflowForSpj($spj)
+            ? null
+            : $this->currentWorkflowStep($spj);
+        if (! $workflowStep && $step === 'input_bast') $workflowStep = $this->workflowStepAfterIdentity('pengurus barang', $spj);
+        if (! $workflowStep && str_starts_with($step, 'validasi_') && $step !== 'validasi_barang') $workflowStep = $this->legacyWorkflowStep($step, $spj);
+        $workflowStep = $this->skipCompletedBastStep($spj, $workflowStep);
         $workflowStepName = $workflowStep ? $this->workflowStepName($workflowStep) : null;
-        if ($workflowStep && ($spj->pengadaan_step === 'workflow' || $spj->pengadaan_step === 'input_bast' || ($spj->pengadaan_step === 'input_penyerahan_spj_admin' && strtolower(trim($workflowStepName)) !== 'admin pengadaan') || (str_starts_with($spj->pengadaan_step, 'validasi_') && $spj->pengadaan_step !== 'validasi_barang'))) {
-            $step = $this->isBastWorkflowStep($workflowStep) ? 'input_bast' : 'workflow';
+        if ($workflowStep && ($spj->pengadaan_step === 'workflow'
+            || ($this->hasCustomWorkflowForSpj($spj) && in_array($spj->pengadaan_step, ['input_pesanan', 'upload_foto', 'validasi_barang', 'input_bast'], true))
+            || $spj->pengadaan_step === 'input_bast'
+            || ($spj->pengadaan_step === 'input_penyerahan_spj_admin' && strtolower(trim($workflowStepName)) !== 'admin pengadaan')
+            || (str_starts_with($spj->pengadaan_step, 'validasi_') && $spj->pengadaan_step !== 'validasi_barang'))) {
+            $step = $this->isBastWorkflowStep($workflowStep, $spj)
+                ? 'input_bast'
+                : ($this->isBendaharaReceiptStep($workflowStepName) ? 'verifikasi_bendahara' : 'workflow');
         }
         $isAdmin = auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('Super Admin');
         $logs = DB::table('pengadaan_workflow_logs')->leftJoin('users', 'users.id', '=', 'pengadaan_workflow_logs.user_id')
@@ -148,12 +158,21 @@ class PengadaanWorkflowController extends Controller
             'details.rkbu.subKegiatan',
         ]);
         $step = $spj->pengadaan_step ?: 'input_pesanan';
-        $workflowStep = $step === 'validasi_barang' ? null : $this->currentWorkflowStep($spj);
-        if (! $workflowStep && $step === 'input_bast') $workflowStep = $this->workflowStepAfterIdentity('pengurus barang');
-        if (! $workflowStep && str_starts_with($step, 'validasi_') && $step !== 'validasi_barang') $workflowStep = $this->legacyWorkflowStep($step);
+        $workflowStep = $step === 'validasi_barang' && ! $this->hasCustomWorkflowForSpj($spj)
+            ? null
+            : $this->currentWorkflowStep($spj);
+        if (! $workflowStep && $step === 'input_bast') $workflowStep = $this->workflowStepAfterIdentity('pengurus barang', $spj);
+        if (! $workflowStep && str_starts_with($step, 'validasi_') && $step !== 'validasi_barang') $workflowStep = $this->legacyWorkflowStep($step, $spj);
+        $workflowStep = $this->skipCompletedBastStep($spj, $workflowStep);
         $workflowStepName = $workflowStep ? $this->workflowStepName($workflowStep) : null;
-        if ($workflowStep && ($spj->pengadaan_step === 'workflow' || $spj->pengadaan_step === 'input_bast' || ($spj->pengadaan_step === 'input_penyerahan_spj_admin' && strtolower(trim($workflowStepName)) !== 'admin pengadaan') || (str_starts_with($spj->pengadaan_step, 'validasi_') && $spj->pengadaan_step !== 'validasi_barang'))) {
-            $step = $this->isBastWorkflowStep($workflowStep) ? 'input_bast' : 'workflow';
+        if ($workflowStep && ($spj->pengadaan_step === 'workflow'
+            || ($this->hasCustomWorkflowForSpj($spj) && in_array($spj->pengadaan_step, ['input_pesanan', 'upload_foto', 'validasi_barang', 'input_bast'], true))
+            || $spj->pengadaan_step === 'input_bast'
+            || ($spj->pengadaan_step === 'input_penyerahan_spj_admin' && strtolower(trim($workflowStepName)) !== 'admin pengadaan')
+            || (str_starts_with($spj->pengadaan_step, 'validasi_') && $spj->pengadaan_step !== 'validasi_barang'))) {
+            $step = $this->isBastWorkflowStep($workflowStep, $spj)
+                ? 'input_bast'
+                : ($this->isBendaharaReceiptStep($workflowStepName) ? 'verifikasi_bendahara' : 'workflow');
         }
         $isAdmin = auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('Super Admin');
         $logs = DB::table('pengadaan_workflow_logs')->leftJoin('users', 'users.id', '=', 'pengadaan_workflow_logs.user_id')
@@ -192,9 +211,25 @@ class PengadaanWorkflowController extends Controller
         $nilaiPpn = (float) $spj->details->sum(fn ($detail) =>
             (float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume * (float) ($detail->item?->ppn ?? 0) / 100
         );
+        $latestPaymentInfo = null;
+        if ($masterInfo && Schema::hasTable('master_spj_payment_transactions')) {
+            $latestPaymentInfo = DB::table('master_spj_payment_transactions as payment')
+                ->leftJoin('users', 'users.id', '=', 'payment.user_id')
+                ->where('payment.master_spj_id', $masterInfo->id)
+                ->orderByDesc('payment.tanggal_pembayaran')
+                ->orderByDesc('payment.created_at')
+                ->first([
+                    'payment.amount',
+                    'payment.tanggal_pembayaran',
+                    'payment.bulan_pembayaran',
+                    'payment.bukti_bayar',
+                    'users.nama as nama_bendahara',
+                ]);
+        }
 
         return [
             'masterInfo' => $masterInfo,
+            'latestPaymentInfo' => $latestPaymentInfo,
             'netto' => $netto,
             'nilaiPpn' => $nilaiPpn,
             'totalAnggaran' => $netto + $nilaiPpn,
@@ -203,17 +238,20 @@ class PengadaanWorkflowController extends Controller
 
     public function userCanAccessCurrentWorkflowStep(Spj $spj): bool
     {
-        $workflowStep = $spj->pengadaan_workflow_step_id
-            ? $this->currentWorkflowStep($spj)
-            : ($spj->pengadaan_step === 'input_bast'
-                ? $this->workflowStepAfterIdentity('pengurus barang')
-                : (str_starts_with($spj->pengadaan_step, 'validasi_') ? $this->legacyWorkflowStep($spj->pengadaan_step) : null));
+        $workflowStep = $this->currentWorkflowStep($spj);
+        if (! $workflowStep && $spj->pengadaan_step === 'input_bast') {
+            $workflowStep = $this->workflowStepAfterIdentity('pengurus barang', $spj);
+        }
+        if (! $workflowStep && str_starts_with($spj->pengadaan_step, 'validasi_') && $spj->pengadaan_step !== 'validasi_barang') {
+            $workflowStep = $this->legacyWorkflowStep($spj->pengadaan_step, $spj);
+        }
         return $workflowStep ? $this->userCanApproveWorkflowStep($workflowStep, $spj) : false;
     }
 
     public function storePesanan(Request $request, Spj $spj)
     {
         $this->authorizeRole('Admin Pengadaan');
+        abort_unless(! $this->hasCustomWorkflowForSpj($spj), 403, 'SPJ ini mengikuti langkah workflow khusus subkategori dan tidak melalui tahap default input surat pesanan.');
         abort_unless(in_array($spj->pengadaan_step ?: 'input_pesanan', ['input_pesanan'], true), 403, 'Tahap pesanan sudah ditutup.');
         $data = $request->validate([
             'no_surat_pesanan' => ['required', 'string', 'max:255'],
@@ -277,7 +315,7 @@ class PengadaanWorkflowController extends Controller
         ]);
         $approved = $data['keputusan'] === 'setuju';
         $from = $spj->pengadaan_step;
-        $workflowNext = $approved ? $this->workflowStepAfterIdentity('pengurus barang') : null;
+        $workflowNext = $approved ? $this->workflowStepAfterIdentity('pengurus barang', $spj) : null;
         if ($approved && ! $workflowNext) {
             throw ValidationException::withMessages(['keputusan' => 'Workflow Pengadaan belum memiliki tahap setelah Pengurus Barang. Periksa pengaturan workflow.']);
         }
@@ -301,7 +339,7 @@ class PengadaanWorkflowController extends Controller
         $this->authorizeRole('Admin Pengadaan');
         $workflowStep = $this->currentWorkflowStep($spj);
         if ($spj->pengadaan_step === 'input_bast' && ! $workflowStep) {
-            $workflowStep = $this->workflowStepAfterIdentity('pengurus barang');
+            $workflowStep = $this->workflowStepAfterIdentity('pengurus barang', $spj);
             abort_unless($workflowStep, 422, 'Workflow Pengadaan belum memiliki tahap setelah Pengurus Barang.');
             $spj->update(['pengadaan_step' => 'workflow', 'pengadaan_workflow_step_id' => $workflowStep->id]);
             $this->log($spj, 'Sesuaikan SPJ ke Workflow Pengadaan', 'input_bast', 'workflow', 'Validasi lanjutan harus diselesaikan sebelum BAST.');
@@ -309,8 +347,11 @@ class PengadaanWorkflowController extends Controller
         }
         $workflowBast = $spj->pengadaan_step === 'workflow'
             && $workflowStep
-            && $this->isBastWorkflowStep($workflowStep);
-        abort_unless($workflowBast || $spj->pengadaan_step === 'input_bast', 403, 'BAST belum dapat diisi pada tahap workflow saat ini.');
+            && $this->isBastWorkflowStep($workflowStep, $spj);
+        $legacyBast = $spj->pengadaan_step === 'input_bast'
+            && $workflowStep
+            && $this->isBastWorkflowStep($workflowStep, $spj);
+        abort_unless($workflowBast || $legacyBast, 403, 'BAST tidak termasuk tahap workflow subkategori ini atau belum dapat diisi.');
         $data = $request->validate([
             'tgl_bast' => ['required', 'date'],
             'no_ba' => ['required', 'string', 'max:255'],
@@ -321,8 +362,8 @@ class PengadaanWorkflowController extends Controller
         $from = $spj->pengadaan_step;
         $master = DB::table('master_spjs')->where('spj_id', $spj->id)->first();
         abort_unless($master, 422, 'Data master SPJ untuk penyedia ini tidak ditemukan.');
-        $workflowStep = $workflowStep ?: $this->bastWorkflowStep();
-        $nextStep = $workflowStep ? $this->nextWorkflowStep($workflowStep) : null;
+        $workflowStep = $workflowStep ?: $this->bastWorkflowStep($spj);
+        $nextStep = $workflowStep ? $this->nextWorkflowStep($workflowStep, $spj) : null;
         $spj->update($data + [
             'pengadaan_step' => 'input_tukar_faktur',
             'pengadaan_workflow_step_id' => $nextStep?->id,
@@ -362,10 +403,10 @@ class PengadaanWorkflowController extends Controller
 
         $workflowCursor = $spj->pengadaan_workflow_step_id
             ? $this->currentWorkflowStep($spj)
-            : $this->bastWorkflowStep();
+            : $this->bastWorkflowStep($spj);
         $nextStep = $spj->pengadaan_workflow_step_id
             ? $workflowCursor
-            : ($workflowCursor ? $this->nextWorkflowStep($workflowCursor) : null);
+            : ($workflowCursor ? $this->nextWorkflowStep($workflowCursor, $spj) : null);
         $spj->update([
             'pengadaan_step' => $nextStep ? 'workflow' : 'selesai',
             'pengadaan_workflow_step_id' => $nextStep?->id,
@@ -425,6 +466,15 @@ class PengadaanWorkflowController extends Controller
     public function storeLanjutan(Request $request, Spj $spj)
     {
         $step = $spj->pengadaan_step;
+        if ($step !== 'workflow'
+            && $this->hasCustomWorkflowForSpj($spj)
+            && in_array($step, ['input_pesanan', 'upload_foto', 'validasi_barang', 'input_bast'], true)) {
+            $mappedStep = $this->currentWorkflowStep($spj);
+            abort_unless($mappedStep, 422, 'Tahap awal workflow subkategori tidak ditemukan. Periksa mapping workflow-step-sub-kategori-rkbu.');
+            abort_unless($this->userCanApproveWorkflowStep($mappedStep, $spj), 403, 'Akun Anda tidak memiliki kewenangan untuk tahap workflow ini.');
+            $spj->update(['pengadaan_step' => 'workflow', 'pengadaan_workflow_step_id' => $mappedStep->id]);
+            $step = 'workflow';
+        }
         if ($step === 'input_penyerahan_spj_admin' && $spj->pengadaan_workflow_step_id) {
             $pendingStep = $this->currentWorkflowStep($spj);
             if ($pendingStep && strtolower(trim($this->workflowStepName($pendingStep))) !== 'admin pengadaan') {
@@ -440,16 +490,20 @@ class PengadaanWorkflowController extends Controller
             }
         }
         if ($step !== 'workflow' && ! $spj->pengadaan_workflow_step_id && ($step === 'input_bast' || str_starts_with($step, 'validasi_'))) {
-            $mappedStep = $step === 'input_bast' ? $this->workflowStepAfterIdentity('pengurus barang') : $this->legacyWorkflowStep($step);
+            $mappedStep = $step === 'input_bast' ? $this->workflowStepAfterIdentity('pengurus barang', $spj) : $this->legacyWorkflowStep($step, $spj);
             abort_unless($mappedStep, 422, 'Tahap SPJ lama tidak terdapat pada Workflow Pengadaan aktif. Periksa workflow atau sesuaikan status SPJ.');
             $spj->update(['pengadaan_step' => 'workflow', 'pengadaan_workflow_step_id' => $mappedStep->id]);
             $step = 'workflow';
         }
         if ($step === 'workflow') {
-            $workflowStep = $this->currentWorkflowStep($spj);
+            $workflowStep = $this->skipCompletedBastStep($spj, $this->currentWorkflowStep($spj));
             abort_unless($workflowStep, 422, 'Tahap workflow tidak ditemukan. Periksa pengaturan workflow Pengadaan.');
             abort_unless($this->userCanApproveWorkflowStep($workflowStep, $spj), 403, 'Akun Anda tidak memiliki kewenangan untuk tahap workflow ini.');
             abort_unless($this->workflowStepName($workflowStep) !== 'Admin Pengadaan', 422, 'Tahap ini memerlukan pengisian BAST.');
+
+            if ($spj->pengadaan_workflow_step_id !== $workflowStep->id) {
+                $spj->update(['pengadaan_workflow_step_id' => $workflowStep->id]);
+            }
 
             $data = $request->validate(['keputusan' => ['required', 'in:setuju,revisi'], 'catatan' => ['nullable', 'string', 'max:5000']]);
             $approved = $data['keputusan'] === 'setuju';
@@ -465,9 +519,9 @@ class PengadaanWorkflowController extends Controller
                 $this->syncWorkflowStatusToMaster($master->id, $stageName, $status, $data['catatan'] ?? null);
             }
 
-            $next = $approved ? $this->nextWorkflowStep($workflowStep) : $workflowStep;
+            $next = $approved ? $this->nextWorkflowStep($workflowStep, $spj) : $workflowStep;
             $nextName = $approved && $next ? $this->workflowStepName($next) : ($approved ? 'Selesai' : $stageName);
-            if ($approved && strtolower(trim($stageName)) === 'direktur') {
+            if ($approved && strtolower(trim($stageName)) === 'direktur' && strtolower(trim($nextName)) === 'admin pengadaan') {
                 $spj->update([
                     'pengadaan_step' => 'input_penyerahan_spj_admin',
                     'pengadaan_workflow_step_id' => $next?->id,
@@ -480,6 +534,26 @@ class PengadaanWorkflowController extends Controller
                     'Disetujui. Tahap berikutnya: penyerahan dokumen SPJ oleh Admin Pengadaan.'
                 );
                 return back()->with('success', 'Validasi Direktur tersimpan. SPJ diteruskan ke Admin Pengadaan untuk penyerahan dokumen.');
+            }
+            if ($this->isBendaharaReceiptStep($stageName)) {
+                $spj->update([
+                    'pengadaan_step' => $approved ? 'pembayaran' : 'workflow',
+                    'pengadaan_workflow_step_id' => $approved ? null : $workflowStep->id,
+                ]);
+                $this->log(
+                    $spj,
+                    $approved ? 'Konfirmasi penerimaan SPJ oleh Bendahara' : 'Revisi Konfirmasi Terima SPJ',
+                    'workflow',
+                    $approved ? 'pembayaran' : 'workflow',
+                    $data['catatan'] ?? null
+                );
+
+                return back()->with(
+                    'success',
+                    $approved
+                        ? 'Penerimaan SPJ dikonfirmasi. Silakan lanjutkan ke form pembayaran.'
+                        : 'SPJ dikembalikan untuk diperbaiki pada tahap konfirmasi penerimaan.'
+                );
             }
             $nextLegacyStep = $approved && $next && $nextName === 'Bendahara' ? 'serah_terima_bendahara' : 'workflow';
             $spj->update([
@@ -543,9 +617,9 @@ class PengadaanWorkflowController extends Controller
             $next = $approved ? 'pembayaran' : $step;
         } elseif ($step === 'pembayaran') {
             $data = $request->validate([
-                'pembayaran' => ['required', 'numeric', 'min:0'],
+                'pembayaran' => ['nullable', 'required_if:status_pembayaran,Selesai', 'numeric', 'min:0'],
                 'tanggal_pembayaran' => ['required', 'date'],
-                'bulan_pembayaran' => ['required', 'string', 'max:30'],
+                'status_pembayaran' => ['required', 'in:Selesai,Revisi'],
                 'ppn' => ['nullable', 'numeric', 'min:0', 'max:100'],
                 'pph21' => ['nullable', 'numeric', 'min:0', 'max:100'],
                 'pph22' => ['nullable', 'numeric', 'min:0', 'max:100'],
@@ -556,23 +630,43 @@ class PengadaanWorkflowController extends Controller
                 'kode_billingppn' => ['nullable', 'string', 'max:255'],
                 'kode_billingpph22' => ['nullable', 'string', 'max:255'],
                 'catatan' => ['nullable', 'string', 'max:5000'],
-                'bukti_bayar' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+                'bukti_bayar' => ['nullable', 'required_if:status_pembayaran,Selesai', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
             ]);
-            $nilaiPembayaran = (float) $data['pembayaran'];
+            $spj->loadMissing('details.item');
+            $hargaDasar = (float) $spj->details->sum(fn ($detail) => (float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume);
+            $totalPpnUsulan = (float) $spj->details->sum(fn ($detail) => (float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume * (float) ($detail->item?->ppn ?? 0) / 100);
+            $nilaiTagihan = $hargaDasar + $totalPpnUsulan;
+            $totalPajak = round($hargaDasar * (
+                (float) ($data['ppn'] ?? $master->ppn ?? 0)
+                + (float) ($data['pph21'] ?? $master->pph21 ?? 0)
+                + (float) ($data['pph22'] ?? $master->pph22 ?? 0)
+                + (float) ($data['pph23'] ?? $master->pph23 ?? 0)
+                + (float) ($data['pp05'] ?? $master->pp05 ?? 0)
+            ) / 100);
+            $nilaiPembayaran = $data['status_pembayaran'] === 'Selesai' ? $hargaDasar + $totalPajak : 0;
             $totalTerbayar = (float) ($master->pembayaran ?? 0) + $nilaiPembayaran;
-            $nilaiTagihan = (float) ($master->harga_bersih ?: $master->harga_dasar ?: $master->bruto ?: 0);
-            if ($totalTerbayar > $nilaiTagihan) {
+            if ($data['status_pembayaran'] === 'Selesai' && $totalTerbayar > $nilaiTagihan) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'pembayaran' => 'Jumlah pembayaran melebihi sisa tagihan SPJ.',
                 ]);
             }
             $sisaPembayaran = max(0, $nilaiTagihan - $totalTerbayar);
+            if ($data['status_pembayaran'] === 'Selesai' && $sisaPembayaran > 0) {
+                throw ValidationException::withMessages([
+                    'status_pembayaran' => 'Status Selesai hanya dapat dipilih jika seluruh total usulan belanja sudah dibayarkan.',
+                ]);
+            }
             $path = $request->file('bukti_bayar')?->store('spjs/bukti-bayar', 'public');
             DB::table('master_spjs')->where('id', $master->id)->update([
                 'pembayaran' => $totalTerbayar,
                 'sisa_pembayaran' => $sisaPembayaran,
                 'tanggal_pembayaran' => $data['tanggal_pembayaran'],
-                'bulan_pembayaran' => $data['bulan_pembayaran'],
+                'bulan_pembayaran' => Carbon::parse($data['tanggal_pembayaran'])->translatedFormat('F'),
+                'status_pembayaran' => $data['status_pembayaran'],
+                'bruto' => $nilaiTagihan,
+                'harga_dasar' => $hargaDasar,
+                'jumlah_pajak' => $totalPajak,
+                'harga_bersih' => max(0, $nilaiTagihan - $totalPajak),
                 'ppn' => $data['ppn'] ?? $master->ppn,
                 'pph21' => $data['pph21'] ?? $master->pph21,
                 'pph22' => $data['pph22'] ?? $master->pph22,
@@ -582,34 +676,40 @@ class PengadaanWorkflowController extends Controller
                 'bpjs_tk' => $data['bpjs_tk'] ?? $master->bpjs_tk,
                 'kode_billingppn' => $data['kode_billingppn'] ?? $master->kode_billingppn,
                 'kode_billingpph22' => $data['kode_billingpph22'] ?? $master->kode_billingpph22,
-                'bukti_bayar' => $path,
+                'bukti_bayar' => $path ?? $master->bukti_bayar,
                 'ket_verif_bendahara' => $data['catatan'] ?? $master->ket_verif_bendahara,
                 'tgl_verif_bendahara' => now()->toDateString(),
                 'updated_at' => now(),
             ]);
-            if (Schema::hasTable('master_spj_payment_transactions')) {
+            if ($data['status_pembayaran'] === 'Selesai' && $nilaiPembayaran > 0 && Schema::hasTable('master_spj_payment_transactions')) {
                 DB::table('master_spj_payment_transactions')->insert([
                     'id' => (string) Str::uuid(),
                     'master_spj_id' => $master->id,
                     'amount' => $nilaiPembayaran,
                     'tanggal_pembayaran' => $data['tanggal_pembayaran'],
-                    'bulan_pembayaran' => $data['bulan_pembayaran'],
+                    'bulan_pembayaran' => Carbon::parse($data['tanggal_pembayaran'])->translatedFormat('F'),
                     'bukti_bayar' => $path,
                     'user_id' => auth()->id(),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
             }
-            $next = $sisaPembayaran > 0 ? 'pembayaran' : 'selesai';
-            $approved = true;
+            $next = $data['status_pembayaran'] === 'Revisi'
+                ? 'pembayaran'
+                : ($sisaPembayaran > 0 ? 'pembayaran' : 'selesai');
+            $approved = $data['status_pembayaran'] === 'Selesai';
         } else {
             abort(403, 'Tahap SPJ tidak valid.');
         }
 
-        $spj->update([
+        $spjUpdates = [
             'pengadaan_step' => $next,
             'pengadaan_workflow_step_id' => $next === 'selesai' ? null : $spj->pengadaan_workflow_step_id,
-        ]);
+        ];
+        if ($next === 'selesai') {
+            $spjUpdates['status_spj'] = 'Sudah di Bayar';
+        }
+        $spj->update($spjUpdates);
         $this->log($spj, $approved ? 'Selesaikan ' . self::STEPS[$step] : 'Revisi ' . self::STEPS[$step], $step, $next, $data['catatan'] ?? null);
         return back()->with('success', $approved ? 'Data tersimpan. SPJ diteruskan ke ' . self::STEPS[$next] . '.' : 'SPJ dikembalikan untuk revisi pada tahap ini.');
     }
@@ -642,11 +742,13 @@ class PengadaanWorkflowController extends Controller
     private function authorizeView(Spj $spj): void
     {
         $user = auth()->user();
-        $workflowStep = $spj->pengadaan_workflow_step_id
-            ? $this->currentWorkflowStep($spj)
-            : ($spj->pengadaan_step === 'input_bast'
-                ? $this->workflowStepAfterIdentity('pengurus barang')
-                : (str_starts_with($spj->pengadaan_step, 'validasi_') ? $this->legacyWorkflowStep($spj->pengadaan_step) : null));
+        $workflowStep = $this->currentWorkflowStep($spj);
+        if (! $workflowStep && $spj->pengadaan_step === 'input_bast') {
+            $workflowStep = $this->workflowStepAfterIdentity('pengurus barang', $spj);
+        }
+        if (! $workflowStep && str_starts_with($spj->pengadaan_step, 'validasi_') && $spj->pengadaan_step !== 'validasi_barang') {
+            $workflowStep = $this->legacyWorkflowStep($spj->pengadaan_step, $spj);
+        }
         $workflowAllowed = $workflowStep && $this->userCanApproveWorkflowStep($workflowStep, $spj);
         $allowed = $user->hasRole('Administrator') || $user->hasRole('Super Admin')
             || $user->hasRole('Admin Pengadaan') || $user->hasRole('Pengurus Barang')
@@ -684,20 +786,69 @@ class PengadaanWorkflowController extends Controller
         return DB::table('workflows')->whereRaw('LOWER(modul) = ?', ['pengadaan'])->orderByDesc('updated_at')->value('id');
     }
 
-    private function workflowStepAfterIdentity(string $identity): ?object
+    private function workflowStepsForSpj(Spj $spj, ?string $workflowId = null)
     {
-        $workflowId = $this->pengadaanWorkflowId();
-        if (! $workflowId) return null;
-        $steps = $this->workflowStepQuery()->where('ws.workflow_id', $workflowId)->orderBy('ws.step_order')->get();
-        $current = $steps->first(fn($step) => $this->matchesWorkflowIdentity($step, $identity));
-        return $current ? $steps->first(fn($step) => $step->step_order > $current->step_order) : null;
+        $workflowId = $workflowId ?: $this->pengadaanWorkflowId();
+        if (! $workflowId) {
+            return collect();
+        }
+
+        $query = $this->workflowStepQuery()->where('ws.workflow_id', $workflowId);
+        if (Schema::hasTable('workflow_step_sub_kategori_rkbu')) {
+            $subcategoryId = $spj->usulanBelanja()->value('sub_kategori_rkbu_id');
+            $mappedStepIds = $subcategoryId
+                ? DB::table('workflow_step_sub_kategori_rkbu')
+                    ->where('sub_kategori_rkbu_id', $subcategoryId)
+                    ->pluck('workflow_step_id')
+                : collect();
+
+            if ($mappedStepIds->isNotEmpty()) {
+                // Once a subcategory has an explicit route, only its mapped steps apply.
+                $query->whereIn('ws.id', $mappedStepIds);
+            }
+        }
+
+        return $query->orderBy('ws.step_order')->get();
     }
 
-    private function workflowStepByIdentity(string $identity): ?object
+    private function hasCustomWorkflowForSpj(Spj $spj, ?string $workflowId = null): bool
+    {
+        if (! Schema::hasTable('workflow_step_sub_kategori_rkbu')) {
+            return false;
+        }
+
+        $workflowId = $workflowId ?: $this->pengadaanWorkflowId();
+        $subcategoryId = $spj->usulanBelanja()->value('sub_kategori_rkbu_id');
+        if (! $workflowId || ! $subcategoryId) {
+            return false;
+        }
+
+        return DB::table('workflow_step_sub_kategori_rkbu as mapping')
+            ->join('workflow_steps as ws', 'ws.id', '=', 'mapping.workflow_step_id')
+            ->where('ws.workflow_id', $workflowId)
+            ->where('mapping.sub_kategori_rkbu_id', $subcategoryId)
+            ->exists();
+    }
+
+    private function workflowStepAfterIdentity(string $identity, ?Spj $spj = null): ?object
     {
         $workflowId = $this->pengadaanWorkflowId();
         if (! $workflowId) return null;
-        return $this->workflowStepQuery()->where('ws.workflow_id', $workflowId)->orderBy('ws.step_order')->get()
+        $allSteps = $this->workflowStepQuery()->where('ws.workflow_id', $workflowId)->orderBy('ws.step_order')->get();
+        $current = $allSteps->first(fn($step) => $this->matchesWorkflowIdentity($step, $identity));
+        if (! $current) return null;
+        $steps = $spj ? $this->workflowStepsForSpj($spj, $workflowId) : $allSteps;
+        return $steps->first(fn($step) => $step->step_order > $current->step_order);
+    }
+
+    private function workflowStepByIdentity(string $identity, ?Spj $spj = null): ?object
+    {
+        $workflowId = $this->pengadaanWorkflowId();
+        if (! $workflowId) return null;
+        $steps = $spj
+            ? $this->workflowStepsForSpj($spj, $workflowId)
+            : $this->workflowStepQuery()->where('ws.workflow_id', $workflowId)->orderBy('ws.step_order')->get();
+        return $steps
             ->first(fn($step) => $this->matchesWorkflowIdentity($step, $identity));
     }
 
@@ -720,15 +871,17 @@ class PengadaanWorkflowController extends Controller
 
     private function userCanApproveIdentity(string $identity, Spj $spj): bool
     {
-        $step = $this->workflowStepByIdentity($identity);
+        $step = $this->workflowStepByIdentity($identity, $spj);
         return $step ? $this->userCanApproveWorkflowStep($step, $spj) : false;
     }
 
-    private function legacyWorkflowStep(string $legacyStep): ?object
+    private function legacyWorkflowStep(string $legacyStep, ?Spj $spj = null): ?object
     {
         $workflowId = $this->pengadaanWorkflowId();
         if (! $workflowId) return null;
-        $steps = $this->workflowStepQuery()->where('ws.workflow_id', $workflowId)->orderBy('ws.step_order')->get();
+        $steps = $spj
+            ? $this->workflowStepsForSpj($spj, $workflowId)
+            : $this->workflowStepQuery()->where('ws.workflow_id', $workflowId)->orderBy('ws.step_order')->get();
         $identity = [
             'validasi_ppk' => ['ppk'],
             'validasi_ppbj' => ['ppbj'],
@@ -741,54 +894,111 @@ class PengadaanWorkflowController extends Controller
         return $steps->first(fn($step) => in_array(strtolower(trim($this->workflowStepName($step))), $identity, true));
     }
 
-    private function bastWorkflowStep(): ?object
+    private function bastWorkflowStep(?Spj $spj = null): ?object
     {
         $workflowId = $this->pengadaanWorkflowId();
         if (! $workflowId) return null;
-        $steps = $this->workflowStepQuery()->where('ws.workflow_id', $workflowId)->orderBy('ws.step_order')->get();
-        return $steps->first(fn($step) => $this->isBastWorkflowStep($step));
+        $steps = $spj
+            ? $this->workflowStepsForSpj($spj, $workflowId)
+            : $this->workflowStepQuery()->where('ws.workflow_id', $workflowId)->orderBy('ws.step_order')->get();
+        return $steps->first(fn($step) => $this->isBastWorkflowStep($step, $spj));
     }
 
-    private function isBastWorkflowStep(object $step): bool
+    private function skipCompletedBastStep(Spj $spj, ?object $workflowStep): ?object
+    {
+        if (! $workflowStep || ! $this->isBastWorkflowStep($workflowStep, $spj)) {
+            return $workflowStep;
+        }
+
+        $bastComplete = filled($spj->tgl_bast)
+            && filled($spj->no_ba)
+            && filled($spj->no_ba_hp)
+            && filled($spj->no_ba_bp)
+            && filled($spj->no_dpa);
+        if (! $bastComplete) {
+            return $workflowStep;
+        }
+
+        $master = DB::table('master_spjs')->where('spj_id', $spj->id)->first();
+        $fakturComplete = $master && (
+            $master->status_proses_tukar_faktur === 'Selesai'
+            || (filled($master->tanggal_faktur ?? null)
+                && filled($master->tgl_kwitansi ?? null)
+                && filled($master->no_faktur ?? null))
+        );
+        if (! $fakturComplete) {
+            return $workflowStep;
+        }
+
+        $steps = $this->workflowStepsForSpj($spj, $workflowStep->workflow_id)
+            ->filter(fn ($candidate) => $candidate->step_order > $workflowStep->step_order)
+            ->values();
+        $approvedIds = Schema::hasTable('pengadaan_workflow_approvals')
+            ? DB::table('pengadaan_workflow_approvals')
+                ->where('spj_id', $spj->id)
+                ->whereIn('status', ['Selesai', 'approved', 'setuju'])
+                ->pluck('workflow_step_id')
+                ->all()
+            : [];
+
+        return $steps->first(function ($candidate) use ($approvedIds) {
+            if (strtolower(trim($this->workflowStepName($candidate))) === 'admin pengadaan') {
+                return false;
+            }
+
+            return ! in_array($candidate->id, $approvedIds, true);
+        }) ?? $workflowStep;
+    }
+
+    private function isBastWorkflowStep(object $step, ?Spj $spj = null): bool
     {
         if (strtolower(trim($this->workflowStepName($step))) !== 'admin pengadaan') return false;
-        $pengurusStep = $this->workflowStepQuery()->where('ws.workflow_id', $step->workflow_id)
-            ->whereRaw("LOWER(COALESCE(p.level_jabatan, r.nama_role, vr.nama_validator, '')) = ?", ['pengurus barang'])
-            ->orderBy('ws.step_order')->first();
+        $steps = $this->workflowStepQuery()->where('ws.workflow_id', $step->workflow_id)->orderBy('ws.step_order')->get();
+        $pengurusStep = $steps->first(fn ($candidate) => $this->matchesWorkflowIdentity($candidate, 'pengurus barang'));
         return $pengurusStep && $step->step_order > $pengurusStep->step_order;
+    }
+
+    private function isBendaharaReceiptStep(?string $stepName): bool
+    {
+        return in_array(strtolower(trim((string) $stepName)), ['bendahara', 'verifikasi bendahara'], true);
     }
 
     private function currentWorkflowStep(Spj $spj): ?object
     {
         $workflowId = $this->pengadaanWorkflowId();
         if (! $workflowId) return null;
+        $steps = $this->workflowStepsForSpj($spj, $workflowId);
         if ($spj->pengadaan_workflow_step_id) {
-            $current = $this->workflowStepQuery()->where('ws.id', $spj->pengadaan_workflow_step_id)
-                ->where('ws.workflow_id', $workflowId)->first();
+            $current = $steps->first(fn ($candidate) => $candidate->id === $spj->pengadaan_workflow_step_id);
             if ($current) return $current;
         }
 
-        if (Schema::hasTable('pengadaan_workflow_approvals')) {
+        if (Schema::hasTable('pengadaan_workflow_approvals') && $steps->isNotEmpty()) {
             $lastApprovedOrder = DB::table('pengadaan_workflow_approvals as approval')
                 ->join('workflow_steps as ws', 'ws.id', '=', 'approval.workflow_step_id')
                 ->where('approval.spj_id', $spj->id)
-                ->where('ws.workflow_id', $workflowId)
+                ->whereIn('ws.id', $steps->pluck('id'))
                 ->whereIn('approval.status', ['Selesai', 'approved', 'setuju'])
                 ->orderByDesc('approval.acted_at')
                 ->value('ws.step_order');
             if ($lastApprovedOrder !== null) {
-                return $this->workflowStepQuery()->where('ws.workflow_id', $workflowId)
-                    ->where('ws.step_order', '>', $lastApprovedOrder)->orderBy('ws.step_order')->first();
+                return $steps->first(fn ($candidate) => $candidate->step_order > $lastApprovedOrder);
             }
         }
 
-        return $this->workflowStepAfterIdentity('pengurus barang');
+        if ($this->hasCustomWorkflowForSpj($spj, $workflowId)) {
+            return $steps->first();
+        }
+
+        return $this->workflowStepAfterIdentity('pengurus barang', $spj);
     }
 
-    private function nextWorkflowStep(object $step): ?object
+    private function nextWorkflowStep(object $step, ?Spj $spj = null): ?object
     {
-        return $this->workflowStepQuery()->where('ws.workflow_id', $step->workflow_id)
-            ->where('ws.step_order', '>', $step->step_order)->orderBy('ws.step_order')->first();
+        $steps = $spj
+            ? $this->workflowStepsForSpj($spj, $step->workflow_id)
+            : $this->workflowStepQuery()->where('ws.workflow_id', $step->workflow_id)->orderBy('ws.step_order')->get();
+        return $steps->first(fn ($candidate) => $candidate->step_order > $step->step_order);
     }
 
     private function workflowStepQuery()

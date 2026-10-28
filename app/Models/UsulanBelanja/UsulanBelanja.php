@@ -30,6 +30,7 @@ class UsulanBelanja extends Model
         'unit_id',
         'sub_kategori_rkbu_id',
         'jenis_kategori_rkbu_id',
+        'sumber_dana_id',
         'tahun_anggaran_id',
         'status_usulan',
         'tanggal_validasi',
@@ -50,6 +51,15 @@ class UsulanBelanja extends Model
             Rkbu::class,
             'rkbu_id',
             'id'
+        );
+    }
+
+    public function sumberDana(): BelongsTo
+    {
+        return $this->belongsTo(
+            \App\Models\MasterBackend\SettingRkbu\SumberDana::class,
+            'sumber_dana_id',
+            'id_sumber_dana'
         );
     }
 
