@@ -1,12 +1,8 @@
 @extends('layouts.main')
 
 @section('content')
-    <div class="card mb-5">
-        <div class="card-body pt-7 pb-4">
-            @include('components.partials.table.headermenu')
-            @include('master_backend.workflow_setting.workflow_step.modal_add')
-        </div>
-    </div>
+        @include('components.partials.table.headermenu')
+    @include('master_backend.workflow_setting.workflow_step.modal_add')
 
     @php
         $stepsByWorkflow = $workflowSteps->groupBy('workflow_id');

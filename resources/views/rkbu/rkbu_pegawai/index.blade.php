@@ -1,11 +1,7 @@
 @extends('layouts.main')
 
 @section('content')
-    <div class="card mb-5 mb-xxl-12">
-        <div class="card-body pt-9 pb-0">
-            @include('rkbu.partials.headermenu')
-        </div>
-    </div>
+    @include('rkbu.partials.headermenu')
 
     <div class="row gy-5 g-xl-8">
         <div class="col-xl-12">
@@ -13,6 +9,7 @@
                 <div class="card-header border-0 pt-5">
                     <h3 class="card-title"><span class="card-label fw-bolder fs-3 mb-1">RKBU Pegawai</span></h3>
                     <div class="card-toolbar">
+                        @include('rkbu.partials.bulk_import', ['module' => 'pegawai'])
                         <span id="pegawai-selected-count" class="text-muted me-3">0 dipilih</span>
                         <button type="button" class="btn btn-sm btn-primary" id="pegawai-bulk-submit" disabled>
                             <i class="fas fa-paper-plane me-1"></i> Ajukan Terpilih

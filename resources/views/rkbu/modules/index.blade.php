@@ -1,24 +1,20 @@
 @extends('layouts.main')
 
 @section('content')
- <div class="card mb-5 mb-xxl-12">
-        <div class="card-body pt-9 pb-0">
-            @include('rkbu.partials.headermenu')
-            {{-- @include('rkbu.rkbu_barjas.create') --}}
-        </div>
-    </div>
+    @include('rkbu.partials.headermenu')
     <div class="card mb-5">
         <div class="card-header">
             <h3 class="card-title">{{ $config['title'] }}</h3>
             <div class="card-toolbar">
+                @php($importModule = str_replace('-', '_', $config['route']))
+                @if (in_array($importModule, ['modal_kantor', 'modal_alkes'], true))
+                    @include('rkbu.partials.bulk_import', ['module' => $importModule])
+                @endif
                 <span id="module-selected-count" class="text-muted me-3">0 dipilih</span>
                 <button type="button" id="module-bulk-submit" class="btn btn-sm btn-light-primary me-3"
                     data-url="{{ route('rkbu.' . $config['route'] . '.bulk-submit') }}" disabled>
                     <i class="fas fa-paper-plane me-1"></i> Ajukan Terpilih
                 </button>
-                <a href="{{ route('rkbu.' . $config['route'] . '.create') }}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-plus me-1"></i> Tambah Data
-                </a>
             </div>
         </div>
 

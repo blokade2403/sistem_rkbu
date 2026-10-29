@@ -1,11 +1,6 @@
 @extends('layouts.main')
 @section('content')
-   <div class="card mb-5 mb-xxl-12">
-        <div class="card-body pt-9 pb-0">
-            @include('rkbu.partials.headermenu')
-            {{-- @include('rkbu.rkbu_persediaan.create') --}}
-        </div>
-    </div>
+    @include('rkbu.partials.headermenu')
     <div class="row gy-5 g-xl-8">
         <div class="col-xl-12">
             <div class="card card-xl-stretch mb-5 mb-xl-8">
@@ -14,6 +9,7 @@
                         <span class="card-label fw-bolder fs-3 mb-1">RKBU Persediaan</span>
                     </h3>
                     <div class="card-toolbar">
+                        @include('rkbu.partials.bulk_import', ['module' => 'persediaan'])
                         <span id="persediaan-selected-count" class="text-muted me-3">0 dipilih</span>
                         <button type="button" class="btn btn-sm btn-primary" id="persediaan-bulk-submit" disabled>
                             <i class="fas fa-paper-plane me-1"></i> Ajukan Terpilih
@@ -21,6 +17,13 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    @if ($errors->has('file'))
+                        <div class="alert alert-danger">{{ $errors->first('file') }}</div>
+                    @endif
+                    @if (session('success'))
+                        <div class="alert alert-success">{{ session('success') }}</div>
+                    @endif
+                    <div class="text-muted small mb-4">Isi file berdasarkan template. Gunakan kode subkategori yang aktif; semua baris akan divalidasi sebelum data disimpan.</div>
                     <form id="persediaan-filter-form" action="{{ route('rkbu.persediaan.print') }}" method="GET" class="row g-3 align-items-end mb-5">
                         <div class="col-md-4 col-lg-3">
                             <label for="filter-sumber-dana" class="form-label">Sumber Dana</label>

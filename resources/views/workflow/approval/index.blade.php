@@ -1,8 +1,19 @@
     @extends('layouts.main')
     @section('content')
-        <div class="card mb-5 mb-xxl-12">
-            <div class="card-body pt-9 pb-0">
-                @include('components.partials.table.headermenu')
+        <div class="card approval-hero mb-6 shadow-sm">
+            <div class="card-body p-5 p-lg-6">
+                <div class="d-flex flex-wrap align-items-center gap-4">
+                    <span class="approval-hero-icon" aria-hidden="true"><i class="fas fa-clipboard-check"></i></span>
+                    <div>
+                        <h1 class="fs-2 fw-bold text-gray-900 mb-1">Approval Saya</h1>
+                        <div class="text-muted">Tinjau usulan RKBU dan kelola persetujuan sesuai kewenangan Anda.</div>
+                    </div>
+                </div>
+                @isset($paguAccountSummary)
+                    <div class="approval-account-summary">
+                        @include('components.partials.table.pagu-summary')
+                    </div>
+                @endisset
             </div>
         </div>
         <div class="row gy-5 g-xl-8">
@@ -101,7 +112,18 @@
             @include('workflow.approval.bulk_tagging')
         @endif
         <style>
+            .approval-hero { position: relative; overflow: hidden; border: 0; border-radius: 1rem; background: linear-gradient(115deg, #f1f7ff 0%, #fff 72%); }
+            .approval-hero::after { content: ''; position: absolute; width: 210px; height: 210px; right: -55px; top: -90px; border-radius: 50%; background: rgba(54, 153, 255, .08); pointer-events: none; }
+            .approval-hero > .card-body { position: relative; z-index: 1; }
+            .approval-hero-icon { display: inline-flex; flex: 0 0 52px; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: .9rem; background: #e8f3ff; color: #3699ff; font-size: 1.35rem; }
+            .approval-account-summary { margin-top: 1.25rem; }
+            .approval-account-summary table { margin-bottom: 0; }
+            .approval-account-summary th { white-space: nowrap; color: #78849a; font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; }
+            .approval-account-summary td { vertical-align: middle; }
             #tableApproval .persediaan-info-card { min-width: 270px; max-width: 350px; white-space: normal; line-height: 1.35; }
             #tableApproval td { vertical-align: top; }
+            @media (max-width: 575.98px) {
+                .approval-hero > .card-body { padding: 1.15rem !important; }
+            }
         </style>
     @endsection

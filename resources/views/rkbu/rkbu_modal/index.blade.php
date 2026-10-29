@@ -1,11 +1,6 @@
 @extends('layouts.main')
 @section('content')
-   <div class="card mb-5 mb-xxl-12">
-        <div class="card-body pt-9 pb-0">
-            @include('rkbu.partials.headermenu')
-            {{-- @include('rkbu.rkbu_modal.create') --}}
-        </div>
-    </div>
+    @include('rkbu.partials.headermenu')
     <div class="row gy-5 g-xl-8">
         <div class="col-xl-12">
             <div class="card card-xl-stretch mb-5 mb-xl-8">

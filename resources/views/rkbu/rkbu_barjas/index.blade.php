@@ -1,11 +1,6 @@
 @extends('layouts.main')
 @section('content')
-   <div class="card mb-5 mb-xxl-12">
-        <div class="card-body pt-9 pb-0">
-            @include('rkbu.partials.headermenu')
-            {{-- @include('rkbu.rkbu_barjas.create') --}}
-        </div>
-    </div>
+    @include('rkbu.partials.headermenu')
     <div class="row gy-5 g-xl-8">
         <div class="col-xl-12">
             <div class="card card-xl-stretch mb-5 mb-xl-8">
@@ -14,6 +9,7 @@
                         <span class="card-label fw-bolder fs-3 mb-1">RKBU Barjas</span>
                     </h3>
                     <div class="card-toolbar">
+                        @include('rkbu.partials.bulk_import', ['module' => 'barjas'])
                         <span id="barjas-selected-count" class="text-muted me-3">0 dipilih</span>
                         <button type="button" class="btn btn-sm btn-primary" id="barjas-bulk-submit"
                             data-table="#rkbubarjas-table"

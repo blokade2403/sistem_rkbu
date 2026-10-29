@@ -43,6 +43,7 @@ use App\Http\Controllers\Rkbu\RkbuModalAlkesController;
 use App\Http\Controllers\Rkbu\RkbuModalKantorController;
 use App\Http\Controllers\Rkbu\RkbuModuleController;
 use App\Http\Controllers\Rkbu\RkbuPersediaanController;
+use App\Http\Controllers\Rkbu\RkbuBulkImportController;
 use App\Http\Middleware\EnforceRkbuPhaseAccess;
 use App\Http\Controllers\UsulanBelanja\UsulanBelanjaController;
 use App\Http\Controllers\UsulanBelanja\SpjUsulanBelanjaController;
@@ -352,6 +353,8 @@ Route::middleware('auth')->group(function () {
                 ->name('index');
             Route::get('/barjas/print', [RkbuBarjasController::class, 'print'])
                 ->name('barjas.print');
+            Route::get('/barjas/template', [RkbuBulkImportController::class, 'template'])->defaults('module', 'barjas')->name('barjas.template');
+            Route::post('/barjas/import', [RkbuBulkImportController::class, 'import'])->defaults('module', 'barjas')->name('barjas.import');
             Route::resource('barjas', RkbuBarjasController::class);
             Route::post('/barjas/{id}/submit', [RkbuBarjasController::class, 'submit'])
                 ->name('barjas.submit');
@@ -360,6 +363,10 @@ Route::middleware('auth')->group(function () {
 
             Route::get('/persediaan/print', [RkbuPersediaanController::class, 'print'])
                 ->name('persediaan.print');
+            Route::get('/persediaan/template', [RkbuPersediaanController::class, 'downloadTemplate'])
+                ->name('persediaan.template');
+            Route::post('/persediaan/import', [RkbuPersediaanController::class, 'import'])
+                ->name('persediaan.import');
             Route::resource('persediaan', RkbuPersediaanController::class);
             Route::post('/persediaan/{id}/submit', [RkbuPersediaanController::class, 'submit'])
                 ->name('persediaan.submit');
@@ -368,6 +375,8 @@ Route::middleware('auth')->group(function () {
 
             Route::get('/modal_kantor/print', [RkbuModalKantorController::class, 'print'])
                 ->name('modal_kantor.print');
+            Route::get('/modal_kantor/template', [RkbuBulkImportController::class, 'template'])->defaults('module', 'modal_kantor')->name('modal_kantor.template');
+            Route::post('/modal_kantor/import', [RkbuBulkImportController::class, 'import'])->defaults('module', 'modal_kantor')->name('modal_kantor.import');
             Route::resource('modal_kantor', RkbuModalKantorController::class);
             Route::post('/modal_kantor/{id}/submit', [RkbuModalKantorController::class, 'submit'])
                 ->name('modal_kantor.submit');
@@ -376,6 +385,8 @@ Route::middleware('auth')->group(function () {
 
             Route::get('/modal_alkes/print', [RkbuModalAlkesController::class, 'print'])
                 ->name('modal_alkes.print');
+            Route::get('/modal_alkes/template', [RkbuBulkImportController::class, 'template'])->defaults('module', 'modal_alkes')->name('modal_alkes.template');
+            Route::post('/modal_alkes/import', [RkbuBulkImportController::class, 'import'])->defaults('module', 'modal_alkes')->name('modal_alkes.import');
             Route::resource('modal_alkes', RkbuModalAlkesController::class);
             Route::post('/modal_alkes/{id}/submit', [RkbuModalAlkesController::class, 'submit'])
                 ->name('modal_alkes.submit');
@@ -388,6 +399,8 @@ Route::middleware('auth')->group(function () {
             Route::post('/pegawai/bulk-submit', [RkbuModuleController::class, 'bulkSubmit'])
                 ->defaults('rkbuModule', 'pegawai')
                 ->name('pegawai.bulk-submit');
+            Route::get('/pegawai/template', [RkbuBulkImportController::class, 'template'])->defaults('module', 'pegawai')->name('pegawai.template');
+            Route::post('/pegawai/import', [RkbuBulkImportController::class, 'import'])->defaults('module', 'pegawai')->name('pegawai.import');
             Route::get('/pegawai', [RkbuModuleController::class, 'index'])
                 ->defaults('rkbuModule', 'pegawai')
                 ->name('pegawai.index');

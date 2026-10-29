@@ -23,14 +23,14 @@
     @if (! $year)
         <div class="alert alert-info">Data tahun anggaran belum tersedia.</div>
     @else
-        <div class="card border-0 shadow-sm">
-            <div class="card-header border-0 pt-6">
-                <div class="card-title"><div><h2 class="fw-bold text-gray-900 mb-1">Serapan Anggaran</h2><span class="text-muted fs-7">Realisasi berdasarkan tanggal pembayaran SPJ</span></div></div>
-                <div class="card-toolbar fw-bold text-gray-700">DPA Perubahan: Rp {{ $rupiah($totalDpa) }}</div>
+        <div class="card border-0 shadow-sm monthly-report-card">
+            <div class="card-header border-0 pt-6 pb-4">
+                <div class="card-title mb-0"><div><h2 class="fw-bold text-gray-900 mb-1">Serapan Anggaran</h2><span class="text-muted fs-7">Realisasi berdasarkan tanggal pembayaran SPJ</span></div></div>
+                <div class="card-toolbar"><div class="monthly-dpa-summary"><span class="text-muted fs-8 fw-semibold text-uppercase">DPA Perubahan</span><strong>Rp {{ $rupiah($totalDpa) }}</strong></div></div>
             </div>
             <div class="card-body pt-2">
                 <div class="table-responsive monthly-report-wrap">
-                    <table class="table table-bordered align-middle monthly-report-table">
+                    <table class="table align-middle monthly-report-table">
                         <thead>
                             <tr>
                                 <th rowspan="2" class="monthly-sticky-program">PROGRAM</th>
@@ -69,17 +69,42 @@
     @endif
 
     <style>
-        .monthly-report-wrap { overflow: auto; max-height: calc(100vh - 240px); }
-        .monthly-report-table { min-width: 1900px; border-color: #555; font-size: 13px; }
-        .monthly-report-table th, .monthly-report-table td { padding: 7px 9px; border-color: #666; }
-        .monthly-report-table thead th { position: sticky; top: 0; z-index: 5; background: #fff; white-space: nowrap; }
-        .monthly-report-table thead tr:nth-child(2) th { top: 37px; z-index: 6; }
-        .monthly-report-table .monthly-sticky-program { min-width: 175px; }
-        .monthly-report-table .monthly-sticky-activity { min-width: 340px; }
-        .monthly-report-table td:nth-child(n+3), .monthly-report-table th:nth-child(n+3) { min-width: 112px; }
-        .monthly-report-table .monthly-program-row { background: #f5cbaa; font-weight: 700; }
-        .monthly-report-table .monthly-activity-row { background: #e7f2fa; font-weight: 700; }
-        .monthly-report-table .monthly-total-row { background: #f5cbaa; font-weight: 700; }
-        .monthly-report-table .monthly-sticky-program, .monthly-report-table .monthly-sticky-activity { background-clip: padding-box; }
+        .monthly-report-card { border-radius: 12px; }
+        .monthly-dpa-summary { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; padding: 10px 16px; border: 1px solid #dbe5f0; border-radius: 10px; background: #f5f8fc; }
+        .monthly-dpa-summary strong { color: #1e3a5f; font-size: 1.05rem; }
+        .monthly-report-wrap { overflow: auto; max-height: calc(100vh - 255px); border: 1px solid #dce3ec; border-radius: 9px; scrollbar-color: #aab8c8 #f1f4f8; scrollbar-width: thin; }
+        .monthly-report-table { min-width: 1900px; margin-bottom: 0; border-collapse: separate; border-spacing: 0; font-size: 12px; color: #344054; }
+        .monthly-report-table th, .monthly-report-table td { padding: 9px 11px; border-right: 1px solid #e5eaf0; border-bottom: 1px solid #e5eaf0; }
+        .monthly-report-table thead th { position: sticky; top: 0; z-index: 5; background: #edf3f9; color: #34445a; font-size: 11px; font-weight: 750; letter-spacing: .035em; white-space: nowrap; }
+        .monthly-report-table thead tr:first-child th { height: 39px; }
+        .monthly-report-table thead tr:first-child th[colspan] { background: #dce9f5; color: #24476c; text-align: center; }
+        .monthly-report-table thead tr:nth-child(2) th { top: 39px; z-index: 6; background: #edf3f9; }
+        .monthly-report-table .monthly-sticky-program { position: sticky; left: 0; z-index: 3; width: 220px; min-width: 220px; max-width: 220px; }
+        .monthly-report-table .monthly-sticky-activity { position: sticky; left: 220px; z-index: 3; width: 360px; min-width: 360px; max-width: 360px; box-shadow: 5px 0 8px -8px #344054; }
+        .monthly-report-table thead .monthly-sticky-program, .monthly-report-table thead .monthly-sticky-activity { z-index: 8; background: #edf3f9; }
+        .monthly-report-table td:nth-child(n+3), .monthly-report-table th:nth-child(n+3) { min-width: 112px; white-space: nowrap; }
+        .monthly-report-table tbody tr:nth-child(even):not(.monthly-program-row):not(.monthly-activity-row):not(.monthly-total-row) { background: #f9fbfd; }
+        .monthly-report-table tbody tr:not(.monthly-program-row):not(.monthly-activity-row):not(.monthly-total-row) .monthly-sticky-program,
+        .monthly-report-table tbody tr:not(.monthly-program-row):not(.monthly-activity-row):not(.monthly-total-row) .monthly-sticky-activity { background: #fff; }
+        .monthly-report-table tbody tr:nth-child(even):not(.monthly-program-row):not(.monthly-activity-row):not(.monthly-total-row) .monthly-sticky-program,
+        .monthly-report-table tbody tr:nth-child(even):not(.monthly-program-row):not(.monthly-activity-row):not(.monthly-total-row) .monthly-sticky-activity { background: #f9fbfd; }
+        .monthly-report-table tbody tr:hover:not(.monthly-total-row) { background: #f0f6fc; }
+        .monthly-report-table tbody tr:hover:not(.monthly-total-row) .monthly-sticky-program,
+        .monthly-report-table tbody tr:hover:not(.monthly-total-row) .monthly-sticky-activity { background: #f0f6fc; }
+        .monthly-report-table .monthly-program-row { background: #e8eff8; color: #1f3b5b; font-weight: 750; }
+        .monthly-report-table .monthly-activity-row { background: #f1f6fb; color: #344b64; font-weight: 650; }
+        .monthly-report-table .monthly-total-row { position: sticky; z-index: 4; background: #e3edf7; color: #1f3b5b; font-weight: 750; }
+        .monthly-report-table .monthly-total-row td:first-child, .monthly-report-table .monthly-total-row th:first-child { position: sticky; left: 0; z-index: 5; background: #e3edf7; }
+        .monthly-report-table .monthly-total-row td:nth-child(2), .monthly-report-table .monthly-total-row th:nth-child(2) { position: sticky; left: 220px; z-index: 5; background: #e3edf7; }
+        .monthly-report-table tfoot .monthly-total-row { bottom: 0; }
+        .monthly-report-table tfoot .monthly-total-row th:first-child { z-index: 7; }
+        .monthly-report-table .text-end { font-variant-numeric: tabular-nums; }
+        @media (max-width: 767.98px) {
+            .monthly-report-wrap { max-height: calc(100vh - 290px); }
+            .monthly-report-table .monthly-sticky-program { width: 170px; min-width: 170px; max-width: 170px; }
+            .monthly-report-table .monthly-sticky-activity { left: 170px; width: 260px; min-width: 260px; max-width: 260px; }
+            .monthly-report-table .monthly-total-row td:nth-child(2), .monthly-report-table .monthly-total-row th:nth-child(2) { left: 170px; }
+            .monthly-dpa-summary { align-items: flex-start; }
+        }
     </style>
 @endsection

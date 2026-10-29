@@ -1,15 +1,11 @@
 @extends('layouts.main')
 @section('content')
     <!--begin::Row-->
-    <div class="card mb-5 mb-xxl-12">
-        <div class="card-body pt-9 pb-0">
-            @include('components.partials.table.headermenu')
-            @include('master_backend.setting_rkbu.jenis_belanja.modal_add')
-            <!--begin::Details-->
+        @include('components.partials.table.headermenu')
+    @include('master_backend.setting_rkbu.jenis_belanja.modal_add')
+    <!--begin::Details-->
 
-            <!--end::Details-->
-        </div>
-    </div>
+    <!--end::Details-->
     <div class="row gy-5 g-xl-8">
         <div class="col-xl-12">
             <!--begin::Tables Widget 9-->

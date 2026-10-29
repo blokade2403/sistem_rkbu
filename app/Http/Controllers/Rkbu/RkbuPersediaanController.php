@@ -18,6 +18,9 @@ use App\Models\Rkbu\RkbuDetailPersediaan;
 use App\Services\Workflow\WorkflowApprovalService;
 use App\Support\Rkbu\RkbuListFilters;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\RkbuPersediaanImport;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
@@ -69,6 +72,89 @@ class RkbuPersediaanController extends Controller
         ])->setPaper('a4', 'landscape');
 
         return $pdf->stream('rkbu-persediaan-' . now()->format('Ymd-His') . '.pdf');
+    }
+
+    public function downloadTemplate(): StreamedResponse
+    {
+        $this->authorizeBulkImport();
+        $headers = ['kode_sub_kategori_rkbu', 'nama_barang', 'spesifikasi', 'satuan_1', 'stok', 'rata_rata_pemakaian', 'pengadaan_sebelumnya', 'kebutuhan_per_bulan', 'buffer', 'harga_satuan', 'is_ppn', 'rating', 'penempatan', 'link_ekatalog'];
+        $filename = 'template-rkbu-persediaan.csv';
+
+        return response()->streamDownload(function () use ($headers) {
+            $output = fopen('php://output', 'w');
+            fputcsv($output, $headers);
+            fputcsv($output, ['ISI_KODE_SUBKATEGORI', 'Contoh nama barang', '', 'unit', 0, 0, 0, 0, 0, 0, 0, '', '', '']);
+            fclose($output);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    public function import(Request $request)
+    {
+        $this->authorizeBulkImport();
+        $request->validate(['file' => 'required|file|mimes:csv,txt,xlsx,xls|max:10240']);
+
+        $rows = Excel::toCollection(new RkbuPersediaanImport(), $request->file('file'))->first();
+        if (!$rows || $rows->count() < 2) {
+            return back()->withErrors(['file' => 'File tidak memiliki baris data.']);
+        }
+
+        $headers = collect($rows->first())->map(fn ($value) => trim((string) $value))->all();
+        $required = ['kode_sub_kategori_rkbu', 'nama_barang', 'stok', 'harga_satuan'];
+        if (array_diff($required, $headers)) {
+            return back()->withErrors(['file' => 'Kolom wajib tidak lengkap. Unduh dan gunakan template yang disediakan.']);
+        }
+
+        $map = collect($headers)->flip();
+        $subKategoriMap = $this->subKategoriOptions()->get()->keyBy('kode_sub_kategori_rkbu');
+        $jenisBelanja = JenisBelanja::where('nama_jenis_belanja', 'LIKE', '%Barang%')->firstOrFail();
+        $ppnAktif = Ppn::where('status', 'aktif')->firstOrFail();
+        $accepted = [];
+        $errors = [];
+
+        foreach ($rows->skip(1) as $index => $row) {
+            $values = [];
+            foreach ($map as $header => $column) $values[$header] = $row[$column] ?? null;
+            if (collect($values)->filter(fn ($value) => $value !== null && trim((string) $value) !== '')->isEmpty()) continue;
+            $line = $index + 2;
+            $subcategory = $subKategoriMap->get(trim((string) ($values['kode_sub_kategori_rkbu'] ?? '')));
+            if (!$subcategory) { $errors[] = "Baris {$line}: kode subkategori tidak ditemukan."; continue; }
+            if (trim((string) ($values['nama_barang'] ?? '')) === '' || !is_numeric($values['stok'] ?? null) || (int) $values['stok'] < 0 || !is_numeric($values['harga_satuan'] ?? null) || (float) $values['harga_satuan'] < 0) {
+                $errors[] = "Baris {$line}: nama_barang, stok, dan harga_satuan harus diisi dengan nilai yang valid."; continue;
+            }
+            foreach (['rata_rata_pemakaian', 'pengadaan_sebelumnya', 'kebutuhan_per_bulan', 'buffer'] as $number) {
+                if (isset($values[$number]) && $values[$number] !== '' && (!is_numeric($values[$number]) || (int) $values[$number] < 0)) $errors[] = "Baris {$line}: {$number} harus bilangan bulat >= 0.";
+            }
+            if (count($errors) && str_starts_with(end($errors), "Baris {$line}:")) continue;
+            $accepted[] = [$values, $subcategory];
+        }
+
+        if ($errors) return back()->withErrors(['file' => implode(' ', array_slice($errors, 0, 8)) . (count($errors) > 8 ? ' Dan ' . (count($errors) - 8) . ' kesalahan lainnya.' : '')]);
+        if (!$accepted) return back()->withErrors(['file' => 'Tidak ada data valid untuk diimpor.']);
+
+        DB::transaction(function () use ($accepted, $jenisBelanja, $ppnAktif) {
+            foreach ($accepted as [$row, $subcategory]) {
+                $kategori = KategoriRkbu::findOrFail($subcategory->id_kategori_rkbu);
+                $rkbu = Rkbu::create([
+                    'nomor_rkbu' => $this->generateNomorRkbu(), 'tahun_anggaran_id' => Session::get('tahun_anggaran_id'),
+                    'unit_id' => Session::get('unit_id'), 'sumber_dana_id' => SumberDana::query()->firstOrFail()->id_sumber_dana,
+                    'jenis_belanja_id' => $jenisBelanja->id_jenis_belanja, 'jenis_kategori_rkbu_id' => $kategori->id_jenis_kategori_rkbu,
+                    'sub_kategori_rkbu_id' => $subcategory->id_sub_kategori_rkbu, 'created_by' => auth()->id(), 'status' => 'draft',
+                ]);
+                $data = [
+                    'sub_kategori_rkbu_id' => $subcategory->id_sub_kategori_rkbu, 'nama_barang' => trim($row['nama_barang']),
+                    'spesifikasi' => $row['spesifikasi'] ?: null, 'satuan_1' => $row['satuan_1'] ?: null,
+                    'stok' => (int) $row['stok'], 'rata_rata_pemakaian' => $row['rata_rata_pemakaian'] ?: 0,
+                    'pengadaan_sebelumnya' => $row['pengadaan_sebelumnya'] ?: 0, 'kebutuhan_per_bulan' => $row['kebutuhan_per_bulan'] ?: 0,
+                    'buffer' => $row['buffer'] ?: 0, 'harga_satuan' => (float) $row['harga_satuan'],
+                    'rating' => in_array((string) ($row['rating'] ?? ''), ['1', '2', '3'], true) ? $row['rating'] : null,
+                    'penempatan' => $row['penempatan'] ?: null, 'link_ekatalog' => $row['link_ekatalog'] ?: null,
+                ];
+                $ppn = in_array(strtolower((string) ($row['is_ppn'] ?? '0')), ['1', 'ya', 'yes', 'true'], true) ? (float) $ppnAktif->ppn : 0;
+                RkbuDetailPersediaan::create(array_merge($this->detailValues($data, $ppn), ['rkbu_id' => $rkbu->id, 'status_komponen' => 'draft']));
+            }
+        });
+
+        return redirect()->route('rkbu.persediaan.index')->with('success', count($accepted) . ' data RKBU berhasil diimpor sebagai draft.');
     }
 
     public function create()
@@ -288,6 +374,14 @@ class RkbuPersediaanController extends Controller
             'upload_file_4'             => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:5120',
             'upload_file_5'             => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:5120',
         ]);
+    }
+
+    private function authorizeBulkImport(): void
+    {
+        $user = auth()->user();
+        $allowed = $user && ($user->roles->contains(fn ($role) => in_array(strtolower(trim($role->nama_role)), ['administrator', 'super admin'], true))
+            || ($user->status_edit === 'aktif' && $user->roles->contains('nama_role', 'Operator')));
+        abort_unless($allowed, 403);
     }
 
     private function selectedSubKegiatan(Request $request): ?SubKegiatan

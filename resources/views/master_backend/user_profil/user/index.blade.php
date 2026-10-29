@@ -1,11 +1,7 @@
 @extends('layouts.main')
 @section('content')
-    <div class="card mb-5 mb-xxl-12">
-        <div class="card-body pt-9 pb-0">
-            @include('components.partials.table.headermenu')
-            @include('master_backend.user_profil.user.modal_add')
-        </div>
-    </div>
+        @include('components.partials.table.headermenu')
+    @include('master_backend.user_profil.user.modal_add')
     <div class="row gy-5 g-xl-8">
         <div class="col-xl-12">
             <div class="card card-xl-stretch mb-5 mb-xl-8">
