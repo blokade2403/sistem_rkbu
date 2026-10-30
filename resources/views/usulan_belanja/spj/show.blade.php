@@ -4,7 +4,15 @@
 
 @section('content')
     <div class="card card-flush shadow-sm spj-detail-shell">
-        <div class="card-header border-0 bg-light-primary pt-6 pb-5">
+        @php
+            $statusSpjTone = match (strtolower((string) $spj->status_spj)) {
+                'selesai', 'approved', 'disetujui' => 'success',
+                'ditolak', 'rejected' => 'danger',
+                'proses', 'pending', 'diproses' => 'primary',
+                default => 'warning',
+            };
+        @endphp
+        <div class="card-header border-0 spj-detail-hero pt-6 pb-5">
             <div class="d-flex align-items-center gap-4">
                 <div class="spj-detail-heading-icon"><i class="ki-duotone ki-document fs-2x text-primary"><span class="path1"></span><span class="path2"></span></i></div>
                 <div>
@@ -15,7 +23,7 @@
                 </div>
             </div>
             <div class="card-toolbar">
-                <span class="badge badge-light-primary fs-7 me-3">{{ $spj->status_spj ?: 'Belum diproses' }}</span>
+                <span class="badge badge-light-{{ $statusSpjTone }} fs-7 me-3 spj-status-badge">{{ $spj->status_spj ?: 'Belum diproses' }}</span>
                 <a href="{{ route('usulan-belanja.spj.index') }}" class="btn btn-light-primary">
                     <i class="ki-duotone ki-arrow-left fs-4 me-1"><span class="path1"></span><span class="path2"></span></i>Kembali
                 </a>
@@ -58,11 +66,11 @@
                         $subKegiatanInfo = $rkbuInfo?->subKegiatan;
                     @endphp
                     <div class="row g-0">
-                        <div class="col-12"><div class="spj-detail-info-row"><span>Program</span><strong>{{ $program?->kode_program }} {{ $program?->nama_program ?? '-' }}</strong></div></div>
-                        <div class="col-12"><div class="spj-detail-info-row"><span>Kegiatan</span><strong>{{ $kegiatan?->kode_kegiatan }} {{ $kegiatan?->nama_kegiatan ?? '-' }}</strong></div></div>
-                        <div class="col-12"><div class="spj-detail-info-row"><span>Subkegiatan</span><strong>{{ $subKegiatanInfo?->kode_sub_kegiatan }} {{ $subKegiatanInfo?->nama_sub_kegiatan ?? '-' }}</strong></div></div>
-                        <div class="col-12"><div class="spj-detail-info-row"><span>Rekening Belanja</span><strong>{{ $rekeningBelanja?->kode_rekening_belanja }} {{ $rekeningBelanja?->nama_rekening_belanja ?? '-' }}</strong></div></div>
-                        <div class="col-12"><div class="spj-detail-info-row"><span>Sub Kategori RKBU</span><strong>{{ $subKategoriInfo?->kode_sub_kategori_rkbu }} {{ $subKategoriInfo?->nama_sub_kategori_rkbu ?? '-' }}</strong></div></div>
+                        <div class="col-12 col-lg-6"><div class="spj-detail-info-row"><span>Program</span><strong>{{ $program?->kode_program }} {{ $program?->nama_program ?? '-' }}</strong></div></div>
+                        <div class="col-12 col-lg-6"><div class="spj-detail-info-row"><span>Kegiatan</span><strong>{{ $kegiatan?->kode_kegiatan }} {{ $kegiatan?->nama_kegiatan ?? '-' }}</strong></div></div>
+                        <div class="col-12 col-lg-6"><div class="spj-detail-info-row"><span>Subkegiatan</span><strong>{{ $subKegiatanInfo?->kode_sub_kegiatan }} {{ $subKegiatanInfo?->nama_sub_kegiatan ?? '-' }}</strong></div></div>
+                        <div class="col-12 col-lg-6"><div class="spj-detail-info-row"><span>Rekening Belanja</span><strong>{{ $rekeningBelanja?->kode_rekening_belanja }} {{ $rekeningBelanja?->nama_rekening_belanja ?? '-' }}</strong></div></div>
+                        <div class="col-12 col-lg-6"><div class="spj-detail-info-row"><span>Sub Kategori RKBU</span><strong>{{ $subKategoriInfo?->kode_sub_kategori_rkbu }} {{ $subKategoriInfo?->nama_sub_kategori_rkbu ?? '-' }}</strong></div></div>
                     </div>
                 </div>
             </div>
@@ -237,34 +245,40 @@
         </section>
 
 <style>
-    .spj-detail-shell { overflow: hidden; border-radius: 12px; }
+    .spj-detail-shell { overflow: hidden; border: 1px solid #edf0f5; border-radius: 16px; box-shadow: 0 8px 28px rgba(31,45,61,.045) !important; }
     .spj-detail-shell > .card-header { flex-wrap: wrap; gap: 14px; }
-    .spj-detail-heading-icon { display: grid; place-items: center; flex: 0 0 48px; width: 48px; height: 48px; border-radius: 12px; background: #fff; box-shadow: 0 2px 8px #3e7eff12; }
-    .spj-detail-stat { display: flex; flex-direction: column; justify-content: center; min-height: 82px; height: 100%; gap: 6px; padding: 15px 17px; border: 1px solid #eef0f5; border-radius: 10px; background: #fff; box-shadow: 0 2px 8px #181c3208; }
-    .spj-detail-stat span { color: #a1a5b7; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
-    .spj-detail-stat strong { color: #3f4254; font-size: 14px; overflow-wrap: anywhere; }
-    .spj-detail-info-card, .spj-items-card { overflow: hidden; border-radius: 10px; }
-    .spj-detail-info-row { display: flex; align-items: flex-start; gap: 20px; padding: 11px 13px; border-bottom: 1px solid #f1f1f4; border-radius: 6px; }
-    .spj-detail-info-row:last-child { border-bottom: 0; }
-    .spj-detail-info-row span { flex: 0 0 175px; color: #7e8299; font-size: 13px; font-weight: 600; }
-    .spj-detail-info-row strong { color: #3f4254; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+    .spj-detail-hero { background: linear-gradient(115deg,#edf5ff 0%,#fff 75%); border-bottom: 1px solid #e8edf5 !important; }
+    .spj-detail-heading-icon { display: grid; place-items: center; flex: 0 0 52px; width: 52px; height: 52px; border-radius: 15px; background: #fff; box-shadow: 0 5px 18px #3e7eff18; }
+    .spj-status-badge { padding: .6rem .85rem; border-radius: 999px; font-weight: 700; }
+    .spj-detail-stat { display: flex; flex-direction: column; justify-content: center; min-height: 96px; height: 100%; gap: 8px; padding: 17px 19px; border: 1px solid #e8edf5; border-radius: 13px; background: linear-gradient(145deg,#fff,#fbfdff); box-shadow: 0 4px 14px rgba(31,45,61,.035); transition: transform .15s ease, box-shadow .15s ease; }
+    .spj-detail-stat:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(31,45,61,.07); }
+    .spj-detail-stat span { color: #8a94a6; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    .spj-detail-stat strong { color: #263449; font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
+    .spj-detail-info-card, .spj-items-card { overflow: hidden; border: 1px solid #e9edf4 !important; border-radius: 14px; box-shadow: 0 4px 16px rgba(31,45,61,.035) !important; }
+    .spj-detail-info-card > .card-header, .spj-items-card > .card-header { border-bottom: 1px solid #edf0f5; background: #f8faff !important; }
+    .spj-detail-info-row { display: flex; align-items: flex-start; gap: 15px; height: calc(100% - 12px); min-height: 58px; margin: 6px; padding: 12px 14px; border: 1px solid #edf0f5; border-radius: 10px; background: #fff; }
+    .spj-detail-info-row span { flex: 0 0 145px; color: #8a94a6; font-size: 12px; font-weight: 650; }
+    .spj-detail-info-row strong { color: #344054; font-size: 13px; font-weight: 650; overflow-wrap: anywhere; }
     .spj-add-items summary { list-style: none; cursor: pointer; width: fit-content; }
     .spj-add-items summary::-webkit-details-marker { display: none; }
     .spj-items-table { min-width: 900px; }
     .spj-items-table tbody td { font-size: 13px; line-height: 1.45; }
     .spj-items-table thead th { color: #7e8299; background: #f5f8fa; font-size: 11px; text-transform: uppercase; white-space: nowrap; }
+    .spj-items-table tbody tr:hover { background: #f8fbff; }
+    .spj-detail-shell .form-control, .spj-detail-shell .form-select { border-radius: 8px; }
+    .spj-detail-shell .btn { border-radius: 8px; }
     .spj-item-action-cell { width: 132px; min-width: 132px; white-space: nowrap; }
     .spj-item-actions { display: flex; align-items: center; gap: 6px; }
     .spj-item-actions details { margin: 0; }
     .spj-item-actions summary { list-style: none; cursor: pointer; }
     .spj-item-actions summary::-webkit-details-marker { display: none; }
     .spj-item-actions .btn { padding: 7px 10px; font-size: 12px; }
-    .spj-workflow-heading { display: flex; align-items: center; gap: 15px; margin-bottom: 14px; padding: 18px 20px; border: 1px solid #e7efff; border-radius: 10px; background: linear-gradient(110deg, #f2f7ff, #fff 68%); }
+    .spj-workflow-heading { display: flex; align-items: center; gap: 15px; margin-bottom: 14px; padding: 18px 20px; border: 1px solid #e7efff; border-radius: 14px; background: linear-gradient(110deg, #f2f7ff, #fff 68%); }
     .spj-workflow-content { padding: 0 2px; }
     .spj-workflow-content > .mt-8 { margin-top: 0 !important; }
     .spj-workflow-content > .mt-8 > .card { border: 1px solid #e8edf5; border-radius: 10px; box-shadow: 0 3px 14px #181c320a; }
     @media (max-width: 767.98px) {
-        .spj-detail-shell > .card-header { align-items: flex-start; flex-direction: column; }
+        .spj-detail-shell > .card-header { align-items: flex-start; flex-direction: column; padding: 1.2rem !important; }
         .spj-detail-shell > .card-header .card-toolbar { width: 100%; justify-content: space-between; }
         .spj-detail-info-row { flex-direction: column; gap: 3px; }
         .spj-detail-info-row span { flex-basis: auto; }

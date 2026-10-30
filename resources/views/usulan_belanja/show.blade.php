@@ -59,52 +59,31 @@
             </div>
         @endif
 
-        <div class="table-responsive ub-summary-wrap">
-            <table class="table table-row-bordered gy-3 ub-summary-table">
-                <tr>
-                    <th class="w-25">Nomor Usulan</th>
-                    <td>{{ $usulanBelanja->no_usulan_belanja }}</td>
-                </tr>
-                <tr>
-                    <th>Nama Pengusul</th>
-                    <td>{{ $usulanBelanja->nama_pengusul }}</td>
-                </tr>
-                <tr>
-                    <th>Subkategori RKBU</th>
-                    <td>
-                        {{ $usulanBelanja->rkbu?->subKategoriRkbu?->nama_sub_kategori_rkbu ?? '-' }}
-                    </td>
-                </tr>
-                <tr>
-                    <th>Tahun Anggaran</th>
-                    <td>
-                        {{ $usulanBelanja->tahunAnggaran?->nama_tahun_anggaran ?? '-' }}
-                    </td>
-                </tr>
-                <tr>
-                    <th>Status</th>
-                    <td>
-                        <span class="badge badge-light-primary">
-                            {{ strtoupper($usulanBelanja->status_usulan) }}
-                        </span>
-                    </td>
-                </tr>
-                <tr>
-                    <th>Tanggal Validasi</th>
-                    <td>
-                        {{ $usulanBelanja->tanggal_validasi?->format('d-m-Y H:i') ?? '-' }}
-                    </td>
-                </tr>
-                <tr>
-                    <th>Validator Terakhir</th>
-                    <td>{{ $usulanBelanja->nama_validasi ?? '-' }}</td>
-                </tr>
-                <tr>
-                    <th>Catatan</th>
-                    <td>{{ $usulanBelanja->catatan ?? '-' }}</td>
-                </tr>
-            </table>
-        </div>
+        @php
+            $statusUsulan = strtolower($usulanBelanja->status_usulan ?? 'draft');
+            $statusTone = ['approved' => 'success', 'revision' => 'warning', 'rejected' => 'danger', 'proses' => 'primary'][$statusUsulan] ?? 'secondary';
+            $grandTotalUsulan = (float) $selectedItems->sum('total_anggaran') + (float) $selectedItems->sum('total_ppn');
+        @endphp
+        <section class="ub-overview mb-8">
+            <div class="ub-overview-top">
+                <div>
+                    <div class="ub-eyebrow">Ringkasan usulan</div>
+                    <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
+                        <h2 class="ub-number mb-0">{{ $usulanBelanja->no_usulan_belanja }}</h2>
+                        <span class="badge badge-light-{{ $statusTone }} ub-status-badge">{{ strtoupper($usulanBelanja->status_usulan) }}</span>
+                    </div>
+                </div>
+                <div class="ub-total-highlight"><span>Total belanja + PPN</span><strong>Rp {{ number_format($grandTotalUsulan, 2, ',', '.') }}</strong></div>
+            </div>
+            <div class="ub-overview-grid">
+                <div class="ub-overview-item"><span><i class="ki-duotone ki-user"></i> Pengusul</span><strong>{{ $usulanBelanja->nama_pengusul ?: ($usulanBelanja->pengusul?->nama ?? '-') }}</strong></div>
+                <div class="ub-overview-item"><span><i class="ki-duotone ki-category"></i> Subkategori RKBU</span><strong>{{ $usulanBelanja->rkbu?->subKategoriRkbu?->nama_sub_kategori_rkbu ?? '-' }}</strong></div>
+                <div class="ub-overview-item"><span><i class="ki-duotone ki-calendar"></i> Tahun anggaran</span><strong>{{ $usulanBelanja->tahunAnggaran?->nama_tahun_anggaran ?? '-' }}</strong></div>
+                <div class="ub-overview-item"><span><i class="ki-duotone ki-time"></i> Tanggal validasi</span><strong>{{ $usulanBelanja->tanggal_validasi?->format('d-m-Y H:i') ?? 'Belum divalidasi' }}</strong></div>
+                <div class="ub-overview-item"><span><i class="ki-duotone ki-profile-user"></i> Validator terakhir</span><strong>{{ $usulanBelanja->nama_validasi ?? '-' }}</strong></div>
+                <div class="ub-overview-item ub-overview-note"><span><i class="ki-duotone ki-message-text-2"></i> Catatan</span><strong>{{ $usulanBelanja->catatan ?: 'Tidak ada catatan' }}</strong></div>
+            </div>
+        </section>
 
         <div class="mt-8 ub-item-section">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -349,17 +328,37 @@
     </div>
 </div>
 <style>
-    .ub-detail-shell { overflow:hidden; border-radius:12px; }
-    .ub-page-header { flex-wrap:wrap; gap:14px; background:linear-gradient(110deg,#f2f7ff,#fff 70%); border-bottom:1px solid #e8edf5; }
-    .ub-heading-icon { display:grid; place-items:center; width:46px; height:46px; flex:0 0 46px; border-radius:12px; background:#fff; box-shadow:0 3px 12px #3699ff18; }
-    .ub-summary-wrap { padding:12px 16px; border:1px solid #edf0f5; border-radius:10px; background:#fbfcfe; }
-    .ub-summary-table { margin:0; }
-    .ub-summary-table th { width:25%; color:#7e8299; font-size:13px; }
-    .ub-summary-table td { color:#3f4254; font-weight:600; overflow-wrap:anywhere; }
-    .ub-item-section > .d-flex:first-child { padding:15px 17px; border:1px solid #e8edf5; border-radius:10px 10px 0 0; background:#f5f8ff; }
+    .ub-detail-shell { overflow:hidden; border:1px solid #edf0f5; border-radius:16px; box-shadow:0 8px 28px rgba(31,45,61,.045); }
+    .ub-page-header { flex-wrap:wrap; gap:14px; padding:1.4rem 1.6rem; background:linear-gradient(110deg,#eef5ff 0%,#fff 72%); border-bottom:1px solid #e8edf5; }
+    .ub-heading-icon { display:grid; place-items:center; width:50px; height:50px; flex:0 0 50px; border-radius:15px; background:#fff; box-shadow:0 5px 18px #3699ff18; }
+    .ub-overview { overflow:hidden; border:1px solid #e7edf5; border-radius:14px; background:#fff; }
+    .ub-overview-top { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.35rem 1.5rem; background:linear-gradient(110deg,#f3f8ff,#fff 75%); }
+    .ub-eyebrow { color:#8a94a6; font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+    .ub-number { color:#1f2937; font-size:1.45rem; font-weight:750; letter-spacing:.01em; }
+    .ub-status-badge { padding:.55rem .8rem; border-radius:999px; font-size:.7rem; letter-spacing:.04em; }
+    .ub-total-highlight { display:flex; flex-direction:column; align-items:flex-end; gap:.25rem; }
+    .ub-total-highlight span { color:#7c8798; font-size:.78rem; }
+    .ub-total-highlight strong { color:#146cba; font-size:1.25rem; font-weight:750; }
+    .ub-overview-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0; padding:.25rem 1.5rem 1rem; }
+    .ub-overview-item { min-width:0; padding:.85rem .75rem; border-top:1px solid #edf0f5; }
+    .ub-overview-item span { display:flex; align-items:center; gap:.45rem; margin-bottom:.4rem; color:#8a94a6; font-size:.72rem; font-weight:650; text-transform:uppercase; letter-spacing:.025em; }
+    .ub-overview-item span i { color:#3699ff; font-size:1rem; }
+    .ub-overview-item strong { display:block; color:#30394b; font-size:.9rem; font-weight:650; overflow-wrap:anywhere; }
+    .ub-item-section > .d-flex:first-child { padding:15px 17px; border:1px solid #e8edf5; border-radius:12px 12px 0 0; background:#f5f8ff; }
     .ub-data-table { min-width:900px; }
     .ub-data-table thead th { color:#7e8299; background:#f5f8fa; font-size:11px; text-transform:uppercase; white-space:nowrap; }
-    @media(max-width:767.98px) { .ub-page-header { align-items:flex-start; flex-direction:column; } .ub-page-header .card-toolbar { display:flex; flex-wrap:wrap; gap:8px; width:100%; } .ub-summary-table th { width:auto; min-width:135px; } .ub-summary-wrap { padding:8px; } }
+    .ub-detail-shell .card { border:1px solid #edf0f5; border-radius:14px; box-shadow:0 4px 16px rgba(31,45,61,.035); }
+    .ub-detail-shell .card-header { border-bottom:1px solid #edf0f5; background:#fbfcfe; }
+    .ub-detail-shell .table { --bs-table-bg:transparent; }
+    .ub-detail-shell .table-responsive { border-radius:10px; }
+    .ub-detail-shell .form-control, .ub-detail-shell .form-select { border-radius:8px; }
+    .ub-history-card, .ub-decision-card { overflow:hidden; border:1px solid #edf0f5; border-radius:14px; box-shadow:0 4px 16px rgba(31,45,61,.035); }
+    .ub-history-card .card-header, .ub-decision-card .card-header { border-bottom:1px solid #edf0f5; background:#f8faff; }
+    .ub-history-card .card-title, .ub-decision-card .card-title { display:flex; align-items:center; gap:.75rem; }
+    .ub-section-mark { display:inline-grid; place-items:center; width:36px; height:36px; border-radius:11px; background:#eaf3ff; }
+    .ub-section-mark-success { background:#e8fff3; }
+    @media(max-width:767.98px) { .ub-page-header { align-items:flex-start; flex-direction:column; padding:1rem; } .ub-page-header .card-toolbar { display:flex; flex-wrap:wrap; gap:8px; width:100%; } .ub-overview-top { align-items:flex-start; flex-direction:column; padding:1rem; } .ub-total-highlight { align-items:flex-start; } .ub-overview-grid { grid-template-columns:repeat(2,minmax(0,1fr)); padding:0 .75rem .75rem; } }
+    @media(max-width:420px) { .ub-overview-grid { grid-template-columns:1fr; } .ub-number { font-size:1.15rem; } }
 </style>
 
 @if($canManageItems)
@@ -482,9 +481,9 @@
     </div>
 @endif
 
-<div class="card">
+<div class="card ub-history-card">
     <div class="card-header">
-        <h3 class="card-title">Riwayat Validasi</h3>
+        <h3 class="card-title"><span class="ub-section-mark"><i class="ki-duotone ki-time text-primary"></i></span>Riwayat Validasi</h3>
     </div>
 
     <div class="card-body">
@@ -529,9 +528,9 @@
 </div>
 
 @if($approvalSaya && $usulanBelanja->status_usulan === 'proses')
-    <div class="card mt-6">
+    <div class="card ub-decision-card mt-6">
         <div class="card-header">
-            <h3 class="card-title">Keputusan Validasi</h3>
+            <h3 class="card-title"><span class="ub-section-mark ub-section-mark-success"><i class="ki-duotone ki-check-circle text-success"></i></span>Keputusan Validasi</h3>
         </div>
 
         <div class="card-body">

@@ -77,7 +77,7 @@ class AuthController extends Controller
         Session::put('fase_tahun_anggaran_id', $tahun->fase_id);
         Session::put('nama_unit', $unit?->nama_unit);
 
-        return redirect()->route('dashboard');
+        return redirect()->route('module-portal');
     }
 
     public function logout(Request $request)

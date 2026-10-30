@@ -135,7 +135,9 @@ class PengadaanWorkflowController extends Controller
             'canValidasi' => $isAdmin || $this->userCanApproveIdentity('pengurus barang', $spj) || auth()->user()->hasRole('Pengurus Barang'),
             'canBast' => $isAdmin || auth()->user()->hasRole('Admin Pengadaan'),
             'canTukarFaktur' => $isAdmin || auth()->user()->hasRole('Admin Pengadaan'),
-            'canPenyerahanSpjAdmin' => $isAdmin || auth()->user()->hasRole('Admin Pengadaan'),
+            'canPenyerahanSpjAdmin' => $isAdmin
+                || auth()->user()->hasRole('Admin Pengadaan')
+                || ($step === 'input_penyerahan_spj_admin' && $workflowStep && $this->userCanApproveWorkflowStep($workflowStep, $spj)),
             'canLanjutan' => $this->canProcessStep($step),
             'workflowStep' => $workflowStep,
             'workflowStepName' => $workflowStepName,
@@ -190,7 +192,9 @@ class PengadaanWorkflowController extends Controller
             'canValidasi' => $isAdmin || $this->userCanApproveIdentity('pengurus barang', $spj) || auth()->user()->hasRole('Pengurus Barang'),
             'canBast' => $isAdmin || auth()->user()->hasRole('Admin Pengadaan'),
             'canTukarFaktur' => $isAdmin || auth()->user()->hasRole('Admin Pengadaan'),
-            'canPenyerahanSpjAdmin' => $isAdmin || auth()->user()->hasRole('Admin Pengadaan'),
+            'canPenyerahanSpjAdmin' => $isAdmin
+                || auth()->user()->hasRole('Admin Pengadaan')
+                || ($step === 'input_penyerahan_spj_admin' && $workflowStep && $this->userCanApproveWorkflowStep($workflowStep, $spj)),
             'canLanjutan' => $this->canProcessStep($step),
             'workflowStep' => $workflowStep,
             'workflowStepName' => $workflowStepName,
@@ -206,11 +210,12 @@ class PengadaanWorkflowController extends Controller
             ->first(['master.*', 'perusahaan.nama_perusahaan']);
 
         $netto = (float) $spj->details->sum(fn ($detail) =>
-            (float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume
+            round((float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume, 2)
         );
-        $nilaiPpn = (float) $spj->details->sum(fn ($detail) =>
-            (float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume * (float) ($detail->item?->ppn ?? 0) / 100
-        );
+        $nilaiPpn = (float) $spj->details->sum(function ($detail) {
+            $subtotal = round((float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume, 2);
+            return round($subtotal * (float) ($detail->item?->ppn ?? 0) / 100, 2);
+        });
         $latestPaymentInfo = null;
         if ($masterInfo && Schema::hasTable('master_spj_payment_transactions')) {
             $latestPaymentInfo = DB::table('master_spj_payment_transactions as payment')
@@ -419,7 +424,17 @@ class PengadaanWorkflowController extends Controller
 
     public function storePenyerahanSpjAdmin(Request $request, Spj $spj)
     {
-        $this->authorizeRole('Admin Pengadaan');
+        $user = $request->user();
+        $isAdmin = $user->hasRole('Administrator') || $user->hasRole('Super Admin');
+        $workflowStep = $this->currentWorkflowStep($spj);
+        $isAssignedToCurrentStep = $spj->pengadaan_step === 'input_penyerahan_spj_admin'
+            && $workflowStep
+            && $this->userCanApproveWorkflowStep($workflowStep, $spj);
+        abort_unless(
+            $isAdmin || $user->hasRole('Admin Pengadaan') || $isAssignedToCurrentStep,
+            403,
+            'Akun Anda tidak memiliki kewenangan untuk menyerahkan dokumen SPJ.'
+        );
         abort_unless($spj->pengadaan_step === 'input_penyerahan_spj_admin', 403, 'SPJ belum berada pada tahap penyerahan dokumen oleh Admin Pengadaan.');
         $data = $request->validate([
             'tanggal_penyerahan_spj' => ['required', 'date'],
@@ -633,9 +648,16 @@ class PengadaanWorkflowController extends Controller
                 'bukti_bayar' => ['nullable', 'required_if:status_pembayaran,Selesai', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
             ]);
             $spj->loadMissing('details.item');
-            $hargaDasar = (float) $spj->details->sum(fn ($detail) => (float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume);
-            $totalPpnUsulan = (float) $spj->details->sum(fn ($detail) => (float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume * (float) ($detail->item?->ppn ?? 0) / 100);
-            $nilaiTagihan = $hargaDasar + $totalPpnUsulan;
+            // Match the per-item rounding used when usulan totals are displayed.
+            $hargaDasar = (float) $spj->details->sum(function ($detail) {
+                return round((float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume, 2);
+            });
+            $totalPpnUsulan = (float) $spj->details->sum(function ($detail) {
+                $subtotal = round((float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume, 2);
+                return round($subtotal * (float) ($detail->item?->ppn ?? 0) / 100, 2);
+            });
+            // Payments are recorded in whole rupiah in the payment form.
+            $nilaiTagihan = round($hargaDasar + $totalPpnUsulan);
             $totalPajak = round($hargaDasar * (
                 (float) ($data['ppn'] ?? $master->ppn ?? 0)
                 + (float) ($data['pph21'] ?? $master->pph21 ?? 0)
@@ -643,14 +665,16 @@ class PengadaanWorkflowController extends Controller
                 + (float) ($data['pph23'] ?? $master->pph23 ?? 0)
                 + (float) ($data['pp05'] ?? $master->pp05 ?? 0)
             ) / 100);
-            $nilaiPembayaran = $data['status_pembayaran'] === 'Selesai' ? $hargaDasar + $totalPajak : 0;
-            $totalTerbayar = (float) ($master->pembayaran ?? 0) + $nilaiPembayaran;
+            $nilaiPembayaran = $data['status_pembayaran'] === 'Selesai'
+                ? round($hargaDasar + $totalPajak)
+                : 0;
+            $totalTerbayar = round((float) ($master->pembayaran ?? 0) + $nilaiPembayaran);
             if ($data['status_pembayaran'] === 'Selesai' && $totalTerbayar > $nilaiTagihan) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'pembayaran' => 'Jumlah pembayaran melebihi sisa tagihan SPJ.',
                 ]);
             }
-            $sisaPembayaran = max(0, $nilaiTagihan - $totalTerbayar);
+            $sisaPembayaran = max(0, round($nilaiTagihan - $totalTerbayar));
             if ($data['status_pembayaran'] === 'Selesai' && $sisaPembayaran > 0) {
                 throw ValidationException::withMessages([
                     'status_pembayaran' => 'Status Selesai hanya dapat dipilih jika seluruh total usulan belanja sudah dibayarkan.',
@@ -906,6 +930,11 @@ class PengadaanWorkflowController extends Controller
 
     private function skipCompletedBastStep(Spj $spj, ?object $workflowStep): ?object
     {
+        // The later Admin Pengadaan step is the document handover stage, not the earlier BAST stage.
+        if ($spj->pengadaan_step === 'input_penyerahan_spj_admin') {
+            return $workflowStep;
+        }
+
         if (! $workflowStep || ! $this->isBastWorkflowStep($workflowStep, $spj)) {
             return $workflowStep;
         }

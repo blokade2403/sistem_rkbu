@@ -49,6 +49,8 @@ use App\Http\Controllers\UsulanBelanja\UsulanBelanjaController;
 use App\Http\Controllers\UsulanBelanja\SpjUsulanBelanjaController;
 use App\Http\Controllers\UsulanBelanja\PengadaanWorkflowController;
 use App\Http\Controllers\UsulanBelanja\ValidasiUsulanBelanjaController;
+use App\Http\Controllers\Assets\AssetModuleController;
+use App\Http\Controllers\Pendapatan\PendapatanController;
 use App\Http\Controllers\Pengadaan\PerusahaanController;
 use App\Http\Controllers\WorkFlow\ApprovalController;
 use App\Http\Controllers\WorkFlow\PositionSubKategoriRkbuController;
@@ -70,7 +72,23 @@ Route::controller(AuthController::class)->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::view('/modul', 'portal.index')->name('module-portal');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::prefix('asset')->name('asset-module.')->controller(AssetModuleController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/manual/create', 'manualCreate')->name('manual-create');
+        Route::post('/manual', 'manualStore')->name('manual-store');
+        Route::get('/source/{spjDetail}/register', 'create')->name('create');
+        Route::post('/source/{spjDetail}/register', 'store')->name('store');
+        Route::get('/{id}/edit', 'edit')->name('edit');
+        Route::put('/{id}', 'update')->name('update');
+        Route::get('/{id}', 'show')->name('show');
+    });
+    Route::prefix('pendapatan')->name('pendapatan.')->controller(PendapatanController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/target', 'saveTarget')->name('target.save');
+        Route::post('/realisasi', 'saveRealization')->name('realisasi.save');
+    });
     Route::get('/monitoring-anggaran/blud', [MonitoringAnggaranController::class, 'blud'])->name('monitoring-anggaran.blud');
     Route::get('/monitoring-anggaran/keseluruhan', [MonitoringAnggaranController::class, 'keseluruhan'])->name('monitoring-anggaran.keseluruhan');
     Route::get('/monitoring-anggaran/laporan-bulanan', LaporanRealisasiBulananController::class)->name('monitoring-anggaran.laporan-bulanan');
