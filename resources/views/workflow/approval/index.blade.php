@@ -59,8 +59,8 @@
                                 @endforeach
                             </select>
                             <select id="approval-status-filter" class="form-select form-select-sm w-auto" data-control="select2">
-                                <option value="">Semua Status Approval</option>
-                                <option value="pending">Pending</option>
+                                <option value="" {{ auth()->user()->hasRole('Super Admin') ? '' : 'selected' }}>Semua Status Approval</option>
+                                <option value="pending" {{ auth()->user()->hasRole('Super Admin') ? 'selected' : '' }}>Pending</option>
                                 <option value="approved">Disetujui</option>
                                 <option value="rejected">Ditolak</option>
                                 <option value="revision">Revisi</option>

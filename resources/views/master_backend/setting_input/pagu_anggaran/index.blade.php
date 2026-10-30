@@ -60,7 +60,7 @@
                 <table class="table table-row-bordered table-row-gray-300 align-middle gy-4">
                     <thead><tr class="text-muted fw-bold text-uppercase fs-7">
                         <th style="width:50px">No.</th><th>Rekening Belanja</th><th>Sumber Dana</th>
-                        <th class="text-end">Pagu</th><th class="text-end">Terpakai RKBU</th>
+                        <th class="text-end">Pagu</th><th class="text-end">Terpakai RKBU</th><th class="text-end">RKBU Tervalidasi</th>
                         <th class="text-end">Terpakai Usulan</th><th class="text-end">Sisa vs RKBU</th><th class="text-end">Sisa vs Usulan</th><th class="text-end">Aksi</th>
                     </tr></thead>
                     <tbody>
@@ -79,6 +79,7 @@
                                 <td><span class="badge badge-light-{{ $pagu->jenis_sumber_dana === 'BLUD' ? 'primary' : 'warning' }}">{{ $pagu->jenis_sumber_dana }}</span></td>
                                 <td class="text-end fw-semibold">{{ $rupiah($pagu->jumlah_pagu) }}</td>
                                 <td class="text-end">{{ $rupiah($pagu->rkbu_terpakai) }}<div class="progress h-4px mt-2"><div class="progress-bar bg-primary" style="width: {{ $rasio }}%"></div></div></td>
+                                <td class="text-end {{ round((float) $pagu->rkbu_tervalidasi, 2) !== round((float) $pagu->jumlah_pagu, 2) ? 'text-danger fw-bold' : '' }}">{{ $rupiah($pagu->rkbu_tervalidasi) }}</td>
                                 <td class="text-end">{{ $rupiah($pagu->usulan_terpakai) }}</td>
                                 <td class="text-end {{ $sisaRkbu < 0 ? 'text-danger fw-bold' : 'text-success fw-semibold' }}">{{ $rupiah($sisaRkbu) }}</td>
                                 <td class="text-end {{ $sisaUsulan < 0 ? 'text-danger fw-bold' : 'text-success fw-semibold' }}">{{ $rupiah($sisaUsulan) }}</td>
@@ -88,7 +89,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="9" class="text-center py-12"><div class="text-muted mb-3">Belum ada pagu untuk tahun ini.</div><a href="{{ route('pagu_anggaran.create') }}" class="btn btn-sm btn-light-primary">Tambahkan pagu pertama</a></td></tr>
+                            <tr><td colspan="10" class="text-center py-12"><div class="text-muted mb-3">Belum ada pagu untuk tahun ini.</div><a href="{{ route('pagu_anggaran.create') }}" class="btn btn-sm btn-light-primary">Tambahkan pagu pertama</a></td></tr>
                         @endforelse
                     </tbody>
                 </table>

@@ -152,13 +152,20 @@ class PaguAnggaranService
     public function approvedRkbuForAccount(string $tahunId, string $accountId): float
     {
         $total = 0.0;
+        $pagu = $this->paguForAccount($tahunId, $accountId);
+        if (! $pagu) {
+            return $total;
+        }
+
+        $accountCodes = RekeningBelanja::query()->pluck('kode_rekening_belanja', 'id_kode_rekening_belanja');
         $rkbUs = Rkbu::query()
             ->where('tahun_anggaran_id', $tahunId)
             ->where('status', 'approved')
-            ->with(['subKategoriRkbu.sub_kategori_rekening', 'subKegiatan', 'jenisBelanja']);
+            ->with(['subKategoriRkbu.sub_kategori_rekening', 'subKegiatan.sumber_danas', 'sumberDana', 'rekeningBelanja.aktivitas.sub_kegiatan.sumber_danas', 'jenisBelanja']);
 
         foreach ($rkbUs->cursor() as $rkbu) {
-            if ($this->resolveAccountId($rkbu) === $accountId) {
+            if ($this->accountIsWithinPagu($this->resolveAccountId($rkbu), $pagu, $accountCodes)
+                && $this->rkbuMatchesFundingSource($rkbu, $pagu->jenis_sumber_dana)) {
                 $total += $this->detailTotal($rkbu);
             }
         }

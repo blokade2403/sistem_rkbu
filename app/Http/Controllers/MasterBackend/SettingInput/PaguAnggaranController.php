@@ -46,6 +46,10 @@ class PaguAnggaranController extends Controller
                     $pagu->tahun_anggaran_id,
                     $pagu->id_kode_rekening_belanja
                 );
+                $pagu->rkbu_tervalidasi = $paguService->approvedRkbuForAccount(
+                    $pagu->tahun_anggaran_id,
+                    $pagu->id_kode_rekening_belanja
+                );
                 $pagu->usulan_terpakai = $paguService->totalUsulanForAccount(
                     $pagu->tahun_anggaran_id,
                     $pagu->id_kode_rekening_belanja
