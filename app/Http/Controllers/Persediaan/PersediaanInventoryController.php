@@ -7,6 +7,7 @@ use App\Models\MasterBackend\SettingUser\Unit;
 use App\Models\Persediaan\PersediaanItem;
 use App\Models\Persediaan\PersediaanRequest;
 use App\Models\Persediaan\PersediaanTransaction;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +33,35 @@ class PersediaanInventoryController extends Controller
         return $this->renderPage('stok', $request);
     }
 
+    public function stockPdf(Request $request)
+    {
+        $this->authorizeRead();
+        $filters = $request->validate([
+            'sub_kategori_rkbu_id' => ['nullable', 'uuid', 'exists:sub_kategori_rkbus,id_sub_kategori_rkbu'],
+            'search' => ['nullable', 'string', 'max:100'],
+        ]);
+        $items = $this->scopedItems()
+            ->with(['unit', 'subKategoriRkbu'])
+            ->when(filled($filters['sub_kategori_rkbu_id'] ?? null), fn ($query) => $query->where('sub_kategori_rkbu_id', $filters['sub_kategori_rkbu_id']))
+            ->when(filled($filters['search'] ?? null), function ($query) use ($filters) {
+                $term = trim($filters['search']);
+                $query->where(fn ($search) => $search->where('nama_barang', 'like', '%' . $term . '%')
+                    ->orWhere('kode_barang', 'like', '%' . $term . '%')
+                    ->orWhere('spesifikasi', 'like', '%' . $term . '%'));
+            })
+            ->orderBy('nama_barang')->get();
+
+        $totalValue = $items->sum(fn (PersediaanItem $item) => (float) $item->stok * (float) ($item->harga_satuan ?? 0) * (1 + (float) ($item->ppn ?? 0) / 100));
+        $pdf = Pdf::loadView('persediaan.inventory.stock_pdf', [
+            'items' => $items,
+            'filters' => $filters,
+            'totalValue' => $totalValue,
+            'printedAt' => now(),
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download('laporan-stok-persediaan-' . now()->format('Ymd-His') . '.pdf');
+    }
+
     public function permintaan()
     {
         return $this->renderPage('permintaan');
@@ -48,7 +78,9 @@ class PersediaanInventoryController extends Controller
             'jenis' => ['nullable', 'in:masuk,keluar,opname'],
             'dari' => ['nullable', 'date'],
             'sampai' => ['nullable', 'date'],
+            'barang' => ['nullable', 'string', 'max:100'],
             'unit_id' => ['nullable', 'uuid', 'exists:units,id'],
+            'unit_peminta_id' => ['nullable', 'uuid', 'exists:units,id'],
         ]);
         return $this->renderPage('laporan', $request);
     }
@@ -106,19 +138,21 @@ class PersediaanInventoryController extends Controller
             ->orderBy('sub.nama_sub_kategori_rkbu')
             ->get(['sub.id_sub_kategori_rkbu', 'sub.kode_sub_kategori_rkbu', 'sub.nama_sub_kategori_rkbu']);
         $requestableItems = $page === 'permintaan'
-            ? PersediaanItem::query()->with(['unit', 'subKategoriRkbu'])->orderBy('nama_barang')->get()
+            ? PersediaanItem::query()->with(['unit', 'subKategoriRkbu'])
+                ->where('stok', '>', 0)->orderBy('nama_barang')->limit(20)->get()
             : collect();
-        $requests = $this->scopedRequests()
-            ->with(['requester', 'reviewer'])
-            ->latest()
-            ->limit(100)
-            ->get();
+        $requestQuery = $this->scopedRequests()
+            ->with(['requester', 'reviewer', 'pickupConfirmer'])
+            ->latest();
+        $requests = $page === 'permintaan'
+            ? $requestQuery->paginate(50, ['*'], 'request_page')->withQueryString()
+            : $requestQuery->limit(10)->get();
         $transactionQuery = PersediaanTransaction::query()
             ->with(['item', 'unit', 'requestingUnit', 'actor', 'spjDetail'])
             ->when(! $this->isAdministrator(), function ($query) {
                 $user = auth()->user();
                 if ($user->hasRole('Pengurus Barang')) {
-                    $query->where('unit_id', $user->unit_id);
+                    $query->whereIn('persediaan_item_id', $this->scopedItems()->select('persediaan_items.id'));
                 } else {
                     $query->whereHas('request', fn ($request) => $request->where('unit_peminta_id', $user->unit_id));
                 }
@@ -126,7 +160,13 @@ class PersediaanInventoryController extends Controller
             ->when($filters?->filled('jenis'), fn ($query) => $query->where('jenis', $filters->input('jenis')))
             ->when($filters?->filled('dari'), fn ($query) => $query->whereDate('tanggal', '>=', $filters->input('dari')))
             ->when($filters?->filled('sampai'), fn ($query) => $query->whereDate('tanggal', '<=', $filters->input('sampai')))
-            ->when($filters?->filled('unit_id') && $this->isAdministrator(), fn ($query) => $query->where('unit_id', $filters->input('unit_id')))
+            ->when($filters?->filled('barang'), function ($query) use ($filters) {
+                $term = trim($filters->input('barang'));
+                $query->whereHas('item', fn ($item) => $item->where('nama_barang', 'like', '%' . $term . '%')
+                    ->orWhere('kode_barang', 'like', '%' . $term . '%'));
+            })
+            ->when($filters?->filled('unit_id') && $this->canManage(), fn ($query) => $query->where('unit_id', $filters->input('unit_id')))
+            ->when($filters?->filled('unit_peminta_id') && $this->canManage(), fn ($query) => $query->where('unit_peminta_id', $filters->input('unit_peminta_id')))
             ->latest('tanggal')->latest('created_at');
         $transactions = $page === 'laporan'
             ? $transactionQuery->paginate(50, ['*'], 'transaction_page')->withQueryString()
@@ -137,7 +177,7 @@ class PersediaanInventoryController extends Controller
             ->when(! $this->isAdministrator(), function ($query) {
                 $user = auth()->user();
                 if ($user->hasRole('Pengurus Barang')) {
-                    $query->where('unit_id', $user->unit_id);
+                    $query->whereIn('persediaan_item_id', $this->scopedItems()->select('persediaan_items.id'));
                 } else {
                     $query->whereHas('request', fn ($request) => $request->where('unit_peminta_id', $user->unit_id));
                 }
@@ -158,7 +198,7 @@ class PersediaanInventoryController extends Controller
             'requestableItems' => $requestableItems,
             'requests' => $requests,
             'transactions' => $transactions,
-            'units' => $this->isAdministrator() ? Unit::query()->orderBy('nama_unit')->get() : collect(),
+            'units' => $this->canManage() ? Unit::query()->orderBy('nama_unit')->get() : collect(),
             'canManage' => $this->canManage(),
             'isAdministrator' => $this->isAdministrator(),
             'totalItems' => $totalItems,
@@ -209,45 +249,161 @@ class PersediaanInventoryController extends Controller
         return back()->with('success', 'Barang masuk berhasil dicatat dan stok telah diperbarui.');
     }
 
+    public function receiveExternal(Request $request)
+    {
+        $this->authorizeManage();
+        $data = $request->validate([
+            'mode' => ['required', 'in:existing,new'],
+            'persediaan_item_id' => ['nullable', 'required_if:mode,existing', 'uuid'],
+            'kode_barang' => ['nullable', 'string', 'max:20', 'unique:persediaan_items,kode_barang'],
+            'nama_barang' => ['nullable', 'required_if:mode,new', 'string', 'max:255'],
+            'spesifikasi' => ['nullable', 'string', 'max:2000'],
+            'satuan' => ['nullable', 'required_if:mode,new', 'string', 'max:50'],
+            'sub_kategori_rkbu_id' => ['nullable', 'uuid', 'exists:sub_kategori_rkbus,id_sub_kategori_rkbu'],
+            'harga_satuan' => ['nullable', 'numeric', 'min:0'],
+            'ppn' => ['nullable', 'numeric', 'between:0,100'],
+            'unit_id' => ['nullable', 'uuid', 'exists:units,id'],
+            'jumlah' => ['required', 'numeric', 'gt:0'],
+            'tanggal' => ['required', 'date'],
+            'sumber_penerimaan' => ['required', 'string', 'max:2000'],
+        ]);
+        $user = auth()->user();
+        $unitId = $this->isAdministrator()
+            ? $data['unit_id']
+            : ($data['mode'] === 'existing'
+                ? $this->scopedItems()->whereKey($data['persediaan_item_id'])->value('unit_id')
+                : $user->unit_id);
+        abort_unless(filled($unitId), 422, 'Unit gudang harus ditentukan untuk penerimaan barang.');
+
+        DB::transaction(function () use ($data, $user, $unitId): void {
+            if ($data['mode'] === 'existing') {
+                $item = $this->scopedItems()->whereKey($data['persediaan_item_id'])->lockForUpdate()->firstOrFail();
+                abort_unless((string) $item->unit_id === (string) $unitId, 422, 'Barang yang dipilih bukan milik unit gudang yang ditentukan.');
+            } else {
+                $item = PersediaanItem::query()->create([
+                    'kode_barang' => $data['kode_barang'] ?: 'EXT-' . strtoupper(bin2hex(random_bytes(5))),
+                    'unit_id' => $unitId,
+                    'sub_kategori_rkbu_id' => $data['sub_kategori_rkbu_id'] ?? null,
+                    'nama_barang' => $data['nama_barang'],
+                    'spesifikasi' => $data['spesifikasi'] ?? null,
+                    'satuan' => $data['satuan'],
+                    'harga_satuan' => $data['harga_satuan'] ?? null,
+                    'ppn' => $data['ppn'] ?? 0,
+                    'stok' => 0,
+                ]);
+                $item = PersediaanItem::query()->whereKey($item->id)->lockForUpdate()->firstOrFail();
+            }
+
+            $before = (float) $item->stok;
+            $quantity = (float) $data['jumlah'];
+            $after = $before + $quantity;
+            $item->update(['stok' => $after]);
+            PersediaanTransaction::query()->create([
+                'persediaan_item_id' => $item->id,
+                'unit_id' => $item->unit_id,
+                'jenis' => 'masuk',
+                'jumlah' => $quantity,
+                'stok_sebelum' => $before,
+                'stok_sesudah' => $after,
+                'tanggal' => $data['tanggal'],
+                'keterangan' => 'Penerimaan non-usulan. Sumber: ' . $data['sumber_penerimaan'],
+                'created_by' => $user->id,
+            ]);
+        });
+
+        return back()->with('success', 'Penerimaan barang non-usulan berhasil dicatat ke stok dan riwayat mutasi.');
+    }
+
     public function requestIssue(Request $request)
     {
         $this->authorizeRead();
         $user = auth()->user();
         abort_unless(filled($user->unit_id), 403, 'Akun peminta harus terhubung ke unit.');
-        $data = $request->validate([
-            'persediaan_item_id' => ['required', 'uuid'],
-            'jumlah' => ['required', 'numeric', 'gt:0'],
-            'keperluan' => ['required', 'string', 'max:2000'],
-        ]);
-        $item = PersediaanItem::query()->whereKey($data['persediaan_item_id'])->firstOrFail();
+        if ($request->filled('persediaan_item_id')) {
+            $legacy = $request->validate([
+                'persediaan_item_id' => ['required', 'uuid'],
+                'jumlah' => ['required', 'numeric', 'gt:0'],
+                'keperluan' => ['required', 'string', 'max:2000'],
+            ]);
+            $data = ['items' => [[
+                'persediaan_item_id' => $legacy['persediaan_item_id'],
+                'jumlah' => $legacy['jumlah'],
+            ]], 'keperluan' => $legacy['keperluan']];
+        } else {
+            $data = $request->validate([
+                'items' => ['required', 'array', 'min:1'],
+                'items.*.persediaan_item_id' => ['required', 'uuid', 'distinct'],
+                'items.*.jumlah' => ['required', 'numeric', 'gt:0'],
+                'keperluan' => ['required', 'string', 'max:2000'],
+            ]);
+        }
+        $items = collect($data['items']);
+        $validItems = PersediaanItem::query()->whereIn('id', $items->pluck('persediaan_item_id'))->pluck('id')->all();
+        abort_if(count($validItems) !== $items->count(), 422, 'Salah satu barang yang dipilih tidak ditemukan.');
+        $requestNumber = 'PB-' . now()->format('Ymd') . '-' . strtoupper(bin2hex(random_bytes(4)));
+        DB::transaction(function () use ($items, $user, $data, $requestNumber): void {
+            foreach ($items as $entry) {
+                PersediaanRequest::query()->create([
+                    'nomor_permintaan' => $requestNumber,
+                    'persediaan_item_id' => $entry['persediaan_item_id'],
+                    'unit_peminta_id' => $user->unit_id,
+                    'requested_by' => $user->id,
+                    'jumlah' => $entry['jumlah'],
+                    'keperluan' => $data['keperluan'],
+                    'status' => 'Menunggu',
+                ]);
+            }
+        });
 
-        PersediaanRequest::query()->create([
-            'persediaan_item_id' => $item->id,
-            'unit_peminta_id' => $user->unit_id,
-            'requested_by' => $user->id,
-            'jumlah' => $data['jumlah'],
-            'keperluan' => $data['keperluan'],
-            'status' => 'Menunggu',
-        ]);
+        return back()->with('success', 'Permintaan ' . $requestNumber . ' berhasil dikirim untuk validasi Pengurus Barang.');
+    }
 
-        return back()->with('success', 'Permintaan pengeluaran barang dikirim untuk diproses Pengurus Barang.');
+    public function searchRequestableItems(Request $request)
+    {
+        $this->authorizeRead();
+        $data = $request->validate(['q' => ['required', 'string', 'min:2', 'max:100']]);
+        $term = trim($data['q']);
+        $items = ($this->canManage() ? $this->scopedItems() : PersediaanItem::query())
+            ->with(['unit', 'subKategoriRkbu'])
+            ->where(function ($query) use ($term) {
+                $query->where('nama_barang', 'like', '%' . $term . '%')
+                    ->orWhere('kode_barang', 'like', '%' . $term . '%')
+                    ->orWhere('spesifikasi', 'like', '%' . $term . '%');
+            })
+            ->orderBy('nama_barang')->limit(20)->get();
+
+        return response()->json($items->map(fn (PersediaanItem $item) => [
+            'id' => $item->id,
+            'kode' => $item->kode_barang,
+            'nama' => $item->nama_barang,
+            'spesifikasi' => $item->spesifikasi,
+            'unit' => $item->unit?->nama_unit,
+            'stok' => (float) $item->stok,
+            'satuan' => $item->satuan,
+            'subkategori' => $item->subKategoriRkbu?->kode_sub_kategori_rkbu,
+        ]));
     }
 
     public function approveRequest(Request $request, string $id)
     {
         $this->authorizeManage();
-        $data = $request->validate(['catatan_verifikasi' => ['nullable', 'string', 'max:2000']]);
+        $data = $request->validate([
+            'jumlah_disetujui' => ['required', 'numeric', 'gt:0'],
+            'catatan_verifikasi' => ['nullable', 'string', 'max:2000'],
+        ]);
         DB::transaction(function () use ($id, $data): void {
             $issue = $this->scopedRequests()->whereKey($id)->lockForUpdate()->firstOrFail();
-            abort_unless($issue->status === 'Menunggu', 422, 'Permintaan sudah diproses.');
+            abort_unless($issue->status === 'Menunggu', 422, 'Permintaan barang ini sudah divalidasi.');
+            $quantity = (float) $data['jumlah_disetujui'];
+            abort_if($quantity > (float) $issue->jumlah, 422, 'Jumlah yang diberikan tidak boleh melebihi jumlah yang diminta.');
             $item = $this->scopedItems()->whereKey($issue->persediaan_item_id)->lockForUpdate()->firstOrFail();
             $before = (float) $item->stok;
-            $quantity = (float) $issue->jumlah;
-            abort_if($quantity > $before, 422, 'Stok tidak mencukupi untuk memenuhi permintaan ini.');
+            abort_if($quantity > $before, 422, 'Stok ' . $item->nama_barang . ' tidak mencukupi untuk memenuhi jumlah yang diberikan.');
             $after = $before - $quantity;
             $item->update(['stok' => $after]);
             $issue->update([
-                'status' => 'Disetujui', 'reviewed_by' => auth()->id(), 'reviewed_at' => now(),
+                'jumlah_disetujui' => $quantity,
+                'status' => 'Siap Diambil', 'reviewed_by' => auth()->id(), 'reviewed_at' => now(),
                 'catatan_verifikasi' => $data['catatan_verifikasi'] ?? null,
             ]);
             PersediaanTransaction::query()->create([
@@ -260,12 +416,30 @@ class PersediaanInventoryController extends Controller
                 'stok_sebelum' => $before,
                 'stok_sesudah' => $after,
                 'tanggal' => now()->toDateString(),
-                'keterangan' => 'Pengeluaran untuk unit ' . $issue->unit->nama_unit . ': ' . $issue->keperluan,
+                'keterangan' => 'Disiapkan untuk permintaan ' . $issue->nomor_permintaan . ' oleh unit ' . $issue->unit->nama_unit . ': ' . $issue->keperluan,
                 'created_by' => auth()->id(),
             ]);
         });
 
-        return back()->with('success', 'Permintaan disetujui dan barang keluar tercatat pada kartu stok.');
+        return back()->with('success', 'Jumlah barang yang diberikan berhasil divalidasi. Barang silakan diambil di gudang.');
+    }
+
+    public function confirmPickup(string $id)
+    {
+        $this->authorizeRead();
+        $user = auth()->user();
+        DB::transaction(function () use ($id, $user): void {
+            $issue = $this->scopedRequests()->whereKey($id)->lockForUpdate()->firstOrFail();
+            abort_unless($issue->status === 'Siap Diambil', 422, 'Permintaan belum siap diambil atau sudah dikonfirmasi.');
+            abort_unless($this->isAdministrator() || $user->hasRole('Pengurus Barang') || $issue->unit_peminta_id === $user->unit_id, 403, 'Anda tidak berwenang mengonfirmasi pengambilan permintaan ini.');
+            $issue->update([
+                'status' => 'Sudah Diambil',
+                'picked_up_at' => now(),
+                'picked_up_by' => $user->id,
+            ]);
+        });
+
+        return back()->with('success', 'Penerimaan barang telah dikonfirmasi. Status permintaan menjadi Barang Sudah Diambil.');
     }
 
     public function rejectRequest(Request $request, string $id)
@@ -274,7 +448,7 @@ class PersediaanInventoryController extends Controller
         $data = $request->validate(['catatan_verifikasi' => ['required', 'string', 'max:2000']]);
         DB::transaction(function () use ($id, $data): void {
             $issue = $this->scopedRequests()->whereKey($id)->lockForUpdate()->firstOrFail();
-            abort_unless($issue->status === 'Menunggu', 422, 'Permintaan sudah diproses.');
+            abort_unless($issue->status === 'Menunggu', 422, 'Permintaan barang ini sudah diproses.');
             $issue->update([
                 'status' => 'Ditolak', 'reviewed_by' => auth()->id(), 'reviewed_at' => now(),
                 'catatan_verifikasi' => $data['catatan_verifikasi'],
@@ -390,7 +564,7 @@ class PersediaanInventoryController extends Controller
         return PersediaanRequest::query()->with(['unit', 'item'])->when(! $this->isAdministrator(), function ($query) {
             $user = auth()->user();
             if ($user->hasRole('Pengurus Barang')) {
-                $query->whereHas('item', fn ($item) => $item->where('unit_id', $user->unit_id));
+                $query->whereIn('persediaan_item_id', $this->scopedItems()->select('persediaan_items.id'));
             } else {
                 $query->where('unit_peminta_id', $user->unit_id);
             }

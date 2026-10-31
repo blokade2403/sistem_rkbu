@@ -99,13 +99,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/barang-masuk', 'barangMasuk')->name('barang-masuk');
         Route::get('/stok', 'stok')->name('stok');
+        Route::get('/stok/pdf', 'stockPdf')->name('stok-pdf');
         Route::get('/permintaan', 'permintaan')->name('permintaan');
+        Route::get('/permintaan/barang', 'searchRequestableItems')->name('request-items');
         Route::get('/stok-opname', 'stokOpname')->name('opname');
         Route::get('/laporan', 'laporan')->name('laporan');
         Route::post('/barang-masuk', 'receive')->name('receive');
+        Route::post('/barang-masuk/non-usulan', 'receiveExternal')->name('receive-external');
         Route::post('/permintaan', 'requestIssue')->name('request');
         Route::post('/permintaan/{id}/setujui', 'approveRequest')->name('approve');
         Route::post('/permintaan/{id}/tolak', 'rejectRequest')->name('reject');
+        Route::post('/permintaan/{id}/terima', 'confirmPickup')->name('pickup');
         Route::post('/stok/{id}/opname', 'stocktake')->name('stocktake');
     });
     Route::prefix('pendapatan')->name('pendapatan.')->controller(PendapatanController::class)->group(function () {

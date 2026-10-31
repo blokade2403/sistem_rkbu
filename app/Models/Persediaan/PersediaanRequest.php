@@ -14,11 +14,11 @@ class PersediaanRequest extends Model
     protected $table = 'persediaan_requests';
 
     protected $fillable = [
-        'persediaan_item_id', 'unit_peminta_id', 'requested_by', 'jumlah', 'keperluan',
-        'status', 'reviewed_by', 'reviewed_at', 'catatan_verifikasi',
+        'nomor_permintaan', 'persediaan_item_id', 'unit_peminta_id', 'requested_by', 'jumlah', 'jumlah_disetujui', 'keperluan',
+        'status', 'reviewed_by', 'reviewed_at', 'picked_up_at', 'picked_up_by', 'catatan_verifikasi',
     ];
 
-    protected $casts = ['jumlah' => 'decimal:3', 'reviewed_at' => 'datetime'];
+    protected $casts = ['jumlah' => 'decimal:3', 'jumlah_disetujui' => 'decimal:3', 'reviewed_at' => 'datetime', 'picked_up_at' => 'datetime'];
 
     public function item()
     {
@@ -38,5 +38,10 @@ class PersediaanRequest extends Model
     public function reviewer()
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function pickupConfirmer()
+    {
+        return $this->belongsTo(User::class, 'picked_up_by');
     }
 }
