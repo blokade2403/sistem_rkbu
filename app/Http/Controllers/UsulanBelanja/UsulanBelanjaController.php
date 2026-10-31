@@ -113,6 +113,14 @@ class UsulanBelanjaController extends Controller
         );
     }
 
+    public function exportRekap(Request $request)
+    {
+        return Excel::download(
+            new UsulanBelanjaExport($request, true),
+            'rekap-usulan-belanja-' . now()->format('Ymd-His') . '.xlsx'
+        );
+    }
+
     public function print(UsulanBelanja $usulanBelanja)
     {
         $user = auth()->user();
@@ -419,6 +427,70 @@ class UsulanBelanjaController extends Controller
             : collect();
         $selectedItems = $this->workflow->getSelectedItems($usulanBelanja);
 
+        $itemProgress = DB::table('spj_details as detail')
+            ->join('spjs as spj', 'spj.id', '=', 'detail.spj_id')
+            ->leftJoin('master_spjs as master', 'master.spj_id', '=', 'spj.id')
+            ->leftJoin('workflow_steps as step', 'step.id', '=', 'spj.pengadaan_workflow_step_id')
+            ->leftJoin('positions as position', 'position.id', '=', 'step.position_id')
+            ->leftJoin('roles as role', 'role.id', '=', 'step.role_id')
+            ->leftJoin('validator_roles as validator_role', 'validator_role.id', '=', 'step.validator_role_id')
+            ->where('detail.usulan_belanja_id', $usulanBelanja->id)
+            ->select([
+                'detail.usulan_belanja_item_id as item_id',
+                'spj.no_usulan_belanja',
+                'spj.nomor_urut',
+                'spj.no_surat_pesanan',
+                'spj.pengadaan_step',
+                'spj.status_spj',
+                'master.status_pembayaran',
+                'master.pembayaran',
+                'master.sisa_pembayaran',
+                'step.is_pptk_step',
+                'step.validator_type',
+                'step.hierarchy_level',
+                'validator_role.nama_validator',
+                'role.nama_role',
+                'position.level_jabatan',
+            ])
+            ->orderBy('spj.nomor_urut')
+            ->get()
+            ->groupBy('item_id')
+            ->map(fn ($rows) => $rows->map(function ($progress) {
+                $stepLabel = $progress->is_pptk_step
+                    ? 'PPTK'
+                    : ($progress->validator_type === 'hierarchy'
+                        ? 'Validasi Atasan (Hirarki ' . max(1, (int) ($progress->hierarchy_level ?? 1)) . ')'
+                        : ($progress->nama_role ?: $progress->nama_validator ?: $progress->level_jabatan));
+                $stepLabels = [
+                    'input_pesanan' => 'Input Surat Pesanan',
+                    'upload_foto' => 'Menunggu Barang Datang',
+                    'validasi_barang' => 'Validasi Pengurus Barang',
+                    'input_bast' => 'Input BAST',
+                    'input_tukar_faktur' => 'Tukar Faktur',
+                    'input_penyerahan_spj_admin' => 'Penyerahan Dokumen SPJ',
+                    'workflow' => $stepLabel ?: 'Validasi Workflow',
+                    'validasi_ppk' => 'Validasi PPK',
+                    'validasi_ppbj' => 'Validasi PPBJ',
+                    'validasi_pptk' => 'Validasi PPTK',
+                    'validasi_verifikator' => 'Validasi Verifikator',
+                    'validasi_ppk_keuangan' => 'Validasi PPK Keuangan',
+                    'validasi_direktur' => 'Validasi Direktur',
+                    'serah_terima_bendahara' => 'Serah Terima ke Bendahara',
+                    'verifikasi_bendahara' => 'Konfirmasi Bendahara',
+                    'pembayaran' => 'Proses Pembayaran',
+                    'selesai' => 'Selesai',
+                ];
+
+                return [
+                    'nomor' => $progress->no_usulan_belanja . '-' . str_pad((string) ($progress->nomor_urut ?? 0), 2, '0', STR_PAD_LEFT),
+                    'surat_pesanan' => $progress->no_surat_pesanan ?: '-',
+                    'tahap' => $stepLabels[$progress->pengadaan_step ?: 'input_pesanan'] ?? ucfirst(str_replace('_', ' ', $progress->pengadaan_step ?: $progress->status_spj ?: 'Belum diproses')),
+                    'pembayaran' => $progress->status_pembayaran ?: 'Belum ada data pembayaran',
+                    'dibayar' => $progress->pembayaran,
+                    'sisa' => $progress->sisa_pembayaran,
+                ];
+            }));
+
         $approvals = DB::table('approvals')
             ->leftJoin(
                 'workflow_steps',
@@ -474,7 +546,8 @@ class UsulanBelanjaController extends Controller
             'canManageItems',
             'canEditItemValues',
             'availableItems',
-            'selectedItems'
+            'selectedItems',
+            'itemProgress'
         ));
     }
 

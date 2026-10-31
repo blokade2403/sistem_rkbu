@@ -12,7 +12,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class UsulanBelanjaExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
 {
-    public function __construct(private Request $request) {}
+    public function __construct(private Request $request, private bool $rekap = false) {}
 
     public function query(): Builder
     {
@@ -27,6 +27,7 @@ class UsulanBelanjaExport implements FromQuery, WithHeadings, WithMapping, Shoul
             ->leftJoin('sub_kategori_rkbus as subkategori', 'subkategori.id_sub_kategori_rkbu', '=', 'usulan.sub_kategori_rkbu_id')
             ->leftJoin('units as unit', 'unit.id', '=', 'usulan.unit_id')
             ->leftJoin('tahun_anggarans as tahun', 'tahun.id', '=', 'usulan.tahun_anggaran_id')
+            ->leftJoin('workflow_instances as instance', 'instance.id', '=', 'usulan.workflow_instance_id')
             ->leftJoin('rkbu_detail_barjass as barjas', function ($join) {
                 $join->on('barjas.id', '=', 'item_usulan.detail_id')->where('item_usulan.detail_type', '=', 'barjas');
             })
@@ -43,11 +44,18 @@ class UsulanBelanjaExport implements FromQuery, WithHeadings, WithMapping, Shoul
                 $join->on('pegawai.id', '=', 'item_usulan.detail_id')->where('item_usulan.detail_type', '=', 'pegawai');
             });
 
-        if (! $isAdministrator) {
+        if (! $this->rekap && ! $isAdministrator) {
             $query->where('usulan.user_id', $user->id);
         }
 
         $query->where('usulan.tahun_anggaran_id', session('tahun_anggaran_id'));
+
+        if ($this->rekap) {
+            $query->whereNotNull('usulan.workflow_instance_id');
+            if ($this->request->filled('pengusul_id')) {
+                $query->where('usulan.user_id', $this->request->input('pengusul_id'));
+            }
+        }
 
         if ($this->request->filled('jenis_kategori_rkbu_id')) {
             $query->where('usulan.jenis_kategori_rkbu_id', $this->request->input('jenis_kategori_rkbu_id'));
@@ -93,6 +101,7 @@ class UsulanBelanjaExport implements FromQuery, WithHeadings, WithMapping, Shoul
             'item_usulan.volume',
             'item_usulan.ppn',
             'usulan.status_usulan',
+            'instance.status as workflow_status',
         ])
             ->selectRaw("COALESCE(barjas.nama_barang, persediaan.nama_barang, modal.nama_barang, alkes.nama_barang, pegawai.nama_pegawai, pegawai.jabatan, '-') as nama_item")
             ->selectRaw("COALESCE(NULLIF(item_usulan.spesifikasi, ''), barjas.spesifikasi, persediaan.spesifikasi, modal.spesifikasi, alkes.spesifikasi, CONCAT_WS(' - ', pegawai.jabatan, pegawai.pendidikan), '-') as spesifikasi")
@@ -102,6 +111,41 @@ class UsulanBelanjaExport implements FromQuery, WithHeadings, WithMapping, Shoul
             ->selectRaw("COALESCE(barjas.satuan_2, modal.satuan_2, alkes.satuan_2, '-') as satuan_2")
             ->selectRaw('COALESCE(barjas.penempatan, persediaan.penempatan, modal.penempatan, alkes.penempatan, \'-\') as penempatan')
             ->selectRaw('COALESCE(barjas.status_komponen, persediaan.status_komponen, modal.status_komponen, alkes.status_komponen, pegawai.status_komponen, \'-\') as status_komponen')
+            ->selectSub(
+                DB::table('workflow_steps as step')
+                    ->leftJoin('positions as position', 'position.id', '=', 'step.position_id')
+                    ->leftJoin('roles as role', 'role.id', '=', 'step.role_id')
+                    ->whereColumn('step.id', 'instance.current_step_id')
+                    ->selectRaw("COALESCE(position.level_jabatan, role.nama_role, '-')")
+                    ->limit(1),
+                'tahap_validasi'
+            )
+            ->selectSub(
+                DB::table('spjs as spj')->whereColumn('spj.usulan_belanja_id', 'usulan.id')
+                    ->selectRaw("GROUP_CONCAT(DISTINCT CONCAT(spj.no_usulan_belanja, '-', LPAD(COALESCE(spj.nomor_urut, 0), 2, '0')) ORDER BY spj.nomor_urut SEPARATOR ', ')")
+                    ->limit(1),
+                'nomor_spj'
+            )
+            ->selectSub(
+                DB::table('spjs as spj')->whereColumn('spj.usulan_belanja_id', 'usulan.id')
+                    ->whereNotNull('spj.no_surat_pesanan')->where('spj.no_surat_pesanan', '<>', '')
+                    ->selectRaw("GROUP_CONCAT(DISTINCT spj.no_surat_pesanan ORDER BY spj.nomor_urut SEPARATOR ', ')")
+                    ->limit(1),
+                'nomor_sp'
+            )
+            ->selectSub(
+                DB::table('master_spjs as master')->join('spjs as spj', 'spj.id', '=', 'master.spj_id')
+                    ->whereColumn('spj.usulan_belanja_id', 'usulan.id')
+                    ->selectRaw("GROUP_CONCAT(DISTINCT COALESCE(NULLIF(master.status_pembayaran, ''), 'Belum ada data pembayaran') ORDER BY spj.nomor_urut SEPARATOR ', ')")
+                    ->limit(1),
+                'status_pembayaran'
+            )
+            ->selectSub(
+                DB::table('spjs as spj')->whereColumn('spj.usulan_belanja_id', 'usulan.id')
+                    ->selectRaw("GROUP_CONCAT(DISTINCT COALESCE(NULLIF(spj.pengadaan_step, ''), NULLIF(spj.status_spj, ''), 'Belum diproses') ORDER BY spj.nomor_urut SEPARATOR ', ')")
+                    ->limit(1),
+                'status_proses_spj'
+            )
             ->orderBy('usulan.created_at')
             ->orderBy('usulan.no_usulan_belanja')
             ->orderBy('nama_item');
@@ -134,6 +178,12 @@ class UsulanBelanjaExport implements FromQuery, WithHeadings, WithMapping, Shoul
             'Penempatan',
             'Status Komponen',
             'Status Usulan',
+            'Status Proses Validasi',
+            'Tahap Validasi Saat Ini',
+            'Nomor SPJ',
+            'Nomor SP (Surat Pesanan)',
+            'Status Proses SPJ/Pengadaan',
+            'Status Pembayaran',
         ];
     }
 
@@ -167,6 +217,12 @@ class UsulanBelanjaExport implements FromQuery, WithHeadings, WithMapping, Shoul
             $row->penempatan,
             $row->status_komponen,
             ucfirst((string) $row->status_usulan),
+            ucfirst((string) ($row->workflow_status ?: $row->status_usulan)),
+            $row->tahap_validasi ?: '-',
+            $row->nomor_spj ?: '-',
+            $row->nomor_sp ?: '-',
+            $row->status_proses_spj ?: 'Belum ada SPJ',
+            $row->status_pembayaran ?: 'Belum ada data pembayaran',
         ];
     }
 }

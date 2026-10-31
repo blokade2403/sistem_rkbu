@@ -288,6 +288,11 @@ Route::middleware('auth')->group(function () {
                 'rekap',
             ])->name('rekap');
 
+            Route::get('/rekap/export', [
+                UsulanBelanjaController::class,
+                'exportRekap',
+            ])->name('rekap.export');
+
             Route::get('/rekap/{usulanBelanja}', [
                 UsulanBelanjaController::class,
                 'showRekap',
@@ -479,48 +484,6 @@ Route::middleware('auth')->group(function () {
                 ->defaults('rkbuModule', 'pegawai')
                 ->whereUuid('id')
                 ->name('pegawai.destroy');
-
-            // foreach (
-            //     [
-            //         'pegawai' => 'pegawai',
-            //         'persediaan' => 'persediaan',
-            //         'modal-kantor' => 'modal_kantor',
-            //         'modal-alkes' => 'modal_alkes',
-            //     ] as $path => $module
-            // ) {
-            //     Route::post($path . '/{id}/submit', [RkbuModuleController::class, 'submit'])
-            //         ->defaults('rkbuModule', $module)
-            //         ->name($path . '.submit');
-            //     Route::post($path . '/bulk-submit', [RkbuModuleController::class, 'bulkSubmit'])
-            //         ->defaults('rkbuModule', $module)
-            //         ->name($path . '.bulk-submit');
-
-            //     Route::get($path, [RkbuModuleController::class, 'index'])
-            //         ->defaults('rkbuModule', $module)
-            //         ->name($path . '.index');
-            //     Route::get($path . '/create', [RkbuModuleController::class, 'create'])
-            //         ->defaults('rkbuModule', $module)
-            //         ->name($path . '.create');
-            //     Route::post($path, [RkbuModuleController::class, 'store'])
-            //         ->defaults('rkbuModule', $module)
-            //         ->name($path . '.store');
-            //     Route::get($path . '/{id}/edit', [RkbuModuleController::class, 'edit'])
-            //         ->defaults('rkbuModule', $module)
-            //         ->whereUuid('id')
-            //         ->name($path . '.edit');
-            //     Route::get($path . '/{id}', [RkbuModuleController::class, 'show'])
-            //         ->defaults('rkbuModule', $module)
-            //         ->whereUuid('id')
-            //         ->name($path . '.show');
-            //     Route::put($path . '/{id}', [RkbuModuleController::class, 'update'])
-            //         ->defaults('rkbuModule', $module)
-            //         ->whereUuid('id')
-            //         ->name($path . '.update');
-            //     Route::delete($path . '/{id}', [RkbuModuleController::class, 'destroy'])
-            //         ->defaults('rkbuModule', $module)
-            //         ->whereUuid('id')
-            //         ->name($path . '.destroy');
-            // }
         });
 
     Route::prefix('approvalrkbu')->group(function () {

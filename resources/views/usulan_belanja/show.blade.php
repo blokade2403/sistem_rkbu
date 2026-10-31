@@ -140,6 +140,9 @@
                             <th>Total Anggaran</th>
                             <th>Sisa Vol RKBU</th>
                             <th>Sisa Anggaran RKBU</th>
+                            <th>Proses SPJ & Validasi</th>
+                            <th>Nomor SP / SPJ</th>
+                            <th>Pembayaran</th>
                             @if($canManageItems)
                                 <th>Aksi</th>
                             @endif
@@ -235,6 +238,40 @@
                                 <td>
                                     Rp <span class="usulan-item-sisa-anggaran">{{ number_format((float) $item->sisa_anggaran_rkbu, 2, ',', '.') }}</span>
                                 </td>
+                                @php
+                                    $progressRows = $itemProgress->get($item->link_id, collect());
+                                @endphp
+                                <td>
+                                    @forelse($progressRows as $progress)
+                                        <div class="mb-2">
+                                            <span class="badge badge-light-primary">{{ $progress['tahap'] }}</span>
+                                        </div>
+                                    @empty
+                                        <span class="text-muted">Belum masuk proses SPJ</span>
+                                    @endforelse
+                                </td>
+                                <td>
+                                    @forelse($progressRows as $progress)
+                                        <div class="mb-2">
+                                            <span class="d-block">SPJ: {{ $progress['nomor'] }}</span>
+                                            <span class="text-muted fs-7">SP: {{ $progress['surat_pesanan'] }}</span>
+                                        </div>
+                                    @empty
+                                        <span class="text-muted">-</span>
+                                    @endforelse
+                                </td>
+                                <td>
+                                    @forelse($progressRows as $progress)
+                                        <div class="mb-2">
+                                            <span class="badge badge-light-{{ in_array(strtolower($progress['pembayaran']), ['sudah di bayar', 'sudah dibayar', 'selesai'], true) ? 'success' : 'warning' }}">{{ $progress['pembayaran'] }}</span>
+                                            @if($progress['dibayar'] !== null || $progress['sisa'] !== null)
+                                                <div class="text-muted fs-7 mt-1">Dibayar Rp {{ number_format((float) $progress['dibayar'], 0, ',', '.') }}<br>Sisa Rp {{ number_format((float) $progress['sisa'], 0, ',', '.') }}</div>
+                                            @endif
+                                        </div>
+                                    @empty
+                                        <span class="text-muted">Belum ada pembayaran</span>
+                                    @endforelse
+                                </td>
                                 @if($canManageItems)
                                     <td>
                                         <form method="POST"
@@ -251,7 +288,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="{{ $canManageItems ? 10 : 9 }}" class="text-center text-muted">
+                                <td colspan="{{ $canManageItems ? 13 : 12 }}" class="text-center text-muted">
                                     Belum ada item yang dipilih.
                                 </td>
                             </tr>

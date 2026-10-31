@@ -9,6 +9,9 @@
             <span class="ub-heading-icon"><i class="ki-duotone ki-chart-simple-2 fs-2x text-primary"></i></span>
             <div><h3 class="mb-1">Rekap Usulan Belanja</h3><span class="text-muted fs-7">Pantau status dan nilai usulan belanja</span></div>
         </div>
+        <a id="rekap-export-excel" href="{{ route('usulan-belanja.rekap.export', request()->query()) }}" class="btn btn-light-success">
+            <i class="ki-duotone ki-file-down fs-2"></i> Download Excel
+        </a>
     </div>
 
     <div class="card-body">
@@ -127,6 +130,12 @@
         const jenis = $('#rekap-jenis');
         const subkategori = $('#rekap-subkategori');
         const selectedSubkategori = @json(request('sub_kategori_rkbu_id'));
+        const exportButton = $('#rekap-export-excel');
+
+        function updateExportUrl() {
+            const params = new URLSearchParams($('form[action="{{ route('usulan-belanja.rekap') }}"]').serialize());
+            exportButton.attr('href', '{{ route('usulan-belanja.rekap.export') }}' + (params.toString() ? '?' + params.toString() : ''));
+        }
 
         function filterSubkategori() {
             const jenisId = jenis.val();
@@ -139,7 +148,9 @@
         }
 
         jenis.on('change', filterSubkategori);
+        $('form[action="{{ route('usulan-belanja.rekap') }}"]').on('change', 'select', updateExportUrl);
         filterSubkategori();
+        updateExportUrl();
         if (selectedSubkategori && !subkategori.find('option:selected').prop('disabled')) {
             subkategori.val(selectedSubkategori).trigger('change.select2');
         }
