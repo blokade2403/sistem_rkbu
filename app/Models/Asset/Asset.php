@@ -115,4 +115,9 @@ class Asset extends Model
     {
         return $this->belongsTo(SpjDetail::class, 'spj_detail_id');
     }
+
+    public function histories()
+    {
+        return $this->hasMany(AssetHistory::class, 'asset_id', 'id_asset');
+    }
 }

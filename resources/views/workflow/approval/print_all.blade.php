@@ -79,7 +79,7 @@
                         <div class="hospital">{{ $header?->nama_rs ?? 'Instansi' }}</div>
                         @if ($header?->header2)<div>{{ $header->header2 }}</div>@endif
                         @if ($header?->alamat_rs)<div class="small">{{ $header->alamat_rs }}</div>@endif
-                        <div class="report">RENCANA KEBUTUHAN BARANG UNIT (RKBU)</div>
+                        <!-- <div class="report">RENCANA KEBUTUHAN BARANG UNIT (RKBU)</div> -->
                         <div>TAHUN ANGGARAN {{ $rkbu->tahunAnggaran?->nama_tahun_anggaran ?? $rkbu->tahunAnggaran?->tahun ?? now()->year }}</div>
                     </td>
                     <td width="12%">

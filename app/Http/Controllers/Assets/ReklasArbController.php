@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Assets;
 
 use Endroid\QrCode\QrCode;
 use App\Models\Asset\Asset;
+use App\Models\Asset\AssetHistory;
 use App\Exports\ExportAsset;
 use Illuminate\Http\Request;
 use App\Models\Asset\Penempatan;
@@ -136,7 +137,7 @@ class ReklasArbController extends Controller
         }
 
         // URL detail untuk QR Code
-        $link_detail = route('barang_assets.details', $id_asset);
+        $link_detail = route('asset.scan', $id_asset);
 
         // Buat QR Code
         $qrCode = QrCode::create($link_detail)
@@ -372,6 +373,17 @@ class ReklasArbController extends Controller
 
     public function destroy(Asset $asset)
     {
+        AssetHistory::query()->create([
+            'asset_id' => $asset->id_asset,
+            'asset_unit_id' => $asset->unit_id,
+            'asset_name' => $asset->nama_asset,
+            'asset_register' => $asset->no_register,
+            'action' => 'deleted',
+            'description' => 'Record aset reklas dihapus permanen; salinan data aset tersimpan dalam riwayat.',
+            'before_data' => $asset->getAttributes(),
+            'after_data' => null,
+            'user_id' => auth()->id(),
+        ]);
         // Hapus foto jika ada
         if ($asset->foto && Storage::exists($asset->foto)) {
             Storage::delete($asset->foto);

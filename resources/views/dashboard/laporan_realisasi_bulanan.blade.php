@@ -37,6 +37,8 @@
                                 <th rowspan="2" class="monthly-sticky-activity">KEGIATAN</th>
                                 <th rowspan="2" class="text-end">DPA PERUBAHAN</th>
                                 <th colspan="12" class="text-center">SERAPAN</th>
+                                <th rowspan="2" class="text-end">SISA ANGGARAN</th>
+                                <th rowspan="2" class="text-end">SERAPAN %</th>
                             </tr>
                             <tr>
                                 @foreach ($months as $month)<th class="text-end">{{ $month }}</th>@endforeach
@@ -44,23 +46,29 @@
                         </thead>
                         <tbody>
                             <tr class="monthly-total-row">
+                                @php($totalSerapan = array_sum($monthTotals))
                                 <td colspan="2">TOTAL ANGGARAN</td>
                                 <td class="text-end">{{ $rupiah($totalDpa) }}</td>
                                 @foreach (range(1, 12) as $month)<td class="text-end">{{ $monthTotals[$month] > 0 ? $rupiah($monthTotals[$month]) : '–' }}</td>@endforeach
+                                <td class="text-end">{{ $rupiah($totalDpa - $totalSerapan) }}</td>
+                                <td class="text-end">{{ $totalDpa > 0 ? number_format($totalSerapan / $totalDpa * 100, 2, ',', '.') : '0,00' }}%</td>
                             </tr>
                             @forelse ($reportRows as $row)
+                                @php($rowSerapanTotal = array_sum($row['serapan']))
                                 <tr class="{{ $row['level'] === 0 ? 'monthly-program-row' : ($row['level'] === 1 ? 'monthly-activity-row' : '') }}">
                                     <td class="monthly-sticky-program">@if ($row['level'] === 0){{ $row['label'] }}@endif</td>
                                     <td class="monthly-sticky-activity"><div style="padding-left: {{ max(0, $row['level'] - 1) * 18 }}px">@if ($row['level'] > 0){{ $row['label'] }}@endif</div></td>
                                     <td class="text-end">{{ $rupiah($row['dpa']) }}</td>
                                     @foreach (range(1, 12) as $month)<td class="text-end">{{ $row['serapan'][$month] > 0 ? $rupiah($row['serapan'][$month]) : '–' }}</td>@endforeach
+                                    <td class="text-end">{{ $rupiah($row['dpa'] - $rowSerapanTotal) }}</td>
+                                    <td class="text-end">{{ $row['dpa'] > 0 ? number_format($rowSerapanTotal / $row['dpa'] * 100, 2, ',', '.') : '0,00' }}%</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="15" class="text-center text-muted py-8">Belum ada data DPA atau realisasi untuk tahun anggaran ini.</td></tr>
+                                <tr><td colspan="17" class="text-center text-muted py-8">Belum ada data DPA atau realisasi untuk tahun anggaran ini.</td></tr>
                             @endforelse
                         </tbody>
                         <tfoot>
-                            <tr class="monthly-total-row"><th colspan="2">TOTAL SERAPAN</th><th class="text-end">{{ $rupiah($totalDpa) }}</th>@foreach (range(1, 12) as $month)<th class="text-end">{{ $monthTotals[$month] > 0 ? $rupiah($monthTotals[$month]) : '–' }}</th>@endforeach</tr>
+                            <tr class="monthly-total-row"><th colspan="2">TOTAL SERAPAN</th><th class="text-end">{{ $rupiah($totalDpa) }}</th>@foreach (range(1, 12) as $month)<th class="text-end">{{ $monthTotals[$month] > 0 ? $rupiah($monthTotals[$month]) : '–' }}</th>@endforeach<th class="text-end">{{ $rupiah($totalDpa - array_sum($monthTotals)) }}</th><th class="text-end">{{ $totalDpa > 0 ? number_format(array_sum($monthTotals) / $totalDpa * 100, 2, ',', '.') : '0,00' }}%</th></tr>
                         </tfoot>
                     </table>
                 </div>
@@ -75,6 +83,8 @@
         .monthly-report-wrap { overflow: auto; max-height: calc(100vh - 255px); border: 1px solid #dce3ec; border-radius: 9px; scrollbar-color: #aab8c8 #f1f4f8; scrollbar-width: thin; }
         .monthly-report-table { min-width: 1900px; margin-bottom: 0; border-collapse: separate; border-spacing: 0; font-size: 12px; color: #344054; }
         .monthly-report-table th, .monthly-report-table td { padding: 9px 11px; border-right: 1px solid #e5eaf0; border-bottom: 1px solid #e5eaf0; }
+        .monthly-report-table tr > :first-child { padding-left: 1rem; }
+        .monthly-report-table tr > :last-child { padding-right: 1rem; }
         .monthly-report-table thead th { position: sticky; top: 0; z-index: 5; background: #edf3f9; color: #34445a; font-size: 11px; font-weight: 750; letter-spacing: .035em; white-space: nowrap; }
         .monthly-report-table thead tr:first-child th { height: 39px; }
         .monthly-report-table thead tr:first-child th[colspan] { background: #dce9f5; color: #24476c; text-align: center; }

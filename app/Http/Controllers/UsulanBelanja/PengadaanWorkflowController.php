@@ -5,7 +5,9 @@ namespace App\Http\Controllers\UsulanBelanja;
 use App\Http\Controllers\Controller;
 use App\Models\MasterBackend\SettingRkbu\SubKategoriRkbu;
 use App\Models\MasterBackend\UserProfil\User;
+use App\Models\MasterBackend\SettingInput\JudulHeader;
 use App\Models\UsulanBelanja\Spj;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -150,6 +152,227 @@ class PengadaanWorkflowController extends Controller
         return view('usulan_belanja.pengadaan.show', $this->panelData($spj));
     }
 
+    public function document(Request $request, Spj $spj, string $document)
+    {
+        $this->authorizeView($spj);
+
+        $documents = [
+            'surat-pesanan' => ['view' => 'usulan_belanja.pengadaan.pdf.surat_pesanan', 'title' => 'Surat Pesanan'],
+            'pemeriksaan-pekerjaan' => ['view' => 'usulan_belanja.pengadaan.pdf.bast', 'title' => 'Berita Acara Pemeriksaan Pekerjaan'],
+            'serah-terima-barang' => ['view' => 'usulan_belanja.pengadaan.pdf.bast', 'title' => 'Berita Acara Serah Terima Barang Pekerjaan'],
+            'serah-terima-hasil' => ['view' => 'usulan_belanja.pengadaan.pdf.bast', 'title' => 'Berita Acara Serah Terima Hasil Pekerjaan'],
+        ];
+        abort_unless(isset($documents[$document]), 404);
+        abort_unless($spj->no_surat_pesanan && $spj->idpaket, 422, 'Data Surat Pesanan belum lengkap.');
+        if ($document !== 'surat-pesanan') {
+            abort_unless($spj->tgl_bast && $spj->no_ba && $spj->no_ba_hp && $spj->no_ba_bp && $spj->no_dpa, 422, 'Data BAST belum lengkap.');
+        }
+
+        $spj->loadMissing([
+            'usulanBelanja.tahunAnggaran', 'usulanBelanja.rkbu.subKategoriRkbu',
+            'usulanBelanja.rkbu.rekeningBelanja', 'details.item', 'details.rkbu.subKategoriRkbu',
+            'details.rkbu.rekeningBelanja',
+        ]);
+        $master = DB::table('master_spjs')->where('spj_id', $spj->id)->first();
+        $provider = $master?->perusahaan_id
+            ? DB::table('perusahaans')->where('id_perusahaan', $master->perusahaan_id)->first()
+            : null;
+        $header = JudulHeader::query()->first() ?? (object) [];
+        $unitId = $spj->usulanBelanja?->unit_id;
+        $ppk = $this->documentOfficer($spj, 'ppk', $unitId);
+        $ppbj = $this->documentOfficer($spj, 'ppbj', $unitId);
+        $subcategoryId = $spj->usulanBelanja?->sub_kategori_rkbu_id;
+        $teamPendukung = $subcategoryId && Schema::hasTable('sub_kategori_pendukung_ppk')
+            ? DB::table('sub_kategori_pendukung_ppk as assignment')
+                ->join('users', 'users.id', '=', 'assignment.user_id')
+                ->join('role_user', 'role_user.user_id', '=', 'users.id')
+                ->join('roles', 'roles.id', '=', 'role_user.role_id')
+                ->where('assignment.sub_kategori_rkbu_id', $subcategoryId)
+                ->where('roles.nama_role', 'Pendukung PPK')
+                ->orderBy('users.nama')->first(['users.nama', 'users.nip'])
+            : null;
+        $pengurus = User::query()
+            ->whereHas('roles', fn ($query) => $query->where('nama_role', 'Pengurus Barang'))
+            ->orderByRaw('CASE WHEN unit_id = ? THEN 0 ELSE 1 END', [$unitId])
+            ->first();
+        $mainRkbu = $spj->details->first()?->rkbu ?? $spj->usulanBelanja?->rkbu;
+        $subkategori = $mainRkbu?->subKategoriRkbu;
+        $rekening = $mainRkbu?->rekeningBelanja;
+
+        $sourceItems = DB::table('usulan_belanja_items')
+            ->whereIn('id', $spj->details->pluck('usulan_belanja_item_id')->filter())
+            ->get()->keyBy('id');
+        $sourceRows = collect();
+        $detailTables = [
+            'barjas' => 'rkbu_detail_barjass', 'persediaan' => 'rkbu_detail_persediaans',
+            'modal' => 'rkbu_detail_modals', 'modal_alkes' => 'rkbu_detail_modal_alkes',
+            'pegawai' => 'rkbu_detail_pegawais',
+        ];
+        foreach ($sourceItems->groupBy('detail_type') as $type => $selectedItems) {
+            $table = $detailTables[$type] ?? null;
+            if (! $table || ! Schema::hasTable($table)) continue;
+            $rows = DB::table($table)->whereIn('id', $selectedItems->pluck('detail_id'))->get()->keyBy('id');
+            foreach ($selectedItems as $selected) $sourceRows->put($selected->id, $rows->get($selected->detail_id));
+        }
+        $keranjang = $spj->details->map(function ($detail) use ($spj, $sourceItems, $sourceRows) {
+            $item = $detail->item;
+            $selected = $sourceItems->get($detail->usulan_belanja_item_id);
+            $source = $sourceRows->get($detail->usulan_belanja_item_id);
+            $rkbu = $detail->rkbu;
+            $subtotal = (float) ($item?->harga_satuan ?? 0) * (float) ($detail->volume ?? 0);
+            $tax = $subtotal * (float) ($item?->ppn ?? 0) / 100;
+            $subcategory = $rkbu?->subKategoriRkbu;
+            $account = $rkbu?->rekeningBelanja;
+
+            return (object) [
+                'no_usulan_barang' => $spj->no_usulan_belanja,
+                'nama_barang' => $selected?->detail_type === 'pegawai'
+                    ? ($source?->nama_pegawai ?: $source?->jabatan ?: 'Pegawai')
+                    : ($source?->nama_barang ?? $rkbu?->nama_barang ?? '-'),
+                'spek_detail' => $item?->spesifikasi ?: ($source?->spesifikasi ?? $source?->jabatan ?? '-'),
+                'jumlah_usulan_barang' => $detail->volume,
+                'satuan_1_detail' => $selected?->detail_type === 'pegawai' ? 'Bulan' : ($source?->satuan_1 ?? '-'),
+                'harga_barang' => $item?->harga_satuan ?? 0,
+                'total_anggaran_usulan_barang' => $subtotal + $tax,
+                'total_ppn' => $tax,
+                'kode_sub_kategori_rkbu' => $subcategory?->kode_sub_kategori_rkbu ?? '-',
+                'nama_sub_kategori_rkbu' => $subcategory?->nama_sub_kategori_rkbu ?? '-',
+                'kode_rekening_belanja' => $account?->kode_rekening_belanja ?? '-',
+                'nama_rekening_belanja' => $account?->nama_rekening_belanja ?? '-',
+                'tgl_surat_pesanan' => $spj->tgl_surat_pesanan,
+            ];
+        });
+
+        $netTotal = (float) $keranjang->sum(fn ($item) => $item->total_anggaran_usulan_barang - $item->total_ppn);
+        $taxTotal = (float) $keranjang->sum('total_ppn');
+        $grossTotal = $netTotal + $taxTotal;
+        $orderDate = $spj->tgl_surat_pesanan ?: now()->toDateString();
+        $completionDate = $master?->jangka_waktu_pekerjaan ?: ($spj->tgl_bast ?: $orderDate);
+        $orderMoment = Carbon::parse($orderDate);
+        $completionMoment = Carbon::parse($completionDate);
+        $bastDate = $spj->tgl_bast ?: now()->toDateString();
+        $bastMoment = Carbon::parse($bastDate)->locale('id');
+        $provider = $provider ?? (object) [];
+        $detailMaster = (object) array_merge(
+            (array) ($master ?? []), (array) ($provider ?? []), (array) $spj->getAttributes(), [
+                'no_surat_pesanan' => $spj->no_surat_pesanan,
+                'idpaket' => $spj->idpaket,
+                'no_ba' => $spj->no_ba,
+                'no_ba_hp' => $spj->no_ba_hp,
+                'no_ba_bp' => $spj->no_ba_bp,
+                'no_dpa' => $spj->no_dpa,
+                'tgl_bast' => $spj->tgl_bast,
+                'nama_ppk' => $ppk?->nama ?? '................................',
+                'nip_ppk' => $ppk?->nip ?? '................................',
+                'nama_ppbj' => $ppbj?->nama ?? '................................',
+                'nip_ppbj' => $ppbj?->nip ?? '................................',
+                'kode_sub_kategori_rkbu' => $subkategori?->kode_sub_kategori_rkbu ?? '-',
+                'nama_sub_kategori_rkbu' => $subkategori?->nama_sub_kategori_rkbu ?? '-',
+                'kode_rekening_belanja' => $rekening?->kode_rekening_belanja ?? '-',
+                'nama_rekening_belanja' => $rekening?->nama_rekening_belanja ?? '-',
+                'nama_rs' => $header->nama_rs ?? '',
+            ]
+        );
+
+        $viewData = [
+            'spj' => $spj,
+            'documentType' => $document,
+            'documentTitle' => mb_strtoupper($documents[$document]['title'], 'UTF-8'),
+            'documentNumber' => match ($document) {
+                'pemeriksaan-pekerjaan' => $spj->no_ba,
+                'serah-terima-barang' => $spj->no_ba_bp,
+                'serah-terima-hasil' => $spj->no_ba_hp,
+                default => $spj->no_surat_pesanan,
+            },
+            'teamPendukung' => $teamPendukung,
+            'detail_master_spj' => $detailMaster,
+            'judulHeaders' => $header,
+            'namaRsDokumen' => ucwords(mb_strtolower((string) ($header->nama_rs ?? ''), 'UTF-8')),
+            'keranjang' => $keranjang,
+            'mainItem' => $keranjang->first(),
+            'pengurus_barang' => (object) [
+                'nama_pengurus_barang' => $pengurus?->nama ?? '................................',
+                'nip_pengurus_barang' => $pengurus?->nip ?? '................................',
+            ],
+            'perusahaan' => collect([$provider]),
+            'tgl_pesanan' => formatTanggal($orderDate),
+            'tgl_pekerjaan' => formatTanggal($completionDate),
+            'tgl_ba' => formatTanggal($bastDate),
+            'converttotekstglbast' => $bastMoment->translatedFormat('l') . ', tanggal ' . formatTanggal($bastDate),
+            'tanggalPemeriksaanLong' => ucfirst($bastMoment->translatedFormat('l')) . ' tanggal ' . ucfirst(terbilang((int) $bastMoment->format('j'))) . ' bulan ' . ucfirst($bastMoment->translatedFormat('F')) . ' tahun ' . ucfirst(terbilang((int) $bastMoment->format('Y'))),
+            'selisih_hari' => $orderMoment->diffInDays($completionMoment),
+            'jumlah_hari_terbilang' => terbilang($orderMoment->diffInDays($completionMoment) + 1),
+            'get_total' => $grossTotal,
+            'ppn' => $taxTotal,
+            'terbilang_total' => terbilangUang($grossTotal),
+            'nama' => $header->nama_rs ?? '',
+            'alamat' => $header->alamat_rs ?? '',
+            'tlp' => $header->tlp_rs ?? '',
+            'email' => $header->email_rs ?? '',
+        ];
+
+        $html = view($documents[$document]['view'], $viewData)->render();
+        $safeReference = Str::slug((string) $spj->no_usulan_belanja, '-') ?: 'spj-' . $spj->getKey();
+        $filename = Str::slug($documents[$document]['title'], '-') . '-' . $safeReference;
+        if ($request->boolean('download')) {
+            return response($html, 200, [
+                'Content-Type' => 'application/msword; charset=UTF-8',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '.doc"',
+                'X-Content-Type-Options' => 'nosniff',
+            ]);
+        }
+        $pdf = Pdf::loadHTML($html)->setPaper('a4', 'portrait');
+        return $pdf->stream($filename . '.pdf');
+    }
+
+    private function documentOfficer(Spj $spj, string $identity, $unitId): ?User
+    {
+        $identities = $identity === 'ppk'
+            ? ['ppk', 'pejabat pembuat komitmen']
+            : ['ppbj', 'pejabat pengadaan barang/jasa', 'pejabat pengadaan'];
+        $matchesIdentity = static function ($query) use ($identities): void {
+            $query->whereIn(DB::raw('LOWER(TRIM(position.level_jabatan))'), $identities)
+                ->orWhereIn(DB::raw('LOWER(TRIM(role.nama_role))'), $identities);
+        };
+        if (Schema::hasTable('pengadaan_workflow_approvals')) {
+            $validator = DB::table('pengadaan_workflow_approvals as approval')
+                ->join('workflow_steps as step', 'step.id', '=', 'approval.workflow_step_id')
+                ->leftJoin('positions as position', 'position.id', '=', 'step.position_id')
+                ->leftJoin('roles as role', 'role.id', '=', 'step.role_id')
+                ->join('users', 'users.id', '=', 'approval.user_id')
+                ->where('approval.spj_id', $spj->id)->whereIn('approval.status', ['Selesai', 'approved'])
+                ->where(fn ($query) => $matchesIdentity($query))
+                ->orderByDesc('approval.acted_at')->first(['users.id']);
+            if ($validator?->id) return User::find($validator->id);
+        }
+
+        $workflowInstanceId = $spj->usulanBelanja?->workflow_instance_id;
+        if ($workflowInstanceId && Schema::hasTable('approvals')) {
+            $validator = DB::table('approvals as approval')
+                ->join('workflow_steps as step', 'step.id', '=', 'approval.workflow_step_id')
+                ->leftJoin('positions as position', 'position.id', '=', 'step.position_id')
+                ->leftJoin('roles as role', 'role.id', '=', 'step.role_id')
+                ->join('users', 'users.id', '=', 'approval.validator_user_id')
+                ->where('approval.workflow_instance_id', $workflowInstanceId)->where('approval.status', 'approved')
+                ->where(fn ($query) => $matchesIdentity($query))
+                ->orderByDesc('approval.approved_at')->first(['users.id']);
+            if ($validator?->id) return User::find($validator->id);
+        }
+
+        $activeAssignment = DB::table('position_assignments as assignment')
+            ->join('positions as position', 'position.id', '=', 'assignment.position_id')
+            ->join('users', 'users.id', '=', 'assignment.user_id')
+            ->where('assignment.is_active', true)->where('users.status_user', 'aktif')
+            ->whereIn(DB::raw('LOWER(TRIM(position.level_jabatan))'), $identities)
+            ->whereDate('assignment.tanggal_mulai', '<=', now()->toDateString())
+            ->where(fn ($query) => $query->whereNull('assignment.tanggal_selesai')->orWhereDate('assignment.tanggal_selesai', '>=', now()->toDateString()))
+            ->orderByRaw('CASE WHEN users.unit_id = ? THEN 0 ELSE 1 END', [$unitId])->first(['users.id']);
+        if ($activeAssignment?->id) return User::find($activeAssignment->id);
+
+        return User::query()->where('status_user', 'aktif')->where('unit_id', $unitId)
+            ->whereHas('roles', fn ($query) => $query->whereIn(DB::raw('LOWER(TRIM(nama_role))'), $identities))->first();
+    }
+
     public function panelData(Spj $spj): array
     {
         $spj->load([
@@ -261,6 +484,7 @@ class PengadaanWorkflowController extends Controller
         $data = $request->validate([
             'no_surat_pesanan' => ['required', 'string', 'max:255'],
             'tgl_surat_pesanan' => ['nullable', 'date'],
+            'jangka_waktu_pekerjaan' => ['nullable', 'date'],
             'idpaket' => ['required', 'string', 'max:255'],
         ]);
         $subkategoriId = $spj->usulanBelanja()->value('sub_kategori_rkbu_id');
@@ -275,7 +499,16 @@ class PengadaanWorkflowController extends Controller
             ]);
         }
         $from = $spj->pengadaan_step ?: 'input_pesanan';
-        $spj->update($data + ['pengadaan_step' => 'upload_foto']);
+        $spjData = $data;
+        unset($spjData['jangka_waktu_pekerjaan']);
+        $spj->update($spjData + ['pengadaan_step' => 'upload_foto']);
+        DB::table('master_spjs')->where('spj_id', $spj->id)->update([
+            'no_surat_pesanan' => $data['no_surat_pesanan'],
+            'tgl_surat_pesanan' => $data['tgl_surat_pesanan'] ?? null,
+            'idpaket' => $data['idpaket'],
+            'jangka_waktu_pekerjaan' => $data['jangka_waktu_pekerjaan'] ?? null,
+            'updated_at' => now(),
+        ]);
         $this->log($spj, 'Input surat pesanan', $from, 'upload_foto', 'Nomor: ' . $data['no_surat_pesanan'] . '; ID paket: ' . $data['idpaket']);
         return back()->with('success', 'Data surat pesanan tersimpan. Tugas diteruskan kepada Pendukung PPK sesuai subkategori.');
     }

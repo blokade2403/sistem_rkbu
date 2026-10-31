@@ -66,6 +66,9 @@
                              <div class="col-md-4 mb-4"><label class="form-label">Tanggal Surat Pesanan</label><input
                                      type="date" name="tgl_surat_pesanan" class="form-control"
                                      value="{{ old('tgl_surat_pesanan', $spj->tgl_surat_pesanan) }}"></div>
+                             <div class="col-md-4 mb-4"><label class="form-label">Batas Waktu Pekerjaan</label><input
+                                     type="date" name="jangka_waktu_pekerjaan" class="form-control"
+                                     value="{{ old('jangka_waktu_pekerjaan', $masterInfo->jangka_waktu_pekerjaan ?? '') }}"><div class="form-text">Digunakan pada surat pesanan.</div></div>
                              <div class="col-md-4 mb-4"><label class="form-label">ID Paket</label><input name="idpaket"
                                      class="form-control" value="{{ old('idpaket', $spj->idpaket) }}" required></div>
                          </div>
@@ -89,6 +92,7 @@
                          <dt class="col-sm-3">ID Paket</dt>
                          <dd class="col-sm-9">{{ $spj->idpaket ?? '-' }}</dd>
                      </dl>
+                     <div class="d-flex flex-wrap gap-2 mt-4"><a class="btn btn-light-primary" target="_blank" rel="noopener" href="{{ route('usulan-belanja.pengadaan.document', ['spj' => $spj->id, 'document' => 'surat-pesanan']) }}"><i class="fas fa-print me-2"></i>Print Surat Pesanan</a><a class="btn btn-primary" href="{{ route('usulan-belanja.pengadaan.document', ['spj' => $spj->id, 'document' => 'surat-pesanan', 'download' => 1]) }}"><i class="fas fa-download me-2"></i>Download .doc</a></div>
                  </div>
              </div>
          @endif
@@ -170,6 +174,12 @@
                  <h4>BAST selesai</h4>
                  <p class="mb-1">Tanggal BAST: {{ $spj->tgl_bast }} | BA: {{ $spj->no_ba }} | BA HP:
                      {{ $spj->no_ba_hp }} | BA BP: {{ $spj->no_ba_bp }} | DPA: {{ $spj->no_dpa }}</p>
+                 <div class="d-flex flex-wrap gap-2 mt-3">
+                     @foreach (['pemeriksaan-pekerjaan' => 'BA Pemeriksaan Pekerjaan', 'serah-terima-barang' => 'BA Serah Terima Barang/Pekerjaan', 'serah-terima-hasil' => 'BA Serah Terima Hasil Pekerjaan'] as $document => $label)
+                         <a class="btn btn-sm btn-light-primary" href="{{ route('usulan-belanja.pengadaan.document', ['spj' => $spj->id, 'document' => $document]) }}" target="_blank" rel="noopener"><i class="fas fa-print me-1"></i>{{ $label }}</a>
+                         <a class="btn btn-sm btn-primary" href="{{ route('usulan-belanja.pengadaan.document', ['spj' => $spj->id, 'document' => $document, 'download' => 1]) }}"><i class="fas fa-download me-1"></i>Download .doc</a>
+                     @endforeach
+                 </div>
              </div>
          @endif
 

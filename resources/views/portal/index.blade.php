@@ -60,16 +60,17 @@
             </div>
 
             <div class="col-md-6 col-xxl-4">
-                <div class="module-card card h-100 border-0 shadow-sm">
+                <a href="{{ route('persediaan.inventory.index') }}" class="module-card card h-100 border-0 shadow-sm text-decoration-none">
                     <div class="card-body p-6">
                         <div class="module-icon bg-light-info text-info"><i class="fas fa-boxes"></i></div>
                         <div class="d-flex align-items-center gap-2 mt-5 mb-2">
                             <h3 class="fs-4 fw-bold text-gray-900 mb-0">Persediaan</h3>
-                        <span class="badge badge-light-warning">Disiapkan</span>
+                        <span class="badge badge-light-success">Aktif</span>
                         </div>
-                        <p class="text-gray-600 mb-0">Catat barang masuk dari penerimaan, kelola stok, dan telusuri asal barang ke usulan belanja.</p>
+                        <p class="text-gray-600 mb-4">Catat penerimaan barang yang telah dibayar, permintaan barang keluar, dan stok opname.</p>
+                        <span class="module-link text-primary fw-bold">Buka Persediaan <i class="fas fa-arrow-right ms-1"></i></span>
                     </div>
-                </div>
+                </a>
             </div>
 
             <div class="col-md-6 col-xxl-4">

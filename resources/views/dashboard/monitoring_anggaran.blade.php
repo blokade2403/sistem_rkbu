@@ -118,6 +118,8 @@
         .monitoring-table thead tr { background: linear-gradient(100deg,#236bb3,#278bd4); }
         .monitoring-table thead th { padding-top: .9rem; padding-bottom: .9rem; white-space: nowrap; font-size: .75rem; letter-spacing: .025em; }
         .monitoring-table td, .monitoring-table th { border-color: #e9eef5; }
+        .monitoring-table tr > :first-child { padding-left: 1rem; }
+        .monitoring-table tr > :last-child { padding-right: 1rem; }
         .monitoring-table tbody tr:nth-child(even) { background: #fbfcfe; }
         .monitoring-row { transition: background-color .15s ease; }
         .monitoring-row:hover { background: #f1f7fd!important; }

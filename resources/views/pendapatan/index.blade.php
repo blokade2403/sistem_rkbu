@@ -1,98 +1,76 @@
 @extends('layouts.main')
 
 @section('content')
+    @php
+        $incomeMonthly = array_fill(1, 12, 0.0);
+        foreach ($targets as $row) foreach ($row->monthly as $month => $amount) $incomeMonthly[$month] += $amount;
+        $plannedMonthly = ($summary['target_pendapatan'] ?? 0) / 12;
+        $chartMax = max(1, $plannedMonthly, max($incomeMonthly), max($expenseMonthly));
+    @endphp
     <div class="container-fluid py-4 revenue-page">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-6">
-            <div>
-                <div class="text-uppercase text-muted fs-8 fw-bold mb-2">Modul Pendapatan</div>
-                <h1 class="fs-2 fw-bold text-gray-900 mb-1">Laporan Keuangan</h1>
-                <div class="text-muted">Realisasi belanja dan capaian target pendapatan per rekening.</div>
-            </div>
-            <form method="GET" action="{{ route('pendapatan.index') }}" class="d-flex flex-wrap gap-3">
-                <select name="tahun_anggaran_id" class="form-select" aria-label="Tahun anggaran" onchange="this.form.submit()">
-                    @foreach ($years as $item)<option value="{{ $item->id }}" @selected($yearId === $item->id)>{{ $item->nama_tahun_anggaran }}</option>@endforeach
-                </select>
-                @if ($isAdmin)
-                    <select name="unit_id" class="form-select" aria-label="Unit" onchange="this.form.submit()">
-                        <option value="">Semua Unit</option>
-                        @foreach ($units as $unit)<option value="{{ $unit->id }}" @selected($unitId === $unit->id)>{{ $unit->nama_unit }}</option>@endforeach
-                    </select>
-                @endif
-            </form>
+            <div><div class="text-uppercase text-muted fs-8 fw-bold mb-2">Modul Pendapatan BLUD</div><h1 class="fs-2 fw-bold text-gray-900 mb-1">Laporan Keuangan</h1><div class="text-muted">Pendapatan global rumah sakit dibandingkan dengan realisasi belanja bersumber dana BLUD.</div></div>
+            <form method="GET" action="{{ route('pendapatan.index') }}"><select name="tahun_anggaran_id" class="form-select" aria-label="Tahun anggaran" onchange="this.form.submit()">@foreach ($years as $item)<option value="{{ $item->id }}" @selected($yearId === $item->id)>{{ $item->nama_tahun_anggaran }}</option>@endforeach</select></form>
         </div>
-
         @if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
         @if ($errors->any())<div class="alert alert-danger"><strong>Periksa isian:</strong><ul class="mb-0 mt-2">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
 
         <div class="row g-4 mb-6">
-            @foreach ([['Realisasi Belanja', $summary['realisasi_belanja'], 'primary'], ['Target Pendapatan', $summary['target_pendapatan'], 'warning'], ['Realisasi Pendapatan', $summary['realisasi_pendapatan'], 'success']] as [$label, $amount, $color])
-                <div class="col-md-4"><div class="card border-0 shadow-sm revenue-summary h-100"><div class="card-body p-5"><div class="text-muted fw-semibold mb-2">{{ $label }}</div><div class="fs-2 fw-bold text-{{ $color }}">Rp {{ number_format($amount, 0, ',', '.') }}</div><small class="text-muted">Tahun {{ $year?->nama_tahun_anggaran ?? '-' }}</small></div></div></div>
+            @foreach ([['Belanja BLUD', $summary['realisasi_belanja'], 'primary'], ['Target Pendapatan', $summary['target_pendapatan'], 'warning'], ['Realisasi Pendapatan', $summary['realisasi_pendapatan'], 'success'], ['Selisih Pendapatan − Belanja BLUD', $summary['selisih_kas'], $summary['selisih_kas'] >= 0 ? 'success' : 'danger']] as [$label, $amount, $color])
+                <div class="col-md-6 col-xl-3"><div class="card border-0 shadow-sm h-100"><div class="card-body p-5"><div class="text-muted fw-semibold mb-2">{{ $label }}</div><div class="fs-2 fw-bold text-{{ $color }}">Rp {{ number_format($amount, 0, ',', '.') }}</div><small class="text-muted">Tahun {{ $year?->nama_tahun_anggaran ?? '-' }}{{ $label === 'Selisih Pendapatan − Belanja BLUD' ? ' · belum termasuk saldo awal kas' : '' }}</small></div></div></div>
             @endforeach
         </div>
 
         <div class="row g-5 mb-6">
-            <div class="col-lg-6">
-                <form method="POST" action="{{ route('pendapatan.target.save') }}" class="card border-0 shadow-sm h-100">
-                    @csrf
-                    <input type="hidden" name="tahun_anggaran_id" value="{{ $yearId }}">
-                    <div class="card-header border-0 pt-5"><div><h2 class="fs-4 fw-bold mb-1">Target Rekening Pendapatan</h2><div class="text-muted fs-7">Simpan atau perbarui target tahunan berdasarkan kode rekening.</div></div></div>
-                    <div class="card-body pt-2">
-                        @if ($isAdmin)
-                            <label class="form-label fw-semibold">Unit</label>
-                            <select name="unit_id" class="form-select mb-4" required><option value="">Pilih unit</option>@foreach ($units as $unit)<option value="{{ $unit->id }}" @selected(old('unit_id', $unitId) === $unit->id)>{{ $unit->nama_unit }}</option>@endforeach</select>
-                        @else
-                            <label class="form-label fw-semibold">Unit</label><div class="form-control bg-light mb-4">{{ auth()->user()->unit?->nama_unit ?? 'Unit belum diatur' }}</div>
-                        @endif
-                        <div class="row g-3">
-                            <div class="col-md-5"><label class="form-label fw-semibold">Kode Rekening</label><input name="kode_rekening" value="{{ old('kode_rekening') }}" class="form-control" required maxlength="100" placeholder="Contoh: 4.1.01.01.001"></div>
-                            <div class="col-md-7"><label class="form-label fw-semibold">Nama Rekening</label><input name="nama_rekening" value="{{ old('nama_rekening') }}" class="form-control" required maxlength="255" placeholder="Nama rekening pendapatan"></div>
-                            <div class="col-md-7"><label class="form-label fw-semibold">Target Tahunan (Rp)</label><input type="number" name="target_tahunan" value="{{ old('target_tahunan', 0) }}" class="form-control" min="0" step="0.01" required></div>
-                            <div class="col-md-5 d-flex align-items-end"><button class="btn btn-primary w-100" @disabled(! $yearId)><i class="fas fa-save me-2"></i>Simpan Target</button></div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="col-lg-6">
-                <form method="POST" action="{{ route('pendapatan.realisasi.save') }}" class="card border-0 shadow-sm h-100">
-                    @csrf
-                    <input type="hidden" name="tahun_anggaran_id" value="{{ $yearId }}">
-                    @if ($isAdmin && $unitId)<input type="hidden" name="unit_id" value="{{ $unitId }}">@endif
-                    <div class="card-header border-0 pt-5"><div><h2 class="fs-4 fw-bold mb-1">Input Realisasi Bulanan</h2><div class="text-muted fs-7">Input baru pada bulan yang sama akan memperbarui nilainya.</div></div></div>
-                    <div class="card-body pt-2">
-                        <label class="form-label fw-semibold">Rekening Pendapatan</label>
-                        <select name="target_pendapatan_id" class="form-select mb-4" required><option value="">Pilih rekening</option>@foreach ($targetOptions as $target)<option value="{{ $target->id }}" @selected(old('target_pendapatan_id') === $target->id)>{{ $target->kode_rekening }} - {{ $target->nama_rekening }} ({{ $target->nama_unit }})</option>@endforeach</select>
-                        <div class="row g-3">
-                            <div class="col-md-4"><label class="form-label fw-semibold">Bulan</label><select name="bulan" class="form-select" required><option value="">Pilih bulan</option>@foreach ($months as $number => $month)<option value="{{ $number }}" @selected((string) old('bulan') === (string) $number)>{{ $month }}</option>@endforeach</select></div>
-                            <div class="col-md-8"><label class="form-label fw-semibold">Realisasi (Rp)</label><input type="number" name="jumlah_realisasi" value="{{ old('jumlah_realisasi') }}" class="form-control" min="0" step="0.01" required></div>
-                            <div class="col-12"><label class="form-label fw-semibold">Keterangan</label><input name="keterangan" value="{{ old('keterangan') }}" class="form-control" maxlength="2000" placeholder="Opsional"></div>
-                            <div class="col-12 text-end"><button class="btn btn-success" @disabled($targetOptions->isEmpty())><i class="fas fa-plus me-2"></i>Simpan Realisasi</button></div>
-                        </div>
-                    </div>
-                </form>
-            </div>
+            <div class="col-lg-5"><form method="POST" action="{{ route('pendapatan.rekening.save') }}" class="card border-0 shadow-sm h-100">@csrf<input type="hidden" name="tahun_anggaran_id" value="{{ $yearId }}"><div class="card-header border-0 pt-5"><div><h2 class="fs-4 fw-bold mb-1">Master Rekening Pendapatan</h2><div class="text-muted fs-7">Masukkan rekening Akun 4 atau SILPA.</div></div></div><div class="card-body pt-2"><div class="row g-3"><div class="col-sm-5"><label class="form-label fw-semibold">Kode</label><input name="kode_rekening" class="form-control" required maxlength="100" placeholder="4.1.01 atau SILPA"></div><div class="col-sm-7"><label class="form-label fw-semibold">Nama rekening</label><input name="nama_rekening" class="form-control" required maxlength="255"></div><div class="col-12 text-end"><button class="btn btn-outline-primary">Tambah rekening</button></div></div></div></form></div>
+            <div class="col-lg-7"><form method="POST" enctype="multipart/form-data" action="{{ route('pendapatan.target.save') }}" class="card border-0 shadow-sm h-100">@csrf<input type="hidden" name="tahun_anggaran_id" value="{{ $yearId }}"><div class="card-header border-0 pt-5"><div><h2 class="fs-4 fw-bold mb-1">Target Tahunan Global</h2><div class="text-muted fs-7">Satu target untuk seluruh rumah sakit pada rekening terpilih.</div></div></div><div class="card-body pt-2"><div class="row g-3"><div class="col-md-7"><label class="form-label fw-semibold">Rekening</label><select name="rekening_pendapatan_id" class="form-select" required><option value="">Pilih rekening</option>@foreach ($accounts as $account)<option value="{{ $account->id }}">{{ $account->kode_rekening }} — {{ $account->nama_rekening }}</option>@endforeach</select></div><div class="col-md-5"><label class="form-label fw-semibold">Target (Rp)</label><input type="number" name="target_tahunan" class="form-control" min="0" step="0.01" required></div><div class="col-12"><label class="form-label fw-semibold">Bukti surat penyusunan target pendapatan</label><input type="file" name="lampiran_surat" class="form-control" accept=".pdf,.jpg,.jpeg,.png"><div class="form-text">PDF/JPG/PNG, maksimal 5 MB. Lampiran lama dipertahankan jika tidak mengunggah file baru.</div></div><div class="col-12 text-end"><button class="btn btn-primary" @disabled(! $yearId || $accounts->isEmpty())>Simpan target</button></div></div></div></form></div>
         </div>
 
-        <section class="card border-0 shadow-sm mb-6">
-            <div class="card-header border-0 pt-6"><div><h2 class="fs-4 fw-bold mb-1">Realisasi Belanja per Bulan</h2><div class="text-muted fs-7">Berdasarkan transaksi pembayaran usulan belanja yang disetujui.</div></div></div>
-            <div class="table-responsive"><table class="table table-row-bordered align-middle gy-4 mb-0 revenue-table"><thead><tr><th>Bulan</th>@foreach ($months as $month)<th class="text-end">{{ $month }}</th>@endforeach<th class="text-end">Total</th></tr></thead><tbody><tr><td class="fw-bold">Realisasi Belanja</td>@foreach ($months as $number => $month)<td class="text-end">Rp {{ number_format($expenseMonthly[$number], 0, ',', '.') }}</td>@endforeach<td class="text-end fw-bold">Rp {{ number_format($summary['realisasi_belanja'], 0, ',', '.') }}</td></tr></tbody></table></div>
-        </section>
+        <form method="POST" action="{{ route('pendapatan.realisasi.save') }}" class="card border-0 shadow-sm mb-6">@csrf<input type="hidden" name="tahun_anggaran_id" value="{{ $yearId }}"><div class="card-header border-0 pt-5"><div><h2 class="fs-4 fw-bold mb-1">Input / Koreksi Realisasi Pendapatan</h2><div class="text-muted fs-7">Jika rekening dan bulan sudah memiliki data, menyimpan kembali akan mengganti nilai sebelumnya.</div></div></div><div class="card-body pt-2"><div class="row g-3 align-items-end"><div class="col-lg-5"><label class="form-label fw-semibold">Target rekening</label><select name="target_pendapatan_id" class="form-select" required><option value="">Pilih rekening bertarget</option>@foreach ($targets as $target)<option value="{{ $target->id }}">{{ $target->kode_rekening }} — {{ $target->nama_rekening }}</option>@endforeach</select></div><div class="col-md-2"><label class="form-label fw-semibold">Bulan</label><select name="bulan" class="form-select" required><option value="">Pilih bulan</option>@foreach ($months as $number => $month)<option value="{{ $number }}">{{ $month }}</option>@endforeach</select></div><div class="col-md-3"><label class="form-label fw-semibold">Realisasi (Rp)</label><input type="number" name="jumlah_realisasi" class="form-control" min="0" step="0.01" required></div><div class="col-md-2"><button class="btn btn-success w-100" @disabled($targets->isEmpty())>Simpan realisasi</button></div><div class="col-12"><input name="keterangan" class="form-control" maxlength="2000" placeholder="Keterangan (opsional)"></div></div></div></form>
 
-        <section class="card border-0 shadow-sm">
-            <div class="card-header border-0 pt-6"><div><h2 class="fs-4 fw-bold mb-1">Target dan Realisasi Pendapatan</h2><div class="text-muted fs-7">Realisasi dicatat per bulan untuk setiap kode rekening.</div></div></div>
-            <div class="table-responsive"><table class="table table-row-bordered align-middle gy-3 mb-0 revenue-table"><thead><tr><th>Unit</th><th>Kode Rekening</th><th>Nama Rekening</th><th class="text-end">Target</th>@foreach ($months as $month)<th class="text-end">{{ $month }}</th>@endforeach<th class="text-end">Total Realisasi</th><th class="text-end">Sisa Target</th></tr></thead><tbody>
-                @forelse ($targets as $target)
-                    <tr><td>{{ $target->nama_unit }}</td><td class="fw-semibold text-nowrap">{{ $target->kode_rekening }}</td><td>{{ $target->nama_rekening }}</td><td class="text-end text-nowrap">Rp {{ number_format($target->target_tahunan, 0, ',', '.') }}</td>@foreach ($months as $number => $month)<td class="text-end text-nowrap">{{ $target->monthly[$number] > 0 ? 'Rp '.number_format($target->monthly[$number], 0, ',', '.') : '-' }}</td>@endforeach<td class="text-end text-nowrap fw-semibold">Rp {{ number_format($target->total_realisasi, 0, ',', '.') }}</td><td class="text-end text-nowrap {{ $target->sisa_target < 0 ? 'text-danger' : 'text-success' }}">Rp {{ number_format($target->sisa_target, 0, ',', '.') }}</td></tr>
-                @empty
-                    <tr><td colspan="18" class="text-center text-muted py-8">Belum ada target rekening pendapatan pada tahun dan unit terpilih.</td></tr>
-                @endforelse
-            </tbody></table></div>
+        <section class="card border-0 shadow-sm mb-6"><div class="card-header border-0 pt-5"><div><h2 class="fs-4 fw-bold mb-1">Koreksi Data</h2><div class="text-muted fs-7">Gunakan Edit untuk memperbarui master rekening. Target dan realisasi dapat dikoreksi langsung pada tabel di bawah.</div></div></div><div class="card-body pt-2">
+            <h3 class="fs-6 fw-bold">Rekening</h3>
+            @foreach ($accounts as $account)
+                <details class="border-bottom py-3"><summary class="text-primary fw-semibold">Edit {{ $account->kode_rekening }} — {{ $account->nama_rekening }}</summary><form method="POST" action="{{ route('pendapatan.rekening.update', $account->id) }}" class="row g-2 mt-2">@csrf @method('PUT')<input type="hidden" name="tahun_anggaran_id" value="{{ $yearId }}"><div class="col-md-3"><input name="kode_rekening" value="{{ $account->kode_rekening }}" class="form-control" required maxlength="100" aria-label="Kode rekening"></div><div class="col-md-6"><input name="nama_rekening" value="{{ $account->nama_rekening }}" class="form-control" required maxlength="255" aria-label="Nama rekening"></div><div class="col-md-3"><button class="btn btn-primary">Simpan rekening</button></div></form></details>
+            @endforeach
+        </div></section>
+        <section class="card border-0 shadow-sm mb-6"><div class="card-header border-0 pt-6"><div><h2 class="fs-4 fw-bold mb-1">Grafik Target dan Arus Kas BLUD</h2><div class="text-muted fs-7">Target pendapatan dibagi rata sebagai pembanding bulanan. Grafik kas menunjukkan realisasi pendapatan dan belanja BLUD.</div></div></div><div class="card-body pt-2"><div class="d-flex flex-wrap gap-4 mb-4 small"><span><i class="legend legend-target"></i>Target bulanan</span><span><i class="legend legend-income"></i>Pendapatan</span><span><i class="legend legend-expense"></i>Belanja BLUD</span></div><div class="finance-chart">@foreach ($months as $number => $month)<div class="chart-month"><div class="chart-bars"><div class="chart-bar target-bar" title="Target: Rp {{ number_format($plannedMonthly, 0, ',', '.') }}" style="height:{{ max(2, $plannedMonthly / $chartMax * 100) }}%"></div><div class="chart-bar income-bar" title="Pendapatan: Rp {{ number_format($incomeMonthly[$number], 0, ',', '.') }}" style="height:{{ max(2, $incomeMonthly[$number] / $chartMax * 100) }}%"></div><div class="chart-bar expense-bar" title="Belanja BLUD: Rp {{ number_format($expenseMonthly[$number], 0, ',', '.') }}" style="height:{{ max(2, $expenseMonthly[$number] / $chartMax * 100) }}%"></div></div><div class="chart-label">{{ mb_substr($month, 0, 3) }}</div></div>@endforeach</div></div></section>
+
+        <section class="card border-0 shadow-sm revenue-detail-card">
+            <div class="card-header border-0 pt-6 pb-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div><h2 class="fs-4 fw-bold mb-1">Target dan Realisasi Pendapatan per Rekening</h2><div class="text-muted fs-7">Periksa capaian tiap rekening. Gunakan tombol Edit pada target atau bulan untuk koreksi.</div></div>
+                <span class="badge bg-light-primary text-primary px-3 py-2">{{ $targets->count() }} rekening</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 revenue-modern-table">
+                    <thead><tr><th class="account-col">Rekening</th><th class="text-end target-col">Target Tahunan</th>@foreach ($months as $month)<th class="text-center month-col">{{ $month }}</th>@endforeach<th class="text-end total-col">Total Realisasi</th><th class="progress-col">Capaian</th></tr></thead>
+                    <tbody>
+                    @forelse ($targets as $target)
+                        @php($progress = $target->target_tahunan > 0 ? min(100, $target->total_realisasi / $target->target_tahunan * 100) : 0)
+                        <tr>
+                            <td class="account-cell"><div class="fw-bold text-gray-900">{{ $target->nama_rekening }}</div><div class="d-flex align-items-center gap-2 mt-1"><span class="text-muted fs-7">{{ $target->kode_rekening }}</span>@if ($target->is_silpa)<span class="badge bg-light-info">SILPA</span>@endif</div></td>
+                            <td class="text-end target-cell"><div class="fw-semibold text-nowrap">Rp {{ number_format($target->target_tahunan, 0, ',', '.') }}</div>@if ($target->lampiran_surat_path)<a class="small d-block" href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($target->lampiran_surat_path) }}" target="_blank" rel="noopener">Lihat bukti surat</a>@endif<details class="cell-edit mt-1"><summary>Edit target</summary><form method="POST" enctype="multipart/form-data" action="{{ route('pendapatan.target.update', $target->id) }}" class="mini-edit-form">@csrf @method('PUT')<input type="hidden" name="tahun_anggaran_id" value="{{ $yearId }}"><label class="form-label small">Target baru</label><input type="number" name="target_tahunan" value="{{ $target->target_tahunan }}" class="form-control form-control-sm" min="0" step="0.01" required><label class="form-label small mt-2">Bukti surat (opsional)</label><input type="file" name="lampiran_surat" class="form-control form-control-sm" accept=".pdf,.jpg,.jpeg,.png"><button class="btn btn-sm btn-primary mt-2">Simpan target</button></form></details>@if ($target->histories->isNotEmpty())<details class="small mt-2"><summary>Histori perubahan ({{ $target->histories->count() }})</summary><div class="text-start mt-2">@foreach ($target->histories as $history)<div class="border-top py-2">{{ $history->created_at ? \Illuminate\Support\Carbon::parse($history->created_at)->format('d/m/Y H:i') : '' }}<br>{{ $history->target_sebelum === null ? 'Target awal' : 'Rp '.number_format($history->target_sebelum, 0, ',', '.') }} → Rp {{ number_format($history->target_sesudah, 0, ',', '.') }}@if ($history->lampiran_surat_path)<br><a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($history->lampiran_surat_path) }}" target="_blank" rel="noopener">Bukti surat</a>@endif</div>@endforeach</div></details>@endif</td>
+                            @foreach ($months as $number => $month)
+                                @php($monthRealization = $target->realizationRows[$number] ?? null)
+                                <td class="text-center month-cell"><div class="month-value {{ $monthRealization ? 'has-value' : 'empty-value' }}">{{ $monthRealization ? 'Rp '.number_format($monthRealization->jumlah_realisasi, 0, ',', '.') : '-' }}</div>
+                                    @if ($monthRealization)
+                                        <details class="cell-edit"><summary>Koreksi</summary><form method="POST" action="{{ route('pendapatan.realisasi.update', $monthRealization->id) }}" class="mini-edit-form">@csrf @method('PUT')<input type="hidden" name="tahun_anggaran_id" value="{{ $yearId }}"><label class="form-label small">Realisasi {{ $month }}</label><select name="bulan" class="form-select form-select-sm mb-2" required>@foreach ($months as $optionMonth => $optionLabel)<option value="{{ $optionMonth }}" @selected($optionMonth === $number)>{{ $optionLabel }}</option>@endforeach</select><input type="number" name="jumlah_realisasi" value="{{ $monthRealization->jumlah_realisasi }}" class="form-control form-control-sm" min="0" step="0.01" required><input name="keterangan" value="{{ $monthRealization->keterangan }}" class="form-control form-control-sm mt-2" maxlength="2000" placeholder="Keterangan"><button class="btn btn-sm btn-primary mt-2">Simpan koreksi</button></form></details>
+                                    @endif
+                                </td>
+                            @endforeach
+                            <td class="text-end total-cell"><div class="fw-bold text-gray-900 text-nowrap">Rp {{ number_format($target->total_realisasi, 0, ',', '.') }}</div><div class="small {{ $target->sisa_target < 0 ? 'text-danger' : 'text-muted' }}">Sisa Rp {{ number_format($target->sisa_target, 0, ',', '.') }}</div></td>
+                            <td class="progress-cell"><div class="d-flex justify-content-between small mb-1"><span>{{ number_format($progress, 1, ',', '.') }}%</span><span class="text-muted">{{ $target->total_realisasi > $target->target_tahunan ? 'Melebihi target' : 'Target' }}</span></div><div class="progress" role="progressbar" aria-valuenow="{{ $progress }}" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar {{ $progress >= 100 ? 'bg-success' : 'bg-primary' }}" style="width: {{ $progress }}%"></div></div></td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="16" class="text-center text-muted py-8">Belum ada target rekening pada tahun ini.</td></tr>
+                    @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer border-0 bg-light fs-8 text-muted">Koreksi realisasi hanya mengubah nilai pada rekening dan bulan yang dipilih. Jika berpindah bulan, bulan tujuan harus belum memiliki realisasi.</div>
         </section>
     </div>
-
     <style>
-        .revenue-page { max-width: 1680px; margin: 0 auto; }
-        .revenue-summary { border-radius: .85rem; background: linear-gradient(135deg, #fff, #f8fbff); }
-        .revenue-table { min-width: 1500px; }
-        .revenue-table thead th { color: #7e8798; font-size: .75rem; text-transform: uppercase; white-space: nowrap; }
+        .revenue-page{max-width:1680px;margin:0 auto}.revenue-detail-card{border-radius:14px;overflow:visible}.revenue-modern-table{min-width:1780px}.revenue-modern-table thead th{position:sticky;top:0;background:#f8fafc;color:#64748b;font-size:.7rem;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;padding:14px 10px}.revenue-modern-table tbody td{padding:14px 10px;border-color:#edf0f4}.revenue-modern-table thead th:first-child,.revenue-modern-table tbody td:first-child{padding-left:20px}.revenue-modern-table thead th:last-child,.revenue-modern-table tbody td:last-child{padding-right:20px}.account-col{min-width:210px}.target-col{min-width:145px}.month-col{min-width:118px}.total-col{min-width:150px}.progress-col{min-width:150px}.account-cell{min-width:210px;border-left:3px solid #3699ff}.month-cell{background:#fff}.month-value{font-size:.78rem;white-space:nowrap}.has-value{font-weight:600;color:#334155}.empty-value{color:#c0c6d0}.cell-edit{position:relative;font-size:.72rem}.cell-edit summary{display:inline-block;cursor:pointer;color:#3699ff;font-weight:600;list-style:none}.cell-edit summary::-webkit-details-marker{display:none}.mini-edit-form{position:static;width:220px;margin:6px auto 0;padding:10px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 6px 18px #0f172a12;text-align:left;white-space:normal}.target-cell .mini-edit-form{margin-left:auto}.progress{height:7px;background:#edf1f5;border-radius:10px}.progress-bar{border-radius:10px}.total-cell{background:#f8fafc}.revenue-modern-table tr:hover .month-cell{background:#fbfdff}.legend{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px}.legend-target,.target-bar{background:#f6c453}.legend-income,.income-bar{background:#16a36a}.legend-expense,.expense-bar{background:#3699ff}.finance-chart{height:270px;display:grid;grid-template-columns:repeat(12,minmax(35px,1fr));gap:10px;border-bottom:1px solid #e5e7eb;padding:12px 4px 0}.chart-month{display:flex;flex-direction:column;justify-content:flex-end;min-width:0}.chart-bars{height:225px;display:flex;align-items:flex-end;justify-content:center;gap:3px;border-bottom:1px solid #eef0f3}.chart-bar{width:24%;min-height:2px;border-radius:3px 3px 0 0;opacity:.88}.chart-label{text-align:center;color:#7e8798;font-size:.72rem;padding:7px 0}.table-responsive table{min-width:1450px}
     </style>
 @endsection

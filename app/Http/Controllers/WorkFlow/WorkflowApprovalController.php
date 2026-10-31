@@ -465,14 +465,34 @@ class WorkflowApprovalController extends Controller
             ];
         });
 
-        return Pdf::loadView('workflow.approval.print_all', [
+        $view = $module === 'persediaan'
+            ? 'workflow.approval.print_all_persediaan'
+            : 'workflow.approval.print_all';
+        $judulHeader = JudulHeader::query()->first();
+        $headerLogo = static function (?string $path): ?string {
+            if (! $path) return null;
+            $fullPath = storage_path('app/public/judul_header/' . basename($path));
+            if (! is_file($fullPath)) return null;
+            $mime = mime_content_type($fullPath) ?: 'image/png';
+
+            return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($fullPath));
+        };
+        $pdf = Pdf::loadView($view, [
             'items' => $items,
             'filters' => $filters,
             'module' => $module,
-            'judulHeader' => JudulHeader::query()->first(),
+            'judulHeader' => $judulHeader,
+            'headerLogoLeft' => $module === 'persediaan' ? $headerLogo($judulHeader?->gambar2) : null,
+            'headerLogoRight' => $module === 'persediaan' ? $headerLogo($judulHeader?->gambar1) : null,
             'printedAt' => now(),
-        ])->setPaper('a4', 'landscape')
-            ->stream('daftar-approval-rkbu-' . now()->format('Ymd-His') . '.pdf');
+        ])->setPaper('a4', 'landscape');
+        if ($module === 'persediaan') {
+            $canvas = $pdf->getDomPDF()->getCanvas();
+            $font = $pdf->getDomPDF()->getFontMetrics()->getFont('DejaVu Sans', 'italic');
+            $canvas->page_text(25, $canvas->get_height() - 18, 'Halaman {PAGE_NUM}/{PAGE_COUNT}', $font, 8, [0, 0, 0]);
+        }
+
+        return $pdf->stream('daftar-approval-rkbu-' . now()->format('Ymd-His') . '.pdf');
     }
 
     private function activeAssignmentsForWorkflowStep(WorkflowStep $step, Position $currentPosition)

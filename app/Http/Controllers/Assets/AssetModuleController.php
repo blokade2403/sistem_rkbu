@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Assets;
 
 use App\Http\Controllers\Controller;
 use App\Models\Asset\Asset;
+use App\Models\Asset\AssetHistory;
 use App\Models\Asset\Penempatan;
 use App\Models\MasterBackend\UserProfil\User;
 use App\Models\MasterBackend\SettingUser\Unit;
@@ -20,14 +21,44 @@ use Illuminate\Validation\Rule;
 
 class AssetModuleController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $this->authorizeAssetAccess();
-        $assets = $this->scopedAssets()
+        $perPage = in_array((int) $request->input('per_page'), [10, 25, 50, 100], true)
+            ? (int) $request->input('per_page')
+            : 10;
+        $assetQuery = $this->scopedAssets()
             ->with(['unit', 'rkbu'])
+            ->where(function ($query) {
+                $query->whereNull('status_reklas_arb')->orWhere('status_reklas_arb', '!=', 'Reklas');
+            })
+            ->when($request->filled('tahun'), fn ($query) => $query->whereYear('assets.created_at', $request->input('tahun')))
+            ->when($request->filled('kondisi'), fn ($query) => $query->where('kondisi_asset', $request->input('kondisi')))
+            ->when($request->filled('tahun_perolehan'), fn ($query) => $query->where('tahun_perolehan', $request->input('tahun_perolehan')))
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $term = trim($request->input('search'));
+                $query->where(function ($search) use ($term) {
+                    $search->where('nama_asset', 'like', '%' . $term . '%')
+                        ->orWhere('no_register', 'like', '%' . $term . '%')
+                        ->orWhere('kode_asset', 'like', '%' . $term . '%')
+                        ->orWhere('merk', 'like', '%' . $term . '%')
+                        ->orWhere('type', 'like', '%' . $term . '%');
+                });
+            });
+        $years = $this->scopedAssets()->whereNotNull('created_at')->selectRaw('YEAR(created_at) as year')->distinct()->orderByDesc('year')->pluck('year');
+        $acquisitionYears = $this->scopedAssets()->whereNotNull('tahun_perolehan')->distinct()->orderByDesc('tahun_perolehan')->pluck('tahun_perolehan');
+        $assets = $assetQuery
             ->orderByDesc('created_at')
-            ->paginate(10, ['*'], 'assets_page')
+            ->paginate($perPage, ['*'], 'assets_page')
             ->withQueryString();
+        $reclassificationItems = $this->scopedAssets()
+            ->with(['unit', 'histories' => fn ($query) => $query->where('action', 'deletion_proposed')->latest()])
+            ->where('status_reklas_arb', 'Reklas')
+            ->orderByDesc('updated_at')
+            ->paginate(10, ['*'], 'reclass_page')
+            ->withQueryString();
+        $assets->getCollection()->concat($reclassificationItems->getCollection())
+            ->unique('id_asset')->each(fn (Asset $asset) => $this->ensureAssetQrCode($asset));
         $pendingItems = $this->eligiblePurchaseItems()
             ->orderByDesc('payment.tanggal_pembayaran')
             ->paginate(10, ['*'], 'pending_page')
@@ -36,9 +67,43 @@ class AssetModuleController extends Controller
         return view('asset_module.index', [
             'title' => 'Modul Aset Barang',
             'assets' => $assets,
+            'years' => $years,
+            'acquisitionYears' => $acquisitionYears,
+            'perPage' => $perPage,
+            'reclassificationItems' => $reclassificationItems,
             'pendingItems' => $pendingItems,
             'isAdministrator' => $this->isAdministrator(),
         ]);
+    }
+
+    public function printQrCodes(Request $request)
+    {
+        $this->authorizeAssetAccess();
+        $validated = $request->validate([
+            'asset_ids' => ['required', 'array', 'min:1', 'max:200'],
+            'asset_ids.*' => ['required', 'uuid', 'distinct'],
+        ]);
+        $assets = $this->scopedAssets()
+            ->whereIn('id_asset', $validated['asset_ids'])
+            ->orderBy('nama_asset')
+            ->get();
+        abort_if($assets->isEmpty(), 404, 'Aset yang dipilih tidak ditemukan.');
+        $assets->each(fn (Asset $asset) => $this->ensureAssetQrCode($asset));
+
+        return view('asset_module.print_qr', ['title' => 'Cetak QR Aset', 'assets' => $assets]);
+    }
+
+    public function historyIndex()
+    {
+        $this->authorizeAssetAccess();
+        $histories = AssetHistory::query()
+            ->with('user')
+            ->when(! $this->isAdministrator(), fn ($query) => $query->where('asset_unit_id', auth()->user()->unit_id))
+            ->orderByDesc('created_at')
+            ->paginate(25)
+            ->withQueryString();
+
+        return view('asset_module.history', ['title' => 'Riwayat Aset', 'histories' => $histories]);
     }
 
     public function create(string $spjDetailId)
@@ -101,22 +166,26 @@ class AssetModuleController extends Controller
         unset($data['foto'], $data['upload_sptjm']);
         $unitId = $this->isAdministrator() ? $data['unit_id'] : auth()->user()->unit_id;
         $register = ($data['no_register'] ?? null) ?: 'AST-' . $data['tahun_perolehan'] . '-' . Str::upper(Str::random(8));
+        $assetId = (string) Str::uuid();
 
-        $asset = Asset::query()->create(array_merge($data, [
-            'id_asset' => (string) Str::uuid(),
-            'unit_id' => $unitId,
-            'registered_by' => auth()->id(),
-            'no_register' => $register,
-            'total_anggaran_asset' => round((float) $data['harga_asset'] * (float) $data['jumlah_asset'], 2),
-            'sumber_anggaran' => ($data['sumber_anggaran'] ?? null) ?: 'Hibah',
-            'foto' => $photoPath,
-            'upload_sptjm' => $sptjmPath,
-            'status_asset' => 'Aktif',
-            'status_registrasi' => 'terdaftar',
-        ]));
+        $asset = DB::transaction(function () use ($data, $unitId, $register, $photoPath, $sptjmPath, $assetId) {
+            $asset = Asset::query()->create(array_merge($data, [
+                'id_asset' => $assetId,
+                'unit_id' => $unitId,
+                'registered_by' => auth()->id(),
+                'no_register' => $register,
+                'total_anggaran_asset' => round((float) $data['harga_asset'] * (float) $data['jumlah_asset'], 2),
+                'sumber_anggaran' => ($data['sumber_anggaran'] ?? null) ?: 'Hibah',
+                'foto' => $photoPath,
+                'upload_sptjm' => $sptjmPath,
+                'status_asset' => 'Aktif',
+                'status_registrasi' => 'terdaftar',
+                'link_detail' => route('asset.scan', $assetId),
+            ]));
+            $this->recordAssetHistory($asset, 'created', 'Aset hibah/manual dicatat.', null, $asset->getAttributes());
 
-        $asset->link_detail = route('asset-module.show', $asset);
-        $asset->save();
+            return $asset;
+        });
         $this->ensureAssetQrCode($asset);
 
         return redirect()->route('asset-module.show', $asset)->with('success', 'Aset hibah berhasil dicatat secara manual.');
@@ -144,7 +213,7 @@ class AssetModuleController extends Controller
             $price = (float) ($source->harga_satuan ?? 0);
             $ppn = (float) ($source->ppn ?? 0);
 
-            return Asset::query()->create(array_merge($data, [
+            $asset = Asset::query()->create(array_merge($data, [
                 'id_asset' => $id,
                 'unit_id' => $source->unit_id,
                 'id_jenis_kategori_rkbu' => $source->jenis_kategori_rkbu_id,
@@ -170,8 +239,11 @@ class AssetModuleController extends Controller
                 'upload_sptjm' => $sptjmPath,
                 'status_asset' => 'Aktif',
                 'status_registrasi' => 'terdaftar',
-                'link_detail' => route('asset-module.show', $id),
+                'link_detail' => route('asset.scan', $id),
             ]));
+            $this->recordAssetHistory($asset, 'created', 'Aset diregistrasikan dari item SPJ yang telah diterima dan dibayar.', null, $asset->getAttributes());
+
+            return $asset;
         });
         $this->ensureAssetQrCode($asset);
 
@@ -181,10 +253,31 @@ class AssetModuleController extends Controller
     public function show(string $id)
     {
         $this->authorizeAssetAccess();
-        $asset = $this->scopedAssets()->with(['unit', 'rkbu', 'spj'])->whereKey($id)->firstOrFail();
+        $asset = $this->scopedAssets()->with(['unit', 'rkbu', 'spj', 'histories.user'])->whereKey($id)->firstOrFail();
         $this->ensureAssetQrCode($asset);
 
-        return view('asset_module.show', ['title' => 'Detail Aset', 'asset' => $asset]);
+        return view('asset_module.show', ['title' => 'Detail Aset', 'asset' => $asset, 'histories' => $asset->histories->sortByDesc('created_at')]);
+    }
+
+    public function scan(string $id)
+    {
+        $asset = Asset::query()->with(['unit', 'rkbu'])->whereKey($id)->firstOrFail();
+
+        return view('asset_module.public_show', ['asset' => $asset]);
+    }
+
+    public function qrImage(string $id)
+    {
+        $asset = Asset::query()->whereKey($id)->firstOrFail();
+        $this->ensureAssetQrCode($asset);
+        $disk = Storage::disk('public');
+
+        abort_unless($disk->exists($asset->qrcode_path), 404, 'QR code aset belum tersedia.');
+
+        return response($disk->get($asset->qrcode_path), 200, [
+            'Content-Type' => 'image/png',
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
     }
 
     public function edit(string $id)
@@ -207,6 +300,7 @@ class AssetModuleController extends Controller
     {
         $this->authorizeAssetAccess();
         $asset = $this->scopedAssets()->whereKey($id)->firstOrFail();
+        $before = $asset->getOriginal();
         $data = $request->validate($this->assetRules($asset->id_asset));
         $data = $this->applyAssignmentData($data);
         unset($data['foto'], $data['upload_sptjm']);
@@ -220,9 +314,34 @@ class AssetModuleController extends Controller
             if ($asset->upload_sptjm) Storage::disk('public')->delete($asset->upload_sptjm);
             $asset->upload_sptjm = $request->file('upload_sptjm')->store('assets/sptjm', 'public');
         }
-        $asset->save();
+        DB::transaction(function () use ($asset, $before): void {
+            $asset->save();
+            $this->recordAssetHistory($asset, 'updated', 'Data aset diperbarui.', $before, $asset->getAttributes());
+        });
 
         return redirect()->route('asset-module.show', $asset)->with('success', 'Data aset berhasil diperbarui.');
+    }
+
+    public function proposeDeletion(Request $request, string $id)
+    {
+        $this->authorizeAssetAccess();
+        $asset = $this->scopedAssets()->whereKey($id)->firstOrFail();
+        abort_unless($asset->kondisi_asset === 'Rusak Berat', 422, 'Usulan penghapusan hanya dapat diajukan untuk aset berkondisi rusak berat.');
+        abort_if($asset->status_reklas_arb === 'Reklas', 422, 'Usulan penghapusan aset ini sudah pernah diajukan.');
+        $data = $request->validate(['alasan' => ['required', 'string', 'max:2000']]);
+        $before = $asset->getOriginal();
+        DB::transaction(function () use ($asset, $data, $before): void {
+            $asset->forceFill(['status_reklas_arb' => 'Reklas'])->save();
+            $this->recordAssetHistory(
+                $asset,
+                'deletion_proposed',
+                'Usulan penghapusan diajukan: ' . $data['alasan'],
+                $before,
+                $asset->getAttributes()
+            );
+        });
+
+        return redirect()->route('asset-module.index')->with('success', 'Usulan penghapusan dicatat. Aset dipindahkan dari daftar aktif dan riwayat aset tetap tersimpan.');
     }
 
     private function eligiblePurchaseItems(): Builder
@@ -301,7 +420,7 @@ class AssetModuleController extends Controller
     private function ensureAssetQrCode(Asset $asset): void
     {
         $disk = Storage::disk('public');
-        $detailUrl = route('asset-module.show', $asset);
+        $detailUrl = route('asset.scan', $asset->id_asset);
         if ($asset->qrcode_path && $disk->exists($asset->qrcode_path) && $asset->link_detail === $detailUrl) {
             return;
         }
@@ -313,12 +432,28 @@ class AssetModuleController extends Controller
             ->setErrorCorrectionLevel(ErrorCorrectionLevel::High);
         $result = (new PngWriter())->write($qrCode);
         $path = 'assets/qrcodes/' . $asset->id_asset . '.png';
-        $disk->put($path, $result->getString());
+        $saved = $disk->put($path, $result->getString());
+        abort_unless($saved, 500, 'QR code aset gagal disimpan. Periksa konfigurasi penyimpanan aplikasi.');
 
         $asset->forceFill([
             'qrcode_path' => $path,
             'link_detail' => $detailUrl,
         ])->save();
+    }
+
+    private function recordAssetHistory(Asset $asset, string $action, string $description, ?array $before, ?array $after): void
+    {
+        AssetHistory::query()->create([
+            'asset_id' => $asset->id_asset,
+            'asset_unit_id' => $after['unit_id'] ?? $before['unit_id'] ?? $asset->unit_id,
+            'asset_name' => $asset->nama_asset,
+            'asset_register' => $asset->no_register,
+            'action' => $action,
+            'description' => $description,
+            'before_data' => $before,
+            'after_data' => $after,
+            'user_id' => auth()->id(),
+        ]);
     }
 
     private function scopedAssets()

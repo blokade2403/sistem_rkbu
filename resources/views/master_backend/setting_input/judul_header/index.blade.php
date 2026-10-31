@@ -15,9 +15,10 @@
         .jh-upload-box { height: 100%; padding: .85rem; border: 1px dashed #cbd5e1; border-radius: .75rem; background: #fafcff; }
         .jh-upload-box img { width: 64px; height: 64px; object-fit: cover; border-radius: .7rem; background: #eef3f8; }
         #judulHeaderCreateModal .modal-dialog, #judulHeaderEditModal .modal-dialog { width: min(1140px, calc(100% - 1rem)); max-width: none; height: calc(100vh - 2rem); height: calc(100dvh - 2rem); margin: 1rem auto; }
-        #judulHeaderCreateModal .modal-content, #judulHeaderEditModal .modal-content { display: flex; height: 100%; max-height: 100%; min-height: 0; overflow: hidden; }
+        #judulHeaderCreateModal .modal-content, #judulHeaderEditModal .modal-content { display: flex; flex-direction: column; height: 100%; max-height: 100%; min-height: 0; overflow: hidden; }
+        #judulHeaderCreateModal form, #judulHeaderEditModal form { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; overflow: hidden; }
         #judulHeaderCreateModal .modal-header, #judulHeaderEditModal .modal-header, #judulHeaderCreateModal .modal-footer, #judulHeaderEditModal .modal-footer { flex: 0 0 auto; }
-        #judulHeaderCreateModal .modal-body, #judulHeaderEditModal .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+        #judulHeaderCreateModal .modal-body, #judulHeaderEditModal .modal-body { flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
         @media (max-width: 575.98px) {
             .jh-hero .card-body { padding: 1.15rem; }
             .jh-modal-section { padding: .8rem; }

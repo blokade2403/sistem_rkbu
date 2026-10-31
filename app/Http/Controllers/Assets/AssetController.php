@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Assets;
 
 use Endroid\QrCode\QrCode;
 use App\Models\Asset\Asset;
+use App\Models\Asset\AssetHistory;
 use App\Exports\ExportAsset;
 use Illuminate\Http\Request;
 use App\Models\Asset\Penempatan;
@@ -163,7 +164,7 @@ class AssetController extends Controller
         }
 
         // URL detail untuk QR Code
-        $link_detail = route('barang_assets.details', $id_asset);
+        $link_detail = route('asset.scan', $id_asset);
 
         // Buat QR Code
         $qrCode = QrCode::create($link_detail)
@@ -285,12 +286,25 @@ class AssetController extends Controller
     public function reklas_update(Request $request, $id)
     {
         $asset = Asset::where('id_asset', $id)->firstOrFail();
+        abort_unless($asset->kondisi_asset === 'Rusak Berat', 422, 'Usulan penghapusan hanya dapat diajukan untuk aset rusak berat.');
         if ($asset->status_reklas_arb !== 'Reklas') {
+            $before = $asset->getAttributes();
             $asset->update([
                 'status_reklas_arb' => 'Reklas',
             ]);
+            AssetHistory::query()->create([
+                'asset_id' => $asset->id_asset,
+                'asset_unit_id' => $asset->unit_id,
+                'asset_name' => $asset->nama_asset,
+                'asset_register' => $asset->no_register,
+                'action' => 'deletion_proposed',
+                'description' => 'Usulan penghapusan diajukan dari modul aset lama.',
+                'before_data' => $before,
+                'after_data' => $asset->getAttributes(),
+                'user_id' => auth()->id(),
+            ]);
         }
-        return redirect()->route('reklas_arbs.index')->with('success', 'Data Asset berhasil diperbarui.');
+        return redirect()->route('asset-module.index')->with('success', 'Usulan penghapusan aset dicatat. Riwayat aset tetap tersimpan.');
     }
 
     public function update(Request $request, $id)
@@ -440,6 +454,17 @@ class AssetController extends Controller
 
     public function destroy(Asset $asset)
     {
+        AssetHistory::query()->create([
+            'asset_id' => $asset->id_asset,
+            'asset_unit_id' => $asset->unit_id,
+            'asset_name' => $asset->nama_asset,
+            'asset_register' => $asset->no_register,
+            'action' => 'deleted',
+            'description' => 'Record aset dihapus permanen; salinan data aset tersimpan dalam riwayat.',
+            'before_data' => $asset->getAttributes(),
+            'after_data' => null,
+            'user_id' => auth()->id(),
+        ]);
         // Hapus foto jika ada
         if ($asset->foto && Storage::exists($asset->foto)) {
             Storage::delete($asset->foto);

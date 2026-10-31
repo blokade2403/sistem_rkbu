@@ -69,17 +69,47 @@
                     <div class="card-header border-0 pt-6"><div><h2 class="card-title fs-3 fw-bold">Label QR Aset</h2><div class="text-muted fs-7">Pindai untuk membuka halaman detail aset.</div></div></div>
                     <div class="card-body text-center">
                         <div id="asset-qr-print-area" class="asset-qr-label mx-auto">
-                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($asset->qrcode_path) }}" alt="QR {{ $asset->nama_asset }}" class="asset-qr-image">
+                            <img src="{{ route('asset.qr', $asset->id_asset) }}" alt="QR {{ $asset->nama_asset }}" class="asset-qr-image">
                             <div class="asset-qr-register">{{ $asset->no_register ?: $asset->kode_asset ?: 'ASET' }}</div>
                             <div class="asset-qr-name">{{ $asset->nama_asset }}</div>
                             <div class="asset-qr-unit">{{ $asset->unit?->nama_unit ?: '-' }}</div>
                         </div>
                         <button type="button" class="btn btn-primary w-100 mt-5" onclick="window.print()"><i class="fas fa-print me-2"></i>Cetak Label QR</button>
-                        <div class="text-muted fs-7 mt-3">Halaman detail memerlukan login ke aplikasi.</div>
+                        <div class="text-muted fs-7 mt-3">Scan QR membuka ringkasan aset tanpa perlu login.</div>
                     </div>
                 </section>
             </div>
         </div>
+
+        <section class="card asset-detail-card border-0 shadow-sm mt-5">
+            <div class="card-header border-0 pt-6"><div><h2 class="card-title fs-3 fw-bold">Riwayat Aset</h2><div class="text-muted fs-7">Pencatatan aset, perubahan data, dan usulan penghapusan. Riwayat disimpan terpisah agar tetap tersedia walau record aset dihapus.</div></div></div>
+            <div class="card-body pt-2">
+                <div class="table-responsive">
+                    <table class="table table-row-bordered align-middle gy-3 mb-0">
+                        <thead><tr class="text-muted fw-bold text-uppercase fs-7"><th>Waktu</th><th>Aktivitas</th><th>Perubahan</th><th>Keterangan</th><th>Petugas</th></tr></thead>
+                        <tbody>
+                            @forelse ($histories as $history)
+                                <tr>
+                                    <td class="text-nowrap">{{ $history->created_at?->format('d-m-Y H:i') }}</td>
+                                    <td>{{ match ($history->action) { 'created' => 'Pencatatan aset', 'updated' => 'Perubahan data', 'deletion_proposed' => 'Usulan penghapusan / reklas', 'deleted' => 'Aset dihapus', default => ucfirst(str_replace('_', ' ', $history->action)) } }}</td>
+                                    <td>
+                                        @forelse ($history->changes as [$field, $oldValue, $newValue])
+                                            <div><strong>{{ $field }}:</strong> {{ $oldValue }} → {{ $newValue }}</div>
+                                        @empty
+                                            -
+                                        @endforelse
+                                    </td>
+                                    <td>{{ $history->description ?: '-' }}</td>
+                                    <td>{{ $history->user?->nama ?: 'Akun dihapus' }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" class="text-center text-muted py-6">Belum ada riwayat aset.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
     </div>
 
     <style>

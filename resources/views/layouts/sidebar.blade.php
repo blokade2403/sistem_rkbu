@@ -324,6 +324,12 @@
                                          <span class="menu-title">PPN</span>
                                      </a>
                                  </div>
+                                 <div class="menu-item">
+                                     <a class="menu-link" href="{{ route('penempatans.index') }}">
+                                         <span class="menu-bullet"><span class="bullet bullet-dot"></span></span>
+                                         <span class="menu-title">Penempatan</span>
+                                     </a>
+                                 </div>
                              </div>
                          </div>
                          <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
@@ -615,6 +621,27 @@
                          <span class="menu-section text-muted text-uppercase fs-8 ls-1">Apps</span>
                      </div>
                  </div>
+                 @if (auth()->user()->unit_id || auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('Super Admin'))
+                 <div data-kt-menu-trigger="click" class="menu-item menu-accordion {{ request()->routeIs('persediaan.inventory.*') ? 'here show' : '' }}">
+                     <span class="menu-link">
+                         <span class="menu-icon"><i class="fas fa-boxes-stacked"></i></span>
+                         <span class="menu-title">Manajemen Persediaan</span>
+                         <span class="menu-arrow"></span>
+                     </span>
+                     <div class="menu-sub menu-sub-accordion {{ request()->routeIs('persediaan.inventory.*') ? 'show' : '' }}">
+                         <div class="menu-item"><a class="menu-link" href="{{ route('persediaan.inventory.index') }}"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">Ringkasan</span></a></div>
+                         @if (auth()->user()->hasRole('Pengurus Barang') || auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('Super Admin'))
+                             <div class="menu-item"><a class="menu-link" href="{{ route('persediaan.inventory.barang-masuk') }}"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">Barang Masuk</span></a></div>
+                         @endif
+                         <div class="menu-item"><a class="menu-link" href="{{ route('persediaan.inventory.stok') }}"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">Stok Barang</span></a></div>
+                         <div class="menu-item"><a class="menu-link" href="{{ route('persediaan.inventory.permintaan') }}"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">Permintaan Barang</span></a></div>
+                         @if (auth()->user()->hasRole('Pengurus Barang') || auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('Super Admin'))
+                             <div class="menu-item"><a class="menu-link" href="{{ route('persediaan.inventory.opname') }}"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">Stok Opname</span></a></div>
+                         @endif
+                         <div class="menu-item"><a class="menu-link" href="{{ route('persediaan.inventory.laporan') }}"><span class="menu-bullet"><span class="bullet bullet-dot"></span></span><span class="menu-title">Laporan Mutasi</span></a></div>
+                     </div>
+                 </div>
+                 @endif
                  @if (auth()->user()->hasRole('Operator') || auth()->user()->hasRole('Super Admin'))
                  <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
                      <span class="menu-link">

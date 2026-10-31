@@ -8,6 +8,7 @@ use App\Http\Controllers\MasterBackend\SettingInput\AnggaranController;
 use App\Http\Controllers\MasterBackend\SettingInput\JudulHeaderController;
 use App\Http\Controllers\MasterBackend\SettingInput\KomponenController;
 use App\Http\Controllers\MasterBackend\SettingInput\PpnController;
+use App\Http\Controllers\MasterBackend\SettingInput\PenempatanController;
 use App\Http\Controllers\MasterBackend\SettingInput\PaguAnggaranController;
 use App\Http\Controllers\MasterBackend\SettingInput\TahunAnggaranController;
 use App\Http\Controllers\MasterBackend\SettingInput\TargetSpsController;
@@ -50,6 +51,8 @@ use App\Http\Controllers\UsulanBelanja\SpjUsulanBelanjaController;
 use App\Http\Controllers\UsulanBelanja\PengadaanWorkflowController;
 use App\Http\Controllers\UsulanBelanja\ValidasiUsulanBelanjaController;
 use App\Http\Controllers\Assets\AssetModuleController;
+use App\Http\Controllers\Assets\AssetImportController;
+use App\Http\Controllers\Persediaan\PersediaanInventoryController;
 use App\Http\Controllers\Pendapatan\PendapatanController;
 use App\Http\Controllers\Pengadaan\PerusahaanController;
 use App\Http\Controllers\WorkFlow\ApprovalController;
@@ -71,23 +74,48 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
+Route::get('/asset/scan/{id}', [AssetModuleController::class, 'scan'])->name('asset.scan');
+Route::get('/asset/qr/{id}', [AssetModuleController::class, 'qrImage'])->name('asset.qr');
+
 Route::middleware('auth')->group(function () {
     Route::view('/modul', 'portal.index')->name('module-portal');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::prefix('asset')->name('asset-module.')->controller(AssetModuleController::class)->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/history', 'historyIndex')->name('history');
         Route::get('/manual/create', 'manualCreate')->name('manual-create');
         Route::post('/manual', 'manualStore')->name('manual-store');
+        Route::post('/print-qr', 'printQrCodes')->name('print-qr');
+        Route::post('/{id}/reclass-proposal', 'proposeDeletion')->name('reclass-proposal');
         Route::get('/source/{spjDetail}/register', 'create')->name('create');
         Route::post('/source/{spjDetail}/register', 'store')->name('store');
         Route::get('/{id}/edit', 'edit')->name('edit');
         Route::put('/{id}', 'update')->name('update');
         Route::get('/{id}', 'show')->name('show');
     });
+    Route::get('/asset/import-template', [AssetImportController::class, 'template'])->name('asset-module.import-template');
+    Route::post('/asset/import', [AssetImportController::class, 'import'])->name('asset-module.import');
+    Route::prefix('persediaan-inventory')->name('persediaan.inventory.')->controller(PersediaanInventoryController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/barang-masuk', 'barangMasuk')->name('barang-masuk');
+        Route::get('/stok', 'stok')->name('stok');
+        Route::get('/permintaan', 'permintaan')->name('permintaan');
+        Route::get('/stok-opname', 'stokOpname')->name('opname');
+        Route::get('/laporan', 'laporan')->name('laporan');
+        Route::post('/barang-masuk', 'receive')->name('receive');
+        Route::post('/permintaan', 'requestIssue')->name('request');
+        Route::post('/permintaan/{id}/setujui', 'approveRequest')->name('approve');
+        Route::post('/permintaan/{id}/tolak', 'rejectRequest')->name('reject');
+        Route::post('/stok/{id}/opname', 'stocktake')->name('stocktake');
+    });
     Route::prefix('pendapatan')->name('pendapatan.')->controller(PendapatanController::class)->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::post('/rekening', 'saveAccount')->name('rekening.save');
+        Route::put('/rekening/{id}', 'updateAccount')->name('rekening.update');
         Route::post('/target', 'saveTarget')->name('target.save');
+        Route::put('/target/{id}', 'updateTarget')->name('target.update');
         Route::post('/realisasi', 'saveRealization')->name('realisasi.save');
+        Route::put('/realisasi/{id}', 'updateRealization')->name('realisasi.update');
     });
     Route::get('/monitoring-anggaran/blud', [MonitoringAnggaranController::class, 'blud'])->name('monitoring-anggaran.blud');
     Route::get('/monitoring-anggaran/keseluruhan', [MonitoringAnggaranController::class, 'keseluruhan'])->name('monitoring-anggaran.keseluruhan');
@@ -213,6 +241,7 @@ Route::middleware('auth')->group(function () {
             ->names('pagu_anggaran')
             ->except(['show', 'destroy']);
         Route::resource('target_sps', TargetSpsController::class);
+        Route::resource('penempatans', PenempatanController::class)->except(['create', 'edit', 'show']);
     });
 
     Route::prefix('setting-rkbu')->group(function () {
@@ -270,6 +299,8 @@ Route::middleware('auth')->group(function () {
                 ->name('pengadaan.index');
             Route::get('/pengadaan/{spj}', [PengadaanWorkflowController::class, 'show'])
                 ->name('pengadaan.show');
+            Route::get('/pengadaan/{spj}/dokumen/{document}', [PengadaanWorkflowController::class, 'document'])
+                ->name('pengadaan.document');
             Route::get('/spj/{spj}/pengadaan', [PengadaanWorkflowController::class, 'panel'])
                 ->name('spj.pengadaan');
             Route::post('/pengadaan/{spj}/pesanan', [PengadaanWorkflowController::class, 'storePesanan'])
