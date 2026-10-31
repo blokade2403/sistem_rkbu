@@ -9,6 +9,8 @@ use App\Models\MasterBackend\SettingUser\Role;
 use App\Models\MasterBackend\SettingUser\Unit;
 use App\Models\MasterBackend\UserProfil\User;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -144,5 +146,27 @@ class UserController extends Controller
         $user->roles()->sync($request->roles);
 
         return redirect()->route('users.index')->with('success', 'User berhasil diperbarui');
+    }
+
+    public function destroy($id)
+    {
+        $user = User::findOrFail($id);
+
+        try {
+            DB::transaction(function () use ($user) {
+                $user->roles()->detach();
+                $user->validatorRoles()->detach();
+                $user->delete();
+            });
+        } catch (QueryException $exception) {
+            report($exception);
+
+            return redirect()->route('users.index')->with(
+                'error',
+                'User tidak dapat dihapus karena masih digunakan pada data lain.'
+            );
+        }
+
+        return redirect()->route('users.index')->with('success', 'User berhasil dihapus');
     }
 }
