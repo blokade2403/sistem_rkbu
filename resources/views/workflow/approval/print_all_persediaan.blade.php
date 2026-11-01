@@ -29,6 +29,11 @@
         .center { text-align: center; }
         .right { text-align: right; white-space: nowrap; }
         .total-row { font-weight: bold; }
+        .signatures { width: 100%; border-collapse: collapse; margin: 28px 0 12px; page-break-inside: avoid; }
+        .signatures td { border: 0; width: 33.33%; padding: 3px 8px; text-align: center; vertical-align: top; }
+        .signatures .signature-space { height: 42px; }
+        .signatures .sign-name { font-weight: bold; text-decoration: underline; }
+        .small { font-size: 6px; }
         .empty { text-align: center; padding: 20px; }
     </style>
 </head>
@@ -43,6 +48,12 @@
             $program = $subKegiatan?->aktivitas?->program ?? $kegiatan?->program;
             $kategori = $rkbu->subKategoriRkbu?->kategori;
             $jenisKategori = $kategori?->jenis_kategori_rkbu;
+            $signers = $groupItems
+                ->flatMap(fn ($entry) => $entry['workflowInstances']->sortByDesc('created_at')->first()?->approvals ?? collect())
+                ->sortBy('sequence')
+                ->unique(fn ($approval) => $approval->validatorUser?->id ?? $approval->position_id ?? $approval->workflowStep?->role_id ?? $approval->sequence)
+                ->take(3)
+                ->values();
             $rekening = $rkbu->subKategoriRkbu?->sub_kategori_rekening;
             $rekeningKategori = $rekening?->kategori_rekening;
             $year = (int) preg_replace('/\D+/', '', (string) ($rkbu->tahunAnggaran?->nama_tahun_anggaran ?? now()->year));
@@ -141,6 +152,39 @@
                     @endif
                     <tr class="total-row"><td colspan="13">Total {{ $rkbu->subKategoriRkbu?->nama_sub_kategori_rkbu ?? 'Persediaan' }}</td><td class="right">Rp. {{ number_format((float) $total, 0, ',', '.') }}</td></tr>
                 </tbody>
+            </table>
+
+            <table class="signatures">
+                <tr>
+                    @forelse ($signers as $approval)
+                        @php
+                            $signerName = $approval->validatorUser?->nama
+                                ?? $approval->position?->nama_jabatan
+                                ?? $approval->workflowStep?->position?->nama_jabatan
+                                ?? $approval->workflowStep?->validatorRole?->nama_validator
+                                ?? 'Pejabat';
+                        @endphp
+                        <td>{{ $signerName }}<br><span class="small">{{ strtoupper($approval->status ?? 'pending') }}</span></td>
+                    @empty
+                        <td colspan="3">Pejabat yang berwenang</td>
+                    @endforelse
+                </tr>
+                <tr>
+                    @forelse ($signers as $approval)
+                        <td class="signature-space"></td>
+                    @empty
+                        <td colspan="3" class="signature-space"></td>
+                    @endforelse
+                </tr>
+                <tr>
+                    @foreach ($signers as $approval)
+                        <td class="sign-name">{{ $approval->validatorUser?->nama
+                            ?? $approval->position?->nama_jabatan
+                            ?? $approval->workflowStep?->position?->nama_jabatan
+                            ?? $approval->workflowStep?->validatorRole?->nama_validator
+                            ?? 'Pejabat' }}</td>
+                    @endforeach
+                </tr>
             </table>
         </section>
     @empty

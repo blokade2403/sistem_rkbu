@@ -70,9 +70,17 @@
                                     <i class="fas fa-tags me-1"></i> Tagging Massal
                                 </button>
                             @endif
-                            <a id="approval-print-all" href="{{ route('workflowapproval.print-all') }}"
+                            <a id="approval-print-rba" href="{{ route('workflowapproval.print-all', ['print_type' => 'rba']) }}"
+                                class="btn btn-sm btn-primary" target="_blank" rel="noopener">
+                                <i class="fas fa-file-pdf me-1"></i> Cetak RBA (Sudah Tagging)
+                            </a>
+                            <a id="approval-print-all" href="{{ route('workflowapproval.print-all', ['print_type' => 'rkbu']) }}"
                                 class="btn btn-sm btn-light-primary" target="_blank" rel="noopener">
                                 <i class="fas fa-file-pdf me-1"></i> Cetak Semua RKBU
+                            </a>
+                            <a id="approval-print-erba" href="{{ route('workflowapproval.print-all', ['print_type' => 'erba']) }}"
+                                class="btn btn-sm btn-light-success" target="_blank" rel="noopener">
+                                <i class="fas fa-file-pdf me-1"></i> <span id="approval-print-erba-label">Cetak e-RBA Jasa</span>
                             </a>
                             <span id="approval-selected-count" class="text-muted">0 dipilih</span>
                             @unless ($isSuperAdmin)

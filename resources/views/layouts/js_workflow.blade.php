@@ -86,16 +86,35 @@
         window.location.assign(url.toString());
     });
 
-    $('#approval-print-all').on('click', function(event) {
+    function updateErbaPrintButton() {
+        const selectedModule = $('#approval-module-filter').val() || 'all';
+        const supported = ['all', 'barjas', 'pegawai'].includes(selectedModule);
+        const button = $('#approval-print-erba');
+        button.toggleClass('disabled', !supported).attr('aria-disabled', String(!supported));
+        $('#approval-print-erba-label').text(selectedModule === 'pegawai' ? 'Cetak e-RBA Pegawai' : 'Cetak e-RBA Jasa');
+    }
+
+    updateErbaPrintButton();
+    $('#approval-module-filter').on('change', updateErbaPrintButton);
+
+    $('#approval-print-rba, #approval-print-all, #approval-print-erba').on('click', function(event) {
         event.preventDefault();
+        const selectedModule = $('#approval-module-filter').val() || 'all';
+        if (this.id === 'approval-print-erba' && !['all', 'barjas', 'pegawai'].includes(selectedModule)) {
+            toastr.info('Cetak e-RBA tersedia untuk modul Barjas dan Pegawai.');
+            return;
+        }
         const url = new URL(this.href, window.location.origin);
+        const printType = this.id === 'approval-print-rba' ? 'rba' :
+            (this.id === 'approval-print-erba' ? 'erba' : 'rkbu');
         const filters = {
-            module: $('#approval-module-filter').val() || 'all',
+            module: selectedModule,
             sumber_dana_id: $('#approval-sumber-dana-filter').val(),
             sub_kegiatan_id: $('#approval-sub-kegiatan-filter').val(),
             sub_kategori_rkbu_id: $('#approval-subkategori-filter').val(),
-            approval_status: $('#approval-status-filter').val(),
+            print_type: printType,
         };
+        if (printType === 'erba' && filters.module === 'all') filters.module = 'barjas';
         Object.entries(filters).forEach(([key, value]) => {
             if (value) url.searchParams.set(key, value);
             else url.searchParams.delete(key);

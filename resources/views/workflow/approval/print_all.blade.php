@@ -31,7 +31,7 @@
         .signatures td { border: 0; text-align: center; vertical-align: top; width: 33.33%; padding: 3px 8px; }
         .sign-name { padding-top: 32px !important; text-decoration: underline; font-weight: bold; }
         .document { page-break-inside: auto; }
-        .document + .document { margin-top: 20px; }
+        .document + .document { page-break-before: always; }
         .empty { text-align: center; padding: 25px; }
     </style>
 </head>
@@ -77,8 +77,12 @@
                     <td width="76%" class="heading">
                         @if ($header?->header1)<div>{{ $header->header1 }}</div>@endif
                         <div class="hospital">{{ $header?->nama_rs ?? 'Instansi' }}</div>
-                        @if ($header?->header2)<div>{{ $header->header2 }}</div>@endif
-                        @if ($header?->alamat_rs)<div class="small">{{ $header->alamat_rs }}</div>@endif
+                        @if (($filters['print_type'] ?? 'rkbu') === 'rkbu')
+                            @if ($header?->header6)<div>{{ $header->header6 }}</div>@endif
+                        @else
+                            @if ($header?->header2)<div>{{ $header->header2 }}</div>@endif
+                        @endif
+                        {{-- @if ($header?->alamat_rs)<div class="small">{{ $header->alamat_rs }}</div>@endif --}}
                         <!-- <div class="report">RENCANA KEBUTUHAN BARANG UNIT (RKBU)</div> -->
                         <div>TAHUN ANGGARAN {{ $rkbu->tahunAnggaran?->nama_tahun_anggaran ?? $rkbu->tahunAnggaran?->tahun ?? now()->year }}</div>
                     </td>

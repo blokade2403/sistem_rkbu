@@ -369,57 +369,47 @@ class WorkflowApprovalController extends Controller
             'sumber_dana_id' => ['nullable', 'string', 'max:36', $this->sourceFilterRule()],
             'sub_kegiatan_id' => ['nullable', 'uuid', Rule::exists('sub_kegiatans', 'id_sub_kegiatan')],
             'sub_kategori_rkbu_id' => ['nullable', 'uuid', Rule::exists('sub_kategori_rkbus', 'id_sub_kategori_rkbu')],
-            'approval_status' => ['nullable', Rule::in(['pending', 'approved', 'rejected', 'revision'])],
+            'print_type' => ['nullable', Rule::in(['rba', 'rkbu', 'erba'])],
         ]);
         $module = $request->query('module', 'all');
         abort_unless(in_array($module, ['all', 'barjas', 'pegawai', 'persediaan', 'modal', 'modal-kantor', 'modal-alkes'], true), 404);
 
-        $isSuperAdmin = $this->isSuperAdmin();
+        $printType = $filters['print_type'] ?? 'rkbu';
+        $printScope = $printType === 'rkbu' ? 'all' : 'tagged';
+        if ($printType === 'erba' && $module === 'all') {
+            $module = 'barjas';
+        }
         $dataTable = app(WorkflowApprovalDataTable::class);
-        $approvalQuery = $isSuperAdmin
-            ? $dataTable->approvalsForCurrentYear()
-            : $dataTable->approvalsForCurrentPosition($this->currentValidatorAssignments());
-
-        if (! empty($filters['approval_status'])) {
-            $approvalQuery->where('status', $filters['approval_status']);
-        } elseif (! $isSuperAdmin) {
-            $approvalQuery->whereIn('status', ['pending', 'approved']);
+        $recordQuery = Rkbu::query()
+            ->where('tahun_anggaran_id', session('tahun_anggaran_id'));
+        if ($printScope === 'tagged') {
+            $recordQuery->whereNotNull('sub_kegiatan_id')->whereNotNull('sumber_dana_id');
+        }
+        if (! empty($filters['sumber_dana_id'])) {
+            $filters['sumber_dana_id'] === '__none'
+                ? $recordQuery->whereNull('sumber_dana_id')
+                : $recordQuery->where('sumber_dana_id', $filters['sumber_dana_id']);
+        }
+        if (! empty($filters['sub_kegiatan_id'])) {
+            $recordQuery->where('sub_kegiatan_id', $filters['sub_kegiatan_id']);
+        }
+        if (! empty($filters['sub_kategori_rkbu_id'])) {
+            $recordQuery->where('sub_kategori_rkbu_id', $filters['sub_kategori_rkbu_id']);
+        }
+        if ($module !== 'all') {
+            $dataTable->filterByModule($recordQuery, $module);
         }
 
-        if ($module !== 'all' || ! empty($filters['sumber_dana_id']) || ! empty($filters['sub_kegiatan_id']) || ! empty($filters['sub_kategori_rkbu_id'])) {
-            $approvalQuery->whereHas('workflowInstance.rkbu', function ($rkbuQuery) use ($module, $filters, $dataTable) {
-                if (! empty($filters['sumber_dana_id'])) {
-                    $filters['sumber_dana_id'] === '__none'
-                        ? $rkbuQuery->whereNull('sumber_dana_id')
-                        : $rkbuQuery->where('sumber_dana_id', $filters['sumber_dana_id']);
-                }
-                if (! empty($filters['sub_kegiatan_id'])) {
-                    $rkbuQuery->where('sub_kegiatan_id', $filters['sub_kegiatan_id']);
-                }
-                if (! empty($filters['sub_kategori_rkbu_id'])) {
-                    $rkbuQuery->where('sub_kategori_rkbu_id', $filters['sub_kategori_rkbu_id']);
-                }
-                if ($module !== 'all') {
-                    $dataTable->filterByModule($rkbuQuery, $module);
-                }
-            });
-        }
-
-        $rkbuIds = $approvalQuery->with('workflowInstance')
-            ->get()
-            ->map(fn ($approval) => $approval->workflowInstance?->dokumen_id)
-            ->filter()
-            ->unique()
-            ->values();
-
-        $records = Rkbu::query()->with([
+        $records = $recordQuery->with([
             'unit',
             'tahunAnggaran',
             'creator',
             'sumberDana',
             'subKegiatan.kegiatan.program',
             'subKegiatan.aktivitas.program',
+            'rekeningBelanja',
             'subKategoriRkbu.kategori.jenis_kategori_rkbu',
+            'subKategoriRkbu.kategori.obyek_belanja',
             'subKategoriRkbu.sub_kategori_rekening.kategori_rekening',
             'jenisBelanja',
             'detailBarjas',
@@ -433,10 +423,7 @@ class WorkflowApprovalController extends Controller
             'workflowInstances.approvals.workflowStep.validatorRole',
             'workflowInstances.approvals.logs.user',
             'workflowInstances.approvals.logs.position',
-        ])
-            ->whereIn('id', $rkbuIds)
-            ->orderBy('nomor_rkbu')
-            ->get();
+        ])->orderBy('sub_kategori_rkbu_id')->orderBy('nomor_rkbu')->get();
 
         $items = $records->map(function (Rkbu $rkbu) use ($dataTable) {
             $details = $dataTable->detailsForRkbu($rkbu);
@@ -465,9 +452,13 @@ class WorkflowApprovalController extends Controller
             ];
         });
 
-        $view = $module === 'persediaan'
-            ? 'workflow.approval.print_all_persediaan'
-            : 'workflow.approval.print_all';
+        $view = $printType === 'erba' && $module === 'barjas'
+            ? 'workflow.approval.print_all_erba'
+            : ($module === 'persediaan'
+                ? 'workflow.approval.print_all_persediaan'
+                : ($module === 'pegawai'
+                    ? 'workflow.approval.print_all_pegawai'
+                    : 'workflow.approval.print_all'));
         $judulHeader = JudulHeader::query()->first();
         $headerLogo = static function (?string $path): ?string {
             if (! $path) return null;
@@ -482,17 +473,21 @@ class WorkflowApprovalController extends Controller
             'filters' => $filters,
             'module' => $module,
             'judulHeader' => $judulHeader,
-            'headerLogoLeft' => $module === 'persediaan' ? $headerLogo($judulHeader?->gambar2) : null,
-            'headerLogoRight' => $module === 'persediaan' ? $headerLogo($judulHeader?->gambar1) : null,
+            'headerLogoLeft' => $printType === 'erba' || $module === 'persediaan' ? $headerLogo($judulHeader?->gambar2) : null,
+            'headerLogoRight' => $printType === 'erba' || $module === 'persediaan' ? $headerLogo($judulHeader?->gambar1) : null,
             'printedAt' => now(),
-        ])->setPaper('a4', 'landscape');
-        if ($module === 'persediaan') {
+        ])->setPaper('a4', in_array($module, ['pegawai', 'persediaan'], true) ? 'landscape' : 'portrait');
+        if ($module === 'persediaan' || $module === 'pegawai' || $printType === 'erba') {
             $canvas = $pdf->getDomPDF()->getCanvas();
             $font = $pdf->getDomPDF()->getFontMetrics()->getFont('DejaVu Sans', 'italic');
             $canvas->page_text(25, $canvas->get_height() - 18, 'Halaman {PAGE_NUM}/{PAGE_COUNT}', $font, 8, [0, 0, 0]);
         }
 
-        return $pdf->stream('daftar-approval-rkbu-' . now()->format('Ymd-His') . '.pdf');
+        $filename = $printType === 'erba'
+            ? ($module === 'pegawai' ? 'e-rba-pegawai' : 'e-rba-jasa')
+            : ($printType === 'rba' ? 'rba-rkbu-tagged' : 'daftar-semua-rkbu');
+
+        return $pdf->stream($filename . '-' . now()->format('Ymd-His') . '.pdf');
     }
 
     private function activeAssignmentsForWorkflowStep(WorkflowStep $step, Position $currentPosition)
