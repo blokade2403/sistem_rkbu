@@ -29,7 +29,7 @@
                     <span class="fw-bold text-gray-800">Filter daftar</span>
                 </div>
                 <form method="GET" action="{{ route('usulan-belanja.spj.providers') }}" class="row g-3 align-items-end">
-                    <div class="col-12 col-md-5 col-lg-4">
+                    <div class="col-12 col-md-3">
                         <label for="perusahaan_id" class="form-label fw-semibold">Perusahaan penyedia</label>
                         <select name="perusahaan_id" id="perusahaan_id" class="form-select form-select-solid">
                             <option value="">Semua perusahaan</option>
@@ -40,7 +40,18 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-12 col-md-4 col-lg-3">
+                    <div class="col-12 col-md-3">
+                        <label for="sub_kategori_rkbu_id" class="form-label fw-semibold">Sub Kategori RKBU</label>
+                        <select name="sub_kategori_rkbu_id" id="sub_kategori_rkbu_id" class="form-select form-select-solid">
+                            <option value="">Semua sub kategori</option>
+                            @foreach ($subKategoris as $subKategori)
+                                <option value="{{ $subKategori->id_sub_kategori_rkbu }}" @selected(request('sub_kategori_rkbu_id') == $subKategori->id_sub_kategori_rkbu)>
+                                    {{ $subKategori->nama_sub_kategori_rkbu }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-3">
                         <label for="status_spj" class="form-label fw-semibold">Status SPJ</label>
                         <select name="status_spj" id="status_spj" class="form-select form-select-solid">
                             <option value="">Semua status</option>
@@ -100,6 +111,7 @@
                                         </div>
                                         <div class="d-flex flex-column min-w-0">
                                             <span class="fw-bold text-gray-900 text-wrap">{{ $spj->nama_perusahaan }}</span>
+                                            <span class="text-muted fs-7 mt-1">Sub Kategori RKBU: {{ $spj->nama_sub_kategori_rkbu ?: '-' }}</span>
                                             <a href="{{ route('usulan-belanja.spj.show', $spj->spj_id) }}" class="text-primary fw-semibold mt-1">
                                                 {{ $spj->no_usulan_belanja }}-{{ str_pad((string) $spj->nomor_urut, 2, '0', STR_PAD_LEFT) }}
                                             </a>

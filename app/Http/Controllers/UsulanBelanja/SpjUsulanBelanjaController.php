@@ -92,10 +92,19 @@ class SpjUsulanBelanjaController extends Controller
                 ->where('usulan.tahun_anggaran_id', session('tahun_anggaran_id'))
                 ->select('master.perusahaan_id'))
             ->orderBy('nama_perusahaan')->get(['id_perusahaan', 'nama_perusahaan']);
+        $subKategoris = SubKategoriRkbu::query()
+            ->whereIn('id_sub_kategori_rkbu', DB::table('master_spjs as master')
+                ->join('spjs as spj', 'spj.id', '=', 'master.spj_id')
+                ->join('usulan_belanjas as usulan', 'usulan.id', '=', 'spj.usulan_belanja_id')
+                ->where('usulan.tahun_anggaran_id', session('tahun_anggaran_id'))
+                ->select('usulan.sub_kategori_rkbu_id'))
+            ->orderBy('nama_sub_kategori_rkbu')
+            ->get(['id_sub_kategori_rkbu', 'nama_sub_kategori_rkbu']);
         $query = DB::table('master_spjs as master')
             ->join('spjs as spj', 'spj.id', '=', 'master.spj_id')
             ->join('perusahaans as perusahaan', 'perusahaan.id_perusahaan', '=', 'master.perusahaan_id')
             ->join('usulan_belanjas as usulan', 'usulan.id', '=', 'spj.usulan_belanja_id')
+            ->leftJoin('sub_kategori_rkbus as subkategori', 'subkategori.id_sub_kategori_rkbu', '=', 'usulan.sub_kategori_rkbu_id')
             ->where('usulan.tahun_anggaran_id', session('tahun_anggaran_id'))
             ->select([
                 'spj.id as spj_id',
@@ -114,6 +123,7 @@ class SpjUsulanBelanjaController extends Controller
                 'spj.no_ba as pengadaan_no_ba',
                 'usulan.nama_pengusul',
                 'usulan.sub_kategori_rkbu_id',
+                'subkategori.nama_sub_kategori_rkbu',
                 'perusahaan.id_perusahaan',
                 'perusahaan.nama_perusahaan',
                 'master.id as master_spj_id',
@@ -170,6 +180,9 @@ class SpjUsulanBelanjaController extends Controller
 
         if ($request->filled('perusahaan_id')) {
             $query->where('perusahaan.id_perusahaan', $request->input('perusahaan_id'));
+        }
+        if ($request->filled('sub_kategori_rkbu_id')) {
+            $query->where('usulan.sub_kategori_rkbu_id', $request->input('sub_kategori_rkbu_id'));
         }
         if ($request->filled('status_spj')) {
             $query->where('spj.status_spj', $request->input('status_spj'));
@@ -284,7 +297,7 @@ class SpjUsulanBelanjaController extends Controller
             ->where('usulan.tahun_anggaran_id', session('tahun_anggaran_id'))
             ->whereNotNull('spj.status_spj')->distinct()->orderBy('spj.status_spj')->pluck('spj.status_spj');
 
-        return view('usulan_belanja.spj.providers', compact('spjs', 'perusahaans', 'statuses'));
+        return view('usulan_belanja.spj.providers', compact('spjs', 'perusahaans', 'subKategoris', 'statuses'));
     }
 
     public function create(UsulanBelanja $usulanBelanja)
@@ -424,8 +437,10 @@ class SpjUsulanBelanjaController extends Controller
             'usulanBelanja.pengusul',
             'usulanBelanja.tahunAnggaran',
             'usulanBelanja.rkbu.subKegiatan.kegiatan.program',
+            'usulanBelanja.rkbu.sumberDana',
             'usulanBelanja.rkbu.subKategoriRkbu',
             'usulanBelanja.rkbu.rekeningBelanja',
+            'usulanBelanja.sumberDana',
             'details',
         ]);
         $rkbu = $spj->usulanBelanja?->rkbu;
@@ -490,11 +505,12 @@ class SpjUsulanBelanjaController extends Controller
             'Direktur',
             'Bendahara',
         ], true) || app(PengadaanWorkflowController::class)->userCanAccessCurrentWorkflowStep($spj);
+        $workflowChecklist = app(PengadaanWorkflowController::class)->workflowChecklistData($spj);
         $pengadaanData = $hasPengadaanRole
             ? app(PengadaanWorkflowController::class)->panelData($spj)
             : [];
         return view('usulan_belanja.spj.show', array_merge(
-            compact('spj', 'items', 'namaPerusahaan', 'isAdmin', 'availableItems', 'canManageSpj', 'program', 'kegiatan', 'rekeningBelanja') + ['pengadaanPanelData' => $pengadaanData],
+            compact('spj', 'items', 'namaPerusahaan', 'isAdmin', 'availableItems', 'canManageSpj', 'program', 'kegiatan', 'rekeningBelanja', 'workflowChecklist') + ['pengadaanPanelData' => $pengadaanData],
             $pengadaanData
         ));
     }

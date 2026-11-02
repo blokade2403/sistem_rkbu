@@ -20,8 +20,27 @@
     $netto = $netto ?? (float) $spj->details->sum(fn ($detail) => (float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume);
     $nilaiPpn = $nilaiPpn ?? (float) $spj->details->sum(fn ($detail) => (float) ($detail->item?->harga_satuan ?? 0) * (float) $detail->volume * (float) ($detail->item?->ppn ?? 0) / 100);
     $totalAnggaran = $totalAnggaran ?? ($netto + $nilaiPpn);
+    $storagePublicUrl = static function ($path) {
+        $path = str_replace('\\', '/', trim((string) $path));
+        if (preg_match('/^(https?:)?\\/\\//i', $path)) return $path;
+        $path = ltrim($path, '/');
+        $path = preg_replace('#^(public/|storage/)#', '', $path);
+        return asset('storage/' . $path);
+    };
 @endphp
 
+<style>
+    .spj-stage-form-card { overflow: hidden; border: 1px solid #e7edf5 !important; border-radius: 16px; box-shadow: 0 8px 24px rgba(31,45,61,.045); }
+    .spj-stage-form-card > .card-header { min-height: 72px; padding: 1.2rem 1.7rem; border-bottom: 1px solid #edf1f7; background: linear-gradient(110deg, #f2f7ff 0%, #fff 75%); }
+    .spj-stage-form-card > .card-header .card-title { color: #1e293b; font-weight: 700; }
+    .spj-stage-form-card > .card-body { padding: clamp(1.25rem, 2.2vw, 2rem); }
+    .spj-stage-form-card .form-label { color: #344054; font-weight: 600; }
+    .spj-stage-form-card .form-control, .spj-stage-form-card .form-select { min-height: 46px; border-radius: 10px; border-color: #e1e7f0; transition: border-color .15s ease, box-shadow .15s ease; }
+    .spj-stage-form-card textarea.form-control { min-height: 110px; }
+    .spj-stage-form-card .form-control:focus, .spj-stage-form-card .form-select:focus { border-color: #93b7ff; box-shadow: 0 0 0 .2rem rgba(54, 110, 255, .1); }
+    .spj-stage-form-card form > .btn-primary, .spj-stage-form-card form .border-top > .btn-primary { padding: .75rem 1.25rem; border-radius: 10px; font-weight: 650; box-shadow: 0 5px 12px rgba(0, 123, 255, .14); }
+    @media (max-width: 575.98px) { .spj-stage-form-card > .card-header { padding: 1rem 1.2rem; } }
+</style>
 
  <div class="card card-bordered shadow-sm rounded-3 spj-workflow-process-card">
      <div class="card-header bg-light-primary border-0">
@@ -53,26 +72,26 @@
              @endforelse
          </ul>
          @if ($canPesanan && $step === 'input_pesanan')
-             <div class="card card-bordered mb-6">
+             <div class="card card-bordered spj-stage-form-card mb-6">
                  <div class="card-header">
                      <h4 class="card-title">1. Input Surat Pesanan</h4>
                  </div>
                  <div class="card-body">
                      <form method="POST" action="{{ route('usulan-belanja.pengadaan.pesanan', $spj->id) }}">@csrf
-                         <div class="row">
+                         <div class="row g-4">
                              <div class="col-md-4 mb-4"><label class="form-label">Nomor Surat Pesanan</label><input
-                                     name="no_surat_pesanan" class="form-control"
+                                     name="no_surat_pesanan" class="form-control form-control-solid"
                                      value="{{ old('no_surat_pesanan', $spj->no_surat_pesanan) }}" required></div>
                              <div class="col-md-4 mb-4"><label class="form-label">Tanggal Surat Pesanan</label><input
-                                     type="date" name="tgl_surat_pesanan" class="form-control"
+                                     type="date" name="tgl_surat_pesanan" class="form-control form-control-solid"
                                      value="{{ old('tgl_surat_pesanan', $spj->tgl_surat_pesanan) }}"></div>
                              <div class="col-md-4 mb-4"><label class="form-label">Batas Waktu Pekerjaan</label><input
-                                     type="date" name="jangka_waktu_pekerjaan" class="form-control"
+                                     type="date" name="jangka_waktu_pekerjaan" class="form-control form-control-solid"
                                      value="{{ old('jangka_waktu_pekerjaan', $masterInfo->jangka_waktu_pekerjaan ?? '') }}"><div class="form-text">Digunakan pada surat pesanan.</div></div>
                              <div class="col-md-4 mb-4"><label class="form-label">ID Paket</label><input name="idpaket"
-                                     class="form-control" value="{{ old('idpaket', $spj->idpaket) }}" required></div>
+                                     class="form-control form-control-solid" value="{{ old('idpaket', $spj->idpaket) }}" required></div>
                          </div>
-                         <button class="btn btn-primary">Simpan dan teruskan</button>
+                         <button class="btn btn-primary"><i class="fas fa-paper-plane me-2"></i>Simpan dan teruskan</button>
                      </form>
                  </div>
              </div>
@@ -109,34 +128,53 @@
          @endif
 
          @if ($canValidasi && $step === 'validasi_barang')
-             <div class="card card-bordered mb-6">
-                 <div class="card-header">
-                     <h4 class="card-title">3. Validasi Pengurus Barang</h4>
+             <div class="card card-bordered spj-stage-form-card border-primary border-opacity-25 shadow-sm rounded-4 mb-6 overflow-hidden">
+                 <div class="card-header bg-light-primary border-0 py-5">
+                     <div class="d-flex align-items-center gap-4">
+                         <span class="symbol symbol-45px symbol-circle flex-shrink-0"><span class="symbol-label bg-primary text-white"><i class="fas fa-boxes text-white fs-4"></i></span></span>
+                         <div><div class="text-primary text-uppercase fw-bold fs-8 mb-1">Pemeriksaan Barang</div><h4 class="card-title mb-0">3. Validasi Pengurus Barang</h4></div>
+                     </div>
                  </div>
-                 <div class="card-body">
+                 <div class="card-body p-6 p-lg-8">
                      <form method="POST" action="{{ route('usulan-belanja.pengadaan.validasi', $spj->id) }}">@csrf
-                         <div class="mb-4"><label class="form-label">Keputusan</label><select name="keputusan"
-                                 class="form-select" required>
-                                 <option value="">Pilih keputusan</option>
-                                 <option value="setuju">Setujui</option>
-                                 <option value="revisi">Kembalikan untuk perbaikan</option>
-                             </select></div>
-                         <div class="row">
-                             <div class="col-md-6 mb-4"><label class="form-label">Nomor BAST serah terima unit</label>
-                                 <input type="text" name="no_bast_serah_terima_unit" class="form-control"
+                         <div class="mb-6">
+                             <label class="form-label fw-bold fs-6 mb-3">Pilih keputusan</label>
+                             <div class="row g-3">
+                                 <div class="col-md-6">
+                                     <input class="btn-check" type="radio" name="keputusan" id="barang-decision-approve" value="setuju" @checked(old('keputusan') === 'setuju') required>
+                                     <label class="btn btn-outline btn-outline-dashed btn-outline-success d-flex align-items-center text-start p-4 h-100 w-100" for="barang-decision-approve">
+                                         <span class="symbol symbol-40px symbol-circle me-3"><span class="symbol-label bg-light-success"><i class="fas fa-check text-success"></i></span></span>
+                                         <span><span class="d-block fw-bold text-gray-900">Barang sesuai dan disetujui</span><span class="text-muted fs-7">Lanjutkan proses penerimaan barang.</span></span>
+                                     </label>
+                                 </div>
+                                 <div class="col-md-6">
+                                     <input class="btn-check" type="radio" name="keputusan" id="barang-decision-revision" value="revisi" @checked(old('keputusan') === 'revisi') required>
+                                     <label class="btn btn-outline btn-outline-dashed btn-outline-warning d-flex align-items-center text-start p-4 h-100 w-100" for="barang-decision-revision">
+                                         <span class="symbol symbol-40px symbol-circle me-3"><span class="symbol-label bg-light-warning"><i class="fas fa-undo text-warning"></i></span></span>
+                                         <span><span class="d-block fw-bold text-gray-900">Kembalikan untuk perbaikan</span><span class="text-muted fs-7">Minta tindak lanjut atas barang atau dokumen.</span></span>
+                                     </label>
+                                 </div>
+                             </div>
+                         </div>
+                         <div class="row g-4 mb-2">
+                             <div class="col-md-6"><label class="form-label fw-semibold">Nomor BAST serah terima unit</label>
+                                 <input type="text" name="no_bast_serah_terima_unit" class="form-control form-control-solid"
                                      value="{{ old('no_bast_serah_terima_unit', $spj->no_bast_serah_terima_unit) }}" maxlength="255">
                                  <div class="form-text">Wajib diisi saat barang disetujui.</div>
                              </div>
-                             <div class="col-md-6 mb-4"><label class="form-label">Nama penerima barang</label>
-                                 <input type="text" name="nama_penerima_barang" class="form-control"
+                             <div class="col-md-6"><label class="form-label fw-semibold">Nama penerima barang</label>
+                                 <input type="text" name="nama_penerima_barang" class="form-control form-control-solid"
                                      value="{{ old('nama_penerima_barang', $spj->nama_penerima_barang) }}" maxlength="255">
                                  <div class="form-text">Wajib diisi saat barang disetujui.</div>
                              </div>
                          </div>
-                         <div class="mb-4"><label class="form-label">Catatan validasi</label>
-                             <textarea name="keterangan_verif_pengurus_barang" class="form-control" rows="3" required>{{ old('keterangan_verif_pengurus_barang') }}</textarea>
+                         <div class="mb-6 mt-4"><label for="barang-validation-note" class="form-label fw-semibold">Catatan validasi</label>
+                             <textarea id="barang-validation-note" name="keterangan_verif_pengurus_barang" class="form-control form-control-solid" rows="4" placeholder="Tuliskan hasil pemeriksaan atau hal yang perlu diperbaiki..." required>{{ old('keterangan_verif_pengurus_barang') }}</textarea>
                          </div>
-                         <button class="btn btn-primary">Simpan validasi</button>
+                         <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 border-top pt-5">
+                             <span class="text-muted fs-7"><i class="fas fa-info-circle me-1"></i>Hasil validasi akan tercatat di riwayat pengadaan.</span>
+                             <button class="btn btn-primary px-6"><i class="fas fa-clipboard-check me-2"></i>Simpan validasi</button>
+                         </div>
                      </form>
                  </div>
              </div>
@@ -151,21 +189,25 @@
          @endif
 
          @if ($canBast && $step === 'input_bast')
-             <div class="card card-bordered mb-6">
+             <div class="card card-bordered spj-stage-form-card mb-6">
                  <div class="card-header">
                      <h4 class="card-title">4. Input Data BAST</h4>
                  </div>
                  <div class="card-body">
                      <form method="POST" action="{{ route('usulan-belanja.pengadaan.bast', $spj->id) }}">@csrf
-                         <div class="row">
+                         <div class="row g-4">
                              @foreach (['tgl_bast' => 'Tanggal BAST', 'no_ba' => 'Nomor BA', 'no_ba_hp' => 'Nomor BA HP', 'no_ba_bp' => 'Nomor BA BP', 'no_dpa' => 'Nomor DPA'] as $field => $label)
-                                 <div class="col-md-4 mb-4"><label
+                                 <div class="col-md-4"><label
                                          class="form-label">{{ $label }}</label><input
                                          name="{{ $field }}"
-                                         type="{{ $field === 'tgl_bast' ? 'date' : 'text' }}" class="form-control"
+                                         type="{{ $field === 'tgl_bast' ? 'date' : 'text' }}" class="form-control form-control-solid"
                                          value="{{ old($field, $spj->{$field}) }}" required></div>
                              @endforeach
-                        </div><button class="btn btn-primary">Simpan BAST dan teruskan ke PPK</button>
+                        </div>
+                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 border-top pt-5 mt-5">
+                            <span class="text-muted fs-7"><i class="fas fa-info-circle me-1"></i>Data BAST akan digunakan untuk dokumen serah terima.</span>
+                            <button class="btn btn-primary"><i class="fas fa-paper-plane me-2"></i>Simpan BAST dan teruskan ke PPK</button>
+                        </div>
                      </form>
                  </div>
              </div>
@@ -184,7 +226,7 @@
          @endif
 
          @if ($step === 'input_tukar_faktur')
-             <div class="card card-bordered mb-6">
+             <div class="card card-bordered spj-stage-form-card mb-6">
                  <div class="card-header bg-light-warning">
                      <h4 class="card-title">5. Update Tukar Faktur</h4>
                  </div>
@@ -220,61 +262,110 @@
          @endif
 
          @if ($step === 'workflow' && $workflowStep)
-             <div class="card card-bordered mb-6">
-                 <div class="card-header"><h4 class="card-title">{{ $workflowStepName }} <span class="text-muted fs-7">(Urutan {{ $workflowStep->step_order }})</span></h4></div>
-                 <div class="card-body">
+            <div class="card card-bordered spj-stage-form-card border-primary border-opacity-25 shadow-sm rounded-4 mb-6 overflow-hidden">
+                <div class="card-header bg-light-primary border-0 py-5">
+                    <div class="d-flex align-items-center gap-4">
+                        <span class="symbol symbol-45px symbol-circle flex-shrink-0">
+                            <span class="symbol-label bg-primary text-white"><i class="fas fa-clipboard-check text-white fs-4"></i></span>
+                        </span>
+                        <div class="flex-grow-1">
+                            <div class="text-primary text-uppercase fw-bold fs-8 mb-1">Persetujuan Pengadaan</div>
+                            <h4 class="card-title mb-0">{{ $workflowStepName }}</h4>
+                        </div>
+                        <span class="badge badge-light-primary fs-7 px-3 py-2">Tahap {{ $workflowStep->step_order }}</span>
+                    </div>
+                </div>
+                <div class="card-body p-6 p-lg-8">
                      @if ($canWorkflowStep)
                          <form method="POST" action="{{ route('usulan-belanja.pengadaan.lanjutan', $spj->id) }}">@csrf
-                             <div class="mb-4"><label class="form-label">Keputusan</label>
-                                 <select name="keputusan" class="form-select" required>
-                                     <option value="">Pilih keputusan</option>
-                                     <option value="setuju">Setujui / teruskan</option>
-                                     <option value="revisi">Kembalikan untuk revisi</option>
-                                 </select>
+                            <div class="mb-6">
+                                <label class="form-label fw-bold fs-6 mb-3">Pilih keputusan</label>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <input class="btn-check" type="radio" name="keputusan" id="workflow-decision-approve" value="setuju" @checked(old('keputusan') === 'setuju') required>
+                                        <label class="btn btn-outline btn-outline-dashed btn-outline-success d-flex align-items-center text-start p-4 h-100 w-100" for="workflow-decision-approve">
+                                            <span class="symbol symbol-40px symbol-circle me-3"><span class="symbol-label bg-light-success"><i class="fas fa-check text-success"></i></span></span>
+                                            <span><span class="d-block fw-bold text-gray-900">Setujui dan teruskan</span><span class="text-muted fs-7">SPJ diteruskan ke tahap berikutnya.</span></span>
+                                        </label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <input class="btn-check" type="radio" name="keputusan" id="workflow-decision-revision" value="revisi" @checked(old('keputusan') === 'revisi') required>
+                                        <label class="btn btn-outline btn-outline-dashed btn-outline-warning d-flex align-items-center text-start p-4 h-100 w-100" for="workflow-decision-revision">
+                                            <span class="symbol symbol-40px symbol-circle me-3"><span class="symbol-label bg-light-warning"><i class="fas fa-undo text-warning"></i></span></span>
+                                            <span><span class="d-block fw-bold text-gray-900">Kembalikan untuk revisi</span><span class="text-muted fs-7">Pemohon perlu memperbaiki dokumen atau data.</span></span>
+                                        </label>
+                                    </div>
+                                </div>
                              </div>
-                             <div class="mb-4"><label class="form-label">Catatan validasi</label><textarea name="catatan" class="form-control" rows="3">{{ old('catatan') }}</textarea></div>
-                             <button class="btn btn-primary">Simpan dan teruskan sesuai workflow</button>
+                            <div class="mb-6">
+                                <label for="workflow-approval-note" class="form-label fw-bold">Catatan validasi <span class="text-muted fw-normal">(opsional)</span></label>
+                                <textarea id="workflow-approval-note" name="catatan" class="form-control form-control-solid" rows="4" placeholder="Tuliskan catatan untuk pemohon atau tahap berikutnya...">{{ old('catatan') }}</textarea>
+                            </div>
+                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 border-top pt-5">
+                                <span class="text-muted fs-7"><i class="fas fa-info-circle me-1"></i>Keputusan akan tercatat pada riwayat workflow.</span>
+                                <button class="btn btn-primary px-6"><i class="fas fa-paper-plane me-2"></i>Simpan keputusan</button>
+                            </div>
                          </form>
                      @else
-                         <div class="text-muted">Menunggu validasi dari {{ $workflowStepName }} sesuai penugasan workflow.</div>
+                        <div class="d-flex align-items-center gap-3 p-4 rounded bg-light-warning">
+                            <i class="fas fa-hourglass-half text-warning fs-2"></i>
+                            <div><div class="fw-bold text-gray-800">Menunggu validasi</div><div class="text-muted">Menunggu persetujuan dari {{ $workflowStepName }} sesuai penugasan workflow.</div></div>
+                        </div>
                      @endif
                  </div>
              </div>
          @endif
 
          @if ($step === 'input_penyerahan_spj_admin')
-             <div class="card card-bordered mb-6">
-                 <div class="card-header bg-light-primary">
-                     <h4 class="card-title">Penyerahan SPJ oleh Admin Pengadaan</h4>
+             <div class="card card-bordered spj-stage-form-card border-primary border-opacity-25 shadow-sm rounded-4 mb-6 overflow-hidden">
+                 <div class="card-header bg-light-primary border-0 py-5">
+                     <div class="d-flex align-items-center gap-4">
+                         <span class="symbol symbol-45px symbol-circle flex-shrink-0"><span class="symbol-label bg-primary text-white"><i class="fas fa-file-alt text-white fs-4"></i></span></span>
+                         <div><div class="text-primary text-uppercase fw-bold fs-8 mb-1">Pemeriksaan Dokumen</div><h4 class="card-title mb-0">Penyerahan SPJ oleh Admin Pengadaan</h4></div>
+                     </div>
                  </div>
-                 <div class="card-body">
+                 <div class="card-body p-6 p-lg-8">
                      @if ($canPenyerahanSpjAdmin)
                          <form method="POST" enctype="multipart/form-data" action="{{ route('usulan-belanja.pengadaan.penyerahan-dokumen', $spj->id) }}">@csrf
-                             <div class="row">
+                             <div class="row g-4">
                                  <div class="col-md-6 mb-4">
-                                     <label class="form-label">Tanggal Penyerahan SPJ</label>
-                                     <input type="date" name="tanggal_penyerahan_spj" class="form-control" value="{{ old('tanggal_penyerahan_spj', $masterInfo->tanggal_penyerahan_spj ?? '') }}" required>
+                                     <label class="form-label fw-semibold">Tanggal Penyerahan SPJ</label>
+                                     <input type="date" name="tanggal_penyerahan_spj" class="form-control form-control-solid" value="{{ old('tanggal_penyerahan_spj', $masterInfo->tanggal_penyerahan_spj ?? '') }}" required>
                                  </div>
-                                 <div class="col-md-6 mb-4">
-                                     <label class="form-label">Status SPJ</label>
-                                     <select name="status_serah_terima_bendahara" class="form-select" required>
-                                         <option value="">Pilih status</option>
-                                         <option value="Selesai" @selected(old('status_serah_terima_bendahara', $masterInfo->status_serah_terima_bendahara ?? '') === 'Selesai')>Selesai</option>
-                                         <option value="Revisi" @selected(old('status_serah_terima_bendahara', $masterInfo->status_serah_terima_bendahara ?? '') === 'Revisi')>Revisi</option>
-                                     </select>
+                                 <div class="col-12">
+                                     <label class="form-label fw-bold fs-6 mb-3">Status dokumen SPJ</label>
+                                     <div class="row g-3">
+                                         <div class="col-md-6">
+                                             <input class="btn-check" type="radio" name="status_serah_terima_bendahara" id="handover-status-complete" value="Selesai" @checked(old('status_serah_terima_bendahara', $masterInfo->status_serah_terima_bendahara ?? '') === 'Selesai') required>
+                                             <label class="btn btn-outline btn-outline-dashed btn-outline-success d-flex align-items-center text-start p-4 h-100 w-100" for="handover-status-complete">
+                                                 <span class="symbol symbol-40px symbol-circle me-3"><span class="symbol-label bg-light-success"><i class="fas fa-check text-success"></i></span></span>
+                                                 <span><span class="d-block fw-bold text-gray-900">Dokumen lengkap</span><span class="text-muted fs-7">Teruskan SPJ ke proses berikutnya.</span></span>
+                                             </label>
+                                         </div>
+                                         <div class="col-md-6">
+                                             <input class="btn-check" type="radio" name="status_serah_terima_bendahara" id="handover-status-revision" value="Revisi" @checked(old('status_serah_terima_bendahara', $masterInfo->status_serah_terima_bendahara ?? '') === 'Revisi') required>
+                                             <label class="btn btn-outline btn-outline-dashed btn-outline-warning d-flex align-items-center text-start p-4 h-100 w-100" for="handover-status-revision">
+                                                 <span class="symbol symbol-40px symbol-circle me-3"><span class="symbol-label bg-light-warning"><i class="fas fa-undo text-warning"></i></span></span>
+                                                 <span><span class="d-block fw-bold text-gray-900">Perlu revisi</span><span class="text-muted fs-7">Kembalikan dokumen untuk diperbaiki.</span></span>
+                                             </label>
+                                         </div>
+                                     </div>
                                  </div>
                                  @foreach (['upload_spj_1' => 'Dokumen SPJ 1', 'upload_spj_2' => 'Dokumen SPJ 2'] as $field => $label)
                                      <div class="col-md-6 mb-4">
-                                         <label class="form-label">{{ $label }} (PDF, maks. 20 MB)</label>
-                                         <input type="file" name="{{ $field }}" class="form-control" accept=".pdf,application/pdf">
+                                         <label class="form-label fw-semibold">{{ $label }} (PDF, maks. 20 MB)</label>
+                                         <input type="file" name="{{ $field }}" class="form-control form-control-solid" accept=".pdf,application/pdf">
                                          @if (!empty($masterInfo->{$field}))
-                                             <a class="form-text d-inline-block" href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($masterInfo->{$field}) }}" target="_blank" rel="noopener">Lihat dokumen yang sudah diunggah</a>
+                                             <a class="form-text d-inline-block" href="{{ $storagePublicUrl($masterInfo->{$field}) }}" target="_blank" rel="noopener">Lihat dokumen yang sudah diunggah</a>
                                          @endif
                                      </div>
                                  @endforeach
                              </div>
-                             <div class="mb-4"><label class="form-label">Catatan</label><textarea name="catatan" class="form-control" rows="3">{{ old('catatan') }}</textarea></div>
-                             <button class="btn btn-primary">Simpan dan Proses</button>
+                             <div class="mb-6 mt-2"><label for="handover-note" class="form-label fw-semibold">Catatan <span class="text-muted fw-normal">(opsional)</span></label><textarea id="handover-note" name="catatan" class="form-control form-control-solid" rows="4" placeholder="Tambahkan catatan untuk bendahara atau admin...">{{ old('catatan') }}</textarea></div>
+                             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 border-top pt-5">
+                                 <span class="text-muted fs-7"><i class="fas fa-info-circle me-1"></i>Dokumen PDF dapat diunggah atau diperbarui pada tahap ini.</span>
+                                 <button class="btn btn-primary px-6"><i class="fas fa-paper-plane me-2"></i>Simpan dan proses</button>
+                             </div>
                          </form>
                      @else
                          <div class="text-muted">Menunggu Admin Pengadaan mengisi tanggal penyerahan, status, dan dokumen SPJ.</div>
@@ -289,7 +380,7 @@
                  <div class="card-body d-flex flex-wrap gap-4">
                      @foreach (['upload_spj_1' => 'Dokumen SPJ 1', 'upload_spj_2' => 'Dokumen SPJ 2'] as $field => $label)
                          @if (!empty($masterInfo->{$field}))
-                             <a class="btn btn-light-primary" href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($masterInfo->{$field}) }}" target="_blank" rel="noopener">{{ $label }} <i class="ki-duotone ki-exit-up fs-5 ms-1"></i></a>
+                             <a class="btn btn-light-primary" href="{{ $storagePublicUrl($masterInfo->{$field}) }}" target="_blank" rel="noopener">{{ $label }} <i class="ki-duotone ki-exit-up fs-5 ms-1"></i></a>
                          @endif
                      @endforeach
                  </div>
@@ -318,7 +409,7 @@
                          <div class="border rounded p-4 h-100">
                              <div class="fw-semibold mb-2">Bukti Pembayaran</div>
                              @if ($buktiLunas)
-                                 <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($buktiLunas) }}" target="_blank" rel="noopener">Lihat bukti pembayaran</a>
+                                 <a href="{{ $storagePublicUrl($buktiLunas) }}" target="_blank" rel="noopener">Lihat bukti pembayaran</a>
                              @else
                                  <span class="text-muted">Tidak ada bukti pembayaran.</span>
                              @endif
@@ -340,18 +431,34 @@
                      'verifikasi_bendahara' => 'Konfirmasi Terima SPJ', 'pembayaran' => 'Pembayaran Bendahara',
                  ];
              @endphp
-             <div class="card card-bordered mb-6">
-                 <div class="card-header"><h4 class="card-title">{{ $formLabels[$step] ?? 'Proses SPJ' }}</h4></div>
-                 <div class="card-body">
+             <div class="card card-bordered spj-stage-form-card border-primary border-opacity-25 shadow-sm rounded-4 mb-6 overflow-hidden">
+                 <div class="card-header bg-light-primary border-0 py-5">
+                     <div class="d-flex align-items-center gap-4">
+                         <span class="symbol symbol-45px symbol-circle flex-shrink-0"><span class="symbol-label bg-primary text-white"><i class="fas fa-clipboard-check text-white fs-4"></i></span></span>
+                         <div><div class="text-primary text-uppercase fw-bold fs-8 mb-1">Persetujuan Pengadaan</div><h4 class="card-title mb-0">{{ $formLabels[$step] ?? 'Proses SPJ' }}</h4></div>
+                     </div>
+                 </div>
+                 <div class="card-body p-6 p-lg-8">
                      <form method="POST" enctype="multipart/form-data" action="{{ route('usulan-belanja.pengadaan.lanjutan', $spj->id) }}">@csrf
                          @if ($step !== 'pembayaran')
-                             <div class="mb-4">
-                                 <label class="form-label">Keputusan</label>
-                                 <select name="keputusan" class="form-select" required>
-                                     <option value="">Pilih keputusan</option>
-                                     <option value="setuju">Setujui / teruskan</option>
-                                     <option value="revisi">Kembalikan untuk revisi</option>
-                                 </select>
+                             <div class="mb-6">
+                                 <label class="form-label fw-bold fs-6 mb-3">Pilih keputusan</label>
+                                 <div class="row g-3">
+                                     <div class="col-md-6">
+                                         <input class="btn-check" type="radio" name="keputusan" id="legacy-workflow-approve" value="setuju" @checked(old('keputusan') === 'setuju') required>
+                                         <label class="btn btn-outline btn-outline-dashed btn-outline-success d-flex align-items-center text-start p-4 h-100 w-100" for="legacy-workflow-approve">
+                                             <span class="symbol symbol-40px symbol-circle me-3"><span class="symbol-label bg-light-success"><i class="fas fa-check text-success"></i></span></span>
+                                             <span><span class="d-block fw-bold text-gray-900">Setujui dan teruskan</span><span class="text-muted fs-7">SPJ diteruskan ke tahap berikutnya.</span></span>
+                                         </label>
+                                     </div>
+                                     <div class="col-md-6">
+                                         <input class="btn-check" type="radio" name="keputusan" id="legacy-workflow-revision" value="revisi" @checked(old('keputusan') === 'revisi') required>
+                                         <label class="btn btn-outline btn-outline-dashed btn-outline-warning d-flex align-items-center text-start p-4 h-100 w-100" for="legacy-workflow-revision">
+                                             <span class="symbol symbol-40px symbol-circle me-3"><span class="symbol-label bg-light-warning"><i class="fas fa-undo text-warning"></i></span></span>
+                                             <span><span class="d-block fw-bold text-gray-900">Kembalikan untuk revisi</span><span class="text-muted fs-7">Pemohon perlu memperbaiki dokumen atau data.</span></span>
+                                         </label>
+                                     </div>
+                                 </div>
                              </div>
                          @endif
                          @if ($step === 'serah_terima_bendahara')
@@ -379,12 +486,30 @@
                                  <div class="col-md-6 mb-4"><label class="form-label">Tanggal pembayaran</label><input type="date" name="tanggal_pembayaran" class="form-control" value="{{ old('tanggal_pembayaran', now()->toDateString()) }}" required></div>
                                  <div class="col-md-6 mb-4"><label class="form-label">Jumlah yang dibayarkan (Harga dasar + total pajak)</label><input type="number" min="0" step="1" name="pembayaran" id="jumlah-pembayaran" class="form-control" value="{{ old('pembayaran') }}" readonly></div>
                                  <div class="col-md-6 mb-4"><label class="form-label">Sisa pembayaran (Rp)</label><input type="text" id="sisa-pembayaran" class="form-control" value="{{ number_format(max(0, $sisaTersimpan), 0, ',', '.') }}" readonly data-due="{{ max(0, $sisaTersimpan) }}"></div>
-                                 <div class="col-md-6 mb-4"><label class="form-label">Validasi pembayaran</label><select name="status_pembayaran" id="status-pembayaran" class="form-select" required><option value="">Pilih status</option><option value="Selesai" @selected(old('status_pembayaran', $masterInfo->status_pembayaran ?? '') === 'Selesai')>Selesai</option><option value="Revisi" @selected(old('status_pembayaran', $masterInfo->status_pembayaran ?? '') === 'Revisi')>Revisi</option></select></div>
+                                 <div class="col-12 mb-4">
+                                     <label class="form-label fw-bold fs-6 mb-3">Validasi pembayaran</label>
+                                     <div class="row g-3">
+                                         <div class="col-md-6">
+                                             <input class="btn-check" type="radio" name="status_pembayaran" id="payment-status-complete" value="Selesai" @checked(old('status_pembayaran', $masterInfo->status_pembayaran ?? '') === 'Selesai') required>
+                                             <label class="btn btn-outline btn-outline-dashed btn-outline-success d-flex align-items-center text-start p-4 h-100 w-100" for="payment-status-complete">
+                                                 <span class="symbol symbol-40px symbol-circle me-3"><span class="symbol-label bg-light-success"><i class="fas fa-check text-success"></i></span></span>
+                                                 <span><span class="d-block fw-bold text-gray-900">Pembayaran selesai</span><span class="text-muted fs-7">Simpan pembayaran dan selesaikan SPJ.</span></span>
+                                             </label>
+                                         </div>
+                                         <div class="col-md-6">
+                                             <input class="btn-check" type="radio" name="status_pembayaran" id="payment-status-revision" value="Revisi" @checked(old('status_pembayaran', $masterInfo->status_pembayaran ?? '') === 'Revisi') required>
+                                             <label class="btn btn-outline btn-outline-dashed btn-outline-warning d-flex align-items-center text-start p-4 h-100 w-100" for="payment-status-revision">
+                                                 <span class="symbol symbol-40px symbol-circle me-3"><span class="symbol-label bg-light-warning"><i class="fas fa-undo text-warning"></i></span></span>
+                                                 <span><span class="d-block fw-bold text-gray-900">Perlu revisi</span><span class="text-muted fs-7">Koreksi data pembayaran sebelum disimpan.</span></span>
+                                             </label>
+                                         </div>
+                                     </div>
+                                 </div>
                                  <div class="col-md-6 mb-4"><label class="form-label">Kode Billing PPN</label><input type="text" name="kode_billingppn" class="form-control" value="{{ old('kode_billingppn', $masterInfo->kode_billingppn ?? '') }}"></div>
                                  <div class="col-md-6 mb-4"><label class="form-label">Kode Billing PPh22</label><input type="text" name="kode_billingpph22" class="form-control" value="{{ old('kode_billingpph22', $masterInfo->kode_billingpph22 ?? '') }}"></div>
                                  <div class="col-md-6 mb-4"><label class="form-label">Bukti bayar (PDF/JPG/PNG, maks. 5 MB; wajib jika status Selesai)</label><input type="file" name="bukti_bayar" class="form-control" accept=".pdf,.jpg,.jpeg,.png"></div>
                                  @if (!empty($masterInfo->bukti_bayar))
-                                     <div class="col-12 mb-4"><a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($masterInfo->bukti_bayar) }}" target="_blank" rel="noopener">Lihat bukti pembayaran terakhir</a></div>
+                                     <div class="col-12 mb-4"><a href="{{ $storagePublicUrl($masterInfo->bukti_bayar) }}" target="_blank" rel="noopener">Lihat bukti pembayaran terakhir</a></div>
                                  @endif
                              </div>
                              <script>
@@ -393,7 +518,7 @@
                                      const remaining = document.getElementById('sisa-pembayaran');
                                      const taxTotal = document.getElementById('total-pajak');
                                      const taxRates = Array.from(document.querySelectorAll('.tax-rate'));
-                                     const status = document.getElementById('status-pembayaran');
+                                     const statusOptions = Array.from(document.querySelectorAll('[name="status_pembayaran"]'));
                                      const proof = document.querySelector('[name="bukti_bayar"]');
                                      const base = {{ $hargaDasarUsulan }};
                                      if (!amount || !remaining) return;
@@ -406,7 +531,8 @@
                                          remaining.value = Math.max(0, due - Number(amount.value || 0)).toLocaleString('id-ID');
                                      };
                                      const updateStatusFields = () => {
-                                         const completing = !status || status.value === 'Selesai';
+                                         const selectedStatus = statusOptions.find(option => option.checked)?.value;
+                                         const completing = !statusOptions.length || selectedStatus === 'Selesai';
                                          amount.required = completing;
                                          amount.disabled = !completing;
                                          if (!completing) amount.value = '';
@@ -414,14 +540,17 @@
                                          if (completing) updateTax();
                                      };
                                      taxRates.forEach(input => input.addEventListener('input', updateTax));
-                                     status?.addEventListener('change', updateStatusFields);
+                                     statusOptions.forEach(option => option.addEventListener('change', updateStatusFields));
                                      updateTax();
                                      updateStatusFields();
                                  })();
                              </script>
                          @endif
-                         <div class="mb-4"><label class="form-label">Catatan</label><textarea name="catatan" class="form-control" rows="3">{{ old('catatan') }}</textarea></div>
-                         <button class="btn btn-primary">{{ $step === 'pembayaran' ? 'Simpan pembayaran dan selesaikan SPJ' : 'Simpan dan teruskan' }}</button>
+                         <div class="mb-6 mt-4"><label for="stage-approval-note" class="form-label fw-semibold">Catatan <span class="text-muted fw-normal">(opsional)</span></label><textarea id="stage-approval-note" name="catatan" class="form-control form-control-solid" rows="4" placeholder="Tambahkan catatan untuk tahap berikutnya...">{{ old('catatan') }}</textarea></div>
+                         <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 border-top pt-5">
+                             <span class="text-muted fs-7"><i class="fas fa-info-circle me-1"></i>Keputusan dan catatan tersimpan dalam riwayat alur.</span>
+                             <button class="btn btn-primary px-6"><i class="fas fa-paper-plane me-2"></i>{{ $step === 'pembayaran' ? 'Simpan pembayaran dan selesaikan SPJ' : 'Simpan dan teruskan' }}</button>
+                         </div>
                      </form>
                  </div>
              </div>

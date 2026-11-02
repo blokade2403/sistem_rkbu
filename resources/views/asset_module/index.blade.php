@@ -98,7 +98,7 @@
                                 <td>{{ $asset->pengguna_asset ?: $asset->lokasi_asset ?: '-' }}</td>
                                 <td>{{ $asset->rkbu?->nomor_rkbu ?: ($asset->hibah ? 'Hibah' : 'Aset awal') }}</td>
                                 <td class="text-end">{{ $rupiah($asset->total_anggaran_asset ?: $asset->harga_asset) }}</td>
-                                <td><a href="{{ route('asset.scan', $asset->id_asset) }}" target="_blank" title="Pindai untuk membuka detail"><img src="{{ route('asset.qr', $asset->id_asset) }}" alt="QR {{ $asset->nama_asset }}" width="72" height="72" loading="lazy"></a></td>
+                                <td><a href="{{ route('asset.scan', $asset->id_asset) }}" target="_blank" title="Pindai untuk membuka detail"><img src="{{ asset('storage/' . $asset->qrcode_path) }}" alt="QR {{ $asset->nama_asset }}" width="72" height="72" loading="lazy"></a></td>
                                 <td class="text-end text-nowrap">
                                     <a href="{{ route('asset-module.show', $asset) }}" class="btn btn-sm btn-light-info">Detail</a>
                                     <a href="{{ route('asset-module.edit', $asset) }}" class="btn btn-sm btn-light-primary">Ubah</a>
@@ -144,7 +144,7 @@
                                 <td>{{ $asset->unit?->nama_unit ?: '-' }}</td>
                                 <td><span class="badge badge-light-danger">{{ $asset->kondisi_asset }}</span></td>
                                 <td>{{ $proposalHistory?->description ?: 'Usulan penghapusan diajukan.' }}</td>
-                                <td><a href="{{ route('asset.scan', $asset->id_asset) }}" target="_blank"><img src="{{ route('asset.qr', $asset->id_asset) }}" alt="QR {{ $asset->nama_asset }}" width="64" height="64" loading="lazy"></a></td>
+                                <td><a href="{{ route('asset.scan', $asset->id_asset) }}" target="_blank"><img src="{{ asset('storage/' . $asset->qrcode_path) }}" alt="QR {{ $asset->nama_asset }}" width="64" height="64" loading="lazy"></a></td>
                                 <td><a href="{{ route('asset-module.show', $asset) }}" class="btn btn-sm btn-light-info">Detail & Riwayat</a></td>
                             </tr>
                         @empty

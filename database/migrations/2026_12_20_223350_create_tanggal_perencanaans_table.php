@@ -11,10 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('tanggal_perencanaans')) {
+            return;
+        }
+
         Schema::create('tanggal_perencanaans', function (Blueprint $table) {
             $table->uuid('id_tanggal_perencanaan')->primary();
             $table->foreignUuid('id_tahun_anggaran')->references('id')->on('tahun_anggarans')->onDelete('cascade');
-            $table->foreignUuid('id_fase')->references('id_fase')->on('fases')->onDelete('cascade');
+            $table->foreignUuid('fase_id')->references('id')->on('fases')->onDelete('cascade');
             $table->date('tanggal');
             $table->string('no_dpa')->nullable();
             $table->string('kota')->nullable();
@@ -29,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tanggal_perencanaans');
+        // This legacy duplicate migration must not drop the table created by the earlier migration.
     }
 };

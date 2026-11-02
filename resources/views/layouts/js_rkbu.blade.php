@@ -161,20 +161,16 @@
 
                     // }
 
-                   error: function(xhr) {
+                    error: function(xhr) {
+                        const message = xhr.responseJSON?.message || 'Terjadi kesalahan saat mengajukan RKBU.';
+                        const isAnalysisRequired = message === 'Wajib untuk Input Analisa Kebutuhan RKBU';
 
-    console.log('STATUS:', xhr.status);
-    console.log('RESPONSE:', xhr.responseText);
-
-    Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        html: '<pre style="text-align:left;max-height:400px;overflow:auto;">'
-            + xhr.responseText +
-            '</pre>'
-    });
-
-}
+                        Swal.fire({
+                            icon: isAnalysisRequired ? 'warning' : 'error',
+                            title: isAnalysisRequired ? 'Peringatan' : 'Gagal',
+                            text: message
+                        });
+                    }
                 });
 
             }

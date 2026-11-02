@@ -66,6 +66,19 @@
                             </div>
                         </div>
                         <div class="mb-7">
+                            <div class="card card-bordered mb-5">
+                                <div class="card-header">
+                                    <h3 class="card-title">Analisis Kebutuhan RKBU</h3>
+                                    <a href="{{ $analysisPreviewUrl }}" target="_blank" rel="noopener" class="btn btn-sm btn-light-primary" title="Pratinjau analisa kebutuhan sebelum mengunduh">
+                                        <i class="fas fa-eye me-2"></i>Preview Analisa
+                                    </a>
+                                </div>
+                                <div class="card-body">
+                                    @foreach ([['latar_belakang','Latar Belakang'],['pembahasan_analisis','Pembahasan / Analisis'],['maksud_tujuan','Maksud dan Tujuan'],['target_sasaran','Target dan Sasaran'],['standar_kebutuhan','Standar Kebutuhan'],['eksisting','Eksisting'],['kondisi_baik','Kondisi Alat Baik'],['kondisi_rusak_berat','Kondisi Alat Rusak Berat'],['user_pengguna','User / Pengguna']] as [$field,$label])
+                                        <div class="mb-3"><span class="fw-bolder">{{ $label }}:</span> {{ $barjas->$field ?? '-' }}{{ in_array($field, ['standar_kebutuhan','eksisting','kondisi_baik','kondisi_rusak_berat'], true) ? ' unit' : '' }}</div>
+                                    @endforeach
+                                </div>
+                            </div>
                             <div class="text-gray-800 mb-5">
                                 <span class="fw-bolder">Spesifikasi Barang :</span>
                                 {{ $barjas->spesifikasi ?? '-' }}

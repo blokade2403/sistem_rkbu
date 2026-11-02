@@ -31,6 +31,18 @@
         </div>
 
         <div class="row g-5 mb-8">
+            @if (auth()->user()->hasRole('Perencana') || auth()->user()->hasRole('Super Admin'))
+                <div class="col-md-6 col-xxl-4">
+                    <a href="{{ route('perencanaan.tugas.index') }}" class="module-card card h-100 border-0 shadow-sm text-decoration-none">
+                        <div class="card-body p-6">
+                            <div class="module-icon bg-light-primary text-primary"><i class="fas fa-calendar-check"></i></div>
+                            <div class="d-flex align-items-center gap-2 mt-5 mb-2"><h3 class="fs-4 fw-bold text-gray-900 mb-0">Tugas Perencanaan</h3><span class="badge badge-light-success">Aktif</span></div>
+                            <p class="text-gray-600 mb-4">Pantau deadline, catat tugas, dan lihat agenda perencanaan dalam kalender.</p>
+                            <span class="module-link text-primary fw-bold">Buka Tugas Perencanaan <i class="fas fa-arrow-right ms-1"></i></span>
+                        </div>
+                    </a>
+                </div>
+            @endif
             <div class="col-md-6 col-xxl-4">
                 <a href="{{ route('rkbu.index') }}" class="module-card card h-100 border-0 shadow-sm text-decoration-none">
                     <div class="card-body p-6">

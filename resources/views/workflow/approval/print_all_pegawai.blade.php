@@ -26,6 +26,7 @@
         .items .subtotal, .items .grand-total { font-weight: bold; background: #eee; }
         .signatures { width: 100%; border-collapse: collapse; margin: 32px 0 12px; page-break-inside: avoid; }
         .signatures td { border: 0; width: 33.33%; padding: 3px 8px; text-align: center; vertical-align: top; }
+        .approval-date { margin: 24px 0 -26px; text-align: right; font-size: 8px; }
         .signatures .signature-space { height: 42px; }
         .signatures .sign-name { font-weight: bold; text-decoration: underline; }
         .small { font-size: 6px; }
@@ -139,6 +140,9 @@
         </tbody>
     </table>
 
+    @if ($tanggalPengesahan)
+        <div class="approval-date">{{ $tanggalPengesahan->kota ?: 'Jakarta' }}, {{ \Carbon\Carbon::parse($tanggalPengesahan->tanggal)->locale('id')->translatedFormat('d F Y') }}</div>
+    @endif
     <table class="signatures">
         <tr>
             @forelse ($signers as $approval)

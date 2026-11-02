@@ -53,7 +53,7 @@
                             <label class="required fs-6 fw-bold mb-2">
                                 Level Jabatan
                             </label>
-                            <input type="number"
+                            <input type="text"
                                 class="form-control form-control-solid"
                                 name="level_jabatan"
                                 value="{{ $item->level_jabatan }}"

@@ -11,6 +11,8 @@ use App\Models\MasterBackend\SettingRkbu\SubKategoriRkbu;
 use App\Models\MasterBackend\SettingRkbu\SubKegiatan;
 use App\Models\MasterBackend\SettingRkbu\SumberDana;
 use App\Models\MasterBackend\SettingInput\JudulHeader;
+use App\Models\MasterBackend\SettingInput\TahunAnggaran;
+use App\Models\MasterBackend\SettingInput\TanggalPerencana;
 use App\Models\Rkbu\Rkbu;
 use App\Models\Rkbu\RkbuEditHistory;
 use App\Models\WorkFlow\Approval;
@@ -375,6 +377,19 @@ class WorkflowApprovalController extends Controller
         abort_unless(in_array($module, ['all', 'barjas', 'pegawai', 'persediaan', 'modal', 'modal-kantor', 'modal-alkes'], true), 404);
 
         $printType = $filters['print_type'] ?? 'rkbu';
+        $tanggalPengesahan = null;
+        if (in_array($printType, ['rkbu', 'rba'], true)) {
+            $tahunAnggaran = TahunAnggaran::find(session('tahun_anggaran_id'));
+            if ($tahunAnggaran && $tahunAnggaran->fase_id) {
+                $tanggalPengesahan = TanggalPerencana::query()
+                    ->where('id_tahun_anggaran', $tahunAnggaran->id)
+                    ->where('fase_id', $tahunAnggaran->fase_id)
+                    ->where('status', 'aktif')
+                    ->orderByDesc('tanggal')
+                    ->orderByDesc('created_at')
+                    ->first();
+            }
+        }
         $printScope = $printType === 'rkbu' ? 'all' : 'tagged';
         if ($printType === 'erba' && $module === 'all') {
             $module = 'barjas';
@@ -476,6 +491,7 @@ class WorkflowApprovalController extends Controller
             'headerLogoLeft' => $printType === 'erba' || $module === 'persediaan' ? $headerLogo($judulHeader?->gambar2) : null,
             'headerLogoRight' => $printType === 'erba' || $module === 'persediaan' ? $headerLogo($judulHeader?->gambar1) : null,
             'printedAt' => now(),
+            'tanggalPengesahan' => $tanggalPengesahan,
         ])->setPaper('a4', in_array($module, ['pegawai', 'persediaan'], true) ? 'landscape' : 'portrait');
         if ($module === 'persediaan' || $module === 'pegawai' || $printType === 'erba') {
             $canvas = $pdf->getDomPDF()->getCanvas();

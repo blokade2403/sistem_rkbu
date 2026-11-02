@@ -6,6 +6,7 @@ use App\DataTables\Rkbu\RkbuModalKantorDataTable;
 use App\Http\Controllers\Controller;
 use App\Models\MasterBackend\SettingInput\Anggaran;
 use App\Models\MasterBackend\SettingInput\Komponen;
+use App\Models\MasterBackend\SettingInput\JudulHeader;
 use App\Models\MasterBackend\SettingInput\Ppn;
 use App\Models\MasterBackend\SettingInput\UraianDua;
 use App\Models\MasterBackend\SettingInput\UraianSatu;
@@ -15,6 +16,8 @@ use App\Models\MasterBackend\SettingRkbu\Program;
 use App\Models\MasterBackend\SettingRkbu\SubKategoriRkbu;
 use App\Models\MasterBackend\SettingRkbu\SubKegiatan;
 use App\Models\MasterBackend\SettingRkbu\SumberDana;
+use App\Models\MasterBackend\SettingUser\Position;
+use App\Models\MasterBackend\SettingUser\PositionAssignment;
 use App\Models\Rkbu\Rkbu;
 use App\Models\Rkbu\RkbuDetailModal;
 use App\Services\Workflow\WorkflowApprovalService;
@@ -24,6 +27,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class RkbuModalKantorController extends Controller
@@ -100,6 +104,15 @@ class RkbuModalKantorController extends Controller
             'nama_barang'          => 'required',
             'volume_1'             => 'required|numeric|min:1',
             'harga_satuan'         => 'required',
+            'latar_belakang' => 'required|string',
+            'pembahasan_analisis' => 'required|string',
+            'maksud_tujuan' => 'required|string',
+            'target_sasaran' => 'required|string',
+            'standar_kebutuhan' => 'required|integer|min:0',
+            'eksisting' => 'required|integer|min:0',
+            'kondisi_baik' => 'required|integer|min:0',
+            'kondisi_rusak_berat' => 'required|integer|min:0',
+            'user_pengguna' => 'required|string',
 
             'upload_file_1' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:5120',
             'upload_file_2' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:5120',
@@ -201,6 +214,15 @@ class RkbuModalKantorController extends Controller
                 'ppn' => $ppn,
                 'total_anggaran' => $totalAnggaran,
                 'penempatan' => $request->penempatan,
+                'latar_belakang' => $request->latar_belakang,
+                'pembahasan_analisis' => $request->pembahasan_analisis,
+                'maksud_tujuan' => $request->maksud_tujuan,
+                'target_sasaran' => $request->target_sasaran,
+                'standar_kebutuhan' => $request->standar_kebutuhan,
+                'eksisting' => $request->eksisting,
+                'kondisi_baik' => $request->kondisi_baik,
+                'kondisi_rusak_berat' => $request->kondisi_rusak_berat,
+                'user_pengguna' => $request->user_pengguna,
                 'status_komponen' => 'draft',
                 'sisa_vol_rkbu' => $jumlahVolume,
                 'sisa_anggaran_rkbu' => $totalAnggaran,
@@ -266,6 +288,25 @@ class RkbuModalKantorController extends Controller
 
     public function submit($id)
     {
+        $detail = RkbuDetailModal::findOrFail($id);
+        $validator = validator($detail->only([
+            'latar_belakang', 'pembahasan_analisis', 'maksud_tujuan', 'target_sasaran',
+            'standar_kebutuhan', 'eksisting', 'kondisi_baik', 'kondisi_rusak_berat', 'user_pengguna',
+        ]), [
+            'latar_belakang' => 'required|string',
+            'pembahasan_analisis' => 'required|string',
+            'maksud_tujuan' => 'required|string',
+            'target_sasaran' => 'required|string',
+            'standar_kebutuhan' => 'required|integer|min:0',
+            'eksisting' => 'required|integer|min:0',
+            'kondisi_baik' => 'required|integer|min:0',
+            'kondisi_rusak_berat' => 'required|integer|min:0',
+            'user_pengguna' => 'required|string',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => 'Wajib untuk Input Analisa Kebutuhan RKBU'], 422);
+        }
+
         return $this->workflowApprovalService->submit($id, RkbuDetailModal::class);
     }
 
@@ -292,6 +333,15 @@ class RkbuModalKantorController extends Controller
                     'success' => false,
                     'message' => 'Data tidak ditemukan, bukan milik Anda, atau statusnya tidak dapat diajukan.',
                 ];
+                continue;
+            }
+
+            $hasIncompleteAnalysis = collect($details[$id]->only([
+                'latar_belakang', 'pembahasan_analisis', 'maksud_tujuan', 'target_sasaran',
+                'standar_kebutuhan', 'eksisting', 'kondisi_baik', 'kondisi_rusak_berat', 'user_pengguna',
+            ]))->contains(fn ($value) => $value === null || $value === '');
+            if ($hasIncompleteAnalysis) {
+                $results[] = ['id' => $id, 'success' => false, 'message' => 'Wajib untuk Input Analisa Kebutuhan RKBU'];
                 continue;
             }
 
@@ -333,6 +383,15 @@ class RkbuModalKantorController extends Controller
                 'nama_barang'   => 'required',
                 'volume_1'      => 'required|numeric|min:1',
                 'volume_2'      => 'nullable|numeric|min:1',
+                'latar_belakang' => 'required|string',
+                'pembahasan_analisis' => 'required|string',
+                'maksud_tujuan' => 'required|string',
+                'target_sasaran' => 'required|string',
+                'standar_kebutuhan' => 'required|integer|min:0',
+                'eksisting' => 'required|integer|min:0',
+                'kondisi_baik' => 'required|integer|min:0',
+                'kondisi_rusak_berat' => 'required|integer|min:0',
+                'user_pengguna' => 'required|string',
 
                 'upload_file_1' => 'nullable|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:5120',
                 'upload_file_2' => 'nullable|mimes:pdf,jpg,jpeg,png,doc,docx,xls,xlsx|max:5120',
@@ -414,6 +473,11 @@ class RkbuModalKantorController extends Controller
                 'eksisting'         => $request->eksisting,
                 'kondisi_baik'      => $request->kondisi_baik,
                 'kondisi_rusak_berat' => $request->kondisi_rusak_berat,
+                'latar_belakang' => $request->latar_belakang,
+                'pembahasan_analisis' => $request->pembahasan_analisis,
+                'maksud_tujuan' => $request->maksud_tujuan,
+                'target_sasaran' => $request->target_sasaran,
+                'user_pengguna' => $request->user_pengguna,
                 'upload_file_1'     => $uploadFile1,
                 'upload_file_2'     => $uploadFile2,
                 'upload_file_3'     => $uploadFile3,
@@ -490,7 +554,120 @@ class RkbuModalKantorController extends Controller
 
         app(\App\Services\Workflow\UsulanBelanjaBalanceService::class)->applyToDetail($barjas);
 
-        return view('rkbu.rkbu_modal.show', compact('barjas'));
+        $analysisPreviewUrl = route('rkbu.modal_kantor.analysis-preview', $barjas->id);
+
+        return view('rkbu.rkbu_modal.show', compact('barjas', 'analysisPreviewUrl'));
+    }
+
+    public function previewAnalysis($id)
+    {
+        return $this->analysisResponse($id, false);
+    }
+
+    public function downloadAnalysis($id)
+    {
+        return $this->analysisResponse($id, true);
+    }
+
+    private function analysisResponse($id, bool $download)
+    {
+        $barjas = RkbuDetailModal::with(['rkbu.unit', 'rkbu.tahunAnggaran', 'rkbu.subKategoriRkbu.kategori.jenis_kategori_rkbu'])
+            ->findOrFail($id);
+        $barjas->loadMissing('rkbu.creator.position');
+        $header = JudulHeader::query()->first();
+        $signatureHierarchy = $this->signatureHierarchyFor($barjas->rkbu->creator);
+        $kabidPosition = $signatureHierarchy['kabid']['position'];
+        $logo = $this->headerLogoData($header?->gambar1 ?: $header?->gambar2);
+
+        $filename = 'Analisa-Kebutuhan-RKBU-' . Str::slug($barjas->nama_barang) . '.doc';
+        $downloadUrl = route('rkbu.modal_kantor.analysis-download', $barjas->id);
+        $preview = !$download;
+
+        $response = response()->view('rkbu.rkbu_modal.analisa_doc', compact('barjas', 'header', 'kabidPosition', 'signatureHierarchy', 'logo', 'preview', 'downloadUrl'));
+
+        if ($download) {
+            return $response
+                ->header('Content-Type', 'application/msword; charset=UTF-8')
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+        }
+
+        return $response->header('Content-Type', 'text/html; charset=UTF-8');
+    }
+
+    private function signatureHierarchyFor($user): array
+    {
+        $requesterAssignment = $user ? PositionAssignment::query()
+            ->where('user_id', $user->id)
+            ->where('is_active', true)
+            ->whereDate('tanggal_mulai', '<=', today())
+            ->where(fn ($query) => $query->whereNull('tanggal_selesai')->orWhereDate('tanggal_selesai', '>=', today()))
+            ->orderByDesc('tanggal_mulai')
+            ->orderByDesc('created_at')
+            ->first() : null;
+
+        $requesterPosition = $requesterAssignment?->position ?: $user?->position;
+        $position = $requesterPosition;
+        $chain = [];
+        while ($position) {
+            $chain[] = $position;
+            $position = $position->parent_id ? Position::find($position->parent_id) : null;
+        }
+
+        $findPosition = fn (array $terms) => collect($chain)->first(
+            fn ($item) => Str::contains(Str::lower((string) $item->level_jabatan), $terms)
+        );
+        $ksp = $findPosition(['ksp', 'ka.ins']);
+        $kabid = $findPosition(['kabid', 'kabag']);
+        $activeUserForPosition = function ($position) {
+            if (!$position) return null;
+
+            return PositionAssignment::query()
+                ->with('user')
+                ->where('position_id', $position->id)
+                ->where('is_active', true)
+                ->whereDate('tanggal_mulai', '<=', today())
+                ->where(fn ($query) => $query->whereNull('tanggal_selesai')->orWhereDate('tanggal_selesai', '>=', today()))
+                ->whereHas('user', fn ($query) => $query->where('status_user', 'aktif'))
+                ->orderByDesc('tanggal_mulai')
+                ->orderByDesc('created_at')
+                ->first()?->user;
+        };
+
+        $kspUser = $activeUserForPosition($ksp);
+        $kabidUser = $activeUserForPosition($kabid);
+
+        return [
+            'pengusul' => [
+                'position' => $requesterPosition?->nama_jabatan ?: ($requesterPosition?->level_jabatan ?: 'Pengusul'),
+                'name' => $user?->nama,
+                'nip' => $user?->nip,
+            ],
+            'ksp' => [
+                'position' => $ksp?->nama_jabatan ?: 'KSP / Ka.Ins',
+                'name' => $kspUser?->nama,
+                'nip' => $kspUser?->nip,
+            ],
+            'kabid' => [
+                'position' => $kabid?->nama_jabatan ?: 'Kepala Bidang',
+                'name' => $kabidUser?->nama,
+                'nip' => $kabidUser?->nip,
+            ],
+        ];
+    }
+
+    private function headerLogoData(?string $file): ?string
+    {
+        if (!$file) {
+            return null;
+        }
+
+        $path = 'judul_header/' . basename($file);
+        if (!Storage::disk('public')->exists($path)) {
+            return null;
+        }
+
+        $mime = Storage::disk('public')->mimeType($path) ?: 'image/png';
+        return 'data:' . $mime . ';base64,' . base64_encode(Storage::disk('public')->get($path));
     }
 
     private function generateNomorRkbu()
@@ -512,6 +689,8 @@ class RkbuModalKantorController extends Controller
 
     private function subKategoriOptions()
     {
-        return SubKategoriRkbu::query()->forJenisKategori('Modal Kantor');
+        return SubKategoriRkbu::query()->whereHas('kategori.jenis_kategori_rkbu', function ($query) {
+            $query->whereIn('nama_jenis_kategori_rkbu', ['Modal Kantor', 'Modal Kantor Lainnya']);
+        });
     }
 }

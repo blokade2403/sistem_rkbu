@@ -36,10 +36,15 @@ class RkbuDetailModal extends Model
         'sisa_vol_rkbu',
         'sisa_anggaran_rkbu',
         'status_komponen',
+        'latar_belakang',
+        'pembahasan_analisis',
+        'maksud_tujuan',
+        'target_sasaran',
         'standar_kebutuhan',
         'eksisting',
         'kondisi_baik',
         'kondisi_rusak_berat',
+        'user_pengguna',
     ];
 
     public function rkbu()

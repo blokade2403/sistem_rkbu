@@ -62,6 +62,71 @@ class PersediaanInventoryController extends Controller
         return $pdf->download('laporan-stok-persediaan-' . now()->format('Ymd-His') . '.pdf');
     }
 
+    public function stockCardPrint(string $id)
+    {
+        $this->authorizeRead();
+        $itemQuery = $this->canManage() ? $this->scopedItems() : PersediaanItem::query();
+        $item = $itemQuery->with('unit')->findOrFail($id);
+        $transactions = $item->transactions()
+            ->with(['unit', 'requestingUnit', 'actor'])
+            ->when(! $this->isAdministrator() && ! auth()->user()->hasRole('Pengurus Barang'), function ($query) {
+                $query->whereHas('request', fn ($request) => $request->where('unit_peminta_id', auth()->user()->unit_id));
+            })
+            ->orderBy('tanggal')
+            ->orderBy('created_at')
+            ->get();
+
+        return view('persediaan.inventory.stock_card_print', [
+            'cards' => collect([(object) ['item' => $item, 'transactions' => $transactions]]),
+            'printedAt' => now(),
+            'filters' => [],
+        ]);
+    }
+
+    public function stockCardsPrint(Request $request)
+    {
+        $this->authorizeRead();
+        $filters = $request->validate([
+            'jenis' => ['nullable', 'in:masuk,keluar,opname'],
+            'barang' => ['nullable', 'string', 'max:100'],
+            'dari' => ['nullable', 'date'],
+            'sampai' => ['nullable', 'date', 'after_or_equal:dari'],
+            'unit_id' => ['nullable', 'uuid', 'exists:units,id'],
+            'unit_peminta_id' => ['nullable', 'uuid', 'exists:units,id'],
+        ]);
+        $term = trim($filters['barang'] ?? '');
+        $transactions = PersediaanTransaction::query()
+            ->with(['item.unit'])
+            ->when(! $this->isAdministrator(), function ($query) {
+                $user = auth()->user();
+                if ($user->hasRole('Pengurus Barang')) {
+                    $query->whereIn('persediaan_item_id', $this->scopedItems()->select('persediaan_items.id'));
+                } else {
+                    $query->whereHas('request', fn ($request) => $request->where('unit_peminta_id', $user->unit_id));
+                }
+            })
+            ->when(filled($term), fn ($query) => $query->whereHas('item', fn ($item) => $item
+                ->where('nama_barang', 'like', '%' . $term . '%')
+                ->orWhere('kode_barang', 'like', '%' . $term . '%')))
+            ->when(filled($filters['dari'] ?? null), fn ($query) => $query->whereDate('tanggal', '>=', $filters['dari']))
+            ->when(filled($filters['sampai'] ?? null), fn ($query) => $query->whereDate('tanggal', '<=', $filters['sampai']))
+            ->when(filled($filters['jenis'] ?? null), fn ($query) => $query->where('jenis', $filters['jenis']))
+            ->when(filled($filters['unit_id'] ?? null) && $this->canManage(), fn ($query) => $query->where('unit_id', $filters['unit_id']))
+            ->when(filled($filters['unit_peminta_id'] ?? null) && $this->canManage(), fn ($query) => $query->where('unit_peminta_id', $filters['unit_peminta_id']))
+            ->orderBy('tanggal')->orderBy('created_at')->get();
+
+        $cards = $transactions->groupBy('persediaan_item_id')->map(fn ($rows) => (object) [
+            'item' => $rows->first()->item,
+            'transactions' => $rows,
+        ])->values();
+
+        return view('persediaan.inventory.stock_card_print', [
+            'cards' => $cards,
+            'printedAt' => now(),
+            'filters' => $filters,
+        ]);
+    }
+
     public function permintaan()
     {
         return $this->renderPage('permintaan');
@@ -91,7 +156,7 @@ class PersediaanInventoryController extends Controller
         if (in_array($page, ['barang_masuk', 'opname'], true)) {
             $this->authorizeManage();
         }
-        $sources = $this->paidPersediaanSources()->orderByDesc('payment.tanggal_pembayaran')->get();
+        $sources = $this->validatedPersediaanSources()->orderByDesc('spj.tgl_verif_pengurus_barang')->get();
 
         foreach ($sources as $source) {
             $source->inventory = PersediaanItem::query()->firstOrCreate(
@@ -219,7 +284,7 @@ class PersediaanInventoryController extends Controller
         ]);
 
         DB::transaction(function () use ($data): void {
-            $source = $this->paidPersediaanSources()->where('sd.id', $data['spj_detail_id'])->lockForUpdate()->first();
+            $source = $this->validatedPersediaanSources()->where('sd.id', $data['spj_detail_id'])->lockForUpdate()->first();
             abort_if(! $source, 404, 'Sumber belanja persediaan yang sudah dibayar tidak ditemukan.');
             $item = PersediaanItem::query()
                 ->where('usulan_belanja_item_id', $source->usulan_belanja_item_id)
@@ -487,17 +552,10 @@ class PersediaanInventoryController extends Controller
         return back()->with('success', 'Stok opname dicatat dan saldo stok disesuaikan.');
     }
 
-    private function paidPersediaanSources(): Builder
+    private function validatedPersediaanSources(): Builder
     {
-        $paymentSummary = DB::table('master_spjs')
-            ->select('spj_id')
-            ->selectRaw('MAX(tanggal_pembayaran) as tanggal_pembayaran')
-            ->selectRaw('MAX(no_surat_pesanan) as no_surat_pesanan')
-            ->groupBy('spj_id');
-
         return DB::table('spj_details as sd')
             ->join('spjs as spj', 'spj.id', '=', 'sd.spj_id')
-            ->leftJoinSub($paymentSummary, 'payment', fn ($join) => $join->on('payment.spj_id', '=', 'spj.id'))
             ->join('usulan_belanja_items as item', 'item.id', '=', 'sd.usulan_belanja_item_id')
             ->join('rkbus as rkbu', 'rkbu.id', '=', 'sd.rkbu_id')
             ->join('rkbu_detail_persediaans as product', function ($join) {
@@ -513,15 +571,10 @@ class PersediaanInventoryController extends Controller
             ->join('units as unit', 'unit.id', '=', 'rkbu.unit_id')
             ->join('sub_kategori_rkbus as sub', 'sub.id_sub_kategori_rkbu', '=', 'rkbu.sub_kategori_rkbu_id')
             ->where('rkbu.jenis_kategori_rkbu_id', '9cdfd364-2946-4ea1-bec2-e1130e8d9f2c')
-            ->where(function ($query) {
-                $query->whereRaw("LOWER(TRIM(COALESCE(spj.status_spj, ''))) IN (?, ?)", ['sudah di bayar', 'sudah dibayar'])
-                    ->orWhereExists(function ($payment) {
-                        $payment->selectRaw('1')
-                            ->from('master_spjs as paid')
-                            ->whereColumn('paid.spj_id', 'spj.id')
-                            ->whereRaw("LOWER(TRIM(COALESCE(paid.status_pembayaran, ''))) IN (?, ?)", ['sudah di bayar', 'sudah dibayar']);
-                });
-            })
+            ->whereNotNull('spj.foto_barang_datang')
+            ->where('spj.foto_barang_datang', '<>', '')
+            ->whereNotNull('spj.tgl_barang_datang')
+            ->whereRaw("LOWER(TRIM(COALESCE(spj.status_verifikasi_pengurus_barang, ''))) = ?", ['selesai'])
             ->when(! $this->isAdministrator(), function ($query) {
                 $user = auth()->user();
                 $query->where(function ($scope) use ($user) {
@@ -531,8 +584,8 @@ class PersediaanInventoryController extends Controller
             })
             ->select([
                 'sd.id as spj_detail_id', 'sd.volume', 'spj.id as spj_id', 'spj.no_bast_serah_terima_unit',
-                'payment.tanggal_pembayaran',
-                DB::raw('COALESCE(payment.no_surat_pesanan, spj.no_surat_pesanan) as no_surat_pesanan'),
+                'spj.tgl_verif_pengurus_barang as tanggal_validasi_pengurus_barang',
+                'spj.no_surat_pesanan',
                 'item.id as usulan_belanja_item_id', 'rkbu.unit_id',
                 'rkbu.nomor_rkbu', 'rkbu.sub_kategori_rkbu_id', 'unit.nama_unit', 'product.nama_barang',
                 'product.spesifikasi', 'product.satuan_1 as satuan', 'item.harga_satuan', 'item.ppn',

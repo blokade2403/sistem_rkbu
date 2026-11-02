@@ -69,7 +69,7 @@
                     <div class="card-header border-0 pt-6"><div><h2 class="card-title fs-3 fw-bold">Label QR Aset</h2><div class="text-muted fs-7">Pindai untuk membuka halaman detail aset.</div></div></div>
                     <div class="card-body text-center">
                         <div id="asset-qr-print-area" class="asset-qr-label mx-auto">
-                            <img src="{{ route('asset.qr', $asset->id_asset) }}" alt="QR {{ $asset->nama_asset }}" class="asset-qr-image">
+                            <img src="{{ asset('storage/' . $asset->qrcode_path) }}" alt="QR {{ $asset->nama_asset }}" class="asset-qr-image">
                             <div class="asset-qr-register">{{ $asset->no_register ?: $asset->kode_asset ?: 'ASET' }}</div>
                             <div class="asset-qr-name">{{ $asset->nama_asset }}</div>
                             <div class="asset-qr-unit">{{ $asset->unit?->nama_unit ?: '-' }}</div>

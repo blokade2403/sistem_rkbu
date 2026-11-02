@@ -64,6 +64,7 @@
                         $rkbuInfo = $spj->usulanBelanja?->rkbu;
                         $subKategoriInfo = $rkbuInfo?->subKategoriRkbu;
                         $subKegiatanInfo = $rkbuInfo?->subKegiatan;
+                        $sumberDanaInfo = $spj->usulanBelanja?->sumberDana ?? $rkbuInfo?->sumberDana;
                     @endphp
                     <div class="row g-0">
                         <div class="col-12 col-lg-6"><div class="spj-detail-info-row"><span>Program</span><strong>{{ $program?->kode_program }} {{ $program?->nama_program ?? '-' }}</strong></div></div>
@@ -71,9 +72,12 @@
                         <div class="col-12 col-lg-6"><div class="spj-detail-info-row"><span>Subkegiatan</span><strong>{{ $subKegiatanInfo?->kode_sub_kegiatan }} {{ $subKegiatanInfo?->nama_sub_kegiatan ?? '-' }}</strong></div></div>
                         <div class="col-12 col-lg-6"><div class="spj-detail-info-row"><span>Rekening Belanja</span><strong>{{ $rekeningBelanja?->kode_rekening_belanja }} {{ $rekeningBelanja?->nama_rekening_belanja ?? '-' }}</strong></div></div>
                         <div class="col-12 col-lg-6"><div class="spj-detail-info-row"><span>Sub Kategori RKBU</span><strong>{{ $subKategoriInfo?->kode_sub_kategori_rkbu }} {{ $subKategoriInfo?->nama_sub_kategori_rkbu ?? '-' }}</strong></div></div>
+                        <div class="col-12 col-lg-6"><div class="spj-detail-info-row spj-source-fund-row"><span>Sumber Dana</span><strong><span class="spj-source-fund-badge"><i class="fas fa-coins" aria-hidden="true"></i>{{ $sumberDanaInfo?->nama_sumber_dana ?? 'Belum ditentukan' }}</span></strong></div></div>
                     </div>
                 </div>
             </div>
+
+           
 
             @if ($canManageSpj)
                 <details class="spj-add-items mb-6">
@@ -215,8 +219,45 @@
                     </div>
                 </div>
             </div>
-         
+          <div class="card card-bordered shadow-xs mb-7 spj-verification-card">
+                <div class="card-header bg-light min-h-65px">
+                    <div>
+                        <h4 class="card-title fw-bold text-gray-800 mb-1">Status Verifikasi Dokumen</h4>
+                        <span class="text-muted fs-7">Checklist mengikuti workflow yang berlaku untuk subkategori RKBU SPJ ini.</span>
+                    </div>
+                    @if ($workflowChecklist->isNotEmpty())
+                        <span class="badge badge-light-primary">{{ $workflowChecklist->where('done', true)->count() }} / {{ $workflowChecklist->count() }} tahap selesai</span>
+                    @endif
+                </div>
+                <div class="card-body p-0">
+                    @if ($workflowChecklist->isNotEmpty())
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle text-center mb-0 spj-verification-table">
+                                <thead><tr><th class="text-start">Status Verifikasi</th>
+                                    @foreach ($workflowChecklist as $workflowStatus)
+                                        <th>{{ $workflowStatus['name'] }}</th>
+                                    @endforeach
+                                </tr></thead>
+                                <tbody><tr><th class="text-start fw-semibold">Pelaksanaan Tahap</th>
+                                    @foreach ($workflowChecklist as $workflowStatus)
+                                        <td>
+                                            @if ($workflowStatus['done'])
+                                                <span class="workflow-check is-done" title="Selesai{{ $workflowStatus['acted_at'] ? ' pada '.\Carbon\Carbon::parse($workflowStatus['acted_at'])->format('d/m/Y H:i') : '' }}" aria-label="Selesai"><i class="fas fa-check"></i></span>
+                                            @else
+                                                <span class="workflow-check is-pending" title="Belum dilaksanakan" aria-label="Belum dilaksanakan"></span>
+                                            @endif
+                                        </td>
+                                    @endforeach
+                                </tr></tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="text-muted text-center py-7">Workflow pengadaan belum memiliki step untuk subkategori ini.</div>
+                    @endif
+                </div>
+            </div>
         </div>
+        
     </div>
         <section class="spj-workflow-section mt-7">
             <div class="spj-workflow-heading">
@@ -255,10 +296,21 @@
     .spj-detail-stat span { color: #8a94a6; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
     .spj-detail-stat strong { color: #263449; font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
     .spj-detail-info-card, .spj-items-card { overflow: hidden; border: 1px solid #e9edf4 !important; border-radius: 14px; box-shadow: 0 4px 16px rgba(31,45,61,.035) !important; }
+    .spj-verification-card { overflow: hidden; border: 1px solid #e9edf4 !important; border-radius: 14px; box-shadow: 0 4px 16px rgba(31,45,61,.035) !important; }
+    .spj-verification-card > .card-header { border-bottom: 1px solid #edf0f5; }
+    .spj-verification-table { min-width: max-content; }
+    .spj-verification-table th { min-width: 112px; padding: 15px 17px; background: #f4f7fa; color: #25364d; font-size: 12px; white-space: nowrap; }
+    .spj-verification-table th:first-child { min-width: 210px; }
+    .spj-verification-table td { min-width: 112px; padding: 14px; }
+    .workflow-check { display: inline-grid; place-items: center; width: 19px; height: 19px; border-radius: 5px; }
+    .workflow-check.is-done { background: #a89ae1; color: #fff; font-size: 11px; }
+    .workflow-check.is-pending { background: #eef0f2; }
     .spj-detail-info-card > .card-header, .spj-items-card > .card-header { border-bottom: 1px solid #edf0f5; background: #f8faff !important; }
     .spj-detail-info-row { display: flex; align-items: flex-start; gap: 15px; height: calc(100% - 12px); min-height: 58px; margin: 6px; padding: 12px 14px; border: 1px solid #edf0f5; border-radius: 10px; background: #fff; }
     .spj-detail-info-row span { flex: 0 0 145px; color: #8a94a6; font-size: 12px; font-weight: 650; }
     .spj-detail-info-row strong { color: #344054; font-size: 13px; font-weight: 650; overflow-wrap: anywhere; }
+    .spj-source-fund-row { border-color: #cfe4ff; background: linear-gradient(110deg, #eff7ff 0%, #fff 100%); }
+    .spj-source-fund-badge { display: inline-flex; align-items: center; gap: 8px; padding: 7px 11px; border: 1px solid #b9dcff; border-radius: 999px; background: #e3f2ff; color: #0875c9; font-weight: 750; }
     .spj-add-items summary { list-style: none; cursor: pointer; width: fit-content; }
     .spj-add-items summary::-webkit-details-marker { display: none; }
     .spj-items-table { min-width: 900px; }

@@ -1,17 +1,17 @@
   @extends('layouts-login.main')
   @section('container')
       <div class="d-flex flex-center flex-column flex-column-fluid p-10 pb-lg-20">
-          <a href="../../demo1/dist/index.html" class="mb-12">
-              <img alt="Logo" src="assets/media/logos/logo-1.svg" class="h-40px" />
+          <a href="" class="mb-12">
+              <img alt="Logo" src="{{ $header6LogoUrl }}" class="mw-100" style="width: 340px; max-height: 190px; object-fit: contain;" />
           </a>
           <div class="w-lg-500px bg-body rounded shadow-sm p-10 p-lg-15 mx-auto">
               <form class="form w-100" novalidate="novalidate" id="kt_sign_in_form" action="{{ route('login.process') }}"
                   method="POST">
                   @csrf
                   <div class="text-center mb-10">
-                      <h3 class="text-dark mb-3">Halaman Login Sistem RKBU</h3>
+                      <h3 class="text-dark mb-3">Halaman Login Si-Penguin</h3>
                       <div class="text-gray-400 fw-bold fx-4">Belum punya akun?
-                          <a href="../../demo1/dist/authentication/flows/basic/sign-up.html"
+                          <a href=""
                               class="link-primary fw-bolder">Create an Account</a>
                       </div>
                   </div>

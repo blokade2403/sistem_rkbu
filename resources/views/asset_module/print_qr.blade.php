@@ -33,7 +33,7 @@
     <main class="labels">
         @foreach ($assets as $asset)
             <article class="label">
-                <img src="{{ route('asset.qr', $asset->id_asset) }}" alt="QR {{ $asset->nama_asset }}">
+                <img src="{{ asset('storage/' . $asset->qrcode_path) }}" alt="QR {{ $asset->nama_asset }}">
                 <div class="register">{{ $asset->no_register ?: $asset->kode_asset ?: 'ASET' }}</div>
                 <div class="name">{{ $asset->nama_asset }}</div>
                 <div class="unit">{{ $asset->unit?->nama_unit ?: '-' }}</div>

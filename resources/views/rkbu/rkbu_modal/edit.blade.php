@@ -193,6 +193,39 @@
                                 rows="5">{{ old('spesifikasi', $barjas->spesifikasi) }}</textarea>
                         </div>
                     </div>
+                    <div class="card border border-2 border-primary border-dashed shadow-sm mb-8 overflow-hidden">
+                        <div class="card-header bg-primary py-5">
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="symbol symbol-40px"><span class="symbol-label bg-white bg-opacity-20"><i class="fas fa-clipboard-list text-white fs-3"></i></span></span>
+                                <div><h3 class="card-title text-white fw-bold mb-1">Analisis Kebutuhan RKBU</h3><div class="text-white opacity-75 fs-7">Jelaskan alasan dan kondisi kebutuhan barang yang diajukan.</div></div>
+                            </div>
+                            <span class="badge badge-light-warning fw-bold">WAJIB DIISI</span>
+                        </div>
+                        <div class="card-body p-5 p-lg-7">
+                            <div class="notice d-flex bg-light-primary rounded border border-primary border-dashed p-4 mb-6">
+                                <i class="fas fa-info-circle text-primary fs-3 me-3 mt-1"></i>
+                                <div class="text-gray-700 fs-7">Isi seluruh bagian di bawah ini. Gunakan contoh pada setiap kolom sebagai panduan.</div>
+                            </div>
+                            <div class="row g-5">
+                            @foreach ([['latar_belakang','Latar Belakang'],['pembahasan_analisis','Pembahasan / Analisis'],['maksud_tujuan','Maksud dan Tujuan'],['target_sasaran','Target dan Sasaran']] as [$field,$label])
+                                @php
+                                    $analysisPlaceholders = [
+                                        'latar_belakang' => 'Contoh: Peralatan yang tersedia sudah tidak memadai untuk mendukung pelayanan.',
+                                        'pembahasan_analisis' => 'Contoh: Kebutuhan 2 unit, sementara saat ini hanya tersedia 1 unit dalam kondisi baik.',
+                                        'maksud_tujuan' => 'Contoh: Menjaga kelancaran dan mutu pelayanan kepada masyarakat.',
+                                        'target_sasaran' => 'Contoh: Tersedianya 2 unit alat yang laik pakai pada tahun anggaran berjalan.',
+                                    ];
+                                @endphp
+                                <div class="col-lg-6"><label class="form-label fw-semibold required">{{ $label }}</label><textarea name="{{ $field }}" class="form-control form-control-solid" rows="3" placeholder="{{ $analysisPlaceholders[$field] }}" required>{{ old($field, $barjas->$field) }}</textarea></div>
+                            @endforeach
+                            <div class="col-md-4"><label class="form-label fw-semibold required">Standar Kebutuhan (unit)</label><input type="number" min="0" name="standar_kebutuhan" class="form-control form-control-solid" value="{{ old('standar_kebutuhan', $barjas->standar_kebutuhan) }}" placeholder="Contoh: 2" required></div>
+                            <div class="col-md-4"><label class="form-label fw-semibold required">Eksisting (unit)</label><input type="number" min="0" name="eksisting" class="form-control form-control-solid" value="{{ old('eksisting', $barjas->eksisting) }}" placeholder="Contoh: 1" required></div>
+                            <div class="col-md-4"><label class="form-label fw-semibold required">User / Pengguna</label><input type="text" name="user_pengguna" class="form-control form-control-solid" value="{{ old('user_pengguna', $barjas->user_pengguna) }}" placeholder="Contoh: Ruang IGD / Poli" required></div>
+                            <div class="col-md-6"><label class="form-label fw-semibold required">Kondisi Alat Baik (unit)</label><input type="number" min="0" name="kondisi_baik" class="form-control form-control-solid" value="{{ old('kondisi_baik', $barjas->kondisi_baik) }}" placeholder="Contoh: 1" required></div>
+                            <div class="col-md-6"><label class="form-label fw-semibold required">Kondisi Alat Rusak Berat (unit)</label><input type="number" min="0" name="kondisi_rusak_berat" class="form-control form-control-solid" value="{{ old('kondisi_rusak_berat', $barjas->kondisi_rusak_berat) }}" placeholder="Contoh: 0" required></div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="row mb-8">
                         <div class="col-xl-3">
                             <div class="fs-6 fw-bold mt-2 mb-3">Harga Satuan</div>

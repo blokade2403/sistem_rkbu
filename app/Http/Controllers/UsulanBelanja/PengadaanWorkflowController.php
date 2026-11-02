@@ -96,55 +96,8 @@ class PengadaanWorkflowController extends Controller
 
     public function show(Spj $spj)
     {
-        $spj->load([
-            'usulanBelanja.pengusul', 'usulanBelanja.unit', 'usulanBelanja.tahunAnggaran',
-            'usulanBelanja.rkbu.subKategoriRkbu', 'details.item', 'details.rkbu.rekeningBelanja',
-            'details.rkbu.subKategoriRkbu.sub_kategori_rekening', 'details.rkbu.subKategoriRkbu.kategori',
-            'details.rkbu.jenisKategoriRkbu', 'details.rkbu.jenisBelanja', 'details.rkbu.sumberDana',
-            'details.rkbu.subKegiatan',
-        ]);
         $this->authorizeView($spj);
-        $step = $spj->pengadaan_step ?: 'input_pesanan';
-        $workflowStep = $step === 'validasi_barang' && ! $this->hasCustomWorkflowForSpj($spj)
-            ? null
-            : $this->currentWorkflowStep($spj);
-        if (! $workflowStep && $step === 'input_bast') $workflowStep = $this->workflowStepAfterIdentity('pengurus barang', $spj);
-        if (! $workflowStep && str_starts_with($step, 'validasi_') && $step !== 'validasi_barang') $workflowStep = $this->legacyWorkflowStep($step, $spj);
-        $workflowStep = $this->skipCompletedBastStep($spj, $workflowStep);
-        $workflowStepName = $workflowStep ? $this->workflowStepName($workflowStep) : null;
-        if ($workflowStep && ($spj->pengadaan_step === 'workflow'
-            || ($this->hasCustomWorkflowForSpj($spj) && in_array($spj->pengadaan_step, ['input_pesanan', 'upload_foto', 'validasi_barang', 'input_bast'], true))
-            || $spj->pengadaan_step === 'input_bast'
-            || ($spj->pengadaan_step === 'input_penyerahan_spj_admin' && strtolower(trim($workflowStepName)) !== 'admin pengadaan')
-            || (str_starts_with($spj->pengadaan_step, 'validasi_') && $spj->pengadaan_step !== 'validasi_barang'))) {
-            $step = $this->isBastWorkflowStep($workflowStep, $spj)
-                ? 'input_bast'
-                : ($this->isBendaharaReceiptStep($workflowStepName) ? 'verifikasi_bendahara' : 'workflow');
-        }
-        $isAdmin = auth()->user()->hasRole('Administrator') || auth()->user()->hasRole('Super Admin');
-        $logs = DB::table('pengadaan_workflow_logs')->leftJoin('users', 'users.id', '=', 'pengadaan_workflow_logs.user_id')
-            ->where('spj_id', $spj->id)->orderBy('pengadaan_workflow_logs.created_at')->get([
-                'pengadaan_workflow_logs.*',
-                'users.nama as nama_user',
-            ]);
-        return view('usulan_belanja.pengadaan.show', [
-            'spj' => $spj,
-            'step' => $step,
-            'steps' => self::STEPS,
-            'logs' => $logs,
-            'canPesanan' => $isAdmin || auth()->user()->hasRole('Admin Pengadaan'),
-            'canFoto' => $isAdmin || $this->isAssignedPendukung($spj),
-            'canValidasi' => $isAdmin || $this->userCanApproveIdentity('pengurus barang', $spj) || auth()->user()->hasRole('Pengurus Barang'),
-            'canBast' => $isAdmin || auth()->user()->hasRole('Admin Pengadaan'),
-            'canTukarFaktur' => $isAdmin || auth()->user()->hasRole('Admin Pengadaan'),
-            'canPenyerahanSpjAdmin' => $isAdmin
-                || auth()->user()->hasRole('Admin Pengadaan')
-                || ($step === 'input_penyerahan_spj_admin' && $workflowStep && $this->userCanApproveWorkflowStep($workflowStep, $spj)),
-            'canLanjutan' => $this->canProcessStep($step),
-            'workflowStep' => $workflowStep,
-            'workflowStepName' => $workflowStepName,
-            'canWorkflowStep' => $workflowStep && $this->userCanApproveWorkflowStep($workflowStep, $spj),
-        ] + $this->barangDatangViewData($spj));
+        return redirect()->route('usulan-belanja.spj.show', $spj->id);
     }
 
     public function panel(Spj $spj)
@@ -474,6 +427,83 @@ class PengadaanWorkflowController extends Controller
             $workflowStep = $this->legacyWorkflowStep($spj->pengadaan_step, $spj);
         }
         return $workflowStep ? $this->userCanApproveWorkflowStep($workflowStep, $spj) : false;
+    }
+
+    public function workflowChecklistData(Spj $spj)
+    {
+        $steps = $this->workflowStepsForSpj($spj);
+        if ($steps->isEmpty()) {
+            return collect();
+        }
+
+        $approvals = Schema::hasTable('pengadaan_workflow_approvals')
+            ? DB::table('pengadaan_workflow_approvals')->where('spj_id', $spj->id)
+                ->get(['workflow_step_id', 'status', 'acted_at'])->keyBy('workflow_step_id')
+            : collect();
+        $master = Schema::hasTable('master_spjs')
+            ? DB::table('master_spjs')->where('spj_id', $spj->id)->first()
+            : null;
+        $currentOrder = $spj->pengadaan_workflow_step_id
+            ? $steps->first(fn ($step) => $step->id === $spj->pengadaan_workflow_step_id)?->step_order
+            : null;
+        $pengurusOrder = $steps->first(fn ($step) => strtolower(trim((string) ($step->level_jabatan ?: $step->system_role_name ?: $step->nama_validator ?: ''))) === 'pengurus barang')?->step_order;
+        $terminal = strtolower(trim((string) $spj->pengadaan_step)) === 'selesai'
+            || in_array(strtolower(trim((string) $spj->status_spj)), ['sudah di bayar', 'selesai', 'paid'], true);
+
+        return $steps->map(function ($step) use ($approvals, $master, $currentOrder, $pengurusOrder, $terminal) {
+            $name = $this->workflowStepName($step);
+            $identity = strtolower(trim((string) ($step->is_pptk_step
+                ? 'pptk'
+                : ($step->system_role_name ?: $step->nama_validator ?: $step->level_jabatan ?: ''))));
+            $identity = trim((string) preg_replace('/[^a-z0-9]+/', ' ', $identity));
+            $approval = $approvals->get($step->id);
+            $rawStatus = strtolower(trim((string) ($approval?->status ?? '')));
+            $done = in_array($rawStatus, ['selesai', 'approved', 'setuju', 'completed', 'complete'], true);
+
+            $legacyStatusField = [
+                'pengurus barang' => 'status_verifikasi_pengurus_barang',
+                'ppk' => 'status_verifikasi_ppk',
+                'ppbj' => 'status_verifikasi_ppbj',
+                'pptk' => 'status_verifikasi_pptk',
+                'verifikator' => 'status_verifikasi_verifikator',
+                'verifikator pengadaan' => 'status_verifikasi_verifikator',
+                'ppk keuangan' => 'status_verifikasi_ppk_keuangan',
+                'direktur' => 'status_verifikasi_direktur',
+            ][$identity] ?? null;
+            if (! $done && $legacyStatusField && $master) {
+                $done = strtolower(trim((string) ($master->{$legacyStatusField} ?? ''))) === 'selesai';
+            }
+            if (! $done && $identity === 'pengurus barang') {
+                $done = strtolower(trim((string) ($spj->status_verifikasi_pengurus_barang ?? ''))) === 'selesai';
+            }
+            if (! $done && $identity === 'bendahara' && $master) {
+                $done = in_array(strtolower(trim((string) ($master->status_serah_terima_bendahara ?? ''))), ['selesai', 'approved', 'setuju'], true)
+                    || strtolower(trim((string) ($master->keterangan ?? ''))) === 'selesai'
+                    || strtolower(trim((string) ($master->status_pembayaran ?? ''))) === 'selesai';
+            }
+            if (! $done && $identity === 'admin pengadaan' && $master) {
+                $isBeforePengurus = $pengurusOrder !== null && $step->step_order < $pengurusOrder;
+                $done = $isBeforePengurus
+                    ? filled($master->no_surat_pesanan ?? null)
+                    : (filled($master->tgl_bast ?? null) || filled($master->no_ba ?? null));
+            }
+
+            if (! $done && $currentOrder !== null && $step->step_order < $currentOrder) {
+                $done = true;
+            }
+            if (! $done && $terminal) {
+                $done = true;
+            }
+
+            return [
+                'id' => $step->id,
+                'order' => (int) $step->step_order,
+                'name' => $name,
+                'done' => $done,
+                'status' => $approval?->status ?? ($done ? 'Selesai' : 'Menunggu'),
+                'acted_at' => $approval?->acted_at,
+            ];
+        })->values();
     }
 
     public function storePesanan(Request $request, Spj $spj)

@@ -11,16 +11,16 @@ class TanggalPerencana extends Model
 {
     use HasFactory, HasUuids;
     protected $primaryKey = 'id_tanggal_perencanaan';
-    protected $fillable = ['id_tahun_anggaran', 'id_fase', 'tanggal', 'no_dpa', 'kota', 'status'];
+    protected $fillable = ['id_tahun_anggaran', 'fase_id', 'tanggal', 'no_dpa', 'kota', 'status'];
     protected $table = 'tanggal_perencanaans';
 
     public function TahunAnggaran()
     {
-        return $this->belongsTo(TahunAnggaran::class, 'id_tahun_anggaran');
+        return $this->belongsTo(TahunAnggaran::class, 'id_tahun_anggaran', 'id');
     }
 
     public function Fase()
     {
-        return $this->belongsTo(Fase::class, 'id_fase');
+        return $this->belongsTo(Fase::class, 'fase_id', 'id');
     }
 }

@@ -102,7 +102,7 @@
                 @endif
 
                 @if ($canFoto && $step === 'upload_foto')
-                    <div class="card card-bordered bg-light mb-5">
+                    <div class="card card-bordered spj-stage-form-card mb-5">
                         <div class="card-header min-h-50px"><h5 class="card-title">{{ $fotoList->isNotEmpty() ? 'Perbarui Foto Barang Datang' : 'Unggah Foto Barang Datang' }}</h5></div>
                         <div class="card-body">
                             <form method="POST" enctype="multipart/form-data" action="{{ route('usulan-belanja.pengadaan.foto', $spj->id) }}">

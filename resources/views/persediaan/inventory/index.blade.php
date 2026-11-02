@@ -7,7 +7,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-6">
         <div>
             <h1 class="fs-2 fw-bold text-gray-900 mb-1">{{ $title }}</h1>
-            <div class="text-muted">Barang masuk berasal dari usulan belanja berstatus Sudah di Bayar. Pengeluaran dan opname tercatat dalam kartu stok.</div>
+            <div class="text-muted">Barang masuk berasal dari barang yang sudah diterima oleh Pendukung PPK dan dinyatakan selesai oleh Pengurus Barang. Pengeluaran dan opname tercatat dalam kartu stok.</div>
         </div>
         <a href="{{ route('module-portal') }}" class="btn btn-light-primary"><i class="fas fa-arrow-left me-2"></i>Beranda Modul</a>
     </div>
@@ -27,14 +27,14 @@
 
     @if ($page === 'barang_masuk')
     <section class="card border-0 shadow-sm mb-6">
-        <div class="card-header border-0 pt-6 d-flex flex-wrap justify-content-between align-items-center gap-3"><div><h2 class="card-title fs-3 fw-bold">Registrasi Barang Masuk</h2><div class="text-muted">Daftar item persediaan yang status pembayarannya sudah Sudah di Bayar. Volume masuk dibatasi sesuai volume pada SPJ.</div></div><button type="button" class="btn btn-light-primary" data-bs-toggle="modal" data-bs-target="#externalReceiveModal"><i class="fas fa-plus me-2"></i>Barang Masuk Non-Usulan</button></div>
+        <div class="card-header border-0 pt-6 d-flex flex-wrap justify-content-between align-items-center gap-3"><div><h2 class="card-title fs-3 fw-bold">Registrasi Barang Masuk</h2><div class="text-muted">Daftar barang yang telah diterima oleh Pendukung PPK dan divalidasi Pengurus Barang. Volume masuk dibatasi sesuai volume pada SPJ.</div></div><button type="button" class="btn btn-light-primary" data-bs-toggle="modal" data-bs-target="#externalReceiveModal"><i class="fas fa-plus me-2"></i>Barang Masuk Non-Usulan</button></div>
         <div class="card-body pt-2">
             <div class="table-responsive">
                 <table class="table table-row-bordered align-middle gy-3">
-                    <thead><tr class="text-muted fw-bold text-uppercase fs-7"><th>Kode Barang / RKBU</th><th>Unit</th><th>No. SPJ / BAST</th><th class="text-end">Volume SPJ</th><th class="text-end">Sudah Masuk</th><th class="text-end">Sisa Penerimaan</th><th>Tanggal Bayar</th><th></th></tr></thead>
+                    <thead><tr class="text-muted fw-bold text-uppercase fs-7"><th>Kode Barang / RKBU</th><th>Unit</th><th>No. SPJ / BAST</th><th class="text-end">Volume SPJ</th><th class="text-end">Sudah Masuk</th><th class="text-end">Sisa Penerimaan</th><th>Tanggal Validasi</th><th></th></tr></thead>
                     <tbody>
                         @if ($sources->isEmpty())
-                            <tr><td colspan="8" class="text-center text-muted py-8">Belum ada item persediaan berstatus pembayaran Sudah di Bayar.</td></tr>
+                            <tr><td colspan="8" class="text-center text-muted py-8">Belum ada barang yang sudah diterima Pendukung PPK dan divalidasi Pengurus Barang.</td></tr>
                         @else
                         @foreach ($sources as $source)
                             <tr>
@@ -44,8 +44,8 @@
                                 <td class="text-end">{{ $qty($source->volume) }} {{ $source->satuan }}</td>
                                 <td class="text-end">{{ $qty($source->received_quantity) }}</td>
                                 <td class="text-end fw-bold">{{ $qty($source->remaining_quantity) }} {{ $source->satuan }}</td>
-                                <td>{{ $source->tanggal_pembayaran ? \Illuminate\Support\Carbon::parse($source->tanggal_pembayaran)->format('d-m-Y') : '-' }}</td>
-                                <td class="text-end">@if ($canManage && $source->remaining_quantity > 0)<button class="btn btn-sm btn-primary js-receive-stock" data-bs-toggle="modal" data-bs-target="#receiveStockModal" data-source-id="{{ $source->spj_detail_id }}" data-item-name="{{ $source->nama_barang }}" data-remaining="{{ $source->remaining_quantity }}" data-unit="{{ $source->satuan }}">Catat Barang Masuk</button>@else<span class="badge badge-light-success">{{ $source->remaining_quantity <= 0 ? 'Penerimaan Lengkap' : 'Menunggu Pengurus Barang' }}</span>@endif</td>
+                                <td>{{ $source->tanggal_validasi_pengurus_barang ? \Illuminate\Support\Carbon::parse($source->tanggal_validasi_pengurus_barang)->format('d-m-Y') : '-' }}</td>
+                                <td class="text-end">@if ($canManage && $source->remaining_quantity > 0)<button class="btn btn-sm btn-primary js-receive-stock" data-bs-toggle="modal" data-bs-target="#receiveStockModal" data-source-id="{{ $source->spj_detail_id }}" data-item-name="{{ $source->nama_barang }}" data-remaining="{{ $source->remaining_quantity }}" data-unit="{{ $source->satuan }}">Catat Barang Masuk</button>@else<span class="badge badge-light-success">{{ $source->remaining_quantity <= 0 ? 'Penerimaan Lengkap' : 'Menunggu pencatatan Pengurus Barang' }}</span>@endif</td>
                             </tr>
                         @endforeach
                         @endif
@@ -84,6 +84,9 @@
                                 <td class="text-end">{{ $item->harga_satuan !== null ? $rupiah((float) $item->harga_satuan * (1 + (float) $item->ppn / 100)) : '-' }}</td>
                                 <td class="text-end fw-bold">{{ $item->harga_satuan !== null ? $rupiah($item->nilai_persediaan) : '-' }}</td>
                                 <td class="text-nowrap">
+                                    @if ($page === 'stok')
+                                        <a href="{{ route('persediaan.inventory.stok-kartu', $item->id) }}" target="_blank" class="btn btn-sm btn-light-success"><i class="fas fa-print me-1"></i>Cetak Kartu</a>
+                                    @endif
                                     @if ($page !== 'opname' && auth()->user()->unit_id)
                                         <button class="btn btn-sm btn-light-primary js-request-stock" data-bs-toggle="modal" data-bs-target="#requestStockModal" data-item-id="{{ $item->id }}" data-item-name="{{ $item->nama_barang }}" data-stock="{{ $item->stok }}" data-unit="{{ $item->satuan }}">Minta Barang</button>
                                     @endif
@@ -165,20 +168,20 @@
                 <div class="col-md-4"><label class="form-label">Unit gudang</label><select name="unit_id" class="form-select"><option value="">Semua unit gudang</option>@foreach ($units as $unit)<option value="{{ $unit->id }}" @selected(request('unit_id') === $unit->id)>{{ $unit->nama_unit }}</option>@endforeach</select></div>
                 <div class="col-md-4"><label class="form-label">Unit peminta</label><select name="unit_peminta_id" class="form-select"><option value="">Semua unit peminta</option>@foreach ($units as $unit)<option value="{{ $unit->id }}" @selected(request('unit_peminta_id') === $unit->id)>{{ $unit->nama_unit }}</option>@endforeach</select></div>
             @endif
-            <div class="col-md-2 d-flex gap-2"><button class="btn btn-primary flex-grow-1">Terapkan</button><a href="{{ route('persediaan.inventory.laporan') }}" class="btn btn-light">Reset</a></div>
+            <div class="col-12 d-flex flex-wrap justify-content-end gap-2"><button class="btn btn-primary">Terapkan Filter</button><a href="{{ route('persediaan.inventory.laporan') }}" class="btn btn-light">Reset</a><button type="submit" formaction="{{ route('persediaan.inventory.stok-kartu-filter') }}" formtarget="_blank" class="btn btn-light-success"><i class="fas fa-print me-2"></i>Cetak Kartu dari Filter</button></div>
         </form>
     @endif
     <section class="card border-0 shadow-sm">
         <div class="card-header border-0 pt-6"><div><h2 class="card-title fs-3 fw-bold">Kartu Stok / Riwayat Mutasi</h2><div class="text-muted">Mencakup barang masuk, barang keluar, dan selisih stok opname.</div></div></div>
         <div class="card-body pt-2"><div class="table-responsive">
             <table class="table table-row-bordered align-middle gy-3">
-                <thead><tr class="text-muted fw-bold text-uppercase fs-7"><th>Tanggal</th><th>Barang</th><th>Gudang / Unit Stok</th><th>Unit Peminta</th><th>Jenis</th><th class="text-end">Mutasi</th><th class="text-end">Saldo Sebelum</th><th class="text-end">Saldo Sesudah</th><th>Keterangan</th><th>Petugas</th></tr></thead>
+                <thead><tr class="text-muted fw-bold text-uppercase fs-7"><th>Tanggal</th><th>Barang</th><th>Gudang / Unit Stok</th><th>Unit Peminta</th><th>Jenis</th><th class="text-end">Mutasi</th><th class="text-end">Saldo Sebelum</th><th class="text-end">Saldo Sesudah</th><th>Keterangan</th><th>Petugas</th><th>Aksi</th></tr></thead>
                 <tbody>
                     @if ($transactions->isEmpty())
-                        <tr><td colspan="10" class="text-center text-muted py-8">Belum ada transaksi persediaan.</td></tr>
+                        <tr><td colspan="11" class="text-center text-muted py-8">Belum ada transaksi persediaan.</td></tr>
                     @else
                     @foreach ($transactions as $transaction)
-                        <tr><td>{{ $transaction->tanggal?->format('d-m-Y') }}</td><td>{{ $transaction->item?->nama_barang }}</td><td>{{ $transaction->unit?->nama_unit }}</td><td>{{ $transaction->requestingUnit?->nama_unit ?: '-' }}</td><td>{{ ucfirst($transaction->jenis) }}</td><td class="text-end">{{ $qty($transaction->jumlah) }} {{ $transaction->item?->satuan }}</td><td class="text-end">{{ $qty($transaction->stok_sebelum) }}</td><td class="text-end fw-bold">{{ $qty($transaction->stok_sesudah) }}</td><td>{{ $transaction->keterangan ?: '-' }}</td><td>{{ $transaction->actor?->nama ?: 'Akun dihapus' }}</td></tr>
+                        <tr><td>{{ $transaction->tanggal?->format('d-m-Y') }}</td><td>{{ $transaction->item?->nama_barang }}</td><td>{{ $transaction->unit?->nama_unit }}</td><td>{{ $transaction->requestingUnit?->nama_unit ?: '-' }}</td><td>{{ ucfirst($transaction->jenis) }}</td><td class="text-end">{{ $qty($transaction->jumlah) }} {{ $transaction->item?->satuan }}</td><td class="text-end">{{ $qty($transaction->stok_sebelum) }}</td><td class="text-end fw-bold">{{ $qty($transaction->stok_sesudah) }}</td><td>{{ $transaction->keterangan ?: '-' }}</td><td>{{ $transaction->actor?->nama ?: 'Akun dihapus' }}</td><td><a href="{{ route('persediaan.inventory.stok-kartu', $transaction->persediaan_item_id) }}" target="_blank" class="btn btn-sm btn-light-success text-nowrap"><i class="fas fa-print me-1"></i>Cetak kartu</a></td></tr>
                     @endforeach
                     @endif
                 </tbody>

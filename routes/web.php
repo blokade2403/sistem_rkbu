@@ -11,6 +11,7 @@ use App\Http\Controllers\MasterBackend\SettingInput\PpnController;
 use App\Http\Controllers\MasterBackend\SettingInput\PenempatanController;
 use App\Http\Controllers\MasterBackend\SettingInput\PaguAnggaranController;
 use App\Http\Controllers\MasterBackend\SettingInput\TahunAnggaranController;
+use App\Http\Controllers\MasterBackend\SettingInput\TanggalPerencanaController;
 use App\Http\Controllers\MasterBackend\SettingInput\TargetSpsController;
 use App\Http\Controllers\MasterBackend\SettingInput\UraianDuaController;
 use App\Http\Controllers\MasterBackend\SettingInput\UraianSatuController;
@@ -54,6 +55,7 @@ use App\Http\Controllers\Assets\AssetModuleController;
 use App\Http\Controllers\Assets\AssetImportController;
 use App\Http\Controllers\Persediaan\PersediaanInventoryController;
 use App\Http\Controllers\Pendapatan\PendapatanController;
+use App\Http\Controllers\Perencanaan\TugasPerencanaanController;
 use App\Http\Controllers\Pengadaan\PerusahaanController;
 use App\Http\Controllers\WorkFlow\ApprovalController;
 use App\Http\Controllers\WorkFlow\PositionSubKategoriRkbuController;
@@ -80,6 +82,12 @@ Route::get('/asset/qr/{id}', [AssetModuleController::class, 'qrImage'])->name('a
 Route::middleware('auth')->group(function () {
     Route::view('/modul', 'portal.index')->name('module-portal');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::prefix('perencanaan/tugas')->name('perencanaan.tugas.')->middleware('checkRole:Perencana,Super Admin')->controller(TugasPerencanaanController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/', 'store')->name('store');
+        Route::put('/{task}', 'update')->name('update');
+        Route::delete('/{task}', 'destroy')->name('destroy');
+    });
     Route::prefix('asset')->name('asset-module.')->controller(AssetModuleController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/history', 'historyIndex')->name('history');
@@ -100,6 +108,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/barang-masuk', 'barangMasuk')->name('barang-masuk');
         Route::get('/stok', 'stok')->name('stok');
         Route::get('/stok/pdf', 'stockPdf')->name('stok-pdf');
+        Route::get('/stok/kartu/cetak', 'stockCardsPrint')->name('stok-kartu-filter');
+        Route::get('/stok/{id}/kartu', 'stockCardPrint')->name('stok-kartu');
         Route::get('/permintaan', 'permintaan')->name('permintaan');
         Route::get('/permintaan/barang', 'searchRequestableItems')->name('request-items');
         Route::get('/stok-opname', 'stokOpname')->name('opname');
@@ -233,6 +243,7 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('setting-input')->group(function () {
         Route::resource('tahun_anggarans', TahunAnggaranController::class);
+        Route::resource('tanggal_perencanaans', TanggalPerencanaController::class)->except(['create', 'edit', 'show']);
         Route::resource('komponens', KomponenController::class);
         Route::resource('uraian_satus', UraianSatuController::class);
         Route::resource('uraian_duas', UraianDuaController::class);
@@ -435,6 +446,8 @@ Route::middleware('auth')->group(function () {
                 ->name('modal_kantor.print');
             Route::get('/modal_kantor/template', [RkbuBulkImportController::class, 'template'])->defaults('module', 'modal_kantor')->name('modal_kantor.template');
             Route::post('/modal_kantor/import', [RkbuBulkImportController::class, 'import'])->defaults('module', 'modal_kantor')->name('modal_kantor.import');
+            Route::get('/modal_kantor/{id}/analisa/preview', [RkbuModalKantorController::class, 'previewAnalysis'])->name('modal_kantor.analysis-preview');
+            Route::get('/modal_kantor/{id}/analisa', [RkbuModalKantorController::class, 'downloadAnalysis'])->name('modal_kantor.analysis-download');
             Route::resource('modal_kantor', RkbuModalKantorController::class);
             Route::post('/modal_kantor/{id}/submit', [RkbuModalKantorController::class, 'submit'])
                 ->name('modal_kantor.submit');
@@ -445,6 +458,8 @@ Route::middleware('auth')->group(function () {
                 ->name('modal_alkes.print');
             Route::get('/modal_alkes/template', [RkbuBulkImportController::class, 'template'])->defaults('module', 'modal_alkes')->name('modal_alkes.template');
             Route::post('/modal_alkes/import', [RkbuBulkImportController::class, 'import'])->defaults('module', 'modal_alkes')->name('modal_alkes.import');
+            Route::get('/modal_alkes/{id}/analisa/preview', [RkbuModalAlkesController::class, 'previewAnalysis'])->name('modal_alkes.analysis-preview');
+            Route::get('/modal_alkes/{id}/analisa', [RkbuModalAlkesController::class, 'downloadAnalysis'])->name('modal_alkes.analysis-download');
             Route::resource('modal_alkes', RkbuModalAlkesController::class);
             Route::post('/modal_alkes/{id}/submit', [RkbuModalAlkesController::class, 'submit'])
                 ->name('modal_alkes.submit');

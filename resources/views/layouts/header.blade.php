@@ -1,3 +1,8 @@
+ <style>
+     .approval-notification-menu { width: min(375px, calc(100vw - 24px)); border-radius: 16px !important; }
+     .approval-notification-item { border: 1px solid #edf0f5; background: #fff; text-decoration: none; transition: border-color .15s ease, background-color .15s ease, transform .15s ease; }
+     .approval-notification-item:hover { border-color: #cbdcff; background: #f6f9ff; transform: translateY(-1px); }
+ </style>
  <!--begin::Header-->
  <div id="kt_header" style="" class="header align-items-stretch">
      <!--begin::Container-->
@@ -266,75 +271,45 @@
                      <!--begin::Notifications-->
                      <div class="d-flex align-items-center ms-1 ms-lg-3">
                          <!--begin::Menu- wrapper-->
-                         <div class="btn btn-icon btn-active-light-primary position-relative w-30px h-30px w-md-40px h-md-40px"
+                         <div class="btn btn-icon btn-active-light-primary position-relative w-30px h-30px w-md-40px h-md-40px rounded-circle"
                              data-kt-menu-trigger="click" data-kt-menu-attach="parent"
-                             data-kt-menu-placement="bottom-end">
+                             data-kt-menu-placement="bottom-end" aria-label="Notifikasi approval" title="Notifikasi approval">
                              <!--begin::Svg Icon | path: icons/duotune/general/gen022.svg-->
-                             <span class="svg-icon svg-icon-1">
-                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                     viewBox="0 0 24 24" fill="none">
-                                     <path
-                                         d="M11.2929 2.70711C11.6834 2.31658 12.3166 2.31658 12.7071 2.70711L15.2929 5.29289C15.6834 5.68342 15.6834 6.31658 15.2929 6.70711L12.7071 9.29289C12.3166 9.68342 11.6834 9.68342 11.2929 9.29289L8.70711 6.70711C8.31658 6.31658 8.31658 5.68342 8.70711 5.29289L11.2929 2.70711Z"
-                                         fill="black" />
-                                     <path
-                                         d="M11.2929 14.7071C11.6834 14.3166 12.3166 14.3166 12.7071 14.7071L15.2929 17.2929C15.6834 17.6834 15.6834 18.3166 15.2929 18.7071L12.7071 21.2929C12.3166 21.6834 11.6834 21.6834 11.2929 21.2929L8.70711 18.7071C8.31658 18.3166 8.31658 17.6834 8.70711 17.2929L11.2929 14.7071Z"
-                                         fill="black" />
-                                     <path opacity="0.3"
-                                         d="M5.29289 8.70711C5.68342 8.31658 6.31658 8.31658 6.70711 8.70711L9.29289 11.2929C9.68342 11.6834 9.68342 12.3166 9.29289 12.7071L6.70711 15.2929C6.31658 15.6834 5.68342 15.6834 5.29289 15.2929L2.70711 12.7071C2.31658 12.3166 2.31658 11.6834 2.70711 11.2929L5.29289 8.70711Z"
-                                         fill="black" />
-                                     <path opacity="0.3"
-                                         d="M17.2929 8.70711C17.6834 8.31658 18.3166 8.31658 18.7071 8.70711L21.2929 11.2929C21.6834 11.6834 21.6834 12.3166 21.2929 12.7071L18.7071 15.2929C18.3166 15.6834 17.6834 15.6834 17.2929 15.2929L14.7071 12.7071C14.3166 12.3166 14.3166 11.6834 14.7071 11.2929L17.2929 8.70711Z"
-                                         fill="black" />
-                                 </svg>
-                             </span>
+                             <i class="fas fa-bell fs-3 text-gray-700"></i>
                              <!--end::Svg Icon-->
                              @if (($approvalNotificationTotal ?? 0) > 0)
                                  <span class="position-absolute top-0 start-100 translate-middle badge badge-circle badge-danger fs-9">{{ $approvalNotificationTotal > 99 ? '99+' : $approvalNotificationTotal }}</span>
                              @endif
                          </div>
                          <!--begin::Menu-->
-                         <div class="menu menu-sub menu-sub-dropdown menu-column w-350px w-lg-375px approval-notification-menu"
+                         <div class="menu menu-sub menu-sub-dropdown menu-column w-350px w-lg-375px approval-notification-menu shadow-lg border-0 overflow-hidden"
                              data-kt-menu="true">
                              <!--begin::Heading-->
-                             <div class="d-flex flex-column bgi-no-repeat rounded-top"
-                                 style="background-image: url(&quot;assets/media/misc/pattern-1.jpg&quot;);">
-                                 <!--begin::Title-->
-                                 <h3 class="text-white fw-bold px-9 mt-7 mb-6">
-                                     Notifikasi Approval
-                                     <span class="fs-8 opacity-75 ps-3">{{ $approvalNotificationTotal ?? 0 }} tugas</span>
-                                 </h3>
-                                 <!--end::Title-->
-                                 <!--begin::Tabs-->
-                                 <ul class="nav nav-line-tabs nav-line-tabs-2x nav-stretch fw-bold px-9 d-none">
-                                     <li class="nav-item">
-                                         <a class="nav-link text-white opacity-75 opacity-state-100 pb-4"
-                                             data-bs-toggle="tab" href="#kt_topbar_notifications_1">Alerts</a>
-                                     </li>
-                                     <li class="nav-item">
-                                         <a class="nav-link text-white opacity-75 opacity-state-100 pb-4 active"
-                                             data-bs-toggle="tab" href="#kt_topbar_notifications_2">Updates</a>
-                                     </li>
-                                     <li class="nav-item">
-                                         <a class="nav-link text-white opacity-75 opacity-state-100 pb-4"
-                                             data-bs-toggle="tab" href="#kt_topbar_notifications_3">Logs</a>
-                                     </li>
-                                 </ul>
-                                 <!--end::Tabs-->
+                             <div class="px-6 py-5 bg-light-primary border-bottom">
+                                 <div class="d-flex align-items-center justify-content-between">
+                                     <div>
+                                         <h3 class="fw-bold text-gray-900 mb-1">Notifikasi Approval</h3>
+                                         <div class="text-muted fs-7">Daftar tugas yang menunggu tindakan Anda</div>
+                                     </div>
+                                     <span class="badge badge-primary rounded-pill px-3 py-2">{{ $approvalNotificationTotal ?? 0 }}</span>
+                                 </div>
                              </div>
                              <!--end::Heading-->
-                             <div class="approval-notification-list p-5">
+                             <div class="approval-notification-list p-4">
                                  @forelse ($approvalNotifications ?? [] as $notification)
-                                     <a href="{{ $notification['url'] }}" class="d-flex align-items-center justify-content-between gap-3 p-4 mb-2 rounded bg-hover-light-primary text-gray-800 text-hover-primary">
-                                         <span class="d-flex align-items-center gap-3">
-                                             <span class="symbol symbol-35px"><span class="symbol-label bg-light-primary"><i class="ki-duotone {{ $notification['icon'] }} fs-3 text-primary"><span class="path1"></span><span class="path2"></span></i></span></span>
-                                             <span class="fw-semibold">{{ $notification['label'] }}</span>
+                                     <a href="{{ $notification['url'] }}" class="approval-notification-item d-flex align-items-center gap-3 p-4 mb-2 rounded-3 text-gray-800 text-hover-primary">
+                                         <span class="symbol symbol-45px symbol-circle flex-shrink-0"><span class="symbol-label bg-light-primary"><i class="ki-duotone {{ $notification['icon'] }} fs-3 text-primary"><span class="path1"></span><span class="path2"></span></i></span></span>
+                                         <span class="d-flex flex-column flex-grow-1 min-w-0">
+                                             <span class="fw-bold text-gray-900 text-hover-primary">{{ $notification['label'] }}</span>
+                                             <span class="text-muted fs-7 mt-1">{{ $notification['count'] }} tugas menunggu</span>
                                          </span>
-                                         <span class="badge badge-light-primary">{{ $notification['count'] }}</span>
+                                         <span class="badge badge-light-primary rounded-pill px-3 py-2">{{ $notification['count'] }}</span>
                                      </a>
                                  @empty
-                                     <div class="text-center text-muted py-8">
-                                         <i class="ki-duotone ki-check-circle fs-2x text-success d-block mb-3"><span class="path1"></span><span class="path2"></span></i>
-                                         Tidak ada tugas approval yang menunggu.
+                                     <div class="text-center py-8 px-4">
+                                         <span class="symbol symbol-60px symbol-circle mx-auto mb-4"><span class="symbol-label bg-light-success"><i class="ki-duotone ki-check-circle fs-2x text-success"><span class="path1"></span><span class="path2"></span></i></span></span>
+                                         <div class="fw-bold text-gray-800 mb-1">Semua sudah diperiksa</div>
+                                         <div class="text-muted fs-7">Tidak ada tugas approval yang menunggu.</div>
                                      </div>
                                  @endforelse
                              </div>

@@ -29,6 +29,7 @@
         .doc-meta { margin: 4px 0; color: #333; }
         .signatures { width: 100%; border-collapse: collapse; margin: 30px 0 14px; page-break-inside: avoid; }
         .signatures td { border: 0; text-align: center; vertical-align: top; width: 33.33%; padding: 3px 8px; }
+        .approval-date { margin: 24px 0 -22px; text-align: right; font-size: 8px; }
         .sign-name { padding-top: 32px !important; text-decoration: underline; font-weight: bold; }
         .document { page-break-inside: auto; }
         .document + .document { page-break-before: always; }
@@ -159,6 +160,9 @@
                 </tbody>
             </table>
 
+            @if ($tanggalPengesahan)
+                <div class="approval-date">{{ $tanggalPengesahan->kota ?: 'Jakarta' }}, {{ \Carbon\Carbon::parse($tanggalPengesahan->tanggal)->locale('id')->translatedFormat('d F Y') }}</div>
+            @endif
             <table class="signatures">
                 <tr>
                     @forelse ($signers as $approval)
