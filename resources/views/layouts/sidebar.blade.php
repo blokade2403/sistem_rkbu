@@ -754,6 +754,12 @@
                             <span class="menu-title">Tugas Perencanaan</span>
                         </a>
                     </div>
+                    <div class="menu-item">
+                        <a class="menu-link" href="{{ route('perencanaan.dokumen.index') }}">
+                            <span class="menu-icon"><i class="fas fa-folder-open fs-4"></i></span>
+                            <span class="menu-title">Dokumen Perencanaan</span>
+                        </a>
+                    </div>
                 @endif
                  @if (!auth()->user()->hasRole('Operator') || auth()->user()->hasRole('Super Admin'))
                  <div class="menu-item">

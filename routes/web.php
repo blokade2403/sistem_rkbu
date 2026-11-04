@@ -56,6 +56,7 @@ use App\Http\Controllers\Assets\AssetImportController;
 use App\Http\Controllers\Persediaan\PersediaanInventoryController;
 use App\Http\Controllers\Pendapatan\PendapatanController;
 use App\Http\Controllers\Perencanaan\TugasPerencanaanController;
+use App\Http\Controllers\Perencanaan\DokumenPerencanaanController;
 use App\Http\Controllers\Pengadaan\PerusahaanController;
 use App\Http\Controllers\WorkFlow\ApprovalController;
 use App\Http\Controllers\WorkFlow\PositionSubKategoriRkbuController;
@@ -87,6 +88,13 @@ Route::middleware('auth')->group(function () {
         Route::post('/', 'store')->name('store');
         Route::put('/{task}', 'update')->name('update');
         Route::delete('/{task}', 'destroy')->name('destroy');
+    });
+    Route::prefix('perencanaan/dokumen')->name('perencanaan.dokumen.')->middleware('checkRole:Perencana,Super Admin')->controller(DokumenPerencanaanController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/', 'store')->name('store');
+        Route::put('/{dokumen}', 'update')->name('update');
+        Route::delete('/{dokumen}', 'destroy')->name('destroy');
+        Route::get('/{dokumen}/file', 'download')->name('download');
     });
     Route::prefix('asset')->name('asset-module.')->controller(AssetModuleController::class)->group(function () {
         Route::get('/', 'index')->name('index');
