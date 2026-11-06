@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\MyProfileController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\MonitoringAnggaranController;
 use App\Http\Controllers\Dashboard\LaporanRealisasiBulananController;
@@ -81,10 +82,14 @@ Route::get('/asset/scan/{id}', [AssetModuleController::class, 'scan'])->name('as
 Route::get('/asset/qr/{id}', [AssetModuleController::class, 'qrImage'])->name('asset.qr');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/my-profile', [MyProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/my-profile', [MyProfileController::class, 'update'])->name('profile.update');
     Route::view('/modul', 'portal.index')->name('module-portal');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::prefix('perencanaan/tugas')->name('perencanaan.tugas.')->middleware('checkRole:Perencana,Super Admin')->controller(TugasPerencanaanController::class)->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/laporan/{month}', 'report')->where('month', '\\d{4}-\\d{2}')->name('report');
+        Route::get('/laporan/{month}/pdf', 'downloadReport')->where('month', '\\d{4}-\\d{2}')->name('report.download');
         Route::post('/', 'store')->name('store');
         Route::put('/{task}', 'update')->name('update');
         Route::delete('/{task}', 'destroy')->name('destroy');

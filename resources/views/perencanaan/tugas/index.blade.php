@@ -26,7 +26,10 @@
                 <h1 class="fs-2x fw-bolder text-gray-900 mb-2">Tugas Perencanaan</h1>
                 <p class="text-gray-600 fs-5 mb-0">Kelola agenda, pantau tenggat, dan pastikan setiap tugas selesai tepat waktu.</p>
             </div>
-            <button class="btn btn-primary px-5" type="button" onclick="openTaskForm()"><i class="fas fa-plus me-2"></i>Tambah tugas</button>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-light-primary px-5" href="{{ route('perencanaan.tugas.report', $calendarMonth->format('Y-m')) }}"><i class="fas fa-eye me-2"></i>Pratinjau laporan {{ $calendarMonth->locale('id')->translatedFormat('F Y') }}</a>
+                <button class="btn btn-primary px-5" type="button" onclick="openTaskForm()"><i class="fas fa-plus me-2"></i>Tambah tugas</button>
+            </div>
         </div>
     </section>
 

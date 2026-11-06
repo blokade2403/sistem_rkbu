@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Usulan Belanja {{ $usulan->no_usulan_belanja }}</title>
     <style>
-        @page { margin: 25px 32px; }
+        @page { size: A4 portrait; margin: 25px 32px; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 8px; color: #111; }
         .letterhead { width: 100%; border-bottom: 1px solid #111; margin-bottom: 12px; padding-bottom: 7px; }
         .letterhead td { border: 0; text-align: center; vertical-align: middle; }
@@ -39,9 +39,24 @@
         .sign-name { font-weight: bold; text-decoration: underline; }
         .note { margin-top: 24px; page-break-inside: avoid; }
         .small { font-size: 7px; }
+        .preview-toolbar { max-width: 900px; margin: 18px auto; display: flex; justify-content: flex-end; gap: 8px; font: 14px Arial, sans-serif; }
+        .preview-toolbar a, .preview-toolbar button { border: 0; border-radius: 4px; padding: 10px 14px; color: #fff; background: #0d6efd; text-decoration: none; cursor: pointer; }
+        .preview-toolbar .download { background: #198754; }
+        .preview-page { box-sizing: border-box; width: 794px; max-width: calc(100% - 24px); min-height: 1123px; margin: 0 auto 24px; padding: 28px; background: #fff; box-shadow: 0 2px 12px #0002; }
+        .approval-note { margin-top: 3px; font-size: 6px; font-weight: normal; line-height: 1.25; }
+        .approval-qr { text-align: center; font-size: 6px; line-height: 1.2; }
+        .approval-qr img { width: 82px; height: 82px; display: block; margin: 0 auto 3px; }
+        @media print { .preview-toolbar { display: none; } .preview-page { max-width: none; margin: 0; padding: 0; box-shadow: none; } }
     </style>
 </head>
 <body>
+    @if(!empty($preview))
+        <div class="preview-toolbar">
+            <a class="download" href="{{ $downloadUrl }}">Unduh PDF</a>
+            <button type="button" onclick="window.print()">Cetak</button>
+        </div>
+        <main class="preview-page">
+    @endif
     @php
         $subkategori = $rkbu?->subKategoriRkbu;
         $kategori = $subkategori?->kategori;
@@ -161,7 +176,16 @@
                     @for($empty = $signatureRow->count(); $empty < 3; $empty++)<td></td>@endfor
                 </tr>
                 <tr>
-                    @foreach($signatureRow as $signature)<td class="sign-space"></td>@endforeach
+                    @foreach($signatureRow as $signature)
+                        <td class="sign-space">
+                            @if($signature['qr_code'])
+                                <div class="approval-qr">
+                                    <img src="{{ $signature['qr_code'] }}" alt="QR validasi {{ $signature['nama'] }}">
+                                    {{ $usulan->no_usulan_belanja }}<br>divalidasi oleh {{ $signature['nama'] }}
+                                </div>
+                            @endif
+                        </td>
+                    @endforeach
                     @for($empty = $signatureRow->count(); $empty < 3; $empty++)<td class="sign-space"></td>@endfor
                 </tr>
                 <tr>
@@ -178,6 +202,13 @@
         @endforeach
     @endif
 
-    <div class="note"><strong>Catatan:</strong> {{ $usulan->catatan ?: '-' }}</div>
+    <div class="note">
+        <strong>Catatan:</strong>
+        @if(filled($usulan->catatan)){{ $usulan->catatan }}@else-@endif
+        @foreach($signatures->filter(fn ($signature) => filled($signature['catatan'])) as $signature)
+            <div class="approval-note"><strong>Catatan {{ $signature['jabatan'] }} ({{ $signature['nama'] }}):</strong> {{ $signature['catatan'] }}</div>
+        @endforeach
+    </div>
+    @if(!empty($preview))</main>@endif
 </body>
 </html>

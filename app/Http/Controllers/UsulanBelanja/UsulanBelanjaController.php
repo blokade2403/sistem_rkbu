@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
 
 
 class UsulanBelanjaController extends Controller
@@ -186,8 +188,38 @@ class UsulanBelanjaController extends Controller
         $subtotal = (float) $items->sum('total_anggaran');
         $totalPpn = (float) $items->sum('total_ppn');
         $totalAnggaran = $subtotal + $totalPpn;
-        $anggaranRkbu = (float) $items->sum('anggaran_tersedia');
-        $sisaAnggaran = (float) $items->sum('sisa_anggaran_rkbu');
+        $anggaranRkbu = 0.0;
+        foreach ([
+            'rkbu_detail_barjass',
+            'rkbu_detail_persediaans',
+            'rkbu_detail_modals',
+            'rkbu_detail_modal_alkes',
+            'rkbu_detail_pegawais',
+        ] as $detailTable) {
+            $anggaranRkbu += (float) DB::table($detailTable . ' as detail')
+                ->join('rkbus', 'rkbus.id', '=', 'detail.rkbu_id')
+                ->where('rkbus.status', 'approved')
+                ->where('rkbus.tahun_anggaran_id', $usulanBelanja->tahun_anggaran_id)
+                ->where('rkbus.sub_kategori_rkbu_id', $usulanBelanja->sub_kategori_rkbu_id)
+                ->where('rkbus.sumber_dana_id', $usulanBelanja->sumber_dana_id)
+                ->sum('detail.total_anggaran');
+        }
+        $previousUsulanAmount = (float) DB::table('usulan_belanja_items as items')
+            ->join('usulan_belanjas as previous_usulan', 'previous_usulan.id', '=', 'items.usulan_belanja_id')
+            ->where('previous_usulan.sub_kategori_rkbu_id', $usulanBelanja->sub_kategori_rkbu_id)
+            ->where('previous_usulan.sumber_dana_id', $usulanBelanja->sumber_dana_id)
+            ->where('previous_usulan.tahun_anggaran_id', $usulanBelanja->tahun_anggaran_id)
+            ->whereIn('previous_usulan.status_usulan', ['proses', 'approved'])
+            ->where(function ($query) use ($usulanBelanja) {
+                $query->where('previous_usulan.created_at', '<', $usulanBelanja->created_at)
+                    ->orWhere(function ($sameTime) use ($usulanBelanja) {
+                        $sameTime->where('previous_usulan.created_at', $usulanBelanja->created_at)
+                            ->where('previous_usulan.nomor_urut', '<', $usulanBelanja->nomor_urut);
+                    });
+            })
+            ->selectRaw('COALESCE(SUM(ROUND(items.harga_satuan * items.volume, 2) + ROUND(ROUND(items.harga_satuan * items.volume, 2) * COALESCE(items.ppn, 0) / 100, 2)), 0) as amount')
+            ->value('amount');
+        $sisaAnggaran = max(0, round($anggaranRkbu - $previousUsulanAmount - $subtotal - $totalPpn, 2));
         $approvals = ($usulanBelanja->workflowInstance?->approvals ?? collect())
             ->sortBy(fn($approval) => str_pad((string) $approval->sequence, 5, '0', STR_PAD_LEFT)
                 . '-' . ($approval->created_at?->format('YmdHis') ?? ''))
@@ -253,6 +285,7 @@ class UsulanBelanjaController extends Controller
                 'nip' => $lastApproval->validatorUser?->nip,
                 'status' => $status,
                 'tanggal' => $approvalDate,
+                'catatan' => $userApprovals->pluck('catatan')->filter(fn ($note) => filled($note))->unique()->implode(' / '),
             ];
         });
         $judulHeader = JudulHeader::query()->first();
@@ -273,7 +306,20 @@ class UsulanBelanjaController extends Controller
 
         $fileNumber = preg_replace('/[^A-Za-z0-9._-]+/', '-', (string) $usulanBelanja->no_usulan_belanja);
 
-        return Pdf::loadView('usulan_belanja.print', [
+        $signatures = $signatures->map(function (array $signature) use ($usulanBelanja) {
+            $signature['qr_code'] = null;
+            if ($signature['status'] === 'approved' && $signature['nama'] !== 'Belum ditentukan') {
+                $qrPayload = 'Nomor usulan belanja ' . $usulanBelanja->no_usulan_belanja
+                    . ' sudah divalidasi oleh ' . $signature['nama'] . '.';
+                $signature['qr_code'] = 'data:image/png;base64,' . base64_encode(
+                    (new PngWriter())->write(new QrCode($qrPayload))->getString()
+                );
+            }
+
+            return $signature;
+        });
+
+        $viewData = [
             'usulan' => $usulanBelanja,
             'rkbu' => $metadataRkbus->first() ?? $usulanBelanja->rkbu,
             'programLabel' => $programLabel,
@@ -292,8 +338,15 @@ class UsulanBelanjaController extends Controller
             'anggaranRkbu' => $anggaranRkbu,
             'sisaAnggaran' => $sisaAnggaran,
             'printedAt' => now(),
-        ])->setPaper('a4', 'portrait')
-            ->download('usulan-belanja-' . trim($fileNumber, '-._') . '.pdf');
+            'downloadUrl' => route('usulan-belanja.print', ['usulanBelanja' => $usulanBelanja->id, 'download' => 1]),
+        ];
+
+        $pdf = Pdf::loadView('usulan_belanja.print', $viewData)->setPaper('a4', 'portrait');
+        if (request()->boolean('download')) {
+            return $pdf->download('usulan-belanja-' . trim($fileNumber, '-._') . '.pdf');
+        }
+
+        return view('usulan_belanja.print', $viewData + ['preview' => true]);
     }
 
     public function printSuratPerintah(UsulanBelanja $usulanBelanja)

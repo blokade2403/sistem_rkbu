@@ -97,7 +97,7 @@
     updateErbaPrintButton();
     $('#approval-module-filter').on('change', updateErbaPrintButton);
 
-    $('#approval-print-rba, #approval-print-all, #approval-print-erba').on('click', function(event) {
+    $('#approval-print-rba, #approval-print-all, #approval-print-erba, #approval-print-kertas-kerja, #approval-preview-kertas-kerja').on('click', function(event) {
         event.preventDefault();
         const selectedModule = $('#approval-module-filter').val() || 'all';
         if (this.id === 'approval-print-erba' && !['all', 'barjas', 'pegawai'].includes(selectedModule)) {
@@ -106,7 +106,8 @@
         }
         const url = new URL(this.href, window.location.origin);
         const printType = this.id === 'approval-print-rba' ? 'rba' :
-            (this.id === 'approval-print-erba' ? 'erba' : 'rkbu');
+            (this.id === 'approval-print-erba' ? 'erba' :
+                (this.id === 'approval-print-kertas-kerja' ? 'kertas-kerja' : 'rkbu'));
         const filters = {
             module: selectedModule,
             sumber_dana_id: $('#approval-sumber-dana-filter').val(),
@@ -119,7 +120,20 @@
             if (value) url.searchParams.set(key, value);
             else url.searchParams.delete(key);
         });
+        if (this.id === 'approval-preview-kertas-kerja') {
+            const preview = $('#approval-kertas-kerja-preview');
+            $('#approval-kertas-kerja-frame').attr('src', url.toString());
+            $('#approval-kertas-kerja-open').attr('href', url.toString());
+            preview.removeClass('d-none');
+            preview[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+        }
         window.open(url.toString(), '_blank', 'noopener');
+    });
+
+    $('#approval-kertas-kerja-close').on('click', function() {
+        $('#approval-kertas-kerja-preview').addClass('d-none');
+        $('#approval-kertas-kerja-frame').attr('src', 'about:blank');
     });
 
     function updateApprovalSelection() {

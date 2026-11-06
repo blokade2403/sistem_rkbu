@@ -28,9 +28,9 @@
         .spec { font-style: italic; }
         .doc-meta { margin: 4px 0; color: #333; }
         .signatures { width: 100%; border-collapse: collapse; margin: 30px 0 14px; page-break-inside: avoid; }
-        .signatures td { border: 0; text-align: center; vertical-align: top; width: 33.33%; padding: 3px 8px; }
+        .signatures td { border: 0; text-align: right; vertical-align: top; width: 33.33%; padding: 3px 8px; }
         .approval-date { margin: 24px 0 -22px; text-align: right; font-size: 8px; }
-        .sign-name { padding-top: 32px !important; text-decoration: underline; font-weight: bold; }
+        .sign-name { padding-top: 32px !important; font-weight: bold; }
         .document { page-break-inside: auto; }
         .document + .document { page-break-before: always; }
         .empty { text-align: center; padding: 25px; }
@@ -48,7 +48,15 @@
         };
     @endphp
 
-    @forelse ($items->groupBy(fn ($item) => $item['rkbu']->sub_kategori_rkbu_id ?? 'tanpa-subkategori') as $categoryItems)
+    @if (($filters['print_type'] ?? '') === 'rba')
+        @include('workflow.approval.partials.cover')
+        @include('workflow.approval.partials.kertas_kerja')
+        <div style="page-break-before: always;"></div>
+    @endif
+
+    @forelse ($items->groupBy(fn ($item) => ($filters['print_type'] ?? '') === 'rba'
+        ? ($item['rkbu']->subKategoriRkbu?->kategori?->id_jenis_kategori_rkbu ?? 'tanpa-jenis-kategori')
+        : ($item['rkbu']->sub_kategori_rkbu_id ?? 'tanpa-subkategori')) as $categoryItems)
         @php
             $categoryItems = collect($categoryItems);
             $item = $categoryItems->first();
@@ -60,13 +68,30 @@
             $jenisKategori = $kategori?->jenis_kategori_rkbu;
             $rekening = $rkbu->subKategoriRkbu?->sub_kategori_rekening;
             $rekeningKategori = $rekening?->kategori_rekening;
+            $programLabels = $categoryItems->map(function ($entry) {
+                $subKegiatan = $entry['rkbu']->subKegiatan;
+                $program = $subKegiatan?->aktivitas?->program ?? $subKegiatan?->kegiatan?->program;
+                return trim(($program?->kode_program ?? '') . ' ' . ($program?->nama_program ?? ''));
+            })->filter()->unique()->values();
+            $kegiatanLabels = $categoryItems->map(function ($entry) {
+                $kegiatan = $entry['rkbu']->subKegiatan?->kegiatan;
+                return trim(($kegiatan?->kode_kegiatan ?? '') . ' ' . ($kegiatan?->nama_kegiatan ?? ''));
+            })->filter()->unique()->values();
+            $subKegiatanLabels = $categoryItems->map(function ($entry) {
+                $subKegiatan = $entry['rkbu']->subKegiatan;
+                return trim(($subKegiatan?->kode_sub_kegiatan ?? '') . ' ' . ($subKegiatan?->nama_sub_kegiatan ?? ''));
+            })->filter()->unique()->values();
             $total = $categoryItems->sum(fn ($categoryItem) => collect($categoryItem['details'])->sum(fn ($row) => (float) ($row['Total Anggaran'] ?? 0)));
-            $signers = $categoryItems
+            $subKategoriGroups = $categoryItems->groupBy(fn ($categoryItem) => $categoryItem['rkbu']->sub_kategori_rkbu_id ?? 'tanpa-subkategori');
+            $approvals = $categoryItems
                 ->flatMap(fn ($categoryItem) => $categoryItem['workflowInstances']->sortByDesc('created_at')->first()?->approvals ?? collect())
-                ->sortBy('sequence')
-                ->unique(fn ($approval) => $approval->validatorUser?->id ?? $approval->position_id ?? $approval->workflowStep?->role_id ?? $approval->sequence)
-                ->take(3)
-                ->values();
+                ->where('status', 'approved');
+            $signers = ($filters['print_type'] ?? '') === 'rba'
+                ? $approvals->where('sequence', $approvals->max('sequence'))->sortByDesc('approved_at')->take(1)->values()
+                : $approvals->sortBy('sequence')
+                    ->unique(fn ($approval) => $approval->validatorUser?->id ?? $approval->position_id ?? $approval->workflowStep?->role_id ?? $approval->sequence)
+                    ->take(3)
+                    ->values();
             $rowNumber = 0;
         @endphp
         <section class="document">
@@ -94,69 +119,92 @@
             </table>
 
             <table class="info">
-                <tr><td class="label">Program</td><td class="colon">:</td><td>{{ $program?->kode_program ?? '-' }} {{ $program?->nama_program ?? '' }}</td></tr>
-                <tr><td class="label">Kegiatan</td><td class="colon">:</td><td>{{ $kegiatan?->kode_kegiatan ?? '-' }} {{ $kegiatan?->nama_kegiatan ?? '' }}</td></tr>
-                <tr><td class="label">Sub Kegiatan</td><td class="colon">:</td><td>{{ $subKegiatan?->kode_sub_kegiatan ?? '-' }} {{ $subKegiatan?->nama_sub_kegiatan ?? '' }}</td></tr>
-                <tr><td class="label">Unit / Pengusul</td><td class="colon">:</td><td>{{ $rkbu->unit?->nama_unit ?? '-' }} / {{ $rkbu->creator?->nama ?? '-' }}</td></tr>
+                <tr><td class="label">Program</td><td class="colon">:</td><td>{{ ($filters['print_type'] ?? '') === 'rba' && $programLabels->count() > 1 ? 'Berbagai Program' : ($programLabels->first() ?: '-') }}</td></tr>
+                <tr><td class="label">Kegiatan</td><td class="colon">:</td><td>{{ ($filters['print_type'] ?? '') === 'rba' && $kegiatanLabels->count() > 1 ? 'Berbagai Kegiatan' : ($kegiatanLabels->first() ?: '-') }}</td></tr>
+                <tr><td class="label">Sub Kegiatan</td><td class="colon">:</td><td>{{ ($filters['print_type'] ?? '') === 'rba' && $subKegiatanLabels->count() > 1 ? 'Berbagai Sub Kegiatan' : ($subKegiatanLabels->first() ?: '-') }}</td></tr>
+                @if (($filters['print_type'] ?? '') !== 'rba')<tr><td class="label">Unit / Pengusul</td><td class="colon">:</td><td>{{ $rkbu->unit?->nama_unit ?? '-' }} / {{ $rkbu->creator?->nama ?? '-' }}</td></tr>@endif
                 <tr><td class="label">Alokasi Anggaran</td><td class="colon">:</td><td>Rp {{ number_format($total, 0, ',', '.') }}</td></tr>
                 <tr><td class="label"></td><td class="colon"></td><td><em>({{ \Illuminate\Support\Number::spell((int) $total, locale: 'id') }} rupiah)</em></td></tr>
             </table>
 
-            <div class="doc-meta">Subkategori RKBU: <strong>{{ $rkbu->subKategoriRkbu?->kode_sub_kategori_rkbu }} {{ $rkbu->subKategoriRkbu?->nama_sub_kategori_rkbu }}</strong></div>
+            @if (($filters['print_type'] ?? '') === 'rba')
+                <div class="doc-meta">Jenis Kategori RKBU: <strong>{{ $jenisKategori?->kode_jenis_kategori_rkbu }} {{ $jenisKategori?->nama_jenis_kategori_rkbu }}</strong></div>
+            @else
+                <div class="doc-meta">Subkategori RKBU: <strong>{{ $rkbu->subKategoriRkbu?->kode_sub_kategori_rkbu }} {{ $rkbu->subKategoriRkbu?->nama_sub_kategori_rkbu }}</strong></div>
+            @endif
 
             <table class="items">
                 <thead>
                     <tr>
                         <th rowspan="2" width="4%">No</th>
                         <th rowspan="2" width="19%">Nama / Jenis Barang</th>
-                        <th rowspan="2" width="20%">Spesifikasi Merk/Ukuran</th>
+                        <th rowspan="2" width="{{ ($filters['print_type'] ?? '') === 'rba' ? 18 : 20 }}%">Spesifikasi Merk/Ukuran</th>
                         <th rowspan="2" width="7%">Jumlah</th>
                         <th colspan="4" width="20%">Uraian Koefisien</th>
-                        <th rowspan="2" width="13%">Harga Satuan</th>
-                        <th rowspan="2" width="17%">Jumlah Biaya</th>
+                        <th rowspan="2" width="{{ ($filters['print_type'] ?? '') === 'rba' ? 12 : 13 }}%">Harga Satuan</th>
+                        @if (($filters['print_type'] ?? '') === 'rba')<th rowspan="2" width="8%">PPN</th>@endif
+                        <th rowspan="2" width="{{ ($filters['print_type'] ?? '') === 'rba' ? 12 : 17 }}%">Jumlah Biaya</th>
                     </tr>
                     <tr><th width="5%">Vol.1</th><th width="5%">Uraian</th><th width="5%">Vol.2</th><th width="5%">Uraian</th></tr>
-                    <tr class="small"><th>1</th><th>2</th><th>3</th><th>4=5x7</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10=9x4</th></tr>
+                    <tr class="small"><th>1</th><th>2</th><th>3</th><th>4=5x7</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>@if (($filters['print_type'] ?? '') === 'rba')<th>10</th>@endif<th>{{ ($filters['print_type'] ?? '') === 'rba' ? '11=9x4+10' : '10=9x4' }}</th></tr>
                 </thead>
                 <tbody>
-                    @if ($jenisKategori || $rekeningKategori || $rekening)
-                        <tr class="group"><td colspan="10">{{ $rekeningKategori?->kode_kategori_rekening }} {{ $rekeningKategori?->nama_kategori_rekening }} {{ $jenisKategori?->kode_jenis_kategori_rkbu }} {{ $jenisKategori?->nama_jenis_kategori_rkbu }}</td></tr>
-                        <tr><td colspan="10">{{ $rekening?->kode_sub_kategori_rekening }} {{ $rekening?->nama_sub_kategori_rekening }}</td></tr>
-                        <tr><td colspan="10">{{ $kategori?->kode_kategori_rkbu }} {{ $kategori?->nama_kategori_rkbu }}</td></tr>
-                        <tr class="group"><td colspan="10">{{ $rkbu->subKategoriRkbu?->kode_sub_kategori_rkbu }} {{ $rkbu->subKategoriRkbu?->nama_sub_kategori_rkbu }}</td></tr>
+                    @if (($filters['print_type'] ?? '') === 'rba' && $jenisKategori)
+                        <tr class="group"><td colspan="11">{{ $jenisKategori->kode_jenis_kategori_rkbu }} {{ $jenisKategori->nama_jenis_kategori_rkbu }}</td></tr>
+                    @elseif ($jenisKategori || $rekeningKategori || $rekening)
+                        <tr class="group"><td colspan="{{ ($filters['print_type'] ?? '') === 'rba' ? 11 : 10 }}">{{ $rekeningKategori?->kode_kategori_rekening }} {{ $rekeningKategori?->nama_kategori_rekening }} {{ $jenisKategori?->kode_jenis_kategori_rkbu }} {{ $jenisKategori?->nama_jenis_kategori_rkbu }}</td></tr>
+                        <tr><td colspan="{{ ($filters['print_type'] ?? '') === 'rba' ? 11 : 10 }}">{{ $rekening?->kode_sub_kategori_rekening }} {{ $rekening?->nama_sub_kategori_rekening }}</td></tr>
+                        <tr><td colspan="{{ ($filters['print_type'] ?? '') === 'rba' ? 11 : 10 }}">{{ $kategori?->kode_kategori_rkbu }} {{ $kategori?->nama_kategori_rkbu }}</td></tr>
+                        <tr class="group"><td colspan="{{ ($filters['print_type'] ?? '') === 'rba' ? 11 : 10 }}">{{ $rkbu->subKategoriRkbu?->kode_sub_kategori_rkbu }} {{ $rkbu->subKategoriRkbu?->nama_sub_kategori_rkbu }}</td></tr>
                     @endif
-                    @foreach ($categoryItems as $categoryItem)
-                        @php $document = $categoryItem['rkbu']; @endphp
-                        @forelse ($categoryItem['details'] as $row)
-                            @php
-                                $rowNumber++;
-                                $pegawai = $categoryItem['module'] === 'Pegawai';
-                                $nama = $row['Nama Barang'] ?? $row['Nama Pegawai'] ?? '-';
-                                $spek = $row['Spesifikasi'] ?? $row['Jabatan'] ?? '-';
-                                $vol1 = $row['Volume 1'] ?? $row['Jumlah Volume'] ?? '-';
-                                $unit1 = $row['Satuan 1'] ?? $row['Satuan'] ?? ($pegawai ? 'Bulan' : '-');
-                                $vol2 = $row['Volume 2'] ?? '-';
-                                $unit2 = $row['Satuan 2'] ?? '-';
-                                $jumlah = $row['Jumlah Volume'] ?? $row['Jumlah Bulan'] ?? '-';
-                                $harga = $row['Harga Satuan'] ?? ($pegawai ? $row['Gaji Pokok'] ?? 0 : 0);
-                                $biaya = $row['Total Anggaran'] ?? $row['Total Gaji Pokok'] ?? 0;
-                            @endphp
-                            <tr>
-                                <td class="center">{{ $rowNumber }}</td>
-                                <td><strong>{{ $nama }}</strong><br><span class="small">Pengusul: {{ $document->creator?->nama ?? '-' }}<br>Nomor RKBU: {{ $document->nomor_rkbu ?? '-' }}</span></td>
-                                <td class="spec">{{ $spek }}</td>
-                                <td class="center">{{ $jumlah }}</td>
-                                <td class="center">{{ $vol1 }}</td><td class="center">{{ $unit1 }}</td><td class="center">{{ $vol2 }}</td><td class="center">{{ $unit2 }}</td>
-                                <td class="right">Rp {{ number_format((float) $harga, 0, ',', '.') }}</td>
-                                <td class="right">Rp {{ number_format((float) $biaya, 0, ',', '.') }}</td>
-                            </tr>
-                        @empty
-                        @endforelse
+                    @foreach ($subKategoriGroups as $subKategoriItems)
+                        @php
+                            $subKategoriItems = collect($subKategoriItems);
+                            $subKategori = $subKategoriItems->first()['rkbu']->subKategoriRkbu;
+                            $subKategoriTotal = $subKategoriItems->sum(fn ($categoryItem) => collect($categoryItem['details'])->sum(fn ($row) => (float) ($row['Total Anggaran'] ?? 0)));
+                        @endphp
+                        @if (($filters['print_type'] ?? '') === 'rba')
+                            <tr class="group"><td colspan="11">Subkategori RKBU: {{ $subKategori?->kode_sub_kategori_rkbu ?? '-' }} {{ $subKategori?->nama_sub_kategori_rkbu ?? 'Tanpa subkategori' }}</td></tr>
+                        @endif
+                        @foreach ($subKategoriItems as $categoryItem)
+                            @php $document = $categoryItem['rkbu']; @endphp
+                            @forelse ($categoryItem['details'] as $row)
+                                @php
+                                    $rowNumber++;
+                                    $pegawai = $categoryItem['module'] === 'Pegawai';
+                                    $nama = $row['Nama Barang'] ?? $row['Nama Pegawai'] ?? '-';
+                                    $spek = $row['Spesifikasi'] ?? $row['Jabatan'] ?? '-';
+                                    $vol1 = $row['Volume 1'] ?? $row['Jumlah Volume'] ?? '-';
+                                    $unit1 = $row['Satuan 1'] ?? $row['Satuan'] ?? ($pegawai ? 'Bulan' : '-');
+                                    $vol2 = $row['Volume 2'] ?? '-';
+                                    $unit2 = $row['Satuan 2'] ?? '-';
+                                    $jumlah = $row['Jumlah Volume'] ?? $row['Jumlah Bulan'] ?? '-';
+                                    $harga = $row['Harga Satuan'] ?? ($pegawai ? $row['Gaji Pokok'] ?? 0 : 0);
+                                    $ppn = (float) ($row['PPN (%)'] ?? 0);
+                                    $ppnAmount = (float) $harga * (float) $jumlah * $ppn / 100;
+                                    $biaya = $row['Total Anggaran'] ?? $row['Total Gaji Pokok'] ?? 0;
+                                @endphp
+                                <tr>
+                                    <td class="center">{{ $rowNumber }}</td>
+                                    <td><strong>{{ $nama }}</strong><br><span class="small">Pengusul: {{ $document->creator?->nama ?? '-' }}<br>Nomor RKBU: {{ $document->nomor_rkbu ?? '-' }}</span></td>
+                                    <td class="spec">{{ $spek }}</td>
+                                    <td class="center">{{ $jumlah }}</td>
+                                    <td class="center">{{ $vol1 }}</td><td class="center">{{ $unit1 }}</td><td class="center">{{ $vol2 }}</td><td class="center">{{ $unit2 }}</td>
+                                    <td class="right">Rp {{ number_format((float) $harga, 0, ',', '.') }}</td>
+                                    @if (($filters['print_type'] ?? '') === 'rba')<td class="right">Rp {{ number_format($ppnAmount, 0, ',', '.') }}</td>@endif
+                                    <td class="right">Rp {{ number_format((float) $biaya, 0, ',', '.') }}</td>
+                                </tr>
+                            @empty
+                            @endforelse
+                        @endforeach
+                        @if (($filters['print_type'] ?? '') === 'rba')
+                            <tr class="total"><td colspan="10">Total {{ $subKategori?->nama_sub_kategori_rkbu ?? 'Subkategori RKBU' }}</td><td class="right">Rp {{ number_format($subKategoriTotal, 0, ',', '.') }}</td></tr>
+                        @endif
                     @endforeach
                     @if ($rowNumber === 0)
-                        <tr><td colspan="10" class="empty">Tidak ada rincian RKBU.</td></tr>
+                        <tr><td colspan="{{ ($filters['print_type'] ?? '') === 'rba' ? 11 : 10 }}" class="empty">Tidak ada rincian RKBU.</td></tr>
                     @endif
-                    <tr class="total"><td colspan="9">Total {{ $rkbu->subKategoriRkbu?->nama_sub_kategori_rkbu ?? 'RKBU' }}</td><td class="right">Rp {{ number_format($total, 0, ',', '.') }}</td></tr>
+                    <tr class="total"><td colspan="{{ ($filters['print_type'] ?? '') === 'rba' ? 10 : 9 }}">Total {{ ($filters['print_type'] ?? '') === 'rba' ? ($jenisKategori?->nama_jenis_kategori_rkbu ?? 'RKBU') : ($rkbu->subKategoriRkbu?->nama_sub_kategori_rkbu ?? 'RKBU') }}</td><td class="right">Rp {{ number_format($total, 0, ',', '.') }}</td></tr>
                 </tbody>
             </table>
 
@@ -166,15 +214,26 @@
             <table class="signatures">
                 <tr>
                     @forelse ($signers as $approval)
-                        @php $validator = $approval->validatorUser?->nama ?? $approval->position?->nama_jabatan ?? $approval->workflowStep?->position?->nama_jabatan ?? $approval->workflowStep?->validatorRole?->nama_validator ?? 'Validator'; @endphp
-                        <td>{{ $validator }}<br><span class="small">{{ strtoupper($approval->status ?? 'pending') }}</span></td>
+                        @php
+                            $jabatan = $approval->assignment?->position?->nama_jabatan
+                                ?? $approval->validatorUser?->activeAssignment?->position?->nama_jabatan
+                                ?? $approval->validatorUser?->position?->nama_jabatan
+                                ?? $approval->position?->nama_jabatan
+                                ?? $approval->workflowStep?->position?->nama_jabatan
+                                ?? $approval->workflowStep?->validatorRole?->nama_validator
+                                ?? 'Jabatan';
+                        @endphp
+                        <td colspan="{{ ($filters['print_type'] ?? '') === 'rba' ? 3 : 1 }}">{{ $jabatan }}<br><span class="small">{{ strtoupper($approval->status ?? 'pending') }}</span></td>
                     @empty
                         <td colspan="3">Dicetak {{ $printedAt->format('d-m-Y') }}</td>
                     @endforelse
                 </tr>
                 <tr>
                     @foreach ($signers as $approval)
-                        <td class="sign-name">{{ $approval->validatorUser?->nama ?? $approval->position?->nama_jabatan ?? $approval->workflowStep?->position?->nama_jabatan ?? $approval->workflowStep?->validatorRole?->nama_validator ?? 'Validator' }}</td>
+                        <td class="sign-name" colspan="{{ ($filters['print_type'] ?? '') === 'rba' ? 3 : 1 }}">
+                            <strong style="text-decoration: underline;">{{ $approval->validatorUser?->nama ?? $approval->position?->nama_jabatan ?? $approval->workflowStep?->position?->nama_jabatan ?? $approval->workflowStep?->validatorRole?->nama_validator ?? 'Validator' }}</strong>
+                            <br><span class="small" style="font-weight: normal;">NIP. {{ $approval->validatorUser?->nip ?: '-' }}</span>
+                        </td>
                     @endforeach
                 </tr>
             </table>

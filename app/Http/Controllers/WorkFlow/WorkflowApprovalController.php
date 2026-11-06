@@ -170,6 +170,9 @@ class WorkflowApprovalController extends Controller
             'detailModalAlkes',
             'subKategoriRkbu.kategori.jenis_kategori_rkbu',
             'workflowInstances.approvals.validatorUser',
+            'workflowInstances.approvals.validatorUser.position',
+            'workflowInstances.approvals.validatorUser.activeAssignment.position',
+            'workflowInstances.approvals.assignment.position',
             'workflowInstances.approvals.position',
             'workflowInstances.approvals.workflowStep.position',
             'workflowInstances.approvals.workflowStep.validatorRole',
@@ -325,6 +328,9 @@ class WorkflowApprovalController extends Controller
             'detailModal',
             'detailModalAlkes',
             'workflowInstances.approvals.validatorUser',
+            'workflowInstances.approvals.validatorUser.position',
+            'workflowInstances.approvals.validatorUser.activeAssignment.position',
+            'workflowInstances.approvals.assignment.position',
             'workflowInstances.approvals.position',
             'workflowInstances.approvals.workflowStep.position',
             'workflowInstances.approvals.workflowStep.validatorRole',
@@ -371,7 +377,7 @@ class WorkflowApprovalController extends Controller
             'sumber_dana_id' => ['nullable', 'string', 'max:36', $this->sourceFilterRule()],
             'sub_kegiatan_id' => ['nullable', 'uuid', Rule::exists('sub_kegiatans', 'id_sub_kegiatan')],
             'sub_kategori_rkbu_id' => ['nullable', 'uuid', Rule::exists('sub_kategori_rkbus', 'id_sub_kategori_rkbu')],
-            'print_type' => ['nullable', Rule::in(['rba', 'rkbu', 'erba'])],
+            'print_type' => ['nullable', Rule::in(['rba', 'rkbu', 'erba', 'kertas-kerja'])],
         ]);
         $module = $request->query('module', 'all');
         abort_unless(in_array($module, ['all', 'barjas', 'pegawai', 'persediaan', 'modal', 'modal-kantor', 'modal-alkes'], true), 404);
@@ -390,13 +396,16 @@ class WorkflowApprovalController extends Controller
                     ->first();
             }
         }
-        $printScope = $printType === 'rkbu' ? 'all' : 'tagged';
+        $printScope = $printType === 'erba' ? 'tagged' : 'all';
         if ($printType === 'erba' && $module === 'all') {
             $module = 'barjas';
         }
         $dataTable = app(WorkflowApprovalDataTable::class);
         $recordQuery = Rkbu::query()
             ->where('tahun_anggaran_id', session('tahun_anggaran_id'));
+        if (in_array($printType, ['rba', 'kertas-kerja'], true)) {
+            $recordQuery->whereHas('workflowInstance', fn ($query) => $query->where('status', 'approved'));
+        }
         if ($printScope === 'tagged') {
             $recordQuery->whereNotNull('sub_kegiatan_id')->whereNotNull('sumber_dana_id');
         }
@@ -433,6 +442,9 @@ class WorkflowApprovalController extends Controller
             'detailModal',
             'detailModalAlkes',
             'workflowInstances.approvals.validatorUser',
+            'workflowInstances.approvals.validatorUser.position',
+            'workflowInstances.approvals.validatorUser.activeAssignment.position',
+            'workflowInstances.approvals.assignment.position',
             'workflowInstances.approvals.position',
             'workflowInstances.approvals.workflowStep.position',
             'workflowInstances.approvals.workflowStep.validatorRole',
@@ -467,14 +479,25 @@ class WorkflowApprovalController extends Controller
             ];
         });
 
-        $view = $printType === 'erba' && $module === 'barjas'
+        $view = $printType === 'kertas-kerja'
+            ? 'workflow.approval.print_kertas_kerja'
+            : ($printType === 'rba'
+            ? ($module === 'pegawai'
+                ? 'workflow.approval.print_all_pegawai'
+                : ($module === 'persediaan' ? 'workflow.approval.print_all_persediaan' : 'workflow.approval.print_all'))
+            : ($printType === 'erba' && $module === 'barjas'
             ? 'workflow.approval.print_all_erba'
             : ($module === 'persediaan'
                 ? 'workflow.approval.print_all_persediaan'
                 : ($module === 'pegawai'
                     ? 'workflow.approval.print_all_pegawai'
-                    : 'workflow.approval.print_all'));
+                    : 'workflow.approval.print_all'))));
         $judulHeader = JudulHeader::query()->first();
+        $rekeningCatalog = in_array($printType, ['kertas-kerja', 'rba'], true)
+            ? \App\Models\MasterBackend\SettingRkbu\RekeningBelanja::query()
+                ->orderBy('kode_rekening_belanja')
+                ->get(['id_kode_rekening_belanja', 'kode_rekening_belanja', 'nama_rekening_belanja'])
+            : collect();
         $headerLogo = static function (?string $path): ?string {
             if (! $path) return null;
             $fullPath = storage_path('app/public/judul_header/' . basename($path));
@@ -490,18 +513,24 @@ class WorkflowApprovalController extends Controller
             'judulHeader' => $judulHeader,
             'headerLogoLeft' => $printType === 'erba' || $module === 'persediaan' ? $headerLogo($judulHeader?->gambar2) : null,
             'headerLogoRight' => $printType === 'erba' || $module === 'persediaan' ? $headerLogo($judulHeader?->gambar1) : null,
+            'coverLogo' => in_array($printType, ['kertas-kerja', 'rba'], true)
+                ? ($headerLogo($judulHeader?->gambar2) ?? $headerLogo($judulHeader?->gambar1))
+                : null,
             'printedAt' => now(),
             'tanggalPengesahan' => $tanggalPengesahan,
-        ])->setPaper('a4', in_array($module, ['pegawai', 'persediaan'], true) ? 'landscape' : 'portrait');
+            'rekeningCatalog' => $rekeningCatalog,
+        ])->setPaper('a4', in_array($module, ['pegawai', 'persediaan'], true) && $printType !== 'kertas-kerja' ? 'landscape' : 'portrait');
         if ($module === 'persediaan' || $module === 'pegawai' || $printType === 'erba') {
             $canvas = $pdf->getDomPDF()->getCanvas();
             $font = $pdf->getDomPDF()->getFontMetrics()->getFont('DejaVu Sans', 'italic');
             $canvas->page_text(25, $canvas->get_height() - 18, 'Halaman {PAGE_NUM}/{PAGE_COUNT}', $font, 8, [0, 0, 0]);
         }
 
-        $filename = $printType === 'erba'
+        $filename = $printType === 'kertas-kerja'
+            ? 'kertas-kerja-rkbu-disetujui'
+            : ($printType === 'erba'
             ? ($module === 'pegawai' ? 'e-rba-pegawai' : 'e-rba-jasa')
-            : ($printType === 'rba' ? 'rba-rkbu-tagged' : 'daftar-semua-rkbu');
+            : ($printType === 'rba' ? 'rba-rkbu-disetujui' : 'daftar-semua-rkbu'));
 
         return $pdf->stream($filename . '-' . now()->format('Ymd-His') . '.pdf');
     }

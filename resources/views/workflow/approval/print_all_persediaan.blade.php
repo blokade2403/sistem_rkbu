@@ -22,8 +22,8 @@
         .items { width: 100%; border-collapse: collapse; table-layout: fixed; }
         .items th, .items td { border: 0.6px solid #777; padding: 3px 2px; vertical-align: middle; }
         .items th { text-align: center; font-weight: normal; }
-        .items .group { font-weight: bold; }
-        .items .light-group { font-weight: normal; }
+        .items .group { font-weight: bold; background: #eee; }
+        .items .light-group { font-weight: normal; background: #eee; }
         .items .item-name { font-weight: bold; }
         .items .spec { font-size: 6px; }
         .center { text-align: center; }
@@ -33,13 +33,23 @@
         .signatures td { border: 0; width: 33.33%; padding: 3px 8px; text-align: center; vertical-align: top; }
         .approval-date { margin: 24px 0 -22px; text-align: right; font-size: 8px; }
         .signatures .signature-space { height: 42px; }
-        .signatures .sign-name { font-weight: bold; text-decoration: underline; }
+        .signatures .sign-name { font-weight: bold; }
         .small { font-size: 6px; }
         .empty { text-align: center; padding: 20px; }
     </style>
 </head>
 <body>
-    @forelse ($items->groupBy(fn ($entry) => $entry['rkbu']->sub_kategori_rkbu_id ?? 'tanpa-subkategori') as $groupItems)
+    @php
+        $isRba = ($filters['print_type'] ?? '') === 'rba';
+    @endphp
+    @if ($isRba)
+        @include('workflow.approval.partials.cover')
+        @include('workflow.approval.partials.kertas_kerja')
+        <div style="page-break-before: always;"></div>
+    @endif
+    @forelse ($items->groupBy(fn ($entry) => $isRba
+        ? ($entry['rkbu']->subKategoriRkbu?->kategori?->id_jenis_kategori_rkbu ?? 'tanpa-jenis-kategori')
+        : ($entry['rkbu']->sub_kategori_rkbu_id ?? 'tanpa-subkategori')) as $groupItems)
         @php
             $groupItems = collect($groupItems);
             $firstEntry = $groupItems->first();
@@ -49,12 +59,15 @@
             $program = $subKegiatan?->aktivitas?->program ?? $kegiatan?->program;
             $kategori = $rkbu->subKategoriRkbu?->kategori;
             $jenisKategori = $kategori?->jenis_kategori_rkbu;
-            $signers = $groupItems
+            $jenisBelanja = $rkbu->jenisBelanja ?? $jenisKategori?->jenis_belanja;
+            $approvals = $groupItems
                 ->flatMap(fn ($entry) => $entry['workflowInstances']->sortByDesc('created_at')->first()?->approvals ?? collect())
-                ->sortBy('sequence')
+                ->where('status', 'approved');
+            $signers = ($isRba
+                ? $approvals->where('sequence', $approvals->max('sequence'))->sortByDesc('approved_at')->take(1)
+                : $approvals->sortBy('sequence')
                 ->unique(fn ($approval) => $approval->validatorUser?->id ?? $approval->position_id ?? $approval->workflowStep?->role_id ?? $approval->sequence)
-                ->take(3)
-                ->values();
+                ->take(3))->values();
             $rekening = $rkbu->subKategoriRkbu?->sub_kategori_rekening;
             $rekeningKategori = $rekening?->kategori_rekening;
             $year = (int) preg_replace('/\D+/', '', (string) ($rkbu->tahunAnggaran?->nama_tahun_anggaran ?? now()->year));
@@ -119,14 +132,37 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if ($jenisKategori || $rekeningKategori || $rekening)
-                        <tr class="group"><td colspan="14">{{ $rekeningKategori?->kode_kategori_rekening }} {{ $rekeningKategori?->nama_kategori_rekening }} {{ $jenisKategori?->kode_jenis_kategori_rkbu }} {{ $jenisKategori?->nama_jenis_kategori_rkbu }}</td></tr>
-                        <tr class="light-group"><td colspan="14">{{ $rekening?->kode_sub_kategori_rekening }} {{ $rekening?->nama_sub_kategori_rekening }}</td></tr>
-                        <tr class="light-group"><td colspan="14">{{ $kategori?->kode_kategori_rkbu }} {{ $kategori?->nama_kategori_rkbu }}</td></tr>
-                        <tr class="group"><td colspan="14">{{ $rkbu->subKategoriRkbu?->kode_sub_kategori_rkbu }} {{ $rkbu->subKategoriRkbu?->nama_sub_kategori_rkbu }}</td></tr>
-                    @endif
-                    @foreach ($groupItems as $entry)
-                        @php $currentRkbu = $entry['rkbu']; @endphp
+                    @unless ($isRba)
+                        @if ($jenisKategori || $rekeningKategori || $rekening)
+                            <tr class="group"><td colspan="14">{{ $rekeningKategori?->kode_kategori_rekening }} {{ $rekeningKategori?->nama_kategori_rekening }} {{ $jenisKategori?->kode_jenis_kategori_rkbu }} {{ $jenisKategori?->nama_jenis_kategori_rkbu }}</td></tr>
+                            <tr class="light-group"><td colspan="14">{{ $rekening?->kode_sub_kategori_rekening }} {{ $rekening?->nama_sub_kategori_rekening }}</td></tr>
+                            <tr class="light-group"><td colspan="14">{{ $kategori?->kode_kategori_rkbu }} {{ $kategori?->nama_kategori_rkbu }}</td></tr>
+                            <tr class="group"><td colspan="14">{{ $rkbu->subKategoriRkbu?->kode_sub_kategori_rkbu }} {{ $rkbu->subKategoriRkbu?->nama_sub_kategori_rkbu }}</td></tr>
+                        @endif
+                    @endunless
+                    @foreach ($groupItems->groupBy(fn ($entry) => $entry['rkbu']->sub_kategori_rkbu_id ?? 'tanpa-subkategori') as $subCategoryItems)
+                        @php
+                            $subCategoryItems = collect($subCategoryItems);
+                            $subCategoryRkbu = $subCategoryItems->first()['rkbu'];
+                            $subCategory = $subCategoryRkbu->subKategoriRkbu;
+                            $subCategoryCategory = $subCategory?->kategori;
+                            $subCategoryKind = $subCategory?->kategori?->jenis_kategori_rkbu;
+                            $subCategorySpendType = $subCategoryRkbu->jenisBelanja ?? $subCategoryKind?->jenis_belanja;
+                            $subCategoryAccount = $subCategoryRkbu->rekeningBelanja;
+                            $subCategoryAccountGroup = $subCategory?->sub_kategori_rekening;
+                            $subCategoryAccountCategory = $subCategoryAccountGroup?->kategori_rekening;
+                            $subCategoryTotal = $subCategoryItems->sum(fn ($entry) => collect($entry['details'])->sum(fn ($row) => (float) ($row['Total Anggaran'] ?? 0)));
+                        @endphp
+                        @if ($isRba)
+                            @if ($subCategorySpendType)<tr class="group"><td colspan="14">{{ $subCategorySpendType->kode_jenis_belanja }} {{ $subCategorySpendType->nama_jenis_belanja }}</td></tr>@endif
+                            @if ($subCategoryKind)<tr><td colspan="14">{{ $subCategoryKind->kode_jenis_kategori_rkbu }} {{ $subCategoryKind->nama_jenis_kategori_rkbu }}</td></tr>@endif
+                            @if ($subCategoryAccountCategory)<tr><td colspan="14">{{ $subCategoryAccountCategory->kode_kategori_rekening }} {{ $subCategoryAccountCategory->nama_kategori_rekening }}</td></tr>@endif
+                            @if ($subCategoryAccountGroup)<tr><td colspan="14">{{ $subCategoryAccountGroup->kode_sub_kategori_rekening }} {{ $subCategoryAccountGroup->nama_sub_kategori_rekening }}</td></tr>@endif
+                            @if ($subCategoryCategory)<tr><td colspan="14">{{ $subCategoryCategory->kode_kategori_rkbu }} {{ $subCategoryCategory->nama_kategori_rkbu }}</td></tr>@endif
+                            @if ($subCategory)<tr class="group"><td colspan="14">{{ $subCategory->kode_sub_kategori_rkbu }} {{ $subCategory->nama_sub_kategori_rkbu }}</td></tr>@endif
+                            @if ($subCategoryAccount)<tr class="group"><td colspan="14">{{ $subCategoryAccount->kode_rekening_belanja }} {{ $subCategoryAccount->nama_rekening_belanja }}</td></tr>@endif
+                        @endif
+                        @foreach ($subCategoryItems as $entry)
                         @forelse ($entry['details'] as $row)
                             @php $rowNumber++; @endphp
                             <tr>
@@ -147,11 +183,13 @@
                             </tr>
                         @empty
                         @endforelse
+                        @endforeach
+                        @if ($isRba)<tr class="total-row"><td colspan="13">Total {{ $subCategory?->nama_sub_kategori_rkbu ?? 'Persediaan' }}</td><td class="right">Rp. {{ number_format((float) $subCategoryTotal, 0, ',', '.') }}</td></tr>@endif
                     @endforeach
                     @if ($rowNumber === 0)
                         <tr><td colspan="14" class="empty">Tidak ada rincian persediaan.</td></tr>
                     @endif
-                    <tr class="total-row"><td colspan="13">Total {{ $rkbu->subKategoriRkbu?->nama_sub_kategori_rkbu ?? 'Persediaan' }}</td><td class="right">Rp. {{ number_format((float) $total, 0, ',', '.') }}</td></tr>
+                    @if ($isRba)<tr class="total-row"><td colspan="13">Total Jenis Kategori</td><td class="right">Rp. {{ number_format((float) $total, 0, ',', '.') }}</td></tr>@else<tr class="total-row"><td colspan="13">Total {{ $rkbu->subKategoriRkbu?->nama_sub_kategori_rkbu ?? 'Persediaan' }}</td><td class="right">Rp. {{ number_format((float) $total, 0, ',', '.') }}</td></tr>@endif
                 </tbody>
             </table>
 
@@ -162,13 +200,15 @@
                 <tr>
                     @forelse ($signers as $approval)
                         @php
-                            $signerName = $approval->validatorUser?->nama
+                            $jabatan = $approval->assignment?->position?->nama_jabatan
+                                ?? $approval->validatorUser?->activeAssignment?->position?->nama_jabatan
+                                ?? $approval->validatorUser?->position?->nama_jabatan
                                 ?? $approval->position?->nama_jabatan
                                 ?? $approval->workflowStep?->position?->nama_jabatan
                                 ?? $approval->workflowStep?->validatorRole?->nama_validator
-                                ?? 'Pejabat';
+                                ?? 'Jabatan';
                         @endphp
-                        <td>{{ $signerName }}<br><span class="small">{{ strtoupper($approval->status ?? 'pending') }}</span></td>
+                        <td>{{ $jabatan }}<br><span class="small">{{ strtoupper($approval->status ?? 'pending') }}</span></td>
                     @empty
                         <td colspan="3">Pejabat yang berwenang</td>
                     @endforelse
@@ -182,11 +222,11 @@
                 </tr>
                 <tr>
                     @foreach ($signers as $approval)
-                        <td class="sign-name">{{ $approval->validatorUser?->nama
+                        <td class="sign-name"><strong style="text-decoration: underline;">{{ $approval->validatorUser?->nama
                             ?? $approval->position?->nama_jabatan
                             ?? $approval->workflowStep?->position?->nama_jabatan
                             ?? $approval->workflowStep?->validatorRole?->nama_validator
-                            ?? 'Pejabat' }}</td>
+                            ?? 'Pejabat' }}</strong><br><span class="small" style="font-weight: normal;">NIP. {{ $approval->validatorUser?->nip ?: '-' }}</span></td>
                     @endforeach
                 </tr>
             </table>

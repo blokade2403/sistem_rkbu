@@ -50,10 +50,35 @@ class UsulanBelanjaWorkflowService
             fn($item) => $item->detail_type . ':' . $item->detail_id
         );
 
-        return $this->getDetailItems($usulan->sub_kategori_rkbu_id, $selected, $usulan->id, null, $usulan->sumber_dana_id)
-            ->map(function ($item) use ($savedValues) {
+        $items = $this->getDetailItems($usulan->sub_kategori_rkbu_id, $selected, $usulan->id, null, $usulan->sumber_dana_id);
+        $previousAmounts = collect();
+        foreach ($items->groupBy('detail_type') as $type => $typedItems) {
+            $detailIds = $typedItems->pluck('detail_id')->all();
+            $previousAmounts = $previousAmounts->merge(
+                DB::table('usulan_belanja_items as items')
+                    ->join('usulan_belanjas as previous_usulan', 'previous_usulan.id', '=', 'items.usulan_belanja_id')
+                    ->where('items.detail_type', $type)
+                    ->whereIn('items.detail_id', $detailIds)
+                    ->whereIn('previous_usulan.status_usulan', ['proses', 'approved'])
+                    ->where(function ($query) use ($usulan) {
+                        $query->where('previous_usulan.created_at', '<', $usulan->created_at)
+                            ->orWhere(function ($sameTime) use ($usulan) {
+                                $sameTime->where('previous_usulan.created_at', $usulan->created_at)
+                                    ->where('previous_usulan.nomor_urut', '<', $usulan->nomor_urut);
+                            });
+                    })
+                    ->groupBy('items.detail_id')
+                    ->select('items.detail_id')
+                    ->selectRaw('SUM(ROUND(items.harga_satuan * items.volume, 2) + ROUND(ROUND(items.harga_satuan * items.volume, 2) * COALESCE(items.ppn, 0) / 100, 2)) as anggaran')
+                    ->get()
+                    ->mapWithKeys(fn ($row) => [$type . ':' . $row->detail_id => (float) $row->anggaran])
+            );
+        }
+
+        return $items->map(function ($item) use ($savedValues, $previousAmounts) {
                 $saved = $savedValues->get($item->detail_type . ':' . $item->detail_id);
                 $item->link_id = $saved?->id;
+                $item->total_anggaran_rkbu = (float) $item->total_anggaran;
                 $item->harga_perencanaan = (float) $item->harga_satuan;
                 $item->harga_satuan = $saved?->harga_satuan ?? $item->harga_satuan;
                 $item->volume = $saved?->volume ?? $item->volume;
@@ -69,10 +94,13 @@ class UsulanBelanjaWorkflowService
                     $item->total_anggaran * (float) $item->ppn / 100,
                     2
                 );
-                $item->anggaran_tersedia = (float) $item->sisa_anggaran_rkbu;
+                $item->anggaran_tersedia = (float) $item->total_anggaran_rkbu;
                 $item->volume_tersedia = (float) $item->sisa_vol_rkbu;
                 $item->sisa_anggaran_rkbu = round(
-                    $item->anggaran_tersedia - $item->total_anggaran,
+                    $item->anggaran_tersedia
+                        - (float) $previousAmounts->get($item->detail_type . ':' . $item->detail_id, 0)
+                        - $item->total_anggaran
+                        - $item->total_ppn,
                     2
                 );
                 $item->sisa_vol_rkbu = round(

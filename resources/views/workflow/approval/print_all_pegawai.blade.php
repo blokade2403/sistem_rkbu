@@ -21,14 +21,14 @@
         .items tr { page-break-inside: avoid; }
         .items .center { text-align: center; }
         .items .right { text-align: right; white-space: nowrap; }
-        .items .group { font-weight: bold; }
-        .items .account { font-weight: bold; background: #eee; }
+        .items .group, .items .account { font-weight: bold; background: #eee; }
+        .items .category-start { page-break-before: always; }
         .items .subtotal, .items .grand-total { font-weight: bold; background: #eee; }
         .signatures { width: 100%; border-collapse: collapse; margin: 32px 0 12px; page-break-inside: avoid; }
         .signatures td { border: 0; width: 33.33%; padding: 3px 8px; text-align: center; vertical-align: top; }
         .approval-date { margin: 24px 0 -26px; text-align: right; font-size: 8px; }
         .signatures .signature-space { height: 42px; }
-        .signatures .sign-name { font-weight: bold; text-decoration: underline; }
+        .signatures .sign-name { font-weight: bold; }
         .small { font-size: 6px; }
         .empty { text-align: center; padding: 20px; }
     </style>
@@ -37,20 +37,31 @@
     @php
         $firstEntry = $items->first();
         $firstRkbu = $firstEntry['rkbu'] ?? null;
-        $groups = $items->groupBy(fn ($entry) => $entry['rkbu']->sub_kategori_rkbu_id ?? 'tanpa-subkategori');
+        $isRba = ($filters['print_type'] ?? '') === 'rba';
+        $groups = $items->groupBy(fn ($entry) => $isRba
+            ? ($entry['rkbu']->subKategoriRkbu?->kategori?->id_jenis_kategori_rkbu ?? 'tanpa-jenis-kategori')
+            : ($entry['rkbu']->sub_kategori_rkbu_id ?? 'tanpa-subkategori'));
         $subKegiatan = $firstRkbu?->subKegiatan;
         $kegiatan = $subKegiatan?->kegiatan;
         $program = $subKegiatan?->aktivitas?->program ?? $kegiatan?->program;
         $grandTotal = $items->sum(fn ($entry) => collect($entry['details'])->sum(fn ($row) => (float) ($row['Total Anggaran'] ?? 0)));
-        $signers = $items
+        $allApprovals = $items
             ->flatMap(fn ($entry) => $entry['workflowInstances']->sortByDesc('created_at')->first()?->approvals ?? collect())
-            ->sortBy('sequence')
+            ->where('status', 'approved');
+        $signers = ($isRba
+            ? $allApprovals->where('sequence', $allApprovals->max('sequence'))->sortByDesc('approved_at')->take(1)
+            : $allApprovals->sortBy('sequence')
             ->unique(fn ($approval) => $approval->validatorUser?->id ?? $approval->position_id ?? $approval->workflowStep?->role_id ?? $approval->sequence)
-            ->take(3)
-            ->values();
+            ->take(3))->values();
         $currency = fn ($value) => number_format((float) $value, 0, ',', '.');
         $rkbuYear = $firstRkbu?->tahunAnggaran?->nama_tahun_anggaran ?? $firstRkbu?->tahunAnggaran?->tahun ?? now()->year;
     @endphp
+
+    @if ($isRba)
+        @include('workflow.approval.partials.cover')
+        @include('workflow.approval.partials.kertas_kerja')
+        <div style="page-break-before: always;"></div>
+    @endif
 
     <table class="letterhead">
         <tr><td class="heading">
@@ -105,13 +116,32 @@
                     $groupTotal = $groupItems->sum(fn ($entry) => collect($entry['details'])->sum(fn ($row) => (float) ($row['Total Anggaran'] ?? 0)));
                     $number = 0;
                 @endphp
-                @if ($jenisBelanja)<tr class="group"><td colspan="12">{{ $jenisBelanja->kode_jenis_belanja }}. {{ $jenisBelanja->nama_jenis_belanja }}</td></tr>@endif
-                @if ($jenisKategori)<tr><td colspan="12">{{ $jenisKategori->kode_jenis_kategori_rkbu }}. {{ $jenisKategori->nama_jenis_kategori_rkbu }}</td></tr>@endif
-                @if ($obyek)<tr><td colspan="12">{{ $obyek->kode_obyek_belanja }}. {{ $obyek->nama_obyek_belanja }}</td></tr>@endif
-                @if ($kategori)<tr><td colspan="12">{{ $kategori->kode_kategori_rkbu }}. {{ $kategori->nama_kategori_rkbu }}</td></tr>@endif
-                @if ($subKategori)<tr class="group"><td colspan="12">{{ $subKategori->kode_sub_kategori_rkbu }}. {{ $subKategori->nama_sub_kategori_rkbu }}</td></tr>@endif
-                <tr class="account"><td colspan="12">{{ $subKategori?->nama_sub_kategori_rkbu ?? 'Belanja Pegawai' }}</td></tr>
-                @foreach ($groupItems as $entry)
+                @if ($jenisBelanja)<tr class="group {{ !$loop->first && $isRba ? 'category-start' : '' }}"><td colspan="12">{{ $jenisBelanja->kode_jenis_belanja }}. {{ $jenisBelanja->nama_jenis_belanja }}</td></tr>@endif
+                @if ($jenisKategori)<tr class="group"><td colspan="12">{{ $jenisKategori->kode_jenis_kategori_rkbu }}. {{ $jenisKategori->nama_jenis_kategori_rkbu }}</td></tr>@endif
+                @if ($obyek && !$isRba)<tr><td colspan="12">{{ $obyek->kode_obyek_belanja }}. {{ $obyek->nama_obyek_belanja }}</td></tr>@endif
+                @if ($kategori && !$isRba)<tr><td colspan="12">{{ $kategori->kode_kategori_rkbu }}. {{ $kategori->nama_kategori_rkbu }}</td></tr>@endif
+                @foreach ($groupItems->groupBy(fn ($entry) => $entry['rkbu']->sub_kategori_rkbu_id ?? 'tanpa-subkategori') as $subCategoryItems)
+                    @php
+                        $subCategoryItems = collect($subCategoryItems);
+                        $subCategory = $subCategoryItems->first()['rkbu']->subKategoriRkbu;
+                        $subCategoryTotal = $subCategoryItems->sum(fn ($entry) => collect($entry['details'])->sum(fn ($row) => (float) ($row['Total Anggaran'] ?? 0)));
+                    @endphp
+                    @if ($isRba)<tr class="group"><td colspan="12">{{ $subCategory?->kode_sub_kategori_rkbu }}. {{ $subCategory?->nama_sub_kategori_rkbu ?? 'Tanpa subkategori' }}</td></tr>@endif
+                    @php
+                        $subCategoryRkbu = $subCategoryItems->first()['rkbu'];
+                        $subCategoryAccountGroup = $subCategory?->sub_kategori_rekening;
+                        $subCategoryAccountCategory = $subCategoryAccountGroup?->kategori_rekening;
+                        $subCategoryCategory = $subCategory?->kategori;
+                        $subCategoryAccount = $subCategoryRkbu->rekeningBelanja;
+                    @endphp
+                    @if ($isRba && $subCategory)
+                        @if ($subCategoryAccountCategory)<tr><td colspan="12">{{ $subCategoryAccountCategory->kode_kategori_rekening }}. {{ $subCategoryAccountCategory->nama_kategori_rekening }}</td></tr>@endif
+                        @if ($subCategoryAccountGroup)<tr><td colspan="12">{{ $subCategoryAccountGroup->kode_sub_kategori_rekening }}. {{ $subCategoryAccountGroup->nama_sub_kategori_rekening }}</td></tr>@endif
+                        @if ($subCategoryCategory)<tr><td colspan="12">{{ $subCategoryCategory->kode_kategori_rkbu }}. {{ $subCategoryCategory->nama_kategori_rkbu }}</td></tr>@endif
+                        <tr class="group"><td colspan="12">{{ $subCategory->kode_sub_kategori_rkbu }}. {{ $subCategory->nama_sub_kategori_rkbu }}</td></tr>
+                    @endif
+                    <tr class="account"><td colspan="12">{{ $isRba && $subCategoryAccount ? $subCategoryAccount->kode_rekening_belanja . '. ' . $subCategoryAccount->nama_rekening_belanja : ($subCategory?->nama_sub_kategori_rkbu ?? 'Belanja Pegawai') }}</td></tr>
+                @foreach ($subCategoryItems as $entry)
                     @foreach ($entry['details'] as $row)
                         @php $number++; @endphp
                         <tr>
@@ -130,7 +160,9 @@
                         </tr>
                     @endforeach
                 @endforeach
-                <tr class="subtotal"><td colspan="11">Total {{ $subKategori?->nama_sub_kategori_rkbu ?? 'Belanja Pegawai' }}</td><td class="right">Rp. {{ $currency($groupTotal) }}</td></tr>
+                    @endforeach
+                    <tr class="subtotal"><td colspan="11">Total {{ $subCategory?->nama_sub_kategori_rkbu ?? 'Belanja Pegawai' }}</td><td class="right">Rp. {{ $currency($subCategoryTotal) }}</td></tr>
+                @if ($isRba)<tr class="grand-total"><td colspan="11">TOTAL {{ $jenisKategori?->nama_jenis_kategori_rkbu ?? 'JENIS KATEGORI' }}</td><td class="right">Rp. {{ $currency($groupTotal) }}</td></tr>@endif
             @empty
                 <tr><td colspan="12" class="empty">Tidak ada data RKBU Pegawai sesuai filter.</td></tr>
             @endforelse
@@ -147,13 +179,15 @@
         <tr>
             @forelse ($signers as $approval)
                 @php
-                    $signerName = $approval->validatorUser?->nama
+                    $jabatan = $approval->assignment?->position?->nama_jabatan
+                        ?? $approval->validatorUser?->activeAssignment?->position?->nama_jabatan
+                        ?? $approval->validatorUser?->position?->nama_jabatan
                         ?? $approval->position?->nama_jabatan
                         ?? $approval->workflowStep?->position?->nama_jabatan
                         ?? $approval->workflowStep?->validatorRole?->nama_validator
-                        ?? 'Pejabat';
+                        ?? 'Jabatan';
                 @endphp
-                <td>{{ $signerName }}<br><span class="small">{{ strtoupper($approval->status ?? 'pending') }}</span></td>
+                <td>{{ $jabatan }}<br><span class="small">{{ strtoupper($approval->status ?? 'pending') }}</span></td>
             @empty
                 <td colspan="3">Pejabat yang berwenang</td>
             @endforelse
@@ -167,11 +201,11 @@
         </tr>
         <tr>
             @foreach ($signers as $approval)
-                <td class="sign-name">{{ $approval->validatorUser?->nama
+                <td class="sign-name"><strong style="text-decoration: underline;">{{ $approval->validatorUser?->nama
                     ?? $approval->position?->nama_jabatan
                     ?? $approval->workflowStep?->position?->nama_jabatan
                     ?? $approval->workflowStep?->validatorRole?->nama_validator
-                    ?? 'Pejabat' }}</td>
+                    ?? 'Pejabat' }}</strong><br><span class="small" style="font-weight: normal;">NIP. {{ $approval->validatorUser?->nip ?: '-' }}</span></td>
             @endforeach
         </tr>
     </table>

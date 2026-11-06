@@ -72,8 +72,15 @@
                             @endif
                             <a id="approval-print-rba" href="{{ route('workflowapproval.print-all', ['print_type' => 'rba']) }}"
                                 class="btn btn-sm btn-primary" target="_blank" rel="noopener">
-                                <i class="fas fa-file-pdf me-1"></i> Cetak RBA (Sudah Tagging)
+                                <i class="fas fa-file-pdf me-1"></i> Cetak RBA Disetujui
                             </a>
+                            <a id="approval-print-kertas-kerja" href="{{ route('workflowapproval.print-all', ['print_type' => 'kertas-kerja']) }}"
+                                class="btn btn-sm btn-light-info" target="_blank" rel="noopener">
+                                <i class="fas fa-file-alt me-1"></i> Cetak Kertas Kerja
+                            </a>
+                            <button type="button" id="approval-preview-kertas-kerja" class="btn btn-sm btn-light-primary">
+                                <i class="fas fa-eye me-1"></i> Tampilkan Kertas Kerja
+                            </button>
                             <a id="approval-print-all" href="{{ route('workflowapproval.print-all', ['print_type' => 'rkbu']) }}"
                                 class="btn btn-sm btn-light-primary" target="_blank" rel="noopener">
                                 <i class="fas fa-file-pdf me-1"></i> Cetak Semua RKBU
@@ -112,6 +119,21 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div id="approval-kertas-kerja-preview" class="card border-0 shadow-sm mt-6 d-none">
+            <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div>
+                    <h3 class="card-title fw-bold mb-1">Pratinjau Kertas Kerja</h3>
+                    <span class="text-muted fs-7">Cover dan rincian berdasarkan filter module yang dipilih.</span>
+                </div>
+                <div class="card-toolbar d-flex gap-2">
+                    <a id="approval-kertas-kerja-open" class="btn btn-sm btn-light-primary" target="_blank" rel="noopener"><i class="fas fa-up-right-from-square me-1"></i>Buka PDF</a>
+                    <button type="button" id="approval-kertas-kerja-close" class="btn btn-sm btn-light"><i class="fas fa-times me-1"></i>Tutup</button>
+                </div>
+            </div>
+            <div class="card-body p-2 p-lg-4">
+                <iframe id="approval-kertas-kerja-frame" title="Pratinjau Kertas Kerja RKBU" style="display:block;width:100%;height:82vh;min-height:680px;border:1px solid #e5e7eb;border-radius:.5rem;background:#f3f4f6;"></iframe>
             </div>
         </div>
         @include('components.partials.calender')
