@@ -516,6 +516,7 @@ class PengadaanWorkflowController extends Controller
             'tgl_surat_pesanan' => ['nullable', 'date'],
             'jangka_waktu_pekerjaan' => ['nullable', 'date'],
             'idpaket' => ['required', 'string', 'max:255'],
+            'rincian_belanja' => ['required', 'string', 'max:5000'],
         ]);
         $subkategoriId = $spj->usulanBelanja()->value('sub_kategori_rkbu_id');
         $assignee = DB::table('sub_kategori_pendukung_ppk')

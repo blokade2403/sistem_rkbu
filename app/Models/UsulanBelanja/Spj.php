@@ -28,6 +28,7 @@ class Spj extends Model
         'pengadaan_workflow_step_id',
         'idpaket',
         'no_surat_pesanan',
+        'rincian_belanja',
         'tgl_surat_pesanan',
         'foto_barang_datang',
         'foto_barang_datang_2',

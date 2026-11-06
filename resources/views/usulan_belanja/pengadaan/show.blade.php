@@ -64,14 +64,7 @@
              {{ $spj->usulanBelanja?->rkbu?->subKategoriRkbu?->nama_sub_kategori_rkbu ?? '-' }} <span
                  class="mx-2">|</span><strong>Pengusul:</strong> {{ $spj->usulanBelanja?->nama_pengusul ?? '-' }}
          </div>
-         <h5 class="mb-3">Item SPJ</h5>
-         <ul class="mb-6">
-             @forelse($spj->details as $detail)
-                 <li>{{ $detail->rkbu?->nama_barang ?? ($detail->rkbu?->nomor_rkbu ?? $detail->rkbu_id) }} — volume
-                 {{ $detail->volume }}</li>@empty<li>Belum ada detail.</li>
-             @endforelse
-         </ul>
-         @if ($canPesanan && $step === 'input_pesanan')
+@if ($canPesanan && $step === 'input_pesanan')
              <div class="card card-bordered spj-stage-form-card mb-6">
                  <div class="card-header">
                      <h4 class="card-title">1. Input Surat Pesanan</h4>
@@ -90,6 +83,7 @@
                                      value="{{ old('jangka_waktu_pekerjaan', $masterInfo->jangka_waktu_pekerjaan ?? '') }}"><div class="form-text">Digunakan pada surat pesanan.</div></div>
                              <div class="col-md-4 mb-4"><label class="form-label">ID Paket</label><input name="idpaket"
                                      class="form-control form-control-solid" value="{{ old('idpaket', $spj->idpaket) }}" required></div>
+                             <div class="col-12 mb-4"><label class="form-label">Rincian Belanja</label><textarea name="rincian_belanja" class="form-control form-control-solid" rows="4" maxlength="5000" placeholder="Tuliskan rincian barang atau pekerjaan yang tercantum pada surat pesanan..." required>{{ old('rincian_belanja', $spj->rincian_belanja) }}</textarea><div class="form-text">Rincian ini akan ditampilkan pada proses verifikasi barang datang.</div></div>
                          </div>
                          <button class="btn btn-primary"><i class="fas fa-paper-plane me-2"></i>Simpan dan teruskan</button>
                      </form>

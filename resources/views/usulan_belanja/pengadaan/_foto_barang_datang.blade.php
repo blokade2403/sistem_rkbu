@@ -90,14 +90,10 @@
                     </div>
                 </div>
 
-                @if ($spj->details->isNotEmpty())
+                @if (filled($spj->rincian_belanja))
                     <div class="mb-5">
                         <h5 class="mb-2">Rincian Belanja</h5>
-                        <ul class="text-gray-700 ps-5 mb-0">
-                            @foreach ($spj->details as $detail)
-                                <li>{{ $detail->item?->spesifikasi ?: $detail->rkbu?->nomor_rkbu ?: 'Item belanja' }} — volume {{ rtrim(rtrim(number_format((float) $detail->volume, 3, ',', '.'), '0'), ',') }}</li>
-                            @endforeach
-                        </ul>
+                        <div class="text-gray-700" style="white-space: pre-line">{{ $spj->rincian_belanja }}</div>
                     </div>
                 @endif
 
